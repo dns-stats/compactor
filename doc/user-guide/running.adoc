@@ -1,0 +1,455 @@
+== Running _compactor_ 
+
+=== Stopping and starting _compactor_  daemon
+
+If _compactor_  was installed from a binary package, then once the
+configuration has been set up _compactor_  can be run as a service or daemon.
+
+==== Linux with `systemd`
+
+By default, http://releases.ubuntu.com/16.04/[Ubuntu 16.04 LTS 'Xenial
+Xerus'] uses `systemd`.
+
+_compactor_  service is a standard `systemd` service. It can be manually
+started, stopped and requested to reload its configuration.
+
+----
+# systemctl start dns-stats-compactor
+# systemctl stop dns-stats-compactor
+# systemctl reload dns-stats-compactor
+----
+
+Stopping the service is equivalent to manually interrupting a
+capture. See <<Capturing network traffic>>.
+
+Requesting the service reloads its configuration is equivalent to a
+manual request for restarting capture. See
+<<Restarting capture with modified configuration>>.
+
+[[command-line]]
+=== Running _compactor_  from the command line
+
+_compactor_  can be run from the command line to either perform
+ad-hoc captures from network interfaces or to convert already captured PCAP files.
+
+Full details of available command options are in _compactor_  manual page,
+*compactor*(1). A summary is available:
+
+----
+$ compactor  -h
+Usage: compactor  [options] [capture-file ...]
+Options:
+
+Command options:
+  -h [ --help ]                   show this help message.
+  -v [ --version ]                show version information.
+  -c [ --configfile ] arg         configuration file.
+  -r [ --report-info ] [=arg(=1)] report info (config and stats summary) on 
+                                  exit.
+  --debug-dns [=arg(=1)]          print DNS packet details.
+  --debug-qr [=arg(=1)]           print Query/Response match details.
+  -l [ --list-interfaces ]        list all network interfaces.
+
+Configuration:
+  -t [ --rotation-period ] arg (=300)   rotation period for all outputs, in 
+                                        seconds.
+  -q [ --query-timeout ] arg (=5)       timeout period for unanswered queries, 
+                                        in seconds.
+...(rest of output omitted for brevity)...
+----
+
+Specifying capture files _and_ a capture interface on the command line is an error.
+
+[TIP]
+====
+Options `--debug-dns` and `--debug-qr` output human-readable summary
+packet and match data as _compactor_ is running. They are a useful way
+to verify operation.
+====
+
+==== Capturing network traffic
+
+If at least one network interface is specified
+and _compactor_  has permission to read from the network, 
+_compactor_ will start recording network traffic.
+
+For example, to capture traffic on `eth0` to output `capture.cdns`, capturing all
+DNS sections and automatically `xz` compressing the output:
+
+----
+$ compactor -x -o capture.cdns -n all -i eth0
+----
+
+_compactor_  will capture traffic until interrupted by a signal, for example
+the user typing Control-C. If the -r option is used then _compactor_ will report
+summary information on exit (configuration and basic statistics).
+
+[WARNING]
+====
+If C-DNS compression is enabled, interrupting _compactor_ causes the
+current output C-DNS to be lost. For this reason you are recommended
+to have C-DNS output file rotation enabled when using compression. For
+more details, see <<C-DNS output compression>>.
+
+This behaviour is under review.
+====
+
+==== Capturing from PCAP files
+
+Any non-option parameters on the command line are assumed to be PCAP files
+to be used for input to _compactor_ . In this case, any capture interface specified
+in the configuration file is ignored and the PCAP files used as input.
+
+So, to convert input PCAP file `capture.pcap` to output `capture.cdns`, capturing
+all DNS sections and automatically `xz` compressing the output:
+
+----
+$ compactor -x -o capture.cdns -n all capture.pcap
+----
+
+or, using the longer option forms,
+
+----
+$ compactor --xz-output --output capture.cdns --include all capture.pcap
+----
+
+Some command line options take an optional argument. For example,
+`--xz-output` can optionally be followed by an explicit value; if none
+is present then `true` is assumed. This does mean that if one of these
+options is the last option before the PCAP file arguments, the
+compactor can't tell that the PCAP file argument is not a (probably
+incorrect) value for the option.
+
+----
+$ compactor -o capture.cdns -x capture.pcap
+Error: the argument ('capture.pcap') for option '--output' is invalid. Valid choices are 'on|off', 'yes|no', '1|0' and 'true|false'
+----
+
+In this case, the option argument must be given explicitly.
+
+----
+$ compactor -o capture.cdns -x true capture.pcap
+----
+
+==== Capture permissions
+
+If performing an ad-hoc capture, _compactor_  must have the necessary
+permissions to allow it to capture traffic from the specified network
+ports. These permissions are operating system dependent, and a full
+discussion is beyond the scope of this guide. The documentation for
+the `wireshark` tool provides a good introduction
+https://wiki.wireshark.org/CaptureSetup/CapturePrivileges[when
+discussing permissions for `dumpcap`]. For the impatient who have the
+necessary permission, just run _compactor_  as `root`.
+
+==== Restarting capture with modified configuration
+
+If _compactor_  is performing a capture from the network, it is possible to
+modify settings in the configuration file and have _compactor_  re-read the
+configuration file. To do so, send the `HUP` signal to the _compactor_  process.
+This will stop the current capture, re-read the configuration file, and restart
+capture.
+
+NOTE: Any options given on the command line will still be applied for
+the restarted capture, and will still over-ride any configuration file value
+for those options.
+
+The process of stopping the current capture, re-reading configuration
+and restarting capture will mean that _compactor_  will miss some
+network traffic. The amount of time taken to stop, write queued data
+and then restart is heavily dependent on the load on the network at
+the time.
+
+If you send a `HUP` signal to _compactor_  while it is doing a capture
+from a PCAP file rather than a network capture, the conversion is stopped
+immediately and _compactor_  exits.
+
+[WARNING]
+====
+If compression of C-DNS output is enabled, a `HUP` signal to
+_compactor_ during a capture from a PCAP file have the same effect as
+interrupting _compactor_, so the current C-DNS output is lost. See
+<<C-DNS output compression>> for details.
+====
+
+==== Configuration file
+
+Remember that when _compactor_  is installed, either using a binary package
+or using the source distribution, a configuration file is installed with sample
+settings. The sample file specifies output file paths, `xz` compression on
+C-DNS output and all sections to be captured.
+
+Any setting given on _compactor_  command line automatically over-rides
+any value for that setting in the configuration file.
+
+The *-c, --configfile* command line option over-rides the default configuration
+file location. If not using an alternate configuration file, but specifying all the
+compactor options from the command line, it may be wise to explicitly give
+`/dev/null` as the configuration file, to ensure that no values from the installed
+configuration file are used.
+
+=== _compactor_  log messages
+
+_compactor_  logs some messages to the system log. There are error messages,
+reporting an error within _compactor_ , and also some informational
+messages.
+
+[cols="1,2,3",options="header"]
+|===
+| Log type
+| Message
+| Comment
+
+| ERROR
+| C-DNS overflow. Dropping address event(s).
+| An address event is a countable event associated with a client address, such as
+a TCP reset or ICMP event. These are happening faster than _compactor_  can
+record them, so at least one has been dropped.
+
+| ERROR
+| C-DNS overflow. Dropping query/response(s).
+| DNS query/response matches are being generated faster than they can be
+recorded to the C-DNS output. At least one of these matches has been dropped.
+
+| ERROR
+| Ignored PCAP overflow. Dropping packet(s).
+| More ignored packets - that is, packets that do not appear to be DNS
+related or which are malformed - are arriving than can be processed
+and recorded to the ignored PCAP output. At least one has been
+dropped.
+
+| ERROR
+| Raw PCAP overflow. Dropping packet(s).
+| More input packets are arriving than can be processed and recorded
+to the raw PCAP output. At least one has been dropped.
+
+| INFO
+| Total packet count, etc.
+| Basic statistics on the ongoing network capture requested by the
+*--log-network-stats-period* option.
+
+| INFO
+| Starting network capture
+| _compactor_  is starting a network capture.
+
+| INFO
+| Re-reading configuration
+| _compactor_  has received a `HUP` signal and is re-reading its configuration.
+
+| INFO
+| Collection interrupted
+| _compactor_  has received a signal requesting termination and is
+  stopping collection.
+|===
+
+Other error messages are reporting an internal error.
+
+=== _compactor_  performance considerations
+
+==== Threading
+
+_compactor_ is multi-threaded. Packet parsing and query/response
+matching happens on the main thread, while separate threads are
+used for packet capture, to write C-DNS, raw PCAP and ignored PCAP
+outputs.
+
+If `xz` or `gzip` compression is requested for C-DNS, that compression
+happens in one or more further threads as described below.
+`xz` or `gzip` compression in PCAP
+outputs remains in the PCAP output thread because the PCAP format is
+very simple and requires minimal processing overhead. C-DNS, on the
+other hand, requires non-trivial processing to perform the data
+de-duplication before proceeding to general purpose compression.
+
+Data is passed between threads using queues with maximum length. If the
+rate of incoming data overwhelms a thread and it can't keep up, the data
+is discarded and the discard recorded. As data rates rise, therefore, the
+compactor will keep running but more and more queries will not be
+processed correctly.
+
+IMPORTANT: By default, installing _compactor_  via a binary package and running
+it as a service restricts _compactor_  to using just one physical
+core. Increasing the number of cores available may, depending on the
+configuration, increase the maximum throughput of _compactor_ .
+
+===== C-DNS output compression
+
+The processed used for C-DNS compression is designed for a scenario where
+_compactor_ is outputting data to a C-DNS file that is periodically rotated; that is,
+the existing output file is close and a new output file with a distinct name is started.
+C-DNS output is first written uncompressed to a temporary output file. When the file is
+complete, either at the end of input from a PCAP file being converted, or after a file
+rotation, a new thread is spawned to compress the temporary output file to the final
+compressed C-DNS file. If strong compression is being used, the compression may
+not finished before the next output file is ready for compression, so it may be necessary
+to have two or more compression threads executing simultaneously to keep up. The
+maximum number of compression threads that may be active at any time is set in
+configuration; if the limit is reached, C-DNS output blocks until one of the compression
+threads finishes.
+
+[WARNING]
+====
+If _compactor_ is interrupted, e.g. by the user typing Control-C, the
+C-DNS output is stopped and all compressing threads are requested to
+abort. In this case all temporary output files and incomplete
+compressed output files are deleted and only completed compressed
+files are retained. This means that all data in the current output
+C-DNS file at the time of the interrupt is lost. This behaviour is
+under review.
+====
+
+If _compactor_ is requested to reload its configuration via `HUP`
+signal, existing compression threads are not affected.
+
+== Running _inspector_
+
+_inspector_ is run from the command line to reconstruct network
+traffic in PCAP format from one or more C-DNS files. Each PCAP file
+output may be accompanied by a text `info` file giving basic
+information on the C-DNS file contents (configuration and basic
+statistics).  Alternatively just the `info` file can be output with no
+PCAP files.
+
+IMPORTANT: `info` files are not part of the C-DNS specification. Their
+contents are specific to this implementation, and are subject to
+change.
+
+Bulk processing can be achieved by writing a custom script to use _inspector_
+to process the C-DNS files as needed.
+
+Full details of available command options are in the _inspector_ manual page,
+*inspector*(1). A summary is available:
+
+----
+$ inspector -h
+Usage: inspector [options] [cdns-file [...]]
+Options:
+  -h [ --help ]                show this help message.
+  -v [ --version ]             show version information.
+  -o [ --output ] arg          output file name.
+  -z [ --gzip-output ]         compress PCAP data using gzip. Adds .gz 
+                               extension to output file.
+  -y [ --gzip-level ] arg (=6) gzip compression level.
+  -x [ --xz-output ]           compress PCAP data using xz. Adds .xz extension 
+                               to output file.
+  -u [ --xz-preset ] arg (=6)  xz compression preset level.
+  -q [ --query-only ]          write only query messages to output.
+  -r [ --report-info ]         report info (config and stats summary) on exit.
+  -I [ --info-only ]           don't generate PCAP output files, only info 
+                               files.
+  -R [ --report-only ]         don't write output files, just report info.
+  --debug-qr                   print Query/Response details.
+----
+
+For example, to generate PCAP output corresponding to the DNS traffic
+in `capture.cdns`, and automatically `xz` compressing the output:
+
+----
+$ inspector -x -o capture.pcap capture.cdns
+----
+
+This generates a compressed PCAP output file,  `capture.pcap.xz`. It also
+generates `capture.pcap.info`.
+
+NOTE: The -q option will only write DNS queries to the output PCAP file.
+
+=== Reconstructed PCAP files
+
+The PCAP files generated from C-DNS are not an exact reproduction of
+the original capture.
+
+* Link information below the IP layer is not preserved. An Ethernet
+  wrapper is generated for the packets, but MAC addresses are not
+  preserved.
+* Queries and responses over TCP will be generated as a TCP stream,
+  but the stream details will not be exactly reproduced.
+* Some effort is made to ensure that label compression matches the
+  original, but the details of compression are not recorded in C-DNS
+  and so the match is not perfect. For https://www.knot-dns.cz/[Knot]
+  and https://www.nlnetlabs.nl/projects/nsd/[NSD] nameservers, the
+  error rate is typically in the region of 0.1%. Mismatches are reported as
+  'REGENERATION ERRORS' in the `info` file.
+* IP fragmentation is not preserved.
+* If the original C-DNS did not record all DNS message sections, these
+  obviously will not be reproduced.
+* Surplus data at the end of a message is not recorded. A count is
+  kept of the number of original packets with surplus data.
+
+=== _compactor_/_inspector_ `info` output
+
+A typical `info` file is as follows. The report begins with
+information on _compactor_  configuration used to capture the data.
+
+----
+CONFIGURATION:
+  Query timeout        : 5 seconds
+  Skew timeout         : 10 microseconds
+  Snap length          : 65535
+  Max block items      : 5000
+  File rotation period : 300
+  Promiscuous mode     : Off
+  Capture interfaces   :
+  Server addresses     :
+  VLAN IDs             :
+  Filter               :
+  Query options        : Extra questions, Answers, Authorities, Additionals
+  Response options     : Extra questions, Answers, Authorities, Additionals
+  Accept RR types      :
+  Ignore RR types      :
+----
+
+NOTE: File rotation is an implementation detail of _compactor_. As
+such, it is not recorded in C-DNS. The value reported by _inspector_
+is the duration (in seconds) of the data in the C-DNS file.
+
+There follows information on the program used to created the C-DNS and the
+host on which it was running.
+
+----
+COLLECTOR:
+  Collector ID         : dns-stats-compactor 0.10.1
+  Collection host ID   : capturehost
+----
+
+Then follows some overall statistics on the capture.
+
+----
+STATISTICS:
+  Total Packets processed                  : 17493
+  Matched DNS query/response pairs (C-DNS) : 8263
+  Unmatched DNS queries            (C-DNS) : 2
+  Unmatched DNS responses          (C-DNS) : 1
+  Malformed DNS packets                    : 2
+  Non-DNS packets                          : 161
+  Out-of-order DNS query/responses         : 0
+  Dropped C-DNS items (overload)           : 0
+  Dropped raw PCAP packets (overload)      : 0
+  Dropped non-DNS packets (overload)       : 0
+----
+
+And finally counts of occurrences of various events recorded, and associated
+addresses.
+
+----
+TCP RESETS:
+  Count:     1  Address: 3502:e3d3:b836:2ec5:5f1e:98ee:38d8:5cba
+
+ICMP DEST UNREACHABLE:
+  Code:  1  Count:     3  Address: 57.98.199.98
+  Code:  3  Count:     1  Address: 46.119.7.172
+  Code:  3  Count:     1  Address: 158.99.9.124
+  Code:  3  Count:     1  Address: 185.158.213.169
+  Code:  3  Count:     1  Address: 192.168.59.90
+  Code:  3  Count:     1  Address: 214.214.142.170
+  Code:  3  Count:     2  Address: 180.243.253.249
+  Code:  3  Count:     3  Address: 39.161.250.99
+  Code: 13  Count:     4  Address: 215.101.68.68
+
+ICMPv6 DEST UNREACHABLE:
+  Code:  1  Count:     4  Address: 3923:96a5:46df:bd71:e9eb:6464:e35:795
+  Code:  1  Count:     7  Address: 3923:96a5:46df:bd71:d2ea:2443:527f:55df
+  Code:  4  Count:     3  Address: 210a:3c44:990b:d1f0:42a9:bc3f:63e1:240a
+
+REGENERATION ERRORS:
+  Incorrect wire size: 11 packets
+----

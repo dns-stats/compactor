@@ -1,0 +1,30 @@
+#
+# Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+# 
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, you can obtain one at https://mozilla.org/MPL/2.0/.
+#
+
+KNOWN ISSUES/LIMITATIONS:
+-------------------------
+
+* Timestamps are recorded at microsecond granularity. Picosecond
+  timestamps as described in the current C-DNS draft are not supported.
+
+* Malformed packet recording as described in the current C-DNS draft
+  is not supported. However, the compactor can record malformed
+  packets in a separate PCAP file with the `--ignored-pcap` option.
+
+* File rotation period reported by the inspector is calculated as the
+  difference in seconds between the first and last items read from the
+  C-DNS file. File rotation is an implementation detail of the compactor,
+  and as such is not recorded in the C-DNS format.
+
+* Packet loss under Ubuntu Trusty/Debian Jessie. When capturing live data
+  from network interfaces, the first packet and any subsequent packet that
+  arrives more than about 50ms later than its predecessor will not be
+  captured. This is a problem with the libpcap library and the kernel.
+  Debian Jessie can be used by updating the kernel to a later backported
+  kernel; we have tested this with the 4.7.0 kernel. For Ubuntu we
+  recommend upgrading to Xenial.

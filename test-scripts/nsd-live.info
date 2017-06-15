@@ -1,0 +1,53 @@
+CONFIGURATION:
+  Query timeout        : 5 seconds
+  Skew timeout         : 10 microseconds
+  Snap length          : 65535
+  Max block items      : 5000
+  File rotation period : 60
+  Promiscuous mode     : Off
+  Capture interfaces   : 
+  Server addresses     : 
+  VLAN IDs             : 
+  Filter               : 
+  Query options        : Extra questions, Answers, Authorities, Additionals
+  Response options     : Extra questions, Answers, Authorities, Additionals
+  Accept RR types      : 
+  Ignore RR types      : 
+
+COLLECTOR:
+  Collector ID         : 
+  Collection host ID   : 
+
+STATISTICS:
+  Total Packets processed                  : 21804
+  Matched DNS query/response pairs (C-DNS) : 10431
+  Unmatched DNS queries            (C-DNS) : 0
+  Unmatched DNS responses          (C-DNS) : 1
+  Malformed DNS packets                    : 1
+  Non-DNS packets                          : 38
+  Out-of-order DNS query/responses         : 1
+  Dropped C-DNS items (overload)           : 0
+  Dropped raw PCAP packets (overload)      : 0
+  Dropped non-DNS packets (overload)       : 0
+
+ICMP DEST UNREACHABLE:
+  Code:  1  Count:     3  Address: 66.30.187.159
+  Code:  3  Count:     1  Address: 9.209.130.132
+  Code:  3  Count:     1  Address: 28.59.150.146
+  Code:  3  Count:     1  Address: 49.91.220.112
+  Code:  3  Count:     1  Address: 81.201.169.125
+  Code:  3  Count:     1  Address: 109.102.251.0
+  Code:  3  Count:     1  Address: 194.118.60.38
+  Code:  3  Count:     2  Address: 60.108.56.136
+  Code:  3  Count:     2  Address: 106.254.71.182
+  Code:  3  Count:     2  Address: 255.176.37.165
+  Code:  3  Count:     5  Address: 125.182.51.8
+  Code:  3  Count:    20  Address: 129.216.91.251
+  Code: 13  Count:     1  Address: 247.120.71.17
+
+ICMPv6 DEST UNREACHABLE:
+  Code:  1  Count:     1  Address: 3532:5309:6edc:a15b:a6d7:9974:3e8:a0b5
+  Code:  3  Count:     1  Address: 2590:b415:d4ed:61d9:cf7c:795e:af1c:a7bd
+  Code:  4  Count:     2  Address: 33b1:c064:f7e4:319f:abc5:e4db:b06b:d75
+  Code:  4  Count:     3  Address: 210a:3c44:990b:d1f0:42a9:bc3f:63e1:240a
+

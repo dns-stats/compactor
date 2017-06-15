@@ -1,0 +1,99 @@
+= inspector(1)
+Jim Hague, Sinodun Internet Technologies
+:manmanual: DNS-STATS
+:mansource: DNS-STATS
+:man-linkstyle: blue R <>
+
+== NAME
+
+inspector - convert C-DNS query/response info to PCAP
+
+== SYNOPSIS
+
+*inspector* ['OPTIONS']... ['FILE' ['FILE'...]]
+
+== DESCRIPTION
+
+*inspector* reads C-DNS query/response files produced by *compactor* and
+writes output files in PCAP containing reconstructed traffic for the query/responses
+in the C-DNS file.
+
+*inspector* also writes a `.info` file for each PCAP output file written. This is a plain
+text file, named as the PCAP output file but with `.info` appended. It contains
+a configuration and statistics summary for the capture.
+
+If no input file is given, *inspector* reads its standard input. In this case, an
+output file must be specified with the *--output* option.
+
+== OPTIONS
+
+=== Generic Program Information
+
+*-h, --help*::
+  Print a usage message briefly summarising these command-line options and then exit.
+
+*-v, --version*::
+  Print the version number of *inspector* to the standard output stream and then exit.
+
+=== Outputs
+
+*-o, --output* _FILENAME_::
+  Write a single output file named _FILENAME_ containing PCAP
+  generated from all the input files specified. If no output filename
+  is specified, a PCAP output file is written for each input file
+  named as the input file with `.pcap` appended to the name. In either
+  case, if the file already exists, a counter is appended to the
+  filename (e.g. `-1`) until a filename is generated that does not
+  exist.  exist. If _FILENAME_ is `-`, PCAP output is written to standard output.
+  In this case, no info (configuration and statistics summary) is generated.
+
+*-z, --gzip-output* [_arg_]::
+  Compress data in the PCAP output files using gzip(1) format. _arg_ may be
+  `true` or `1` to  enable compression, `false` or `0` to disable compression.
+  If _arg_ is omitted,  it defaults to `true`. If compression is enabled, an
+  extension `.gz` is added to  the output filename.
+
+*-y, --gzip-level* [_arg_]::
+  Compression level to use when producing gzip(1) PCAP output. _arg_ must be
+  a single digit `0` to `9`.  If not specified, the default level is `6`.
+
+*-x, --xz-output* [_arg_]::
+  Compress data in the PCAP output files using xz(1) format. _arg_ may be `true`
+  or `1` to enable compression, `false` or `0` to disable compression. If _arg_ is omitted,
+  it defaults to `true`. If compression is enabled, an extension `.xz` is added to
+  the output filename.
+
+*-u, --xz-preset* [_arg_]::
+  Compression preset level to use when producing xz(1) PCAP output. _arg_ must be
+  a single digit `0` to `9`.  If not specified, the default level is `6`.
+
+*-q, --query-only*::
+  When writing the output file, write only query messages to the output.
+
+*-r. --report-info*::
+  Report info (config and statistics summary) to standard output on exit.
+
+*-R, --report-only*::
+  Don't write any output files, just report info to standard output on exit.
+
+*-I, --info-only*::
+   Don't write any PCAP output files, just write the `.info` files.
+
+*--debug-qr*::
+   Print a summary of each query/response pair to standard output on reading
+   from the input C-DNS file.
+
+== EXIT STATUS
+
+The exit status is 1 if any error occurred. A successful run ends with an exit status of 0.
+
+== RESOURCES
+
+There will be a website one day.
+
+== COPYRIGHT
+
+Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+
+Free use of this software is granted under the terms of the Mozilla Public
+Licence, version 2.0. See the source for full details.

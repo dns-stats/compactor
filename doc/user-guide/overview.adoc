@@ -1,0 +1,122 @@
+== Overview
+
+=== About
+
+The DNS-STATS Compactor project is a suite of applications for
+capturing and working with DNS traffic to a DNS nameserver. It stores
+DNS traffic data in Compacted-DNS (C-DNS), a space-efficient format
+defined in an Internet Draft
+https://datatracker.ietf.org/doc/draft-ietf-dnsop-dns-capture-format[draft-ietf-dnsop-dns-capture-format].
+
+The project was initially developed for for
+https://www.icann.org[ICANN] by https://www.sinodun.com[Sinodun IT],
+and is now released via DNS-STATS as an open source project licenced
+under the https://mozilla.org/MPL/2.0[Mozilla Public License v2.0].
+
+For more information about DNS-STATS and the Compactor see the
+http://dns-stats.org/[DNS-STATS website].
+
+=== DNS-STATS Compactor
+
+The DNS-STATS Compactor suite currently comprises two programs:
+
+* _compactor_. Similar in usage to the well-known
+  http://www.tcpdump.org[_tcpdump_] utility, _compactor_ reads traffic
+  from one or more network interfaces and writes selected details to
+  C-DNS and PCAP output files. _compactor_ can also read and convert
+  pre-recorded PCAP files.
+* _inspector_. Reconstructs network traffic from C-DNS files produced
+  by _compactor_. It outputs one or more PCAP files suitable for
+  direct inspection or input to existing analysis tools. See
+  <<Reconstructed PCAP files>> for limitations on the reconstruction.
+
+_compactor_ is resource efficient, and can therefore be co-located
+on a nameserver. Alternatively it can be run on a standalone server
+with access to the network traffic to be recorded.
+
+_compactor_ can be configured to produce multiple output files from a single
+data source. _compactor_ can optionally compress output files using the popular
+http://www.gzip.org[_gzip_] or _https://tukaani.org/xz[_xz_]_ compression schemes.
+The output file types that may be produced are:
+
+* C-DNS.  These contain captured DNS traffic, along with some
+  ancilliary information, e.g. ICMP and TCP Reset counts. These files
+  are significantly smaller than PCAP files containing the same
+  traffic.  See <<C-DNS Format>>.
+* 'Ignored' traffic. These contain captured non-DNS and malformed DNS packets in PCAP format.
+* 'Raw' traffic. These contain all packets in the captured traffic in
+  PCAP format. They are similar to files produced by _tcpdump_.
+
+// We could add a simple picture here of the architecture
+
+=== C-DNS Format
+
+Traditionally server operators and others wishing to record DNS
+traffic have used network level capture tools such as `tcpdump`. While
+this does produce a complete record of the traffic to and from the
+server, the resulting output files are large. As the files contain a
+lot of repeated data (e.g. server IP and MAC address, common port
+numbers), they compress well, typically reducing in size by an order
+of magnitude. This compression, however, requires notable CPU
+resources to perform.
+
+The DNS-STATS Compactor focuses on the needs of DNS operators
+capturing data in environments where resources (CPU, Upload bandwidth,
+etc.) are restricted.  It writes captured traffic using the
+https://datatracker.ietf.org/doc/draft-ietf-dnsop-dns-capture-format/[C-DNS
+file format]. This format is defined in an Internet Draft, adopted by
+https://tools.ietf.org/wg/dnsop/[the IETF DNSOP working group] in
+November 2016.
+
+[NOTE]
+====
+The draft is a work in progress, and the format subject to
+change. At the time of writing, the latest version of the draft is
+https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-02[version
+02].
+
+_compactor_ writes C-DNS as described in the latest version
+of the draft, with the following changes:
+
+* The format major version is set to 0.
+* The format minor version is set to 5.
+* A private version ID of 1000 is present.
+
+_inspector_ reads C-DNS as described all versions of
+the draft, and will continue to be backwards compatible over format
+changes.
+====
+
+[IMPORTANT]
+====
+The current release does not support the following facilities defined in the current draft:
+
+* Picosecond timestamps. Only microsecond resolution is supported.
+* Malformed packet data recorded directly into C-DNS.
+====
+
+The C-DNS file format is designed for efficiently recording DNS traffic information:
+
+* It only captures transport level information likely to be of interest to
+  a DNS operator.
+* By default it captures only basic query and response information,
+  but can optionally capture selected additional details up to the
+  entire DNS payload.  See <<Configuring>>.
+* Performs DNS-specific compression internally to produce files that
+  are significantly smaller than raw PCAP files.
+
+[NOTE]
+====
+These files can then be compressed using general purpose compression,
+producing files that are typically less than half the size of compressed
+raw PCAP files, while using a fraction of the CPU resources used by
+compressing raw PCAP.
+====
+
+=== Support
+
+Bug reports and feature requests can be submitted via the issue tracker:
+https://github.com/dns-stats/compactor/issues
+
+A mailing list is available for users:
+https://mm.dns-stats.org/mailman/listinfo/dns-stats-users

@@ -1,0 +1,17 @@
+= DNS-STATS Compactor User Guide
+Jim Hague <jim@sinodun.com>
+v{appversion}
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 3
+:sectnums:
+:sectnumlevels: 5
+:icons: font
+
+include::overview.adoc[]
+
+include::installation.adoc[]
+
+include::configuring.adoc[]
+
+include::running.adoc[]

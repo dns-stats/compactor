@@ -1,0 +1,161 @@
+== Installation
+
+=== Installing from packages
+
+Binary install packages are available from a
+https://launchpad.net[Launchpad] PPA (Personal Package Archive)
+`ppa:dns-stats/compactor` for
+
+* http://releases.ubuntu.com/16.04/[Ubuntu 16.04 LTS 'Xenial Xerus']
+
+==== Ubuntu 16.04 LTS 'Xenial Xerus'
+
+_compactor_ and  _inspector_  are supplied in separate packages named
+`dns-stats-compactor` and `dns-stats-inspector`.
+
+===== Pre-requisites
+
+Both _compactor_ and _inspector_ use
+https://libtins.github.io/[libtins] for various network related
+functions. There is no suitable pre-pacakged version for Ubuntu Xenial, so
+a package is supplied along with the DNS-STATS packages. It will be installed
+as a pre-requisite package automatically.
+
+===== Installing
+
+You need first to add the DNS-STATS PPA to your system's Software Sources:
+
+----
+sudo add-apt-repository ppa:dns-stats/compactor
+sudo apt update
+----
+
+You can then install either both of the `dns-stats-compactor` or
+`dns-stats-inspector` packages. Their pre-requisite packages will be
+downloaded and installed automatically.
+
+----
+$ sudo apt install dns-stats-compactor
+$ sudo apt install dns-stats-inspector
+----
+
+===== Post-installation
+
+[TIP]
+====
+After installation _compactor_ can be used <<command-line,from the
+command line>>, for example for ad-hoc captures or converting PCAP
+capture files.
+====
+
+Whenever the _compactor_ package is installed, the system will attempt
+to start _compactor_ as a service.
+
+The first time the _compactor_ package is installed, it installs a
+default configuration file `/etc/dns-stats/compactor.conf`. This
+default configuration does not specify a capture interface, so the
+attempt at starting _compactor_ as a service will fail.  Before
+using _compactor_ as a service, you need to edit the default
+configuration and at minimum specify a capture interface.
+
+When the _compactor_ package is upgraded, any running service is
+stopped for the upgrade and restarted immediately the upgrade is
+complete.
+
+=== Installing from source
+
+The source code is available at: https://github.com/dns-stats/compactor
+
+Release tarballs are also available on github. 
+
+==== Pre-requisites
+
+To build _compactor_ and _inspector_ from source, the following items
+are required.  They should be available via standard installation repositories
+for most platforms. If not, for information on building pre-requisite items from
+source, see the documentation for those items.
+
+[cols=".^,.^",frame=none,grid=none]
+|===
+
+| `{cpp} compiler` | _compactor_ and _inspector_ are written in
+  {cpp}. To build them, a {cpp} compiler and tool chain compatible
+  with the 2011 ISO standard, otherwise {cpp}11.
+
+| `boost-log`
+.4+| Several libraries from http://www.boost.org[Boost
+  {cpp}] are required. Depending on your system, it may be possible to
+  install just the build requirements for individual libraries, or it
+  may be more convenient to install all the Boost libraries.
+  NOTE: _compactor_ and _inspector_ require Boost 1.54 or later.
+
+| `boost-program-options`
+
+| `boost-system`
+
+| `boost-thread`
+
+| `liblzma`| The compression library from http://tukaani.org/xz/[XZ utils].
+
+| `libpcap`| Library for capturing network traffic http://www.tcpdump.org/.
+
+| `libtcmalloc-minimal4`| Optionally, on systems such as Linux where
+  it's available, `tcmalloc` from the
+  http://goog-perftools.sourceforge.net/doc/tcmalloc.html[Google
+  performance tools] gives a notable performance boost over standard
+  `glibc` `malloc`. If not present, the build will use the standard
+  system `malloc`.
+
+| `libtins` | Networking functions library. http://libtins.github.io/.
+|===
+
+==== Optionally building documentation
+
+The documentation is built using http://asciidoctor.org/[Asciidoctor], version 1.5.0 or later is required (this may
+require installation using 'gem install asciidoctor' on some platforms).
+
+http://www.stack.nl/~dimitri/doxygen/[Doxygen] documentation is also built if Doxygen is installed.
+
+==== Building and installing
+
+==== Building from a git repository
+
+To build _compactor_ and _inspector_, select the desired branch; for example the
+most recent release branch/tag or the latest development code which is in 'develop'.
+
+----
+$ git checkout <branch or tag>
+----
+
+The code uses https://en.wikipedia.org/wiki/GNU_Build_System[GNU Autotools].
+Building and installing requires configuring for the locally installed version
+of Autotool, and then follows the usual Autotools process.
+
+----
+$ ./autogen.sh
+$ ./configure
+$ make
+$ make install
+----
+
+As usual with Autotools, by default the install is to directories under `/usr/local`.
+
+==== Building from a release tarball
+
+To build _compactor_ and _inspector_, unpack the release tarball.
+
+----
+$ tar -xvzf dns-stats-compactor-<version>.tar.gz
+----
+
+The code uses https://en.wikipedia.org/wiki/GNU_Build_System[GNU Autotools].
+Building and installing follows the usual Autotools process.
+
+----
+$ cd dns-stats-compactor-<version>
+$ ./configure
+$ make
+$ make install
+----
+
+As usual with Autotools, by default the install is to directories under `/usr/local`.

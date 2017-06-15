@@ -1,0 +1,78 @@
+Query/Response:
+Query: 2016-04-05 19h33m24s561484us UTC:
+	Client IP: 86.237.170.188
+	Server IP: 211.79.123.239
+	Transport: UDP
+	Client port: 51644
+	Server port: 53
+	Hop limit: 52
+	DNS QR: Query
+	ID: 61888
+	Opcode: 0
+	Rcode: 0
+	Flags: 
+	QdCount: 1
+	AnCount: 0
+	NsCount: 0
+	ArCount: 1
+	Name: xtsskb5qon8sn._kerberos._tcp.TEVC._sites.dc._msdcs.172.20.222.38
+	Type: 33
+	Class: 1
+Response: 2016-04-05 19h33m24s561574us UTC:
+	Client IP: 86.237.170.188
+	Server IP: 211.79.123.239
+	Transport: UDP
+	Client port: 51644
+	Server port: 53
+	Hop limit: 64
+	DNS QR: Response
+	ID: 61888
+	Opcode: 0
+	Rcode: 3
+	Flags: AA 
+	QdCount: 1
+	AnCount: 0
+	NsCount: 4
+	ArCount: 1
+	Name: xtsskb5qon8sn._kerberos._tcp.TEVC._sites.dc._msdcs.172.20.222.38
+	Type: 33
+	Class: 1
+Query/Response:
+Query: 2016-04-05 19h33m24s667820us UTC:
+	Client IP: 3249:ed7d:124b:f9c3:1248:e8c5:12ef:e8c5
+	Server IP: 3249:edc5:124b:e8c5:1248:e8c5:1248:e847
+	Transport: UDP
+	Client port: 47686
+	Server port: 53
+	Hop limit: 59
+	DNS QR: Query
+	ID: 11414
+	Opcode: 0
+	Rcode: 0
+	Flags: 
+	QdCount: 1
+	AnCount: 0
+	NsCount: 0
+	ArCount: 1
+	Name: CO801M180191.azcorrections.local
+	Type: 6
+	Class: 1
+Response: 2016-04-05 19h33m24s667916us UTC:
+	Client IP: 3249:ed7d:124b:f9c3:1248:e8c5:12ef:e8c5
+	Server IP: 3249:edc5:124b:e8c5:1248:e8c5:1248:e847
+	Transport: UDP
+	Client port: 47686
+	Server port: 53
+	Hop limit: 64
+	DNS QR: Response
+	ID: 11414
+	Opcode: 0
+	Rcode: 3
+	Flags: AA 
+	QdCount: 1
+	AnCount: 0
+	NsCount: 6
+	ArCount: 1
+	Name: CO801M180191.azcorrections.local
+	Type: 6
+	Class: 1

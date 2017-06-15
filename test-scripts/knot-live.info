@@ -1,0 +1,54 @@
+CONFIGURATION:
+  Query timeout        : 5 seconds
+  Skew timeout         : 10 microseconds
+  Snap length          : 65535
+  Max block items      : 5000
+  File rotation period : 52
+  Promiscuous mode     : Off
+  Capture interfaces   : 
+  Server addresses     : 
+  VLAN IDs             : 
+  Filter               : 
+  Query options        : Extra questions, Answers, Authorities, Additionals
+  Response options     : Extra questions, Answers, Authorities, Additionals
+  Accept RR types      : 
+  Ignore RR types      : 
+
+COLLECTOR:
+  Collector ID         : 
+  Collection host ID   : 
+
+STATISTICS:
+  Total Packets processed                  : 17493
+  Matched DNS query/response pairs (C-DNS) : 8263
+  Unmatched DNS queries            (C-DNS) : 2
+  Unmatched DNS responses          (C-DNS) : 1
+  Malformed DNS packets                    : 2
+  Non-DNS packets                          : 161
+  Out-of-order DNS query/responses         : 0
+  Dropped C-DNS items (overload)           : 0
+  Dropped raw PCAP packets (overload)      : 0
+  Dropped non-DNS packets (overload)       : 0
+
+TCP RESETS:
+  Count:     1  Address: 3502:e3d3:b836:2ec5:5f1e:98ee:38d8:5cba
+
+ICMP DEST UNREACHABLE:
+  Code:  1  Count:     3  Address: 57.98.199.98
+  Code:  3  Count:     1  Address: 46.119.7.172
+  Code:  3  Count:     1  Address: 158.99.9.124
+  Code:  3  Count:     1  Address: 185.158.213.169
+  Code:  3  Count:     1  Address: 192.168.59.90
+  Code:  3  Count:     1  Address: 214.214.142.170
+  Code:  3  Count:     2  Address: 180.243.253.249
+  Code:  3  Count:     3  Address: 39.161.250.99
+  Code: 13  Count:     4  Address: 215.101.68.68
+
+ICMPv6 DEST UNREACHABLE:
+  Code:  1  Count:     4  Address: 3923:96a5:46df:bd71:e9eb:6464:e35:795
+  Code:  1  Count:     7  Address: 3923:96a5:46df:bd71:d2ea:2443:527f:55df
+  Code:  4  Count:     3  Address: 210a:3c44:990b:d1f0:42a9:bc3f:63e1:240a
+
+REGENERATION ERRORS:
+  Incorrect wire size: 11 packets
+

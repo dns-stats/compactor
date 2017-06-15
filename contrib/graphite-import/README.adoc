@@ -1,0 +1,50 @@
+= Import `.info` to Graphite/Carbon
+
+The GNU AWK script in this directory is used to extract basic information
+on data captured in C-DNS files from `.info` files and output it in a
+form suitable for import into
+http://docs.grafana.org/features/datasources/graphite/[Graphite].
+
+The script assumes:
+
+* the input `.info` files are collected into directories named after
+the server that collected the data,
+* within each directory, the individual `.info` files are named
+`YYYYMMDD-HHMMSS.info`; produced, for example, by the compactor with
+an output file pattern `%Y%m%d-%H%M%S.cdns`.
+
+The script extracts the hostname and the file timestamp from the `.info` file
+path. It then scans the `.info` file and extracts the following:
+
+* Total number of packets processed.
+* Number of matched query/responses.
+* Number of dropped C-DNS items.
+* Number of unmatched queries.
+* Number of unmatched responses.
+* Number of malformed DNS packets.
+* Number of non-DNS packets.
+* Number of out-of-order query/responses.
+
+Each quantity is reported as the number of items per second, approximated
+by dividing the number by the reported file rotation time.
+
+== Sample output
+
+Given an input file `oxf01/20170608-164640_30.pcap.info`, the script
+produces output of the form:
+
+ compactor-info.oxf01.packet 1511.85 1496940400
+ compactor-info.oxf01.qr 755.927 1496940400
+ compactor-info.oxf01.unmatched-query 0 1496940400
+ compactor-info.oxf01.unmatched-response 0 1496940400
+ compactor-info.oxf01.malformed-dns 0 1496940400
+ compactor-info.oxf01.non-dns 0 1496940400
+ compactor-info.oxf01.out-of-order 0 1496940400
+ compactor-info.oxf01.qr-drop 0 1496940400
+
+== Usage
+
+This could be used to feed data into a Graphite server using a command
+line something like:
+
+ $ find . -name "*.info" | xargs gawk -f ./import.awk | nc graphite 2003

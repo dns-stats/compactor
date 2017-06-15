@@ -1,0 +1,98 @@
+#
+# Configuration for DNS-STATS compactor.
+#
+# Commented out items show the default values.
+#
+
+# Network capture options.
+
+# Interface on which to capture traffic.
+# interface=
+
+# Optional hints about the server addresses. These do not affect collection,
+# but are stored in the C-DNS output and may be useful for downstream
+# analysis. If specified, and capture is from one or more interfaces,
+# the address must be present on a capture interface.
+# server-address-hint=
+
+# VLAN IDs to capture. If none specified, all are captured.
+# vlan-id=
+
+# RR type to ignore. Type name in UPPER CASE e.g. AAAA, RRSIG.
+# ignore-rr-type=
+
+# RR type to accept. Type name in UPPER CASE e.g. AAAA, RRSIG.
+# accept-rr-type=
+
+# Snap length - limit of bytes in package to capture.
+# snaplen=65535
+
+# Filter expression.
+# filter=
+
+# Enable promiscuous mode.
+# promiscuous-mode=false
+
+# Log basic collection stats to syslog every n seconds. 0 (default) == never.
+# log-network-stats-period=0
+
+# Output options.
+
+# Output file rotation period, in seconds.
+# rotation-period=300
+
+# C-DNS output file pattern.
+# output=
+output=@DSLOCALSTATEDIR@/cdns/%Y%m%d-%H%M%S_%{rotate-period}_%{interface}.cdns
+
+# Raw PCAP output file pattern.
+# raw-pcap=
+raw-pcap=@DSLOCALSTATEDIR@/pcap/raw/%Y%m%d-%H%M%S_%{rotate-period}_%{interface}.raw.pcap
+
+# Ignored PCAP output file pattern.
+# ignored-pcap=
+ignored-pcap=@DSLOCALSTATEDIR@/pcap/ignored/%Y%m%d-%H%M%S_%{rotate-period}_%{interface}.ignored.pcap
+
+# Level of data to capture. Value may be one of:
+# query-questions, query-answers, query-authority, query-additional,
+# response-questions, response-answers, response-authority, response-additional,
+# query-all, response-all, all.
+#
+# The line may be repeated to request additional sections, for example:
+# include=query-questions
+# include=response-answers
+#
+# Default is no additional sections.
+include=all
+
+# Compress C-DNS using gzip?
+# gzip-output=false
+
+# C-DNS gzip compression level.
+# gzip-level=6
+
+# Compress C-DNS using xz?
+xz-output=true
+
+# C-DNS xz compression level.
+# xz-preset=6
+
+# Compress PCAP using gzip?
+# gzip-pcap=false
+
+# PCAP gzip compression level.
+# gzip-level-pcap=6
+
+# Compress PCAP using xz?
+# xz-pcap=false
+
+# PCAP xz compression level.
+# xz-preset-pcap=6
+
+# Query matching options.
+
+# Seconds to wait for response before timing out query.
+# query-timeout=5
+
+# Microseconds to wait for query arrive after response received.
+# skew-timeout=10

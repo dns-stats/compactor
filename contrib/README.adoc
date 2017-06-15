@@ -1,0 +1,7 @@
+= Contributed items
+
+This directory contains contributed items that users of *dns-stats-compactor* may
+find useful.
+
+These items are provided as-is. The *dns-stats-compactor* project will not provide
+support for them.
