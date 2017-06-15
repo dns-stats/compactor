@@ -9,7 +9,7 @@ https://datatracker.ietf.org/doc/draft-ietf-dnsop-dns-capture-format[draft-ietf-
 *DNS-STATS Compactor* is an open source project licenced under the
 https://mozilla.org/MPL/2.0[Mozilla Public License v2.0].
 
-For more infomation, see http://dns-stats.org[the DNS-STATS home page] or the https://github.com/dns-stats/compactor/wiki[Compactor project wiki].
+For more information, see http://dns-stats.org[the DNS-STATS home page] or the https://github.com/dns-stats/compactor/wiki[Compactor project wiki].
 
 For an overview of current known issues, see `KNOWN_ISSUES.txt`.
 
