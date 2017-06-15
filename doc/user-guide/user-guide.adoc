@@ -1,5 +1,5 @@
 = DNS-STATS Compactor User Guide
-Jim Hague <jim@sinodun.com>
+DNS-STATS <dns-stats-users@dns-stats.org>
 v{appversion}
 :source-highlighter: highlightjs
 :toc: left
