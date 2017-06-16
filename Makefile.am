@@ -66,6 +66,8 @@ dist_check_DATA = test-scripts/dns.pcap.xz \
                   test-scripts/knot-live.info \
                   test-scripts/check-live-pcap.sh
 
+EXTRA_DIST = getversion.sh .version
+
 check_SCRIPTS = $(dist_check_SCRIPTS)
 check_DATA = dns.pcap \
              gold.pcap \
@@ -94,7 +96,6 @@ AM_LDFLAGS = $(BOOST_LDFLAGS)
 doc/user-guide.html : $(user_guide_sources) ; @ASCIIDOC@ -b html5 -d article -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
 
 compactor_headers = \
-        .version \
         src/addressevent.hpp \
         src/baseoutputwriter.hpp \
         src/bytestring.hpp \
