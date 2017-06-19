@@ -49,7 +49,8 @@ dist_check_SCRIPTS = test-scripts/check-config-info.sh \
                      test-scripts/verify-cbor02.sh \
                      test-scripts/verify-cddl.sh
 
-dist_check_DATA = test-scripts/dns.pcap.xz \
+dist_check_DATA = doc/c-dns-working.cddl \
+                  test-scripts/dns.pcap.xz \
                   test-scripts/gold.pcap.xz \
                   test-scripts/gold.cbor.xz \
                   test-scripts/gold.cbor02.xz \
@@ -57,6 +58,8 @@ dist_check_DATA = test-scripts/dns.pcap.xz \
                   test-scripts/malformed.pcap.xz \
                   test-scripts/matching.pcap.xz \
                   test-scripts/testcontent.pcap.xz \
+                  test-scripts/testcontent.diag \
+                  test-scripts/testcontent.debugqr \
                   test-scripts/unmatched.pcap.xz \
                   test-scripts/nsd-live.raw.pcap.xz \
                   test-scripts/nsd-live.ignored.pcap.xz \
