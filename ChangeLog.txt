@@ -6,6 +6,12 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 0.10.1 - 2017-06-16
+---------------------------
+
+* Fix typos in README and author in user guide.
+* Add missing file to distribution tarball.
+
 Version 0.10.0 - 2017-06-15
 ---------------------------
 
