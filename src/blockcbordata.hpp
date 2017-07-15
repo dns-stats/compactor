@@ -990,6 +990,8 @@ namespace block_cbor {
          */
         const T& operator[](index_t pos) const
         {
+            if ( pos == 0 || pos > items_.size() )
+                throw cbor_file_format_error("Block index out of range");
             return items_[pos - 1];
         }
 
