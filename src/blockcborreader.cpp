@@ -305,7 +305,7 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
     std::shared_ptr<QueryResponse> res;
     std::unique_ptr<DNSMessage> query, response;
 
-    if ( need_block_ )
+    while ( need_block_ )
         if ( !readBlock() )
             return res;
 
