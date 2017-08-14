@@ -13,6 +13,7 @@
 #ifndef IPADDRESS_HPP
 #define IPADDRESS_HPP
 
+#include <array>
 #include <chrono>
 #include <iostream>
 #include <string>
@@ -133,10 +134,29 @@ public:
 
     /**
      * \brief Return IPv6 TINS address.
+     *
+     * If address is IPv4, return it in IPv6 representation.
      */
     operator Tins::IPv6Address() const
     {
-        return addr6_;
+        if ( ipv6_ )
+            return addr6_;
+        else
+        {
+            uint32_t a4 = addr4_;
+            std::array<uint8_t, 16> addr;
+            addr.fill(0);
+            addr[10] = addr[11] = 0xff;
+            addr[12] = a4;
+            a4 >>= 8;
+            addr[13] = a4;
+            a4 >>= 8;
+            addr[14] = a4;
+            a4 >>= 8;
+            addr[15] = a4;
+            return Tins::IPv6Address(addr.cbegin());
+
+        }
     }
 
     /**

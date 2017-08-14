@@ -50,6 +50,15 @@ SCENARIO("IPAddress wrapper for v4 and v6 addresses does the right thing",
                 IPAddress a2(a_bin);
                 REQUIRE(a == a2);
             }
+
+            AND_THEN("the IPv6 representation is correct")
+            {
+                Tins::IPv6Address a4_a6 = a;
+
+                std::ostringstream oss;
+                oss << a4_a6;
+                REQUIRE(oss.str() == "::ffff:193.0.29.226");
+            }
         }
 
         WHEN("IPv6 is used")
