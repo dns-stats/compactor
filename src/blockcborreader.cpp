@@ -340,7 +340,7 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
             ttl <<= 8;
             ttl |= (sig.query_edns_version & 0xff);
             ttl <<= 16;
-            if ( sig.dns_flags & BaseOutputWriter::QUERY_D0 )
+            if ( sig.dns_flags & BaseOutputWriter::QUERY_DO )
                 ttl |= 0x8000;
             query->dns.add_additional(
                 CaptureDNS::resource(

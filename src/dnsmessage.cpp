@@ -57,7 +57,7 @@ DNSMessage::OptData DNSMessage::opt() const
         if ( rr.query_type() == CaptureDNS::QueryType::OPT )
         {
             uint32_t ttl = rr.ttl();
-            res.d0 = ((ttl & 0x8000) != 0);
+            res.opt_do = ((ttl & 0x8000) != 0);
             ttl >>= 16;
             res.edns_version = (ttl & 0xff);
             ttl >>= 8;

@@ -167,8 +167,8 @@ uint16_t BaseOutputWriter::dnsFlags(const std::shared_ptr<QueryResponse>& qr)
             res |= QUERY_AA;
 
         query_opt = q.opt();
-        if ( query_opt.present && query_opt.d0 )
-            res |= QUERY_D0;
+        if ( query_opt.present && query_opt.opt_do )
+            res |= QUERY_DO;
     }
 
     if ( qr->has_response() )

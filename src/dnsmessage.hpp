@@ -73,9 +73,9 @@ struct DNSMessage
         uint8_t extended_rcode;
 
         /**
-         * \brief OPT D0 bit.
+         * \brief OPT DO bit.
          */
-        bool d0;
+        bool opt_do;
 
         /**
          * \brief OPT RDATA.
