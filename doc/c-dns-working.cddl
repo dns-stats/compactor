@@ -193,7 +193,7 @@ DNSFlagValues = &(
     query-rd   : 4,
     query-tc   : 5,
     query-aa   : 6,
-    query-do   : 7,
+    query-d0   : 7,
     response-cd: 8,
     response-ad: 9,
     response-z : 10,
