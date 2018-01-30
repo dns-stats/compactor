@@ -4,7 +4,7 @@
 ; This copy contains modifications from c-dns.cddl, the version in the draft.
 ;
 ; For more information on CDDL, see
-; https://tools.ietf.org/html/draft-greevenbosch-appsawg-cbor-cddl-08
+; https://tools.ietf.org/html/draft-ietf-cbor-cddl-01
 ;
 
 File = [
