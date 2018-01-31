@@ -125,16 +125,24 @@ compactor-missing-pairs          = 12
 compactor-missing-packets        = 13
 compactor-missing-non-dns        = 14
 
+QuestionTables = (
+    qlist => [* QuestionList],
+    qrr   => [* Question]
+)
+
+RRTables = (
+    rrlist => [* RRList],
+    rr     => [* RR]
+)
+
 BlockTables = {
     ip-address => [* IPAddress],
     classtype  => [* ClassType],
     name-rdata => [* bstr],            ; Holds both Name RDATA and RDATA
-    query-sig  => [* QuerySignature]
-    ? qlist    => [* QuestionList],
-    ? qrr      => [* Question],
-    ? rrlist   => [* RRList],
-    ? rr       => [* RR],
-}
+    query-sig  => [* QuerySignature],
+    ? QuestionTables,
+    ? RRTables
+ }
 
 ip-address = 0
 classtype  = 1

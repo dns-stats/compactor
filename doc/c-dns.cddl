@@ -111,15 +111,23 @@ unmatched-responses          = 3
 completely-malformed-packets = 4
 partially-malformed-packets  = 5
 
+QuestionTables = (
+    qlist => [* QuestionList],
+    qrr   => [* Question]
+)
+
+RRTables = (
+    rrlist => [* RRList],
+    rr     => [* RR]
+)
+
 BlockTables = {
     ip-address => [* IPAddress],
     classtype  => [* ClassType],
     name-rdata => [* bstr],            ; Holds both Name RDATA and RDATA
-    query-sig  => [* QuerySignature]
-    ? qlist    => [* QuestionList],
-    ? qrr      => [* Question],
-    ? rrlist   => [* RRList],
-    ? rr       => [* RR],
+    query-sig  => [* QuerySignature],
+    ? QuestionTables,
+    ? RRTables
 }
 
 ip-address = 0
