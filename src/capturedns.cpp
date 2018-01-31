@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -247,6 +247,18 @@ byte_string CaptureDNS::expand_rr_data(uint16_t query_type, uint16_t offset, uin
         if ( offset + 20 > rdata_end )
             throw Tins::malformed_packet();
         res.append(buf + offset, 20);
+        break;
+
+    case SRV:
+        // RDATA is 2 bytes priority, 2 bytes weight, 2 bytes port and name.
+        // Name compression is forbidden by RFC2782, but was permitted by
+        // its predecessor RFC2052, so just in case...
+        if ( len < 8 )
+            throw Tins::malformed_packet();
+        res = byte_string(buf + offset, 6);
+        name = namebuf;
+        offset = read_dname_offset(offset + 6, buf, buflen, name, namebuf + sizeof(namebuf));
+        res.append(namebuf, name - namebuf);
         break;
 
     default:
