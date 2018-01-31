@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,6 +20,8 @@ namespace block_cbor {
         {
             bool indef;
             uint64_t n_elems = dec.readArrayHeader(indef);
+            if ( !indef )
+                vec.reserve(n_elems);
             while ( indef || n_elems-- > 0 )
             {
                 if ( indef && dec.type() == CborBaseDecoder::TYPE_BREAK )
@@ -39,10 +41,9 @@ namespace block_cbor {
 
     void IndexVectorItem::writeCbor(CborBaseEncoder& enc)
     {
-        enc.writeArrayHeader();
+        enc.writeArrayHeader(vec.size());
         for ( auto& i : vec )
             enc.write(i);
-        enc.writeBreak();
     }
 
     void ByteStringItem::readCbor(CborBaseDecoder& dec, const FileVersionFields&)
@@ -907,6 +908,8 @@ namespace block_cbor {
     {
         bool indef;
         uint64_t n_elems = dec.readArrayHeader(indef);
+        if ( !indef )
+            query_response_items.reserve(n_elems);
         while ( indef || n_elems-- > 0 )
         {
             if ( indef && dec.type() == CborBaseDecoder::TYPE_BREAK )
@@ -1073,10 +1076,9 @@ namespace block_cbor {
 
     void BlockData::writeItems(CborBaseEncoder& enc)
     {
-        enc.writeArrayHeader();
+        enc.writeArrayHeader(query_response_items.size());
         for ( auto& qri : query_response_items )
             qri.writeCbor(enc, earliest_time);
-        enc.writeBreak();
     }
 
     void BlockData::writeStats(CborBaseEncoder& enc)
@@ -1118,7 +1120,7 @@ namespace block_cbor {
 
     void BlockData::writeAddressEventCounts(CborBaseEncoder& enc)
     {
-        enc.writeArrayHeader();
+        enc.writeArrayHeader(address_event_counts.size());
         for ( auto& aeci : address_event_counts )
         {
             AddressEventCount aec;
@@ -1126,7 +1128,6 @@ namespace block_cbor {
             aec.count = aeci.second;
             aec.writeCbor(enc);
         }
-        enc.writeBreak();
     }
 
 }
