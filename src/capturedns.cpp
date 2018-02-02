@@ -19,6 +19,8 @@
 #include <memory>
 #include <vector>
 
+#include <boost/version.hpp>
+
 #include "capturedns.hpp"
 
 using Tins::Memory::InputMemoryStream;
@@ -275,7 +277,11 @@ void CaptureDNS::add_edns0(const byte_string& dname, QueryClass query_class, uin
     // one already.
     if ( edns0_ || dname.size() > 1 )
         throw Tins::malformed_packet();
+#if BOOST_VERSION >= 105600
     edns0_.emplace(static_cast<QueryClass>(query_class), ttl, data);
+#else
+    edns0_ = EDNS0(static_cast<QueryClass>(query_class), ttl, data);
+#endif
 }
 
 byte_string CaptureDNS::expand_rr_data(uint16_t query_type, uint16_t offset, uint16_t len, const uint8_t *buf, uint16_t buflen)
