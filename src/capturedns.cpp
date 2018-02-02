@@ -26,9 +26,60 @@ using Tins::Memory::OutputMemoryStream;
 
 namespace {
     const unsigned MAX_DNAME_LEN = 512;
+    const unsigned DO_BIT = (1 << 15);
 }
 
 CaptureDNS::NameCompression CaptureDNS::name_compression_ = CaptureDNS::DEFAULT;
+
+uint32_t CaptureDNS::EDNS0::make_ttl() const
+{
+    uint32_t res = 0;
+    if ( do_bit_ )
+        res |= DO_BIT;
+    res |= (edns_version_ << 16);
+    res |= (extended_rcode_ << 24);
+    return res;
+}
+
+void CaptureDNS::EDNS0::extract_ttl_data(uint32_t ttl)
+{
+    do_bit_ = ( (ttl & DO_BIT) != 0 );
+    edns_version_ = (ttl & 0x00ff0000) >> 16;
+    extended_rcode_ = (ttl & 0xff000000) >> 24;
+}
+
+byte_string CaptureDNS::EDNS0::make_options_data() const
+{
+    byte_string res;
+
+    for (const auto& opt : options_)
+    {
+        res.push_back((opt.code() & 0xff00) >> 8);
+        res.push_back(opt.code() & 0xff);
+        res.push_back((opt.data().size() & 0xff00) >> 8);
+        res.push_back(opt.data().size() & 0xff);
+        res.append(opt.data());
+    }
+
+    return res;
+}
+
+void CaptureDNS::EDNS0::extract_options(const byte_string& data)
+{
+    InputMemoryStream stream(data.data(), data.size());
+
+    while (stream)
+    {
+        EDNS0Code code = static_cast<EDNS0Code>(stream.read_be<uint16_t>());
+        uint16_t len = stream.read_be<uint16_t>();
+        if ( !stream.can_read(len) )
+            throw Tins::malformed_packet();
+        byte_string optdata(stream.pointer(), len);
+        stream.skip(len);
+
+        options_.emplace_back(code, std::move(optdata));
+    }
+}
 
 // cppcheck-suppress unusedFunction
 Tins::PDU::metadata CaptureDNS::extract_metadata(const uint8_t *, uint32_t total_sz) {
@@ -60,11 +111,11 @@ CaptureDNS::CaptureDNS(const uint8_t* buffer, uint32_t total_sz)
 
     // RRs.
     for ( uint16_t i = 0; i < answers_count(); ++i )
-        add_rr(answers_, stream, buffer, total_sz);
+        add_rr(answers_, stream, buffer, total_sz, false);
     for ( uint16_t i = 0; i < authority_count(); ++i )
-        add_rr(authority_, stream, buffer, total_sz);
+        add_rr(authority_, stream, buffer, total_sz, false);
     for ( uint16_t i = 0; i < additional_count(); ++i )
-        add_rr(additional_, stream, buffer, total_sz);
+        add_rr(additional_, stream, buffer, total_sz, true);
 
     trailing_data_size_ = stream.size();
 }
@@ -194,7 +245,7 @@ byte_string CaptureDNS::encode_domain_name(const std::string& name)
     return output;
 }
 
-void CaptureDNS::add_rr(CaptureDNS::resources_type& res, Tins::Memory::InputMemoryStream& s, const uint8_t *buffer, uint32_t buflen)
+void CaptureDNS::add_rr(CaptureDNS::resources_type& res, Tins::Memory::InputMemoryStream& s, const uint8_t *buffer, uint32_t buflen, bool allow_opt)
 {
     byte_string dname(read_dname(s, buffer, buflen));
     uint16_t query_type = s.read_be<uint16_t>();
@@ -205,7 +256,26 @@ void CaptureDNS::add_rr(CaptureDNS::resources_type& res, Tins::Memory::InputMemo
         throw Tins::malformed_packet();
     byte_string data(expand_rr_data(query_type, s.pointer() - buffer, data_size, buffer, buflen));
     s.skip(data_size);
+
+    if ( query_type == OPT )
+    {
+        // Only allowed in ADDITIONAL.
+        if ( !allow_opt )
+            throw Tins::malformed_packet();
+
+        add_edns0(dname, static_cast<QueryClass>(query_class), ttl, data);
+    }
+
     res.emplace_back(std::move(dname), std::move(data), static_cast<QueryType>(query_type), static_cast<QueryClass>(query_class), ttl);
+}
+
+void CaptureDNS::add_edns0(const byte_string& dname, QueryClass query_class, uint32_t ttl, const byte_string& data)
+{
+    // Name must be empty (apart from the terminating \0), and we mustn't have
+    // one already.
+    if ( edns0_ || dname.size() > 1 )
+        throw Tins::malformed_packet();
+    edns0_.emplace(static_cast<QueryClass>(query_class), ttl, data);
 }
 
 byte_string CaptureDNS::expand_rr_data(uint16_t query_type, uint16_t offset, uint16_t len, const uint8_t *buf, uint16_t buflen)

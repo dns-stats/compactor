@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,8 @@
 
 #include <list>
 #include <string>
+
+#include <boost/optional.hpp>
 
 #include <tins/tins.h>
 #include <tins/memory_helpers.h>
@@ -196,6 +198,25 @@ public:
     };
 
     /**
+     * \brief Query types enum.
+     */
+    enum EDNS0Code
+    {
+        NSID = 3,
+        DAU = 5,
+        DHU,
+        N3U,
+        CLIENT_SUBNET,
+        EXPIRE,
+        COOKIE,
+        TCP_KEEPALIVE,
+        PADDING,
+        CHAIN,
+        KEY_TAG,
+        DEVICE_ID = 26946
+    };
+
+    /**
      * \brief Name compression type enum.
      */
     enum NameCompression
@@ -291,7 +312,7 @@ public:
         /**
          * Constructs a Resource object.
          *
-         * \param dname The domain name for which this records
+         * \param dname The domain name for which this record
          * provides an answer, in label form.
          * \param data The resource's payload.
          * \param type The type of this record.
@@ -309,7 +330,7 @@ public:
         /**
          * Constructs a Resource object.
          *
-         * \param dname The domain name for which this records
+         * \param dname The domain name for which this record
          * provides an answer, in label form.
          * \param data The resource's payload.
          * \param type The type of this record.
@@ -409,6 +430,241 @@ public:
          * \brief resource time-to-live (TTL).
          */
         uint32_t ttl_;
+    };
+
+    /**
+     * \brief Class the respresents an EDNS0 option.
+     */
+    class EDNS0_option
+    {
+    public:
+        /**
+         * \brief Constructor.
+         *
+         * \param code  the option code.
+         * \param data  the option data.
+         */
+        EDNS0_option(EDNS0Code code, const byte_string &data)
+            : code_(code), data_(data) {}
+
+        /**
+         * \brief Constructor.
+         *
+         * \param code  the option code.
+         * \param data  the option data.
+         */
+        EDNS0_option(EDNS0Code code, byte_string &&data)
+            : code_(code), data_(data) {}
+
+        /**
+         * \brief Getter for the option code.
+         *
+         * \returns the option code.
+         */
+        EDNS0Code code() const {
+            return code_;
+        }
+
+        /**
+         * \brief Getter for the option data.
+         *
+         * \returns the option data.
+         */
+        const byte_string& data() const {
+            return data_;
+        }
+
+    private:
+        /**
+         * \brief option code.
+         */
+        EDNS0Code code_;
+
+        /**
+         * \brief option data.
+         */
+        byte_string data_;
+    };
+
+    /**
+     * \brief Class that represents EDNS0 extensions.
+     */
+    class EDNS0
+    {
+    public:
+        /**
+         * \brief Typedef for list of options.
+         */
+        using options_type = std::list<EDNS0_option>;
+
+        /**
+         * \brief Constructor.
+         *
+         * \param udp_payload_size      UDP payload size.
+         * \param do_bit                DO bit.
+         * \param extended_rcode        Extended RCODE.
+         * \param EDNS version          EDNS version. Should be 0.
+         */
+        EDNS0(uint16_t udp_payload_size,
+              bool do_bit,
+              uint8_t extended_rcode,
+              uint8_t edns_version = 0)
+            : udp_payload_size_(udp_payload_size),
+              extended_rcode_(extended_rcode),
+              do_bit_(do_bit),
+              edns_version_(edns_version) {}
+
+        /**
+         * \brief Constructor.
+         *
+         * \param resource              The resource. Must have type OPT.
+         * \throws Tins::malformed_packet if resource is not OPT.
+         */
+        EDNS0(const resource& resource)
+            : udp_payload_size_(static_cast<uint16_t>(resource.query_class()))
+        {
+            if ( resource.query_type() != OPT )
+                throw Tins::malformed_packet();
+
+            extract_ttl_data(resource.ttl());
+            extract_options(resource.data());
+        }
+
+        /**
+         * \brief Constructor.
+         *
+         * Build from raw resource contents.
+         *
+         * \param query_class           The resource class.
+         * \param ttl                   The resource TTL.
+         * \param data                  The resource data.
+         * \throws Tins::malformed_packet on resource data format error.
+         */
+        EDNS0(QueryClass query_class, uint32_t ttl, const byte_string& data)
+            : udp_payload_size_(static_cast<uint16_t>(query_class))
+        {
+            extract_ttl_data(ttl);
+            extract_options(data);
+        }
+
+        /**
+         * \brief Getter for the UDP payload size.
+         *
+         * \return UDP payload size.
+         */
+        const uint16_t udp_payload_size() const {
+            return udp_payload_size_;
+        }
+
+        /**
+         * \brief Getter for the DO bit.
+         *
+         * \return <code>true</code> if DO bit set.
+         */
+        const bool do_bit() const {
+            return do_bit_;
+        }
+
+        /**
+         * \brief Getter for the extended RCODE.
+         *
+         * \returns extended RCODE.
+         */
+        const uint8_t extended_rcode() const {
+            return extended_rcode_;
+        }
+
+        /**
+         * \brief Getter for the EDNS version.
+         *
+         * \returns EDNS version.
+         */
+        const uint8_t edns_version() const {
+            return edns_version_;
+        }
+
+        /**
+         * \brief Getter for the individual options.
+         *
+         * \returns the options in this EDNS0.
+         */
+        const options_type& options() const {
+            return options_;
+        }
+
+        /**
+         * \brief Add an option.
+         */
+        void add_option(const EDNS0_option& opt) {
+            options_.push_back(opt);
+        }
+
+        /**
+         * \brief Construct the resource embodying this EDNS0.
+         *
+         * \returns the resource.
+         */
+        resource rr() const {
+            return resource("",
+                            make_options_data(),
+                            OPT,
+                            static_cast<QueryClass>(udp_payload_size_),
+                            make_ttl());
+        }
+
+    private:
+        /**
+         * \brief Calculate the TTL value for a resource.
+         *
+         * \returns the TTL value.
+         */
+        uint32_t make_ttl() const;
+
+        /**
+         * \brief Extract EDNS0 values from a TTL.
+         *
+         * \param ttl the TTL.
+         */
+        void extract_ttl_data(uint32_t ttl);
+
+        /**
+         * \brief Construct resource data from the options.
+         *
+         * \returns resource data with the options.
+         */
+        byte_string make_options_data() const;
+
+        /**
+         * \brief Extract EDNS0 options from resource data.
+         *
+         * \param data the resource data.
+         */
+        void extract_options(const byte_string& data);
+
+        /**
+         * \brief the EDNS0 UDP payload size.
+         */
+        uint16_t udp_payload_size_;
+
+        /**
+         * \brief the EDNS0 extended RCODE.
+         */
+        uint8_t extended_rcode_;
+
+        /**
+         * \brief the EDNS0 DO bit.
+         */
+        bool do_bit_;
+
+        /**
+         * \brief the individual EDNS0 options.
+         */
+        options_type options_;
+
+        /**
+         * \brief the EDNS0 version.
+         */
+        uint8_t edns_version_;
     };
 
     /**
@@ -643,6 +899,15 @@ public:
     }
 
     /**
+     * \brief Getter for this PDU's EDNS0 (OPT) record, if it has one.
+     *
+     * \return Optional EDNS0 info.
+     */
+    const boost::optional<EDNS0>& edns0() const {
+        return edns0_;
+    }
+
+    /**
      * \sa PDU::clone
      */
     CaptureDNS* clone() const {
@@ -796,6 +1061,8 @@ public:
      * \param res The additional to be added.
      */
     void add_additional(const resource& res) {
+        if ( res.query_type() == OPT )
+            add_edns0(res.dname(), res.query_class(), res.ttl(), res.data());
         additional_.push_back(res);
         header_.additional = Tins::Endian::host_to_be(static_cast<uint16_t>(additional_count() + 1));
         cached_header_size_ = 0;
@@ -915,20 +1182,6 @@ private:
     static uint16_t read_dname_offset(uint16_t offset, const uint8_t *buffer, uint32_t buflen, unsigned char*& res, const unsigned char* res_end);
 
     /**
-     * \brief Read a Resource Record and add it.
-     *
-     * The entire packet data is required to decompress compressed labels.
-     *
-     * \param res       resources collection to add data to.
-     * \param s         memory stream to read from.
-     * \param buffer    the whole packet data.
-     * \param buflen    the length of the packet.
-     * \returns the resource.
-     * \throws Tins::malformed_packet.
-     */
-    static void add_rr(resources_type& res, Tins::Memory::InputMemoryStream& s, const uint8_t *buffer, uint32_t buflen);
-
-    /**
      * \brief Given RDATA, expand any compressed label items therein.
      *
      * \param query_type        the query type of the RDATA.
@@ -940,6 +1193,33 @@ private:
      * \throws Tins::malformed_packet.
      */
     static byte_string expand_rr_data(uint16_t query_type, uint16_t offset, uint16_t len, const uint8_t* buf, uint16_t buflen);
+
+    /**
+     * \brief Read a Resource Record and add it.
+     *
+     * The entire packet data is required to decompress compressed labels.
+     *
+     * \param res        resources collection to add data to.
+     * \param s          memory stream to read from.
+     * \param buffer     the whole packet data.
+     * \param buflen     the length of the packet.
+     * \param allow_opt  <code>true</code> if this is an additional RR. OPT
+     *                   are only allowed if so, and only one of those.
+     * \returns the resource.
+     * \throws Tins::malformed_packet.
+     */
+    void add_rr(resources_type& res, Tins::Memory::InputMemoryStream& s, const uint8_t *buffer, uint32_t buflen, bool allow_opt);
+
+    /**
+     * \brief Add EDNS0.
+     *
+     * \param name              the resource dname.
+     * \param query_class       the query class.
+     * \param ttl               the resource TTL.
+     * \param data              the resource data.
+     * \throws Tins::malformed_packet if bad format or OPT already present.
+     */
+    void add_edns0(const byte_string& dname, QueryClass query_class, uint32_t ttl, const byte_string& data);
 
     /**
      * \brief write serialised version of the packet.
@@ -977,6 +1257,11 @@ private:
      * \brief the packet additional section.
      */
     resources_type additional_;
+
+    /**
+     * \brief ENDS0, if any.
+     */
+    boost::optional<EDNS0> edns0_;
 
     /**
      * \brief the amount of trailing data in the message.

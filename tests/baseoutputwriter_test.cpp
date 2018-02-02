@@ -171,8 +171,8 @@ SCENARIO("Generating output", "[output]")
         r = q;
 
         q.dns.add_additional(CaptureDNS::resource("one", ""_b, CaptureDNS::A, CaptureDNS::IN, 0));
-        q.dns.add_additional(CaptureDNS::resource("two", ""_b, CaptureDNS::OPT, CaptureDNS::IN, 0));
-        q.dns.add_additional(CaptureDNS::resource("three", ""_b, CaptureDNS::OPT, CaptureDNS::IN, 0));
+        q.dns.add_additional(CaptureDNS::resource("", ""_b, CaptureDNS::OPT, CaptureDNS::IN, 0));
+        q.dns.add_additional(CaptureDNS::resource("three", ""_b, CaptureDNS::AAAA, CaptureDNS::IN, 0));
 
         r.timestamp += std::chrono::seconds(1);
         r.dns.type(CaptureDNS::RESPONSE);
@@ -217,7 +217,7 @@ SCENARIO("Generating output", "[output]")
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
 
-            THEN("only base output plus additional section with only second OPT is generated")
+            THEN("only base output plus additional section is generated")
             {
                 REQUIRE(tbow.actions ==
                         "startRecord:1989-12-27 00h00m00s,"
@@ -225,7 +225,7 @@ SCENARIO("Generating output", "[output]")
                         "startExtendedQueryGroup,"
                         "startAdditionalSection,"
                         "writeResourceRecord:one,type:1,"
-                        "writeResourceRecord:three,type:41,"
+                        "writeResourceRecord:three,type:28,"
                         "endSection,"
                         "endExtendedGroup,"
                         "endRecord:1989-12-27 00h00m00s");
@@ -358,7 +358,7 @@ SCENARIO("Generating output", "[output]")
         r.dns.add_answer(CaptureDNS::resource("onea", ""_b, CaptureDNS::A, CaptureDNS::IN, 0));
         r.dns.add_authority(CaptureDNS::resource("two", ""_b, CaptureDNS::AAAA, CaptureDNS::IN, 0));
         r.dns.add_authority(CaptureDNS::resource("twoa", ""_b, CaptureDNS::A, CaptureDNS::IN, 0));
-        r.dns.add_additional(CaptureDNS::resource("three", ""_b, CaptureDNS::OPT, CaptureDNS::IN, 0));
+        r.dns.add_additional(CaptureDNS::resource("", ""_b, CaptureDNS::OPT, CaptureDNS::IN, 0));
         r.dns.add_additional(CaptureDNS::resource("threea", ""_b, CaptureDNS::A, CaptureDNS::IN, 0));
 
         std::shared_ptr<QueryResponse> qr = std::make_shared<QueryResponse>(make_unique<DNSMessage>(q));
@@ -419,7 +419,7 @@ SCENARIO("Generating output", "[output]")
                         "writeBasic:1989-12-27 00h00m00s,"
                         "startExtendedResponseGroup,"
                         "startAdditionalSection,"
-                        "writeResourceRecord:three,type:41,"
+                        "writeResourceRecord:,type:41,"
                         "writeResourceRecord:threea,type:1,"
                         "endSection,"
                         "endExtendedGroup,"
@@ -525,7 +525,7 @@ SCENARIO("Generating output", "[output]")
                         "writeBasic:1989-12-27 00h00m00s,"
                         "startExtendedResponseGroup,"
                         "startAdditionalSection,"
-                        "writeResourceRecord:three,type:41,"
+                        "writeResourceRecord:,type:41,"
                         "endSection,"
                         "endExtendedGroup,"
                         "endRecord:1989-12-27 00h00m00s");
