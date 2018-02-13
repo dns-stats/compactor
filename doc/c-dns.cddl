@@ -33,7 +33,7 @@ collection = 1
 
 StorageParameters = {
     ticks-per-second     => uint,
-    max-block-qr-items   => uint,
+    max-block-items      => uint,
     table-field-hints    => TableFieldHints,
     opcodes              => [+ uint],
     rr-types             => [+ uint],
@@ -41,7 +41,7 @@ StorageParameters = {
 }
 
 ticks-per-second    = 0
-max-block-qr-items  = 1
+max-block-items     = 1
 table-field-hints   = 2
 opcodes             = 3
 rr-types            = 4
@@ -280,7 +280,6 @@ QueryResponseFlagValues = &(
     query-has-opt           : 3,
     response-has-opt        : 4,
     response-has-no-question: 5,
-    response-cache-hit      : 6,
 )
 QueryResponseFlags = uint .bits QueryResponseFlagValues
 
