@@ -70,7 +70,7 @@ QueryResponseFieldHintValues = &(
     query-name-index             : 7,
     query-size                   : 8,
     response-size                : 9,
-    response-bailiwick-index     : 10,
+    response-processing-data     : 10,
     query-question-sections      : 11,    ; Second & subsequent questions
     query-answer-sections        : 12,
     query-authority-sections     : 13,
@@ -227,7 +227,7 @@ QueryResponse = {
     ? query-name-index         => uint,
     ? query-size               => uint,       ; DNS size of query
     ? response-size            => uint,       ; DNS size of response
-    ? response-bailiwick-index => uint,
+    ? response-processing-data => ResponseProcessingData,
     ? query-extended           => QueryResponseExtended,
     ? response-extended        => QueryResponseExtended,
 }
@@ -242,7 +242,7 @@ response-delay           = 6
 query-name-index         = 7
 query-size               = 8
 response-size            = 9
-response-bailiwick-index = 10
+response-processing-data = 10
 query-extended           = 11
 response-extended        = 12
 
@@ -378,6 +378,19 @@ question-index   = 0
 answer-index     = 1
 authority-index  = 2
 additional-index = 3
+
+ResponseProcessingFlagValues = &(
+    from-cache : 0,
+)
+ResponseProcessingFlags = uint .bits ResponseProcessingFlagValues
+
+ResponseProcessingData = {
+    ? bailiwick-index  => uint,
+    ? processing-flags => ResponseProcessingFlags,
+}
+
+bailiwick-index = 0
+processing-flags = 1
 
 AddressEventCount = {
     ae-type          => &AddressEventType,
