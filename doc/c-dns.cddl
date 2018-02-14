@@ -176,14 +176,14 @@ BlockStatistics = {
     ? total-packets             => uint,
     ? total-pairs               => uint,
     ? total-unmatched-queries   => uint,
-    ? totla-unmatched-responses => uint,
+    ? total-unmatched-responses => uint,
     ? total-malformed-messages  => uint,
 }
 
 total-packets                = 0
 total-pairs                  = 1
 total-unmatched-queries      = 2
-totla-unmatched-responses    = 3
+total-unmatched-responses    = 3
 total-malformed-messages     = 4
 
 QuestionTables = (
