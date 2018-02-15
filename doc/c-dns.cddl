@@ -37,19 +37,27 @@ storage    = 0
 collection = 1
 
   StorageParameters = {
-      ticks-per-second     => uint,
-      max-block-items      => uint,
-      table-field-hints    => TableFieldHints,
-      opcodes              => [+ uint],
-      rr-types             => [+ uint],
-      ? storage-flags      => StorageFlags,
+      ticks-per-second             => uint,
+      max-block-items              => uint,
+      table-field-hints            => TableFieldHints,
+      opcodes                      => [+ uint],
+      rr-types                     => [+ uint],
+      ? storage-flags              => StorageFlags,
+      ? client-address-prefix-ipv4 => uint,
+      ? client-address-prefix-ipv6 => uint,
+      ? server-address-prefix-ipv4 => uint,
+      ? server-address-prefix-ipv6 => uint,
   }
-  ticks-per-second    = 0
-  max-block-items     = 1
-  table-field-hints   = 2
-  opcodes             = 3
-  rr-types            = 4
-  storage-flags       = 5
+  ticks-per-second           = 0
+  max-block-items            = 1
+  table-field-hints          = 2
+  opcodes                    = 3
+  rr-types                   = 4
+  storage-flags              = 5
+  client-address-prefix-ipv4 = 6
+  client-address-prefix-ipv6 = 7
+  server-address-prefix-ipv4 = 8
+  server-address-prefix-ipv6 = 9
 
     ; A hint indicates if the collection method will output the
     ; field or will ignore the field if present.
