@@ -998,7 +998,7 @@ namespace block_cbor {
         /**
          * \brief Get the number of items stored.
          */
-        typename std::vector<T>::size_type size() const
+        typename std::deque<T>::size_type size() const
         {
             return items_.size();
         }
@@ -1040,6 +1040,26 @@ namespace block_cbor {
             enc.writeArrayHeader(items_.size());
             for ( auto& i : items_ )
                 i.writeCbor(enc);
+        }
+
+        /**
+         * \brief Iterator begin
+         *
+         * \returns iterator.
+         */
+        typename std::deque<T>::iterator begin()
+        {
+            return items_.begin();
+        }
+
+        /**
+         * \brief Iterator end
+         *
+         * \returns iterator.
+         */
+        typename std::deque<T>::iterator end()
+        {
+            return items_.end();
         }
 
     private:

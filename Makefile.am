@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -37,6 +37,7 @@ dist_check_SCRIPTS = test-scripts/check-config-info.sh \
                      test-scripts/check-outputs.sh \
                      test-scripts/check-testcontent.sh \
                      test-scripts/inspector-outputs.sh \
+                     test-scripts/pseudoanon-tshark-output.sh \
                      test-scripts/same-output.sh \
                      test-scripts/same-output-gzip.sh \
                      test-scripts/same-output-xz.sh \
@@ -91,8 +92,9 @@ CLEANFILES = $(check_DATA) $(dist_man_MANS)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
-AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) -DCONFFILE=\"$(conffile)\"
-AM_LDFLAGS = $(BOOST_LDFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) -DCONFFILE=\"$(conffile)\" \
+              $(OPENSSL_INCLUDES)
+AM_LDFLAGS = $(BOOST_LDFLAGS) $(OPENSSL_LDFLAGS)
 
 %.1 :: %.adoc ; @ASCIIDOC@ -b manpage -d manpage -o $@ $<
 
@@ -119,6 +121,7 @@ compactor_headers = \
         src/packetstatistics.hpp \
         src/packetstream.hpp \
         src/pcapwriter.hpp \
+        src/pseudoanonymise.hpp \
         src/queryresponse.hpp \
         src/rotatingfilename.hpp \
         src/sniffers.hpp \
@@ -138,6 +141,7 @@ inspector_headers = \
         src/makeunique.hpp \
         src/no-register-warning.hpp \
         src/pcapwriter.hpp \
+        src/pseudoanonymise.hpp \
         src/queryresponse.hpp \
         src/streamwriter.hpp
 
@@ -162,6 +166,7 @@ src_without_internal_tests = \
         src/ipaddress.cpp \
         src/log.cpp \
         src/packetstream.cpp \
+        src/pseudoanonymise.cpp \
         src/rotatingfilename.cpp \
         src/sniffers.cpp \
         src/streamwriter.cpp
@@ -182,6 +187,7 @@ compactor_LDFLAGS = \
         $(BOOST_THREAD_LIB) \
         $(PCAP_LIB) \
         $(LZMA_LIB) \
+        $(OPENSSL_LIBS) \
         $(TCMALLOC_LIB) \
         @PTHREAD_LIBS@
 compactor_LDADD = $(libtins_LIBS)
@@ -202,6 +208,7 @@ compactor_tests_SOURCES = \
         tests/matcher_test.cpp \
         tests/matcher_internal_test.cpp \
         tests/packetstream_test.cpp \
+        tests/pseudoanonymise_test.cpp \
         tests/rotatingfilename_test.cpp
 
 compactor_tests_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
@@ -214,6 +221,7 @@ compactor_tests_LDFLAGS = \
         $(BOOST_THREAD_LIB) \
         $(PCAP_LIB) \
         $(LZMA_LIB) \
+        $(OPENSSL_LIBS) \
         $(TCMALLOC_LIB) \
         @PTHREAD_LIBS@
 compactor_tests_LDADD = $(libtins_LIBS)
@@ -234,6 +242,7 @@ inspector_SOURCES = \
         src/dnsmessage.cpp \
         src/inspector.cpp \
         src/log.cpp \
+        src/pseudoanonymise.cpp \
         src/streamwriter.cpp
 
 inspector_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
@@ -245,6 +254,7 @@ inspector_LDFLAGS = \
         $(BOOST_SYSTEM_LIB) \
         $(BOOST_THREAD_LIB) \
         $(LZMA_LIB) \
+        $(OPENSSL_LIBS) \
         @PTHREAD_LIBS@
 inspector_LDADD = $(libtins_LIBS)
 
