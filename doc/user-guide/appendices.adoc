@@ -1,0 +1,78 @@
+:sectnums!:
+
+[[pseudoanonymisation]]
+== Appendix A: Pseudo-anonymisation
+
+In many juristictions IP addresses may, in certain circumstances, be regarded
+as _personal data_ and so data containing IP addresses may be subject to data
+protection laws.
+
+_Pseudo-anonymisation_ means replacing personal data items with a
+pseudonym, a value that does not allow direct
+identification. Organisations with requirements to retain and process
+data containing personal data may want to use pseudo-anonymisation as
+part of their privacy management strategy.
+
+To that end, there is now an *experimental* facility in _inspector_ which enables
+PCAP and other outputs from _inspector_ to apply pseudo-anonymisation
+to some IP addresses in the output. To be exact:
+
+- Client and server IP addresses in the IP traffic headers.
+- Client subnet information in DNS queries from the client.
+
+IP addresses supplied by the server as answers to queries from clients
+are not pseudo-anonymised.
+
+_inspector_ is only able to pseudo-anonymise IP addresses in client queries
+that follow the DNS standards. Any IP addresses included in non-standard
+locations cannot be reliably distinguished from non-address data, so only
+addresses in standard locations can be processed.
+
+=== Pseudo-anonymisation process technical details
+
+IP address pseudo-anonymisation is done by encrypting addresses with
+AES-128 using a 16 byte key. That key can be supplied directly, via
+the command line parameter `--pseudo-anonymisation-key`.
+Alternatively, a key can be generated from a passphrase supplied by
+the `--pseudo-anonymisation-passphrase` command line parameter.
+
+Many aspects of the currently implemented pseudo-anonymisation follow
+the https://powerdns.org/ipcipher/[`ipcipher`] proposals from
+https://powerdns.org[PowerDNS].
+
+==== Key generation from passphrase
+
+The process for generating a key from a passphrase is to apply
+https://en.wikipedia.org/wiki/PBKDF2[PBKDF2] with SHA1 as the hashing
+function, a salt `cdnscdnscdnscdns`, 50,000 iterations for a 16 byte key.
+See also https://www.ietf.org/rfc/rfc2898.txt[RFC2898].
+
+NOTE: This is the same process used by the section _Key derivation_ in
+the https://powerdns.org/ipcipher#keyderivation[`ipcipher`]
+specification, but using a different salt to the value
+`ipcipheripcipher` specified by `ipcipher` to emphasise that not all
+aspects of _inspector_ pseudo-anonymisation follows `ipcipher`.
+
+==== IPv4 address anonymisation
+
+IPv4 address anonymisation in _inspector_ is done using the following process:
+
+. Fill a 16 byte buffer with 4 concatenated copies of the IPv4 address (4 bytes each).
+. Apply AES-128 to the buffer using the key.
+. Use the most significant 4 bytes of the result (i.e. the first 4 bytes in the buffer)
+as the pseudo-anonymised IPv4 address.
+
+WARNING: This is *completely different* to the process used by section
+_IPv4 algorithm_ section in the
+https://powerdns.org/ipcipher#ipv4algorithm[`ipcipher`] specification.
+
+==== IPv6 address anonymisation
+
+IPv6 address anonymisation in _inspector_ is done using the following process:
+
+. Fill a 16 byte buffer with the IPv6 address.
+. Apply AES-128 to the buffer using the key.
+. Use the result as the pseudo-anonymised IPv6 address.
+
+NOTE: This is the same process used by section _IPv6 algorithm_ section in the
+https://powerdns.org/ipcipher#ipv6algorithm[`ipcipher`] specification.

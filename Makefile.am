@@ -22,7 +22,8 @@ user_guide_sources = \
         $(srcdir)/doc/user-guide/overview.adoc \
         $(srcdir)/doc/user-guide/installation.adoc \
         $(srcdir)/doc/user-guide/configuring.adoc \
-        $(srcdir)/doc/user-guide/running.adoc
+        $(srcdir)/doc/user-guide/running.adoc \
+        $(srcdir)/doc/user-guide/appendices.adoc
 
 dslocalstatedir=$(localstatedir)/lib/$(PACKAGE)
 dsconfdir=$(sysconfdir)/$(PACKAGE)
