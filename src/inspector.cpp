@@ -39,6 +39,11 @@ const std::string INFO_EXT = ".info";
 
 namespace po = boost::program_options;
 
+/**
+ * \struct Options
+ *
+ * Inspector command line option values.
+ */
 struct Options
 {
     /**

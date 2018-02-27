@@ -44,21 +44,22 @@ public:
     /**
      * \brief Constructor
      *
-     * \param a key pass phrase.
+     * \param str a key pass phrase.
      */
     PseudoAnonymise(const std::string& str);
 
     /**
      * \brief Constructor
      *
-     * \param a key pass phrase.
+     * \param str a key pass phrase.
+     * \param salt the salt to use.
      */
     PseudoAnonymise(const char* str, const char* salt = "cdnscdnscdnscdns");
 
     /**
      * \brief Constructor
      *
-     * \param a 16 byte key.
+     * \param key a 16 byte key.
      */
     PseudoAnonymise(const byte_string& key);
 

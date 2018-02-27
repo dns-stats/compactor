@@ -503,7 +503,7 @@ public:
          * \param udp_payload_size      UDP payload size.
          * \param do_bit                DO bit.
          * \param extended_rcode        Extended RCODE.
-         * \param EDNS version          EDNS version. Should be 0.
+         * \param edns_version          EDNS version. Should be 0.
          */
         EDNS0(uint16_t udp_payload_size,
               bool do_bit,
