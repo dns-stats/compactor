@@ -28,7 +28,7 @@ that follow the DNS standards. Any IP addresses included in non-standard
 locations cannot be reliably distinguished from non-address data, so only
 addresses in standard locations can be processed.
 
-=== Pseudo-anonymisation process technical details
+=== Technical details
 
 IP address pseudo-anonymisation is done by encrypting addresses with
 AES-128 using a 16 byte key. That key can be supplied directly, via
@@ -53,9 +53,10 @@ specification, but using a different salt to the value
 `ipcipheripcipher` specified by `ipcipher` to emphasise that not all
 aspects of _inspector_ pseudo-anonymisation follows `ipcipher`.
 
-==== IPv4 address anonymisation
+==== IPv4 address pseudo-anonymisation
 
-IPv4 address anonymisation in _inspector_ is done using the following process:
+IPv4 address pseudo-anonymisation in _inspector_ is done using the
+following process:
 
 . Fill a 16 byte buffer with 4 concatenated copies of the IPv4 address (4 bytes each).
 . Apply AES-128 to the buffer using the key.
@@ -66,9 +67,10 @@ WARNING: This is *completely different* to the process used by section
 _IPv4 algorithm_ section in the
 https://powerdns.org/ipcipher#ipv4algorithm[`ipcipher`] specification.
 
-==== IPv6 address anonymisation
+==== IPv6 address pseudo-anonymisation
 
-IPv6 address anonymisation in _inspector_ is done using the following process:
+IPv6 address pseudo-anonymisation in _inspector_ is done using the
+following process:
 
 . Fill a 16 byte buffer with the IPv6 address.
 . Apply AES-128 to the buffer using the key.
@@ -76,3 +78,18 @@ IPv6 address anonymisation in _inspector_ is done using the following process:
 
 NOTE: This is the same process used by section _IPv6 algorithm_ section in the
 https://powerdns.org/ipcipher#ipv6algorithm[`ipcipher`] specification.
+
+==== Client subnet pseudo-anonymisation
+
+Client subnet addresses given in the EDNS0 option described in
+https://datatracker.ietf.org/doc/rfc7871/[RFC7871] are
+pseudo-anonymised using the following process:
+
+. Depending on the address family indicated in the option, construct
+an IPv4 or IPv6 address with its significant bits set to the address bits
+passed in the option and the rest set to 0.
+. Obtain a pseudo-anonymised address based on the constructed address.
+. Set all bits in this address not included in the source prefix length from the
+option to 0.
+. Replace the option address bits with the significant bits from the
+pseudo-anonymised address.
