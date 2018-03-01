@@ -11,9 +11,9 @@ _Pseudo-anonymisation_ means the processing of personal data in such a way that
 the data can no longer be attributed to a specific data subject without the use
 of additional information. However, it is not intended to preclude any other
 measures of data protection. We do not attempt to provide an exhaustive
-description _pseudo-anonymisation_ or its limitations here, we recommend that
+description of _pseudo-anonymisation_ or its limitations here. We recommend that
 any organisation using this facility fully understand the implications of
-sharing pseudo-anonymised data for their own use case and independantly verify
+sharing pseudo-anonymised data for their own use case and independently verify
 this mechanism meets their needs.
 
 This version of the _inspector_ includes an *experimental* facility which
@@ -23,7 +23,8 @@ other outputs from _inspector_. To be exact:
 In PCAP output:
 - Client and server IP addresses in the IP traffic headers.
 - EDNS(0) Client subnet information in DNS queries from the client.
-In .info output:
+
+In `.info` output:
 - IP addresses of Address Event Counts.
 - The Server Addresses field
 

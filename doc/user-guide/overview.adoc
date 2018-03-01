@@ -40,7 +40,7 @@ http://www.gzip.org[_gzip_] or _https://tukaani.org/xz[_xz_]_ compression scheme
 The output file types that may be produced are:
 
 * C-DNS.  These contain captured DNS traffic, along with some
-  ancilliary information, e.g. ICMP and TCP Reset counts. These files
+  ancillary information, e.g. ICMP and TCP Reset counts. These files
   are significantly smaller than PCAP files containing the same
   traffic.  See <<C-DNS Format>>.
 * 'Ignored' traffic. These contain captured non-DNS and malformed DNS packets in PCAP format.
