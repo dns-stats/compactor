@@ -128,6 +128,8 @@ void BlockCborReader::readFilePreamble(Configuration& config, bool old)
 
         case block_cbor::FilePreambleField::host_id:
             host_id_ = dec_.read_string();
+            if ( pseudo_anon_ )
+                host_id_ = "";
             break;
 
         default:
@@ -188,6 +190,8 @@ void BlockCborReader::readConfiguration(Configuration& config)
 
         case block_cbor::ConfigurationField::filter:
             config.filter = dec_.read_string();
+            if ( pseudo_anon_ )
+                config.filter = "";
             break;
 
         case block_cbor::ConfigurationField::query_options:
@@ -254,7 +258,10 @@ void BlockCborReader::readConfiguration(Configuration& config)
                     break;
                 }
 
-                config.server_addresses.push_back(IPAddress(dec_.read_binary()));
+                IPAddress addr(dec_.read_binary());
+                if ( pseudo_anon_ )
+                    addr = pseudo_anon_->address(addr);
+                config.server_addresses.push_back(addr);
             }
             break;
 

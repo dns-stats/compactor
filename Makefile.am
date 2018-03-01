@@ -39,6 +39,7 @@ dist_check_SCRIPTS = test-scripts/check-config-info.sh \
                      test-scripts/check-testcontent.sh \
                      test-scripts/inspector-outputs.sh \
                      test-scripts/pseudoanon-tshark-output.sh \
+                     test-scripts/pseudoanon-inspector-output.sh \
                      test-scripts/same-output.sh \
                      test-scripts/same-output-gzip.sh \
                      test-scripts/same-output-xz.sh \
