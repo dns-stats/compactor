@@ -359,13 +359,14 @@ NOTE: The -q option will only write DNS queries to the output PCAP file.
 
 === Pseudo-anonymised output
 
-_inspector_ output may be optionally pseudo-anonymised. This means
-that client and server IP addresses in PCAP output are
-pseudo-anonymised, as are all IP addresses in counts of events
-recorded. IP addresses in data returned from server to client are not
-anonymised. Client IP address information sent from the client is
-pseudo-anonymised provided it occurs in locations prescribed in DNS
-standards.
+_inspector_ output may be optionally pseudo-anonymised (see
+<<pseudoanonymisation, Appendix A>> for a full description). 
+
+Briefly, this means that client and server IP addresses in PCAP output are
+pseudo-anonymised, as are all IP addresses in counts of events recorded. IP
+addresses in data returned from server to client are not anonymised. Client IP
+address information sent from the client is pseudo-anonymised provided it occurs
+in locations prescribed in DNS standards.
 
 Pseudo-anonymisation of an IP address takes the original address and
 passes it through an encoding mechanism to generate a different address.
@@ -374,7 +375,7 @@ The technical details of the the current implementation are described in
 
 NOTE:  Pseudo-anonymisation is currently an experimental feature.
 The pseudo-anonymisation services provided and
-the details of the mechanism used are expected to change.
+the details of the mechanism used are subject to change.
 
 === Reconstructed PCAP files
 

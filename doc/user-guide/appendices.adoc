@@ -3,30 +3,40 @@
 [[pseudoanonymisation]]
 == Appendix A: Pseudo-anonymisation
 
-In many juristictions IP addresses may, in certain circumstances, be regarded
+In many jurisdictions IP addresses may, in certain circumstances, be regarded
 as _personal data_ and so data containing IP addresses may be subject to data
 protection laws.
 
-_Pseudo-anonymisation_ means replacing personal data items with a
-pseudonym, a value that does not allow direct
-identification. Organisations with requirements to retain and process
-data containing personal data may want to use pseudo-anonymisation as
-part of their privacy management strategy.
+_Pseudo-anonymisation_ means the processing of personal data in such a way that
+the data can no longer be attributed to a specific data subject without the use
+of additional information. However, it is not intended to preclude any other
+measures of data protection. We do not attempt to provide an exhaustive
+description _pseudo-anonymisation_ or its limitations here, we recommend that
+any organisation using this facility fully understand the implications of
+sharing pseudo-anonymised data for their own use case and independantly verify
+this mechanism meets their needs.
 
-To that end, there is now an *experimental* facility in _inspector_ which enables
-PCAP and other outputs from _inspector_ to apply pseudo-anonymisation
-to some IP addresses in the output. To be exact:
+This version of the _inspector_ includes an *experimental* facility which
+applies pseudo-anonymisation to some IP addresses in the PCAP and
+other outputs from _inspector_. To be exact:
 
+In PCAP output:
 - Client and server IP addresses in the IP traffic headers.
-- Client subnet information in DNS queries from the client.
+- EDNS(0) Client subnet information in DNS queries from the client.
+In .info output:
+- IP addresses of Address Event Counts.
+- The Server Addresses field
 
-IP addresses supplied by the server as answers to queries from clients
-are not pseudo-anonymised.
+IP addresses supplied by the server as answers to queries from clients are not
+pseudo-anonymised. Note that only DNS messages are re-generated in PCAP files
+produced by the _inspector_, no ICMP or other non-DNS messages are generated.
 
-_inspector_ is only able to pseudo-anonymise IP addresses in client queries
-that follow the DNS standards. Any IP addresses included in non-standard
-locations cannot be reliably distinguished from non-address data, so only
-addresses in standard locations can be processed.
+_inspector_ is only able to pseudo-anonymise IP addresses within DNS messages in
+records that are defined in the DNS standards. Any IP addresses included in
+non-standard records cannot be reliably distinguished from non-address data, so
+only addresses in standard locations within records can be processed.
+
+NOTE: This implementation is experimental and subject to change.
 
 === Technical details
 
@@ -36,9 +46,10 @@ the command line parameter `--pseudo-anonymisation-key`.
 Alternatively, a key can be generated from a passphrase supplied by
 the `--pseudo-anonymisation-passphrase` command line parameter.
 
-Many aspects of the currently implemented pseudo-anonymisation follow
-the https://powerdns.org/ipcipher/[`ipcipher`] proposals from
-https://powerdns.org[PowerDNS].
+Many, but not all, aspects of the currently implemented pseudo-anonymisation are
+similar to the https://powerdns.org/ipcipher/[`ipcipher`] proposals from
+https://powerdns.org[PowerDNS]. In particular the IPv4 address
+pseudo-anonymisation is quite different.
 
 ==== Key generation from passphrase
 
@@ -46,12 +57,6 @@ The process for generating a key from a passphrase is to apply
 https://en.wikipedia.org/wiki/PBKDF2[PBKDF2] with SHA1 as the hashing
 function, a salt `cdnscdnscdnscdns`, 50,000 iterations for a 16 byte key.
 See also https://www.ietf.org/rfc/rfc2898.txt[RFC2898].
-
-NOTE: This is the same process used by the section _Key derivation_ in
-the https://powerdns.org/ipcipher#keyderivation[`ipcipher`]
-specification, but using a different salt to the value
-`ipcipheripcipher` specified by `ipcipher` to emphasise that not all
-aspects of _inspector_ pseudo-anonymisation follows `ipcipher`.
 
 ==== IPv4 address pseudo-anonymisation
 
@@ -63,10 +68,6 @@ following process:
 . Use the most significant 4 bytes of the result (i.e. the first 4 bytes in the buffer)
 as the pseudo-anonymised IPv4 address.
 
-WARNING: This is *completely different* to the process used by section
-_IPv4 algorithm_ section in the
-https://powerdns.org/ipcipher#ipv4algorithm[`ipcipher`] specification.
-
 ==== IPv6 address pseudo-anonymisation
 
 IPv6 address pseudo-anonymisation in _inspector_ is done using the
@@ -76,12 +77,9 @@ following process:
 . Apply AES-128 to the buffer using the key.
 . Use the result as the pseudo-anonymised IPv6 address.
 
-NOTE: This is the same process used by section _IPv6 algorithm_ section in the
-https://powerdns.org/ipcipher#ipv6algorithm[`ipcipher`] specification.
+==== EDNS(0) Client subnet pseudo-anonymisation
 
-==== Client subnet pseudo-anonymisation
-
-Client subnet addresses given in the EDNS0 option described in
+EDNS(0) Client subnet addresses described in
 https://datatracker.ietf.org/doc/rfc7871/[RFC7871] are
 pseudo-anonymised using the following process:
 
