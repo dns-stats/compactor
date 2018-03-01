@@ -15,7 +15,6 @@ CONFIGURATION:
   Ignore RR types      : 
 
 COLLECTOR:
-  Collector ID         : dns-stats-compactor 0.10.1-23-ge8422f1
   Collection host ID   : 
 
 STATISTICS:

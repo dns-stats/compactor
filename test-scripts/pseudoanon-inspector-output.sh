@@ -35,6 +35,11 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-test -f $tmpdir/out.pcap.info -a ! \( -f $tmpdir/out.pcap \) &&
-    diff -q $tmpdir/out.pcap.info $INFOFILE
+grep -v "Collector ID" $tmpdir/out.pcap.info > $tmpdir/out.pcap.anon.info
+if [ $? -ne 0 ]; then
+    cleanup 1
+fi
+
+test -f $tmpdir/out.pcap.anon.info -a ! \( -f $tmpdir/out.pcap \) &&
+    diff -q $tmpdir/out.pcap.anon.info $INFOFILE
 cleanup $?
