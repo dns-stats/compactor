@@ -13,6 +13,10 @@
 #include <cstring>
 #include <stdexcept>
 
+#include "config.h"
+
+#if ENABLE_PSEUDOANONYMISATION
+
 #include <openssl/evp.h>
 
 #include "bytestring.hpp"
@@ -125,3 +129,5 @@ byte_string PseudoAnonymise::generate_key(const char *str, const char *salt)
         throw std::range_error("Key passphrase generate error");
     return key;
 }
+
+#endif

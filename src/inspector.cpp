@@ -502,6 +502,7 @@ int main(int ac, char *av[])
          "don't generate PCAP output files, only info files.")
         ("report-only,R",
          "don't write output files, just report info.")
+#if ENABLE_PSEUDOANONYMISATION
         ("pseudo-anonymisation-key,k",
          po::value<std::string>(&pseudo_anon_key),
          "pseudo-anonymisation key.")
@@ -510,6 +511,7 @@ int main(int ac, char *av[])
          "pseudo-anonymisation passphrase.")
         ("pseudo-anonymise,p",
          "pseudo-anonymise output.")
+#endif
         ("debug-qr",
          "print Query/Response details.");
     po::options_description debug("Hidden options");
@@ -601,6 +603,7 @@ int main(int ac, char *av[])
         return 1;
     }
 
+#if ENABLE_PSEUDOANONYMISATION
     if ( vm.count("pseudo-anonymise") != 0 )
     {
         if ( vm.count("pseudo-anonymisation-key") != 0 )
@@ -608,6 +611,7 @@ int main(int ac, char *av[])
         else
             options.pseudo_anon = boost::optional<PseudoAnonymise>{pseudo_anon_passphrase};
     }
+#endif
 
     if ( options.gzip_output && options.xz_output )
     {

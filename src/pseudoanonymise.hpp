@@ -15,6 +15,10 @@
 
 #include <string>
 
+#include "config.h"
+
+#if ENABLE_PSEUDOANONYMISATION
+
 #include <openssl/aes.h>
 
 #include "bytestring.hpp"
@@ -93,5 +97,17 @@ public:
 private:
     AES_KEY aes_key;
 };
+
+#else
+
+/**
+ * \class PseudoAnonymise
+ * \brief Empty dummy for when not built with pseudo-anonymising.
+ */
+class PseudoAnonymise
+{
+};
+
+#endif
 
 #endif
