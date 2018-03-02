@@ -576,7 +576,7 @@ int main(int ac, char *av[])
         }
 
         if ( vm.count("pseudo-anonymise") != 0 &&
-             vm.count("pseudo-anonymisation-passphrase") == 0 &&
+             vm.count("pseudo-anonymisation-key") == 0 &&
              vm.count("pseudo-anonymisation-passphrase") == 0 )
         {
             std::cerr << PROGNAME
