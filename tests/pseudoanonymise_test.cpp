@@ -122,8 +122,8 @@ SCENARIO("Pseudo-Anonymising OPT RDATA", "[pseudoanonymise]")
             {
                 { "\x00\x08\x00\x08\x00\x01\x20\x00\x08\x08\x08\x08"_b,
                   "\x00\x08\x00\x08\x00\x01\x20\x00\x26\x86\x4f\x6f"_b },
-                { "\x00\x08\x00\x08\x00\x01\x18\x00\x08\x08\x08"_b,
-                  "\x00\x08\x00\x08\x00\x01\x18\x00\x47\x2b\xba"_b },
+                { "\x00\x08\x00\x07\x00\x01\x18\x00\x08\x08\x08"_b,
+                  "\x00\x08\x00\x07\x00\x01\x18\x00\x47\x2b\xba"_b },
                 { "\x00\x08\x00\x08\x00\x01\x19\x00\x08\x08\x08\x7f"_b,
                   "\x00\x08\x00\x08\x00\x01\x19\x00\x47\x2b\xba\x80"_b },
                 { "\x00\x08\x00\x08\x00\x01\x1a\x00\x08\x08\x08\x3f"_b,
@@ -136,7 +136,8 @@ SCENARIO("Pseudo-Anonymising OPT RDATA", "[pseudoanonymise]")
 
             for (auto t : TESTS)
             {
-                byte_string out = anon.opt_rdata(t.first);
+                CaptureDNS::EDNS0 edns0(CaptureDNS::INTERNET, 1, t.first);
+                byte_string out = anon.edns0(edns0).rr().data();
                 CHECK(out == t.second);
             }
         }

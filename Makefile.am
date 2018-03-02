@@ -34,23 +34,31 @@ conffile=$(dsconfdir)/compactor.conf
 %.conf :: etc/%.conf.in ; sed -e "s|@DSLOCALSTATEDIR@|$(dslocalstatedir)|g" $< > $@
 
 check_PROGRAMS = compactor-tests
-dist_check_SCRIPTS = test-scripts/check-config-info.sh \
-                     test-scripts/check-outputs.sh \
-                     test-scripts/check-testcontent.sh \
-                     test-scripts/inspector-outputs.sh \
-                     test-scripts/pseudoanon-tshark-output.sh \
-                     test-scripts/pseudoanon-inspector-output.sh \
-                     test-scripts/same-output.sh \
-                     test-scripts/same-output-gzip.sh \
-                     test-scripts/same-output-xz.sh \
-                     test-scripts/same-file-output.sh \
-                     test-scripts/same-pcap-cbor-pcap.sh \
-                     test-scripts/same-qr-dump.sh \
-                     test-scripts/tmp-output.sh \
-                     test-scripts/same-tshark-output.sh \
-                     test-scripts/same-live.sh \
-                     test-scripts/verify-cbor02.sh \
-                     test-scripts/verify-cddl.sh
+check_SCRIPTS = test-scripts/check-config-info.sh \
+                test-scripts/check-outputs.sh \
+                test-scripts/check-testcontent.sh \
+                test-scripts/inspector-outputs.sh \
+                test-scripts/same-output.sh \
+                test-scripts/same-output-gzip.sh \
+                test-scripts/same-output-xz.sh \
+                test-scripts/same-file-output.sh \
+                test-scripts/same-pcap-cbor-pcap.sh \
+                test-scripts/same-qr-dump.sh \
+                test-scripts/tmp-output.sh \
+                test-scripts/same-tshark-output.sh \
+                test-scripts/same-live.sh \
+                test-scripts/verify-cbor02.sh \
+                test-scripts/verify-cddl.sh
+
+if ENABLE_PSEUDOANONYMISATION
+        check_SCRIPTS += test-scripts/pseudoanon-tshark-output.sh \
+                         test-scripts/pseudoanon-inspector-output.sh
+        dist_check_SCRIPTS = $(check_SCRIPTS)
+else
+        dist_check_SCRIPTS = $(check_SCRIPTS)
+        dist_check_SCRIPTS += test-scripts/pseudoanon-tshark-output.sh \
+                              test-scripts/pseudoanon-inspector-output.sh
+endif
 
 dist_check_DATA = doc/c-dns-working.cddl \
                   test-scripts/dns.pcap.xz \
@@ -75,7 +83,6 @@ dist_check_DATA = doc/c-dns-working.cddl \
 
 EXTRA_DIST = getversion.sh .version
 
-check_SCRIPTS = $(dist_check_SCRIPTS)
 check_DATA = dns.pcap \
              gold.pcap \
              gold.cbor \
@@ -190,9 +197,12 @@ compactor_LDFLAGS = \
         $(BOOST_THREAD_LIB) \
         $(PCAP_LIB) \
         $(LZMA_LIB) \
-        $(OPENSSL_LIBS) \
         $(TCMALLOC_LIB) \
         @PTHREAD_LIBS@
+if ENABLE_PSEUDOANONYMISATION
+compactor_LDFLAGS += \
+        $(OPENSSL_LIBS)
+endif
 compactor_LDADD = $(libtins_LIBS)
 
 compactor_tests_SOURCES = \
@@ -211,8 +221,11 @@ compactor_tests_SOURCES = \
         tests/matcher_test.cpp \
         tests/matcher_internal_test.cpp \
         tests/packetstream_test.cpp \
-        tests/pseudoanonymise_test.cpp \
         tests/rotatingfilename_test.cpp
+if ENABLE_PSEUDOANONYMISATION
+compactor_tests_SOURCES += \
+        tests/pseudoanonymise_test.cpp
+endif
 
 compactor_tests_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
 compactor_tests_LDFLAGS = \
@@ -224,9 +237,12 @@ compactor_tests_LDFLAGS = \
         $(BOOST_THREAD_LIB) \
         $(PCAP_LIB) \
         $(LZMA_LIB) \
-        $(OPENSSL_LIBS) \
         $(TCMALLOC_LIB) \
         @PTHREAD_LIBS@
+if ENABLE_PSEUDOANONYMISATION
+compactor_tests_LDFLAGS += \
+        $(OPENSSL_LIBS)
+endif
 compactor_tests_LDADD = $(libtins_LIBS)
 
 inspector_SOURCES = \
@@ -257,8 +273,11 @@ inspector_LDFLAGS = \
         $(BOOST_SYSTEM_LIB) \
         $(BOOST_THREAD_LIB) \
         $(LZMA_LIB) \
-        $(OPENSSL_LIBS) \
         @PTHREAD_LIBS@
+if ENABLE_PSEUDOANONYMISATION
+inspector_LDFLAGS += \
+        $(OPENSSL_LIBS)
+endif
 inspector_LDADD = $(libtins_LIBS)
 
 @DX_RULES@

@@ -15,9 +15,14 @@
 
 #include <string>
 
+#include "config.h"
+
+#if ENABLE_PSEUDOANONYMISATION
+
 #include <openssl/aes.h>
 
 #include "bytestring.hpp"
+#include "capturedns.hpp"
 #include "ipaddress.hpp"
 
 /**
@@ -64,23 +69,20 @@ public:
     PseudoAnonymise(const byte_string& key);
 
     /**
-     * \brief Anonymise an address.
+     * \brief Pseudo-anonymise an address.
      *
-     * \param addr the address to anonymise.
-     * \returns the anonymised address.
+     * \param addr the address to pseudo-anonymise.
+     * \returns the pseudo-anonymised address.
      */
     IPAddress address(const IPAddress& addr) const;
 
     /**
-     * \brief Anonymise OPT RDATA.
+     * \brief Pseudo-anonymise EDNS0.
      *
-     * Check OPT RDATA for EDNS0 client subnet options and anonymise
-     * those subnet addresses.
-     *
-     * \param rdata the RDATA to anonymise.
-     * \returns anonymised RDATA.
+     * Pseudo-anonymise an EDNS0 option. At present, only
+     * CLIENT_SUBNET affected.
      */
-    byte_string opt_rdata(const byte_string& rdata) const;
+    CaptureDNS::EDNS0 edns0(const CaptureDNS::EDNS0& edns0) const;
 
     /**
      * \brief Generate key from passphrase and salt.
@@ -93,5 +95,17 @@ public:
 private:
     AES_KEY aes_key;
 };
+
+#else
+
+/**
+ * \class PseudoAnonymise
+ * \brief Empty dummy for when not built with pseudo-anonymising.
+ */
+class PseudoAnonymise
+{
+};
+
+#endif
 
 #endif

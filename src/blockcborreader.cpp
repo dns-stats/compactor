@@ -13,6 +13,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "config.h"
+
 #include "baseoutputwriter.hpp"
 #include "blockcbor.hpp"
 #include "bytestring.hpp"
@@ -128,8 +130,10 @@ void BlockCborReader::readFilePreamble(Configuration& config, bool old)
 
         case block_cbor::FilePreambleField::host_id:
             host_id_ = dec_.read_string();
+#if ENABLE_PSEUDOANONYMISATION
             if ( pseudo_anon_ )
                 host_id_ = "";
+#endif
             break;
 
         default:
@@ -190,8 +194,10 @@ void BlockCborReader::readConfiguration(Configuration& config)
 
         case block_cbor::ConfigurationField::filter:
             config.filter = dec_.read_string();
+#if ENABLE_PSEUDOANONYMISATION
             if ( pseudo_anon_ )
                 config.filter = "";
+#endif
             break;
 
         case block_cbor::ConfigurationField::query_options:
@@ -259,8 +265,10 @@ void BlockCborReader::readConfiguration(Configuration& config)
                 }
 
                 IPAddress addr(dec_.read_binary());
+#if ENABLE_PSEUDOANONYMISATION
                 if ( pseudo_anon_ )
                     addr = pseudo_anon_->address(addr);
+#endif
                 config.server_addresses.push_back(addr);
             }
             break;
@@ -293,9 +301,11 @@ bool BlockCborReader::readBlock()
     block_.clear();
     block_.readCbor(dec_, *fields_);
 
+#if ENABLE_PSEUDOANONYMISATION
     if ( pseudo_anon_ )
         for ( auto& a : block_.ip_addresses )
             a.addr = pseudo_anon_->address(a.addr);
+#endif
 
     // Accumulate address events counts.
     for ( auto& aeci : block_.address_event_counts )
@@ -351,8 +361,16 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
         if ( sig.qr_flags & block_cbor::QUERY_HAS_OPT )
         {
             byte_string opt_rdata = block_.names_rdatas[sig.query_opt_rdata].str;
+#if ENABLE_PSEUDOANONYMISATION
             if ( pseudo_anon_ )
-                opt_rdata = pseudo_anon_->opt_rdata(opt_rdata);
+            {
+                CaptureDNS::EDNS0 edns0(CaptureDNS::INTERNET,
+                                        0,
+                                        opt_rdata);
+                edns0 = pseudo_anon_->edns0(edns0);
+                opt_rdata = edns0.rr().data();
+            }
+#endif
 
             uint32_t ttl = ((sig.query_rcode >> 4) &0xff);
             ttl <<= 8;
@@ -452,14 +470,22 @@ CaptureDNS::resource BlockCborReader::makeResource(const block_cbor::ResourceRec
     const block_cbor::ClassType& ct = block_.class_types[rr.classtype];
     byte_string rdata = block_.names_rdatas[rr.rdata].str;
 
-    if ( ct.qtype == CaptureDNS::OPT && pseudo_anon_ )
-        rdata = pseudo_anon_->opt_rdata(rdata);
+    CaptureDNS::resource res(name,
+                             rdata,
+                             static_cast<CaptureDNS::QueryType>(ct.qtype),
+                             static_cast<CaptureDNS::QueryClass>(ct.qclass),
+                             rr.ttl);
 
-    return CaptureDNS::resource(name,
-                               rdata,
-                               static_cast<CaptureDNS::QueryType>(ct.qtype),
-                               static_cast<CaptureDNS::QueryClass>(ct.qclass),
-                               rr.ttl);
+#if ENABLE_PSEUDOANONYMISATION
+    if ( ct.qtype == CaptureDNS::OPT && pseudo_anon_ )
+    {
+        CaptureDNS::EDNS0 edns0(res);
+        edns0 = pseudo_anon_->edns0(edns0);
+        res = edns0.rr();
+    }
+#endif
+
+    return res;
 }
 
 void BlockCborReader::dump_collector(std::ostream& os)
