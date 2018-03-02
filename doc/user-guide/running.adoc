@@ -338,6 +338,10 @@ Options:
   -I [ --info-only ]           don't generate PCAP output files, only info 
                                files.
   -R [ --report-only ]         don't write output files, just report info.
+  -k [ --pseudo-anonymisation-key ] arg pseudo-anonymisation key.
+  -P [ --pseudo-anonymisation-passphrase ] arg
+                                        pseudo-anonymisation passphrase.
+  -p [ --pseudo-anonymise ]             pseudo-anonymise output.
   --debug-qr                   print Query/Response details.
 ----
 
@@ -352,6 +356,26 @@ This generates a compressed PCAP output file,  `capture.pcap.xz`. It also
 generates `capture.pcap.info`.
 
 NOTE: The -q option will only write DNS queries to the output PCAP file.
+
+=== Pseudo-anonymised output
+
+_inspector_ output may be optionally pseudo-anonymised (see
+<<pseudoanonymisation, Appendix A>> for a full description). 
+
+Briefly, this means that client and server IP addresses in PCAP output are
+pseudo-anonymised, as are all IP addresses in counts of events recorded. IP
+addresses in data returned from server to client are not anonymised. Client IP
+address information sent from the client is pseudo-anonymised provided it occurs
+in locations prescribed in DNS standards.
+
+Pseudo-anonymisation of an IP address takes the original address and
+passes it through an encoding mechanism to generate a different address.
+The technical details of the the current implementation are described in
+<<pseudoanonymisation, Appendix A>>.
+
+NOTE:  Pseudo-anonymisation is currently an experimental feature.
+The pseudo-anonymisation services provided and
+the details of the mechanism used are subject to change.
 
 === Reconstructed PCAP files
 

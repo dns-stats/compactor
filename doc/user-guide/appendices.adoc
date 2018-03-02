@@ -1,0 +1,94 @@
+:sectnums!:
+
+[[pseudoanonymisation]]
+== Appendix A: Pseudo-anonymisation
+
+In many jurisdictions IP addresses may, in certain circumstances, be regarded
+as _personal data_ and so data containing IP addresses may be subject to data
+protection laws.
+
+_Pseudo-anonymisation_ means the processing of personal data in such a way that
+the data can no longer be attributed to a specific data subject without the use
+of additional information. However, it is not intended to preclude any other
+measures of data protection. We do not attempt to provide an exhaustive
+description of _pseudo-anonymisation_ or its limitations here. We recommend that
+any organisation using this facility fully understand the implications of
+sharing pseudo-anonymised data for their own use case and independently verify
+this mechanism meets their needs.
+
+This version of the _inspector_ includes an *experimental* facility which
+applies pseudo-anonymisation to some IP addresses in the PCAP and
+other outputs from _inspector_. To be exact:
+
+In PCAP output:
+- Client and server IP addresses in the IP traffic headers.
+- EDNS(0) Client subnet information in DNS queries from the client.
+
+In `.info` output:
+- IP addresses of Address Event Counts.
+- The Server Addresses field
+
+IP addresses supplied by the server as answers to queries from clients are not
+pseudo-anonymised. Note that only DNS messages are re-generated in PCAP files
+produced by the _inspector_, no ICMP or other non-DNS messages are generated.
+
+_inspector_ is only able to pseudo-anonymise IP addresses within DNS messages in
+records that are defined in the DNS standards. Any IP addresses included in
+non-standard records cannot be reliably distinguished from non-address data, so
+only addresses in standard locations within records can be processed.
+
+NOTE: This implementation is experimental and subject to change.
+
+=== Technical details
+
+IP address pseudo-anonymisation is done by encrypting addresses with
+AES-128 using a 16 byte key. That key can be supplied directly, via
+the command line parameter `--pseudo-anonymisation-key`.
+Alternatively, a key can be generated from a passphrase supplied by
+the `--pseudo-anonymisation-passphrase` command line parameter.
+
+Many, but not all, aspects of the currently implemented pseudo-anonymisation are
+similar to the https://powerdns.org/ipcipher/[`ipcipher`] proposals from
+https://powerdns.org[PowerDNS]. In particular the IPv4 address
+pseudo-anonymisation is quite different.
+
+==== Key generation from passphrase
+
+The process for generating a key from a passphrase is to apply
+https://en.wikipedia.org/wiki/PBKDF2[PBKDF2] with SHA1 as the hashing
+function, a salt `cdnscdnscdnscdns`, 50,000 iterations for a 16 byte key.
+See also https://www.ietf.org/rfc/rfc2898.txt[RFC2898].
+
+==== IPv4 address pseudo-anonymisation
+
+IPv4 address pseudo-anonymisation in _inspector_ is done using the
+following process:
+
+. Fill a 16 byte buffer with 4 concatenated copies of the IPv4 address (4 bytes each).
+. Apply AES-128 to the buffer using the key.
+. Use the most significant 4 bytes of the result (i.e. the first 4 bytes in the buffer)
+as the pseudo-anonymised IPv4 address.
+
+==== IPv6 address pseudo-anonymisation
+
+IPv6 address pseudo-anonymisation in _inspector_ is done using the
+following process:
+
+. Fill a 16 byte buffer with the IPv6 address.
+. Apply AES-128 to the buffer using the key.
+. Use the result as the pseudo-anonymised IPv6 address.
+
+==== EDNS(0) Client subnet pseudo-anonymisation
+
+EDNS(0) Client subnet addresses described in
+https://datatracker.ietf.org/doc/rfc7871/[RFC7871] are
+pseudo-anonymised using the following process:
+
+. Depending on the address family indicated in the option, construct
+an IPv4 or IPv6 address with its significant bits set to the address bits
+passed in the option and the rest set to 0.
+. Obtain a pseudo-anonymised address based on the constructed address.
+. Set all bits in this address not included in the source prefix length from the
+option to 0.
+. Replace the option address bits with the significant bits from the
+pseudo-anonymised address.

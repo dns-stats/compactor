@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,9 +21,11 @@
 
 #include "blockcborreader.hpp"
 
-BlockCborReader::BlockCborReader(CborBaseDecoder& dec, Configuration &config)
+BlockCborReader::BlockCborReader(CborBaseDecoder& dec, Configuration &config,
+                                 boost::optional<PseudoAnonymise> pseudo_anon)
     : dec_(dec), next_item_(0), need_block_(true),
-      block_(config.max_block_qr_items), current_block_num_(0)
+      block_(config.max_block_qr_items), current_block_num_(0),
+      pseudo_anon_(pseudo_anon)
 {
     readFileHeader(config);
 }
@@ -126,6 +128,8 @@ void BlockCborReader::readFilePreamble(Configuration& config, bool old)
 
         case block_cbor::FilePreambleField::host_id:
             host_id_ = dec_.read_string();
+            if ( pseudo_anon_ )
+                host_id_ = "";
             break;
 
         default:
@@ -186,6 +190,8 @@ void BlockCborReader::readConfiguration(Configuration& config)
 
         case block_cbor::ConfigurationField::filter:
             config.filter = dec_.read_string();
+            if ( pseudo_anon_ )
+                config.filter = "";
             break;
 
         case block_cbor::ConfigurationField::query_options:
@@ -252,7 +258,10 @@ void BlockCborReader::readConfiguration(Configuration& config)
                     break;
                 }
 
-                config.server_addresses.push_back(IPAddress(dec_.read_binary()));
+                IPAddress addr(dec_.read_binary());
+                if ( pseudo_anon_ )
+                    addr = pseudo_anon_->address(addr);
+                config.server_addresses.push_back(addr);
             }
             break;
 
@@ -284,10 +293,16 @@ bool BlockCborReader::readBlock()
     block_.clear();
     block_.readCbor(dec_, *fields_);
 
+    if ( pseudo_anon_ )
+        for ( auto& a : block_.ip_addresses )
+            a.addr = pseudo_anon_->address(a.addr);
+
     // Accumulate address events counts.
     for ( auto& aeci : block_.address_event_counts )
     {
-        AddressEvent ae(aeci.first.type, block_.ip_addresses[aeci.first.address].addr, aeci.first.code);
+        IPAddress addr = block_.ip_addresses[aeci.first.address].addr;
+
+        AddressEvent ae(aeci.first.type, addr, aeci.first.code);
         if ( address_events_read_.find(ae) != address_events_read_.end() )
             address_events_read_[ae] += aeci.second;
         else
@@ -313,7 +328,6 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
     need_block_ = (block_.query_response_items.size() == ++next_item_);
 
     const block_cbor::QuerySignature& sig = block_.query_signatures[qri.signature];
-
     if ( sig.qr_flags & block_cbor::QUERY_ONLY )
     {
         query = make_unique<DNSMessage>();
@@ -336,6 +350,10 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
 
         if ( sig.qr_flags & block_cbor::QUERY_HAS_OPT )
         {
+            byte_string opt_rdata = block_.names_rdatas[sig.query_opt_rdata].str;
+            if ( pseudo_anon_ )
+                opt_rdata = pseudo_anon_->opt_rdata(opt_rdata);
+
             uint32_t ttl = ((sig.query_rcode >> 4) &0xff);
             ttl <<= 8;
             ttl |= (sig.query_edns_version & 0xff);
@@ -345,7 +363,7 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
             query->dns.add_additional(
                 CaptureDNS::resource(
                     "",
-                    block_.names_rdatas[sig.query_opt_rdata].str,
+                    opt_rdata,
                     CaptureDNS::OPT,
                     static_cast<CaptureDNS::QueryClass>(sig.query_edns_payload_size),
                     ttl));
@@ -433,6 +451,10 @@ CaptureDNS::resource BlockCborReader::makeResource(const block_cbor::ResourceRec
     byte_string name = block_.names_rdatas[rr.name].str;
     const block_cbor::ClassType& ct = block_.class_types[rr.classtype];
     byte_string rdata = block_.names_rdatas[rr.rdata].str;
+
+    if ( ct.qtype == CaptureDNS::OPT && pseudo_anon_ )
+        rdata = pseudo_anon_->opt_rdata(rdata);
+
     return CaptureDNS::resource(name,
                                rdata,
                                static_cast<CaptureDNS::QueryType>(ct.qtype),

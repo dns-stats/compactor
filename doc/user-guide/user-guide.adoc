@@ -15,3 +15,5 @@ include::installation.adoc[]
 include::configuring.adoc[]
 
 include::running.adoc[]
+
+include::appendices.adoc[]
