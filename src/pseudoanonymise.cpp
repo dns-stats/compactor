@@ -60,57 +60,67 @@ IPAddress PseudoAnonymise::address(const IPAddress& addr) const
     return IPAddress(addr.is_ipv6() ? addr_out : addr_out.substr(0, 4));
 }
 
-byte_string PseudoAnonymise::opt_rdata(const byte_string& rdata) const
+CaptureDNS::EDNS0 PseudoAnonymise::edns0(const CaptureDNS::EDNS0& edns0) const
 {
-    const uint16_t OPTION_CODE_ECS = 8;
-    uint16_t opt_code, opt_len;
-    std::string::size_type offset = 0, len = rdata.size();
-    byte_string res;
+    bool client_subnet_found = false;
 
-    while (offset + 4 < len)
-    {
-        std::string::size_type data;
-
-        opt_code = (rdata[offset] << 8) + rdata[offset + 1];
-        offset += 2;
-        opt_len =  (rdata[offset] << 8) + rdata[offset + 1];
-        offset += 2;
-
-        data = offset;
-        offset += opt_len;
-
-        if ( opt_code == OPTION_CODE_ECS && opt_len > 4 )
+    for ( auto& opt : edns0.options() )
+        if ( opt.code() == CaptureDNS::CLIENT_SUBNET )
         {
-            uint16_t family = (rdata[data] << 8) + rdata[data + 1];
+            client_subnet_found = true;
+            break;
+        }
 
-            if ( family == 1 || family == 2 )
+    if ( !client_subnet_found )
+        return edns0;
+
+    CaptureDNS::EDNS0 res(edns0.udp_payload_size(),
+                          edns0.do_bit(),
+                          edns0.extended_rcode(),
+                          edns0.edns_version());
+
+    for ( auto& opt : edns0.options() )
+    {
+        if ( opt.code() == CaptureDNS::CLIENT_SUBNET )
+        {
+            byte_string opt_data = opt.data();
+            uint16_t family = (opt_data[0] << 8) + opt_data[1];
+            if ( family != 1 && family != 2 )
             {
-                uint8_t source_prefix_len = rdata[data + 2];
-                uint8_t no_addr_bytes = (source_prefix_len + 7) / 8;
-
-                if ( no_addr_bytes <= opt_len - 4 )
-                {
-                    if ( res.size() == 0 )
-                        res = rdata;
-
-                    uint8_t bits_to_zero = source_prefix_len % 8;
-                    byte_string addr(family == 1 ? 4 : 16, '\0');
-                    uint8_t last_byte_mask = 0xff;
-
-                    if ( bits_to_zero > 0 )
-                        last_byte_mask <<= (8 - bits_to_zero);
-
-                    addr.replace(0, no_addr_bytes, rdata, data + 4, no_addr_bytes);
-                    addr[no_addr_bytes - 1] &= last_byte_mask;
-                    addr = address(IPAddress(addr)).asNetworkBinary();
-                    addr[no_addr_bytes - 1] &= last_byte_mask;
-                    res.replace(data + 4, no_addr_bytes, addr, 0, no_addr_bytes);
-                }
+                res.add_option(opt);
+                continue;
             }
+
+            uint8_t source_prefix_len = opt_data[2];
+            size_t no_addr_bytes = (source_prefix_len + 7) / 8;
+
+            if ( opt_data.size() < no_addr_bytes + 4 )
+            {
+                res.add_option(opt);
+                continue;
+            }
+
+            uint8_t bits_to_zero = source_prefix_len % 8;
+            byte_string addr(family == 1 ? 4 : 16, '\0');
+            uint8_t last_byte_mask = 0xff;
+
+            if ( bits_to_zero > 0 )
+                last_byte_mask <<= (8 - bits_to_zero);
+
+            addr.replace(0, no_addr_bytes, opt_data, 4, no_addr_bytes);
+            addr[no_addr_bytes - 1] &= last_byte_mask;
+            addr = address(IPAddress(addr)).asNetworkBinary();
+            addr[no_addr_bytes - 1] &= last_byte_mask;
+            opt_data.replace(4, no_addr_bytes, addr, 0, no_addr_bytes);
+            res.add_option(CaptureDNS::EDNS0_option(CaptureDNS::CLIENT_SUBNET, opt_data));
+        }
+        else
+        {
+            res.add_option(opt);
         }
     }
 
-    return res.size() > 0 ? res : rdata;
+    return res;
 }
 
 byte_string PseudoAnonymise::generate_key(const char *str, const char *salt)

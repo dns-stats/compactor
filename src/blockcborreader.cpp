@@ -363,7 +363,13 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
             byte_string opt_rdata = block_.names_rdatas[sig.query_opt_rdata].str;
 #if ENABLE_PSEUDOANONYMISATION
             if ( pseudo_anon_ )
-                opt_rdata = pseudo_anon_->opt_rdata(opt_rdata);
+            {
+                CaptureDNS::EDNS0 edns0(CaptureDNS::INTERNET,
+                                        0,
+                                        opt_rdata);
+                edns0 = pseudo_anon_->edns0(edns0);
+                opt_rdata = edns0.rr().data();
+            }
 #endif
 
             uint32_t ttl = ((sig.query_rcode >> 4) &0xff);
@@ -464,16 +470,22 @@ CaptureDNS::resource BlockCborReader::makeResource(const block_cbor::ResourceRec
     const block_cbor::ClassType& ct = block_.class_types[rr.classtype];
     byte_string rdata = block_.names_rdatas[rr.rdata].str;
 
+    CaptureDNS::resource res(name,
+                             rdata,
+                             static_cast<CaptureDNS::QueryType>(ct.qtype),
+                             static_cast<CaptureDNS::QueryClass>(ct.qclass),
+                             rr.ttl);
+
 #if ENABLE_PSEUDOANONYMISATION
     if ( ct.qtype == CaptureDNS::OPT && pseudo_anon_ )
-        rdata = pseudo_anon_->opt_rdata(rdata);
+    {
+        CaptureDNS::EDNS0 edns0(res);
+        edns0 = pseudo_anon_->edns0(edns0);
+        res = edns0.rr();
+    }
 #endif
 
-    return CaptureDNS::resource(name,
-                               rdata,
-                               static_cast<CaptureDNS::QueryType>(ct.qtype),
-                               static_cast<CaptureDNS::QueryClass>(ct.qclass),
-                               rr.ttl);
+    return res;
 }
 
 void BlockCborReader::dump_collector(std::ostream& os)
