@@ -37,8 +37,8 @@ AM_CONDITIONAL([BUILD_DOCS], [test ! $ASCIIDOC_TOO_OLD && test "x$ASCIIDOC" != "
 
 # Optional features
 AC_ARG_ENABLE([pseudo-anonymisation],
-        [AS_HELP_STRING([--enable-pseudo-anonymisation],
-                [Enable pseudo-anonymisation @<:@default=yes@:>@])],
+        [AS_HELP_STRING([--disable-pseudo-anonymisation],
+                [do not include pseudo-anonymisation])],
         [],
         [enable_pseudo_anonymisation=yes])
 AM_CONDITIONAL([ENABLE_PSEUDOANONYMISATION], [test "x$enable_pseudo_anonymisation" == "xyes"])
