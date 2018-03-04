@@ -104,7 +104,6 @@ TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
 AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) -DCONFFILE=\"$(conffile)\" \
               $(OPENSSL_INCLUDES)
-AM_LDFLAGS = $(BOOST_LDFLAGS) $(OPENSSL_LDFLAGS)
 
 %.1 :: %.adoc ; @ASCIIDOC@ -b manpage -d manpage -o $@ $<
 
@@ -188,7 +187,7 @@ compactor_SOURCES = \
         src/compactor.cpp
 
 compactor_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
-compactor_LDFLAGS = \
+compactor_LDADD = \
         $(BOOST_FILESYSTEM_LIB) \
         $(BOOST_IOSTREAMS_LIB) \
         $(BOOST_LOG_LIB) \
@@ -198,12 +197,16 @@ compactor_LDFLAGS = \
         $(PCAP_LIB) \
         $(LZMA_LIB) \
         $(TCMALLOC_LIB) \
-        @PTHREAD_LIBS@
+        @PTHREAD_LIBS@ \
+        $(libtins_LIBS)
+compactor_LDFLAGS = \
+        $(BOOST_LDFLAGS)
 if ENABLE_PSEUDOANONYMISATION
-compactor_LDFLAGS += \
+compactor_LDADD += \
         $(OPENSSL_LIBS)
+compactor_LDFLAGS += \
+        $(OPENSSL_LDFLAGS)
 endif
-compactor_LDADD = $(libtins_LIBS)
 
 compactor_tests_SOURCES = \
         $(compactor_headers) \
@@ -228,7 +231,7 @@ compactor_tests_SOURCES += \
 endif
 
 compactor_tests_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
-compactor_tests_LDFLAGS = \
+compactor_tests_LDADD = \
         $(BOOST_FILESYSTEM_LIB) \
         $(BOOST_IOSTREAMS_LIB) \
         $(BOOST_LOG_LIB) \
@@ -238,12 +241,16 @@ compactor_tests_LDFLAGS = \
         $(PCAP_LIB) \
         $(LZMA_LIB) \
         $(TCMALLOC_LIB) \
-        @PTHREAD_LIBS@
+        @PTHREAD_LIBS@ \
+        $(libtins_LIBS)
+compactor_tests_LDFLAGS = \
+        $(BOOST_LDFLAGS)
 if ENABLE_PSEUDOANONYMISATION
-compactor_tests_LDFLAGS += \
+compactor_tests_LDADD += \
         $(OPENSSL_LIBS)
+compactor_tests_LDFLAGS += \
+        $(OPENSSL_LDFLAGS)
 endif
-compactor_tests_LDADD = $(libtins_LIBS)
 
 inspector_SOURCES = \
         $(inspector_headers) \
@@ -265,7 +272,7 @@ inspector_SOURCES = \
         src/streamwriter.cpp
 
 inspector_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
-inspector_LDFLAGS = \
+inspector_LDADD = \
         $(BOOST_FILESYSTEM_LIB) \
         $(BOOST_IOSTREAMS_LIB) \
         $(BOOST_LOG_LIB) \
@@ -273,11 +280,15 @@ inspector_LDFLAGS = \
         $(BOOST_SYSTEM_LIB) \
         $(BOOST_THREAD_LIB) \
         $(LZMA_LIB) \
-        @PTHREAD_LIBS@
+        @PTHREAD_LIBS@ \
+        $(libtins_LIBS)
+inspector_LDFLAGS = \
+        $(BOOST_LDFLAGS)
 if ENABLE_PSEUDOANONYMISATION
-inspector_LDFLAGS += \
+inspector_LDADD += \
         $(OPENSSL_LIBS)
+inspector_LDFLAGS += \
+        $(OPENSSL_LDFLAGS)
 endif
-inspector_LDADD = $(libtins_LIBS)
 
 @DX_RULES@
