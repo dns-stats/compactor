@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,6 +16,7 @@
 #include <memory>
 #include <unordered_map>
 
+#include <boost/optional.hpp>
 #include <boost/functional/hash.hpp>
 
 #include "addressevent.hpp"
@@ -23,6 +24,7 @@
 #include "blockcbor.hpp"
 #include "blockcbordata.hpp"
 #include "configuration.hpp"
+#include "pseudoanonymise.hpp"
 #include "queryresponse.hpp"
 
 /**
@@ -44,10 +46,12 @@ public:
     /**
      * \brief Constructor.
      *
-     * \param dec    the decoder to use.
-     * \param config the configuration.
+     * \param dec               the decoder to use.
+     * \param config            the configuration.
+     * \param pseudo_anon       pseudo-anonymisation, if to use.
      */
-    BlockCborReader(CborBaseDecoder& dec, Configuration& config);
+    BlockCborReader(CborBaseDecoder& dec, Configuration& config,
+                    boost::optional<PseudoAnonymise> pseudo_anon ={});
 
     /**
      * \brief Return the next Query/Response pair.
@@ -204,6 +208,11 @@ private:
      * \brief Pointer to the field translation object.
      */
     std::unique_ptr<block_cbor::FileVersionFields> fields_;
+
+    /**
+     * \brief pseudo-anonymisation, if to use.
+     */
+    boost::optional<PseudoAnonymise> pseudo_anon_;
 
     /**
      * \brief accumulated address events from the file.

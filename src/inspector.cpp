@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,7 @@
 #include <utility>
 
 #include <boost/filesystem.hpp>
+#include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 
 #include "config.h"
@@ -30,6 +31,7 @@
 #include "log.hpp"
 #include "makeunique.hpp"
 #include "pcapwriter.hpp"
+#include "pseudoanonymise.hpp"
 
 const std::string PROGNAME = "inspector";
 const std::string PCAP_EXT = ".pcap";
@@ -37,6 +39,11 @@ const std::string INFO_EXT = ".info";
 
 namespace po = boost::program_options;
 
+/**
+ * \struct Options
+ *
+ * Inspector command line option values.
+ */
 struct Options
 {
     /**
@@ -89,6 +96,10 @@ struct Options
      */
     unsigned int xz_preset{6};
 
+    /**
+     * \brief pseudo-anonymisation, if to use.
+     */
+    boost::optional<PseudoAnonymise> pseudo_anon;
 };
 
 using PacketSink = std::function<void (std::shared_ptr<QueryResponse>)>;
@@ -115,7 +126,7 @@ static void convert_stream(std::istream& is, PacketSink packet_sink, std::ofstre
 {
     Configuration config;
     CborStreamDecoder dec(is);
-    BlockCborReader cbr(dec, config);
+    BlockCborReader cbr(dec, config, options.pseudo_anon);
     unsigned bad_response_wire_size_count = 0;
     bool auto_compression = options.auto_compression;
     bool using_compression = ( CaptureDNS::name_compression() != CaptureDNS::NONE );
@@ -461,6 +472,9 @@ int main(int ac, char *av[])
     std::string pcap_file_name;
     std::string info_file_name;
     std::string compression_type;
+    // cppcheck-suppress unusedVariable
+    std::string pseudo_anon_passphrase;
+    std::string pseudo_anon_key;
 
     Options options;
 
@@ -489,6 +503,16 @@ int main(int ac, char *av[])
          "don't generate PCAP output files, only info files.")
         ("report-only,R",
          "don't write output files, just report info.")
+#if ENABLE_PSEUDOANONYMISATION
+        ("pseudo-anonymisation-key,k",
+         po::value<std::string>(&pseudo_anon_key),
+         "pseudo-anonymisation key.")
+        ("pseudo-anonymisation-passphrase,P",
+         po::value<std::string>(&pseudo_anon_passphrase),
+         "pseudo-anonymisation passphrase.")
+        ("pseudo-anonymise,p",
+         "pseudo-anonymise output.")
+#endif
         ("debug-qr",
          "print Query/Response details.");
     po::options_description debug("Hidden options");
@@ -534,6 +558,34 @@ int main(int ac, char *av[])
             return 1;
         }
 
+        if ( vm.count("pseudo-anonymisation-key") != 0 &&
+             vm.count("pseudo-anonymisation-passphrase") != 0 )
+        {
+            std::cerr << PROGNAME
+                << ":  Error:\tSpecify pseudo-anonymisation key "
+                "or passphrase, but not both.\n";
+            return 1;
+        }
+
+        if ( vm.count("pseudo-anonymisation-key") != 0 &&
+             pseudo_anon_key.size() != 16 )
+        {
+            std::cerr << PROGNAME
+                << ":  Error:\tPseudo-anonymisation key "
+                "must be exactly 16 bytes long.\n";
+            return 1;
+        }
+
+        if ( vm.count("pseudo-anonymise") != 0 &&
+             vm.count("pseudo-anonymisation-key") == 0 &&
+             vm.count("pseudo-anonymisation-passphrase") == 0 )
+        {
+            std::cerr << PROGNAME
+                << ":  Error:\tTo pseudo-anonymise output you must specify "
+                " a passphrase or key.\n";
+            return 1;
+        }
+
         options.gzip_output = ( vm.count("gzip-output") != 0 );
         options.xz_output = ( vm.count("xz-output") != 0 );
         options.debug_qr = ( vm.count("debug-qr") != 0 );
@@ -551,6 +603,16 @@ int main(int ac, char *av[])
         std::cerr << PROGNAME << ": Error: " << err.what() << std::endl;
         return 1;
     }
+
+#if ENABLE_PSEUDOANONYMISATION
+    if ( vm.count("pseudo-anonymise") != 0 )
+    {
+        if ( vm.count("pseudo-anonymisation-key") != 0 )
+            options.pseudo_anon = boost::optional<PseudoAnonymise>{to_byte_string(pseudo_anon_key)};
+        else
+            options.pseudo_anon = boost::optional<PseudoAnonymise>{pseudo_anon_passphrase};
+    }
+#endif
 
     if ( options.gzip_output && options.xz_output )
     {

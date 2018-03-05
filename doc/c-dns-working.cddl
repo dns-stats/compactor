@@ -4,7 +4,7 @@
 ; This copy contains modifications from c-dns.cddl, the version in the draft.
 ;
 ; For more information on CDDL, see
-; https://tools.ietf.org/html/draft-greevenbosch-appsawg-cbor-cddl-08
+; https://tools.ietf.org/html/draft-ietf-cbor-cddl-01
 ;
 
 File = [
@@ -125,16 +125,24 @@ compactor-missing-pairs          = 12
 compactor-missing-packets        = 13
 compactor-missing-non-dns        = 14
 
+QuestionTables = (
+    qlist => [* QuestionList],
+    qrr   => [* Question]
+)
+
+RRTables = (
+    rrlist => [* RRList],
+    rr     => [* RR]
+)
+
 BlockTables = {
     ip-address => [* IPAddress],
     classtype  => [* ClassType],
     name-rdata => [* bstr],            ; Holds both Name RDATA and RDATA
-    query-sig  => [* QuerySignature]
-    ? qlist    => [* QuestionList],
-    ? qrr      => [* Question],
-    ? rrlist   => [* RRList],
-    ? rr       => [* RR],
-}
+    query-sig  => [* QuerySignature],
+    ? QuestionTables,
+    ? RRTables
+ }
 
 ip-address = 0
 classtype  = 1
@@ -193,7 +201,7 @@ DNSFlagValues = &(
     query-rd   : 4,
     query-tc   : 5,
     query-aa   : 6,
-    query-d0   : 7,
+    query-do   : 7,
     response-cd: 8,
     response-ad: 9,
     response-z : 10,

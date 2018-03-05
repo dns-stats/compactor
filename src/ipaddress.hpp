@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -58,7 +58,7 @@ public:
      * \param str string with IPv4 or IPv6 address.
      * \throws Tins::invalid_address if data is not a valid address.
      */
-    IPAddress(const std::string& str);
+    explicit IPAddress(const std::string& str);
 
     /**
      * \brief Constructor from const char*.
@@ -66,7 +66,7 @@ public:
      * \param str string with IPv4 or IPv6 address.
      * \throws Tins::invalid_address if data is not a valid address.
      */
-    IPAddress(const char* str);
+    explicit IPAddress(const char* str);
 
     /**
      * \brief Default constructor for an empty address.

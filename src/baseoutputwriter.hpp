@@ -39,7 +39,7 @@ public:
      * \brief DNS flags enum.
      *
      * Note that we always store response OPT RRs directly in the file,
-     * so there is no need for a response D0 in the following.
+     * so there is no need for a response DO in the following.
      */
     enum DNSFlags
     {
@@ -50,7 +50,7 @@ public:
         QUERY_RD = (1 << 4),
         QUERY_TC = (1 << 5),
         QUERY_AA = (1 << 6),
-        QUERY_D0 = (1 << 7),
+        QUERY_DO = (1 << 7),
         RESPONSE_CD = (1 << 8),
         RESPONSE_AD = (1 << 9),
         RESPONSE_Z = (1 << 10),
@@ -208,7 +208,7 @@ public:
     /**
      * \brief Set the basic DNS flags in a query or response message.
      *
-     * Note this does not set the query D0 flag.
+     * Note this does not set the query DO flag.
      *
      * \param msg   the message.
      * \param flags DNS flags value.

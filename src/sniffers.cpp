@@ -203,46 +203,55 @@ void BaseSniffers::packet_read_thread()
 
     while ( !finished )
     {
-        for ( auto h : handles_ )
+        bool read_one;
+
+        do
         {
-            std::unique_lock<std::mutex> lock(m_);
-            struct pcap_pkthdr* hdr;
-            const u_char* data;
-            int res = pcap_next_ex(h, &hdr, &data);
-            lock.unlock();
+            read_one = false;
 
-            switch (res)
+            for ( auto h : handles_ )
             {
-            case 1:
-                try
+                std::unique_lock<std::mutex> lock(m_);
+                struct pcap_pkthdr* hdr;
+                const u_char* data;
+                int res = pcap_next_ex(h, &hdr, &data);
+                lock.unlock();
+
+                switch (res)
                 {
-                    packets_.put(make_packet(h, hdr, data));
+                case 1:
+                    read_one = true;
+                    try
+                    {
+                        packets_.put(make_packet(h, hdr, data));
+                    }
+                    catch (Tins::malformed_packet&)
+                    {
+                        // Unlike libtins, which just ignores them, pass malformed
+                        // packets - packets where transport level decode fails -
+                        // back to the application as RawPDU. There they will be
+                        // treated as ignored and logged if appropriate.
+                        packets_.put(Tins::Packet(new Tins::RawPDU(reinterpret_cast<const uint8_t*>(data), hdr->caplen), hdr->ts, DONT_COPY_PDU));
+                    }
+                    break;
+
+                case 0:
+                    break;
+
+                case -1:
+                    // TODO: Find way to indicate error rather than EOF to
+                    // receiving thread.
+                    LOG_ERROR << pcap_geterr(h);
+                    finished = true;
+                    break;
+
+                case -2:
+                    finished = true;
+                    break;
                 }
-                catch (Tins::malformed_packet&)
-                {
-                    // Unlike libtins, which just ignores them, pass malformed
-                    // packets - packets where transport level decode fails -
-                    // back to the application as RawPDU. There they will be
-                    // treated as ignored and logged if appropriate.
-                    packets_.put(Tins::Packet(new Tins::RawPDU(reinterpret_cast<const uint8_t*>(data), hdr->caplen), hdr->ts, DONT_COPY_PDU));
-                }
-                break;
-
-            case 0:
-                break;
-
-            case -1:
-                // TODO: Find way to indicate error rather than EOF to
-                // receiving thread.
-                LOG_ERROR << pcap_geterr(h);
-                finished = true;
-                break;
-
-            case -2:
-                finished = true;
-                break;
             }
         }
+        while ( read_one && !finished );
 
         if ( finished )
             continue;

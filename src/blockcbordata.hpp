@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -990,13 +990,15 @@ namespace block_cbor {
          */
         const T& operator[](index_t pos) const
         {
+            if ( pos == 0 || pos > items_.size() )
+                throw cbor_file_format_error("Block index out of range");
             return items_[pos - 1];
         }
 
         /**
          * \brief Get the number of items stored.
          */
-        typename std::vector<T>::size_type size() const
+        typename std::deque<T>::size_type size() const
         {
             return items_.size();
         }
@@ -1035,10 +1037,29 @@ namespace block_cbor {
          */
         void writeCbor(CborBaseEncoder& enc)
         {
-            enc.writeArrayHeader();
+            enc.writeArrayHeader(items_.size());
             for ( auto& i : items_ )
                 i.writeCbor(enc);
-            enc.writeBreak();
+        }
+
+        /**
+         * \brief Iterator begin
+         *
+         * \returns iterator.
+         */
+        typename std::deque<T>::iterator begin()
+        {
+            return items_.begin();
+        }
+
+        /**
+         * \brief Iterator end
+         *
+         * \returns iterator.
+         */
+        typename std::deque<T>::iterator end()
+        {
+            return items_.end();
         }
 
     private:
@@ -1085,7 +1106,7 @@ namespace block_cbor {
          *
          * \param max_block_qr_items number of query/response items to full.
          */
-        BlockData(unsigned max_block_qr_items = DEFAULT_MAX_BLOCK_ITEMS)
+        explicit BlockData(unsigned max_block_qr_items = DEFAULT_MAX_BLOCK_ITEMS)
             : max_block_qr_items_(max_block_qr_items)
         {
             init();

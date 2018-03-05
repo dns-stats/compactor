@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -175,12 +175,10 @@ SCENARIO("IndexVectorItems can be compared and written", "[block]")
             {
                 const uint8_t EXPECTED[] =
                     {
-                        (4 << 5) | 31,
+                        (4 << 5) | 4,
                         1, 2, 3, 4,
-                        0xff,
-                        (4 << 5) | 31,
-                        1, 2, 3, 5,
-                        0xff,
+                        (4 << 5) | 4,
+                        1, 2, 3, 5
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -682,11 +680,10 @@ SCENARIO("HeaderList items can be written", "[block]")
             {
                 const uint8_t EXPECTED[] =
                     {
-                        (4 << 5) | 31,
+                        (4 << 5) | 3,
                         1,
                         2,
-                        3,
-                        0xff
+                        3
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -731,23 +728,21 @@ SCENARIO("BlockData items can be written", "[block]")
 
                         2,
                         (5 << 5) | 31,
-                        0, (4 << 5) | 31, 0xff,
-                        1, (4 << 5) | 31, 0xff,
-                        2, (4 << 5) | 31, 0xff,
-                        3, (4 << 5) | 31, 0xff,
-                        4, (4 << 5) | 31, 0xff,
-                        5, (4 << 5) | 31, 0xff,
-                        6, (4 << 5) | 31, 0xff,
-                        7, (4 << 5) | 31, 0xff,
+                        0, (4 << 5) | 0,
+                        1, (4 << 5) | 0,
+                        2, (4 << 5) | 0,
+                        3, (4 << 5) | 0,
+                        4, (4 << 5) | 0,
+                        5, (4 << 5) | 0,
+                        6, (4 << 5) | 0,
+                        7, (4 << 5) | 0,
                         0xff,
 
                         3,
-                        (4 << 5) | 31,
-                        0xff,
+                        (4 << 5) | 0,
 
                         4,
-                        (4 << 5) | 31,
-                        0xff,
+                        (4 << 5) | 0,
 
                         0xff
                     };

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -130,37 +130,42 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     if ( qr->has_query() )
     {
         const DNSMessage &q(qr->query());
-        DNSMessage::OptData query_opt = q.opt();
 
         qri.qr_flags |= block_cbor::QUERY_ONLY;
         qri.query_size = q.wire_size;
         qri.hoplimit = q.hoplimit;
         qs.query_opcode = q.dns.opcode();
-        qs.query_rcode = q.dns.rcode() + (query_opt.extended_rcode << 4);
+        qs.query_rcode = q.dns.rcode();
         qs.query_ancount = q.dns.answers_count();
         qs.query_nscount = q.dns.authority_count();
         qs.query_arcount = q.dns.additional_count();
 
-        if ( query_opt.present )
+        auto edns0 = q.dns.edns0();
+        if ( edns0 )
         {
+            qs.query_rcode += edns0->extended_rcode() << 4;
             qri.qr_flags |= block_cbor::QUERY_HAS_OPT;
-            qs.query_edns_payload_size = query_opt.udp_payload_size;
-            qs.query_edns_version = query_opt.edns_version;
-            qs.query_opt_rdata = data_->add_name_rdata(query_opt.rdata);
+            qs.query_edns_payload_size = edns0->udp_payload_size();
+            qs.query_edns_version = edns0->edns_version();
+            qs.query_opt_rdata = data_->add_name_rdata(edns0->rr().data());
         }
     }
 
     if ( qr->has_response() )
     {
         const DNSMessage &r(qr->response());
-        DNSMessage::OptData resp_opt = r.opt();
 
         qri.qr_flags |= block_cbor::RESPONSE_ONLY;
         qri.response_size = r.wire_size;
-        qs.response_rcode = r.dns.rcode() + (resp_opt.extended_rcode << 4);
+        qs.response_rcode = r.dns.rcode();
 
-        if ( resp_opt.present )
+        auto edns0 = r.dns.edns0();
+        if ( edns0 )
+        {
+            qs.response_rcode += edns0->extended_rcode() << 4;
             qri.qr_flags |= block_cbor::RESPONSE_HAS_OPT;
+        }
+
         if ( r.dns.questions_count() == 0 )
             qri.qr_flags |= block_cbor::RESPONSE_HAS_NO_QUESTION;
     }

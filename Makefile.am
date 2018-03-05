@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,7 +22,8 @@ user_guide_sources = \
         $(srcdir)/doc/user-guide/overview.adoc \
         $(srcdir)/doc/user-guide/installation.adoc \
         $(srcdir)/doc/user-guide/configuring.adoc \
-        $(srcdir)/doc/user-guide/running.adoc
+        $(srcdir)/doc/user-guide/running.adoc \
+        $(srcdir)/doc/user-guide/appendices.adoc
 
 dslocalstatedir=$(localstatedir)/lib/$(PACKAGE)
 dsconfdir=$(sysconfdir)/$(PACKAGE)
@@ -33,23 +34,34 @@ conffile=$(dsconfdir)/compactor.conf
 %.conf :: etc/%.conf.in ; sed -e "s|@DSLOCALSTATEDIR@|$(dslocalstatedir)|g" $< > $@
 
 check_PROGRAMS = compactor-tests
-dist_check_SCRIPTS = test-scripts/check-config-info.sh \
-                     test-scripts/check-outputs.sh \
-                     test-scripts/check-testcontent.sh \
-                     test-scripts/inspector-outputs.sh \
-                     test-scripts/same-output.sh \
-                     test-scripts/same-output-gzip.sh \
-                     test-scripts/same-output-xz.sh \
-                     test-scripts/same-file-output.sh \
-                     test-scripts/same-pcap-cbor-pcap.sh \
-                     test-scripts/same-qr-dump.sh \
-                     test-scripts/tmp-output.sh \
-                     test-scripts/same-tshark-output.sh \
-                     test-scripts/same-live.sh \
-                     test-scripts/verify-cbor02.sh \
-                     test-scripts/verify-cddl.sh
+check_SCRIPTS = test-scripts/check-config-info.sh \
+                test-scripts/check-outputs.sh \
+                test-scripts/check-testcontent.sh \
+                test-scripts/inspector-outputs.sh \
+                test-scripts/same-output.sh \
+                test-scripts/same-output-gzip.sh \
+                test-scripts/same-output-xz.sh \
+                test-scripts/same-file-output.sh \
+                test-scripts/same-pcap-cbor-pcap.sh \
+                test-scripts/same-qr-dump.sh \
+                test-scripts/tmp-output.sh \
+                test-scripts/same-tshark-output.sh \
+                test-scripts/same-live.sh \
+                test-scripts/verify-cbor02.sh \
+                test-scripts/verify-cddl.sh
 
-dist_check_DATA = test-scripts/dns.pcap.xz \
+if ENABLE_PSEUDOANONYMISATION
+        check_SCRIPTS += test-scripts/pseudoanon-tshark-output.sh \
+                         test-scripts/pseudoanon-inspector-output.sh
+        dist_check_SCRIPTS = $(check_SCRIPTS)
+else
+        dist_check_SCRIPTS = $(check_SCRIPTS)
+        dist_check_SCRIPTS += test-scripts/pseudoanon-tshark-output.sh \
+                              test-scripts/pseudoanon-inspector-output.sh
+endif
+
+dist_check_DATA = doc/c-dns-working.cddl \
+                  test-scripts/dns.pcap.xz \
                   test-scripts/gold.pcap.xz \
                   test-scripts/gold.cbor.xz \
                   test-scripts/gold.cbor02.xz \
@@ -57,6 +69,8 @@ dist_check_DATA = test-scripts/dns.pcap.xz \
                   test-scripts/malformed.pcap.xz \
                   test-scripts/matching.pcap.xz \
                   test-scripts/testcontent.pcap.xz \
+                  test-scripts/testcontent.diag \
+                  test-scripts/testcontent.debugqr \
                   test-scripts/unmatched.pcap.xz \
                   test-scripts/nsd-live.raw.pcap.xz \
                   test-scripts/nsd-live.ignored.pcap.xz \
@@ -64,11 +78,11 @@ dist_check_DATA = test-scripts/dns.pcap.xz \
                   test-scripts/knot-live.raw.pcap.xz \
                   test-scripts/knot-live.ignored.pcap.xz \
                   test-scripts/knot-live.info \
+                  test-scripts/knot-live.anon.info \
                   test-scripts/check-live-pcap.sh
 
 EXTRA_DIST = getversion.sh .version
 
-check_SCRIPTS = $(dist_check_SCRIPTS)
 check_DATA = dns.pcap \
              gold.pcap \
              gold.cbor \
@@ -88,8 +102,8 @@ CLEANFILES = $(check_DATA) $(dist_man_MANS)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
-AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) -DCONFFILE=\"$(conffile)\"
-AM_LDFLAGS = $(BOOST_LDFLAGS)
+AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) -DCONFFILE=\"$(conffile)\" \
+              $(OPENSSL_INCLUDES)
 
 %.1 :: %.adoc ; @ASCIIDOC@ -b manpage -d manpage -o $@ $<
 
@@ -116,6 +130,7 @@ compactor_headers = \
         src/packetstatistics.hpp \
         src/packetstream.hpp \
         src/pcapwriter.hpp \
+        src/pseudoanonymise.hpp \
         src/queryresponse.hpp \
         src/rotatingfilename.hpp \
         src/sniffers.hpp \
@@ -135,6 +150,7 @@ inspector_headers = \
         src/makeunique.hpp \
         src/no-register-warning.hpp \
         src/pcapwriter.hpp \
+        src/pseudoanonymise.hpp \
         src/queryresponse.hpp \
         src/streamwriter.hpp
 
@@ -159,6 +175,7 @@ src_without_internal_tests = \
         src/ipaddress.cpp \
         src/log.cpp \
         src/packetstream.cpp \
+        src/pseudoanonymise.cpp \
         src/rotatingfilename.cpp \
         src/sniffers.cpp \
         src/streamwriter.cpp
@@ -170,7 +187,7 @@ compactor_SOURCES = \
         src/compactor.cpp
 
 compactor_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
-compactor_LDFLAGS = \
+compactor_LDADD = \
         $(BOOST_FILESYSTEM_LIB) \
         $(BOOST_IOSTREAMS_LIB) \
         $(BOOST_LOG_LIB) \
@@ -180,8 +197,16 @@ compactor_LDFLAGS = \
         $(PCAP_LIB) \
         $(LZMA_LIB) \
         $(TCMALLOC_LIB) \
-        @PTHREAD_LIBS@
-compactor_LDADD = $(libtins_LIBS)
+        @PTHREAD_LIBS@ \
+        $(libtins_LIBS)
+compactor_LDFLAGS = \
+        $(BOOST_LDFLAGS)
+if ENABLE_PSEUDOANONYMISATION
+compactor_LDADD += \
+        $(OPENSSL_LIBS)
+compactor_LDFLAGS += \
+        $(OPENSSL_LDFLAGS)
+endif
 
 compactor_tests_SOURCES = \
         $(compactor_headers) \
@@ -200,9 +225,13 @@ compactor_tests_SOURCES = \
         tests/matcher_internal_test.cpp \
         tests/packetstream_test.cpp \
         tests/rotatingfilename_test.cpp
+if ENABLE_PSEUDOANONYMISATION
+compactor_tests_SOURCES += \
+        tests/pseudoanonymise_test.cpp
+endif
 
 compactor_tests_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
-compactor_tests_LDFLAGS = \
+compactor_tests_LDADD = \
         $(BOOST_FILESYSTEM_LIB) \
         $(BOOST_IOSTREAMS_LIB) \
         $(BOOST_LOG_LIB) \
@@ -212,8 +241,16 @@ compactor_tests_LDFLAGS = \
         $(PCAP_LIB) \
         $(LZMA_LIB) \
         $(TCMALLOC_LIB) \
-        @PTHREAD_LIBS@
-compactor_tests_LDADD = $(libtins_LIBS)
+        @PTHREAD_LIBS@ \
+        $(libtins_LIBS)
+compactor_tests_LDFLAGS = \
+        $(BOOST_LDFLAGS)
+if ENABLE_PSEUDOANONYMISATION
+compactor_tests_LDADD += \
+        $(OPENSSL_LIBS)
+compactor_tests_LDFLAGS += \
+        $(OPENSSL_LDFLAGS)
+endif
 
 inspector_SOURCES = \
         $(inspector_headers) \
@@ -231,10 +268,11 @@ inspector_SOURCES = \
         src/dnsmessage.cpp \
         src/inspector.cpp \
         src/log.cpp \
+        src/pseudoanonymise.cpp \
         src/streamwriter.cpp
 
 inspector_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
-inspector_LDFLAGS = \
+inspector_LDADD = \
         $(BOOST_FILESYSTEM_LIB) \
         $(BOOST_IOSTREAMS_LIB) \
         $(BOOST_LOG_LIB) \
@@ -242,7 +280,15 @@ inspector_LDFLAGS = \
         $(BOOST_SYSTEM_LIB) \
         $(BOOST_THREAD_LIB) \
         $(LZMA_LIB) \
-        @PTHREAD_LIBS@
-inspector_LDADD = $(libtins_LIBS)
+        @PTHREAD_LIBS@ \
+        $(libtins_LIBS)
+inspector_LDFLAGS = \
+        $(BOOST_LDFLAGS)
+if ENABLE_PSEUDOANONYMISATION
+inspector_LDADD += \
+        $(OPENSSL_LIBS)
+inspector_LDFLAGS += \
+        $(OPENSSL_LDFLAGS)
+endif
 
 @DX_RULES@

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -252,7 +252,9 @@ static void sniff_loop(BaseSniffers* sniffer,
                        PacketStatistics& stats)
 {
     bool seen_raw_overflow = false;
+    // cppcheck-suppress variableScope
     bool seen_ignored_overflow = false;
+    // cppcheck-suppress variableScope
     bool seen_ae_overflow = false;
 
     bool do_raw_pcap = !config.raw_pcap_pattern.empty();
@@ -509,6 +511,7 @@ static int run_configuration(const po::variables_map& vm,
     sniff_config.set_chan_max_size(config.max_channel_size);
 
     PacketStatistics stats{};
+    // cppcheck-suppress variableScope
     bool seen_qr_overflow = false;
 
     QueryResponseMatcher matcher(

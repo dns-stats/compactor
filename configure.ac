@@ -1,5 +1,5 @@
 # 
-# Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
 # 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,6 +35,13 @@ AS_IF([test "x$ASCIIDOC" == xno], [AC_MSG_NOTICE("asciidoctor not found. Not bui
 ])
 AM_CONDITIONAL([BUILD_DOCS], [test ! $ASCIIDOC_TOO_OLD && test "x$ASCIIDOC" != "xno"])
 
+# Optional features
+AC_ARG_ENABLE([pseudo-anonymisation],
+        [AS_HELP_STRING([--disable-pseudo-anonymisation],
+                [do not include pseudo-anonymisation])],
+        [],
+        [enable_pseudo_anonymisation=yes])
+AM_CONDITIONAL([ENABLE_PSEUDOANONYMISATION], [test "x$enable_pseudo_anonymisation" == "xyes"])
 
 # Checks for libraries.
 AC_LANG([C++])
@@ -47,6 +54,11 @@ AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_PTHREAD
+
+AS_IF([test "x$enable_pseudo_anonymisation" != xno],
+        [AX_CHECK_OPENSSL([], [AC_MSG_ERROR([pseudo-anonymisation requires OpenSSL])])
+         AC_DEFINE([ENABLE_PSEUDOANONYMISATION], [1], [Define to 1 to enable pseudo-anonymisation])
+        ])
 
 AC_CHECK_LIB([pcap],[pcap_create],
         [

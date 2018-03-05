@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -116,16 +116,11 @@ void BaseOutputWriter::writeSections(const DNSMessage& dm, int options)
          dm.dns.additional_count() > 0 )
     {
         bool found_one = false;
-        bool first_question_opt = true;
         for ( const auto& r : dm.dns.additional() )
         {
             if ( r.query_type() == CaptureDNS::QueryType::OPT &&
-                 dm.dns.type() == CaptureDNS::QRType:: QUERY &&
-                 first_question_opt )
-            {
-                first_question_opt = false;
+                 dm.dns.type() == CaptureDNS::QRType:: QUERY )
                 continue;
-            }
 
             if ( !outputRRType(r.query_type()) )
                 continue;
@@ -146,7 +141,6 @@ void BaseOutputWriter::writeSections(const DNSMessage& dm, int options)
 uint16_t BaseOutputWriter::dnsFlags(const std::shared_ptr<QueryResponse>& qr)
 {
     uint16_t res = 0;
-    DNSMessage::OptData query_opt{};
 
     if ( qr->has_query() )
     {
@@ -166,9 +160,10 @@ uint16_t BaseOutputWriter::dnsFlags(const std::shared_ptr<QueryResponse>& qr)
         if ( q.dns.authoritative_answer() )
             res |= QUERY_AA;
 
-        query_opt = q.opt();
-        if ( query_opt.present && query_opt.d0 )
-            res |= QUERY_D0;
+        auto edns0 = q.dns.edns0();
+
+        if ( edns0 && edns0->do_bit() )
+            res |= QUERY_DO;
     }
 
     if ( qr->has_response() )

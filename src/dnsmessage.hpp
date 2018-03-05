@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -37,53 +37,6 @@ struct DNSMessage
           hoplimit(64), tcp(false), wire_size(0) {}
 
     /**
-     * \typedef OptData
-     * \brief OPT data, in structure OptData.
-     *
-     * \struct OptData_s
-     * \brief OPT data.
-     *
-     * This struct holds data in an OPT record. These are special records
-     * not resident in the DNS zone, but generated on the fly by client
-     * and server to provide extended information about the transaction.
-     * See DNS documentation for more information.
-     */
-    using OptData = struct OptData_s
-    {
-        /**
-         * \brief `true` if the message contains OPT data.
-         */
-        bool present;
-
-        /**
-         * \brief OPT UDP payload size.
-         */
-        uint16_t udp_payload_size;
-
-        /**
-         * \brief OPT EDNS version.
-         */
-        uint8_t edns_version;
-
-        /**
-         * \brief OPT extended RCODE information.
-         *
-         * This provides a top 8 bits of a 12 bit RCODE.
-         */
-        uint8_t extended_rcode;
-
-        /**
-         * \brief OPT D0 bit.
-         */
-        bool d0;
-
-        /**
-         * \brief OPT RDATA.
-         */
-        byte_string rdata;
-    };
-
-    /**
      * \brief Construct a message.
      *
      * \param pdu      packet payload data.
@@ -100,13 +53,6 @@ struct DNSMessage
                const IPAddress& srcIP, const IPAddress& dstIP,
                uint16_t srcPort, uint16_t dstPort,
                uint8_t hoplimit, bool tcp);
-
-    /**
-     * \brief Extract OPT data from message, if present.
-     *
-     * \return completed OptData.
-     */
-    OptData opt() const;
 
     /**
      * \brief Write basic information on the message to the output stream.

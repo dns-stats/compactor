@@ -2,18 +2,18 @@
 ; https://datatracker.ietf.org/doc/draft-ietf-dnsop-dns-capture-format/
 ;
 ; For more information on CDDL, see
-; https://tools.ietf.org/html/draft-greevenbosch-appsawg-cbor-cddl-08
+; https://tools.ietf.org/html/draft-ietf-cbor-cddl-01
 ;
 
 File = [
-    file-type-id  : tstr,          ; = "C-DNS"
+    file-type-id  : tstr .regexp "C-DNS",
     file-preamble : FilePreamble,
     file-blocks   : [* Block],
 ]
 
 FilePreamble = {
-    major-format-version => uint,  ; = 1
-    minor-format-version => uint,  ; = 0
+    major-format-version => uint .eq 0,
+    minor-format-version => uint .eq 5,
     ? private-version    => uint,
     ? configuration      => Configuration,
     ? generator-id       => tstr,
@@ -61,7 +61,7 @@ vlan-ids           = 5
 filter             = 6
 query-options      = 7
 response-options   = 8
-accept-rr-types    = 9;
+accept-rr-types    = 9
 ignore-rr-types    = 10
 server-addresses   = 11
 max-block-qr-items = 12
@@ -102,6 +102,12 @@ BlockStatistics = {
     ? unmatched-responses          => uint,
     ? completely-malformed-packets => uint,
     ? partially-malformed-packets  => uint,
+
+    ? compactor-non-dns-packets      => uint,
+    ? compactor-out-of-order-packets => uint,
+    ? compactor-missing-pairs        => uint,
+    ? compactor-missing-packets      => uint,
+    ? compactor-missing-non-dns      => uint,
 }
 
 total-packets                = 0
@@ -111,16 +117,24 @@ unmatched-responses          = 3
 completely-malformed-packets = 4
 partially-malformed-packets  = 5
 
+QuestionTables = (
+    qlist => [* QuestionList],
+    qrr   => [* Question]
+)
+
+RRTables = (
+    rrlist => [* RRList],
+    rr     => [* RR]
+)
+
 BlockTables = {
     ip-address => [* IPAddress],
     classtype  => [* ClassType],
     name-rdata => [* bstr],            ; Holds both Name RDATA and RDATA
-    query-sig  => [* QuerySignature]
-    ? qlist    => [* QuestionList],
-    ? qrr      => [* Question],
-    ? rrlist   => [* RRList],
-    ? rr       => [* RR],
-}
+    query-sig  => [* QuerySignature],
+    ? QuestionTables,
+    ? RRTables
+ }
 
 ip-address = 0
 classtype  = 1
@@ -179,7 +193,7 @@ DNSFlagValues = &(
     query-rd   : 4,
     query-tc   : 5,
     query-aa   : 6,
-    query-d0   : 7,
+    query-do   : 7,
     response-cd: 8,
     response-ad: 9,
     response-z : 10,

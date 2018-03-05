@@ -16,7 +16,7 @@ inspector - convert C-DNS query/response info to PCAP
 
 *inspector* reads C-DNS query/response files produced by *compactor* and
 writes output files in PCAP containing reconstructed traffic for the query/responses
-in the C-DNS file.
+in the C-DNS file. Optionally, IP addresses may be pseudo-anonymised.
 
 *inspector* also writes a `.info` file for each PCAP output file written. This is a plain
 text file, named as the PCAP output file but with `.info` appended. It contains
@@ -78,6 +78,15 @@ output file must be specified with the *--output* option.
 
 *-I, --info-only*::
    Don't write any PCAP output files, just write the `.info` files.
+
+*-k, --pseudo-anonymisation-key*::
+   Key to use during output pseudo-anonymisation. Must be 16 bytes long.
+
+*-P, --pseudo-anonymisation-passphrase*::
+   Passphrase to use to generate key for output pseudo-anonymisation.
+
+*-p, --pseudo-anonymise*::
+   Pseudo-anonymise output.
 
 *--debug-qr*::
    Print a summary of each query/response pair to standard output on reading

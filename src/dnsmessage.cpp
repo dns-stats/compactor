@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -46,28 +46,4 @@ DNSMessage::DNSMessage(const Tins::RawPDU& pdu,
     {
         throw malformed_packet();
     }
-}
-
-DNSMessage::OptData DNSMessage::opt() const
-{
-    DNSMessage::OptData res = {};
-
-    for ( const auto& rr : dns.additional() )
-    {
-        if ( rr.query_type() == CaptureDNS::QueryType::OPT )
-        {
-            uint32_t ttl = rr.ttl();
-            res.d0 = ((ttl & 0x8000) != 0);
-            ttl >>= 16;
-            res.edns_version = (ttl & 0xff);
-            ttl >>= 8;
-            res.extended_rcode = ttl;
-            res.present = true;
-            res.rdata = rr.data();
-            res.udp_payload_size = rr.query_class();
-            break;
-        }
-    }
-
-    return res;
 }

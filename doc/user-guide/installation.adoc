@@ -107,6 +107,9 @@ source, see the documentation for those items.
   system `malloc`.
 
 | `libtins` | Networking functions library. http://libtins.github.io/.
+
+| `openssl` | Cryptography library, used in pseudo-anonymisation.
+http://www.openssl.org/.
 |===
 
 ==== Optionally building documentation
