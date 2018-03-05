@@ -6,7 +6,7 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
-Version 0.11.0~rc1 - 2018-03-05
+Version 0.11.0-rc1 - 2018-03-05
 -------------------------------
 
 * Add pseudo-anonymisation of output to inspector.
