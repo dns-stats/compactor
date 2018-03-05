@@ -1,10 +1,18 @@
 #
-# Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
+
+Version 0.11.0~rc1 - 2018-03-05
+-------------------------------
+
+* Add pseudo-anonymisation of output to inspector.
+* CBOR - use definite-length items where possible.
+* Small packet receive optimisation.
+* Improve detection of malformed EDNS0.
 
 Version 0.10.1 - 2017-06-16
 ---------------------------
