@@ -520,7 +520,7 @@ public:
          * \param resource              The resource. Must have type OPT.
          * \throws Tins::malformed_packet if resource is not OPT.
          */
-        EDNS0(const resource& resource)
+        explicit EDNS0(const resource& resource)
             : udp_payload_size_(static_cast<uint16_t>(resource.query_class()))
         {
             if ( resource.query_type() != OPT )

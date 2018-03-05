@@ -1106,7 +1106,7 @@ namespace block_cbor {
          *
          * \param max_block_qr_items number of query/response items to full.
          */
-        BlockData(unsigned max_block_qr_items = DEFAULT_MAX_BLOCK_ITEMS)
+        explicit BlockData(unsigned max_block_qr_items = DEFAULT_MAX_BLOCK_ITEMS)
             : max_block_qr_items_(max_block_qr_items)
         {
             init();

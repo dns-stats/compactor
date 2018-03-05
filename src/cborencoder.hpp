@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -276,7 +276,7 @@ public:
      *
      * \param level compression level, if any.
      */
-    CborStreamFileEncoder(unsigned level = 6) : level_(level) {}
+    explicit CborStreamFileEncoder(unsigned level = 6) : level_(level) {}
 
     /**
      * \brief Destructor.
@@ -420,7 +420,7 @@ public:
      *
      * \param pool the parallel writer pool to use.
      */
-    CborParallelStreamFileEncoder(std::shared_ptr<BaseParallelWriterPool>& pool)
+    explicit CborParallelStreamFileEncoder(std::shared_ptr<BaseParallelWriterPool>& pool)
         : CborStreamFileEncoder<StreamWriter>(0), pool_(pool)
     {
     }
