@@ -28,7 +28,8 @@ The DNS-STATS Compactor suite currently comprises two programs:
 * _inspector_. Reconstructs network traffic from C-DNS files produced
   by _compactor_. It outputs one or more PCAP files suitable for
   direct inspection or input to existing analysis tools. See
-  <<Reconstructed PCAP files>> for limitations on the reconstruction.
+  <<running.adoc#_reconstructed_pcap_files,Reconstructed PCAP files>> for
+  limitations on the reconstruction.
 
 _compactor_ is resource efficient, and can therefore be co-located
 on a nameserver. Alternatively it can be run on a standalone server
@@ -101,7 +102,7 @@ The C-DNS file format is designed for efficiently recording DNS traffic informat
   a DNS operator.
 * By default it captures only basic query and response information,
   but can optionally capture selected additional details up to the
-  entire DNS payload.  See <<Configuring>>.
+  entire DNS payload.  See <<configuring.adoc#_configuring,Configuring>>.
 * Performs DNS-specific compression internally to produce files that
   are significantly smaller than raw PCAP files.
 
