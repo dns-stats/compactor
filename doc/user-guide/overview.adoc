@@ -8,6 +8,14 @@ DNS traffic data in Compacted-DNS (C-DNS), a space-efficient format
 defined in an Internet Draft
 https://datatracker.ietf.org/doc/draft-ietf-dnsop-dns-capture-format[draft-ietf-dnsop-dns-capture-format].
 
+[NOTE]
+====
+The C-DNS draft is a work in progress, and the format subject to
+change. At the time of writing, the version of the draft implemented is
+https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-04[version
+04].
+====
+
 The project was initially developed for for
 https://www.icann.org[ICANN] by https://www.sinodun.com[Sinodun IT],
 and is now released via DNS-STATS as an open source project licenced
@@ -71,13 +79,10 @@ November 2016.
 
 [NOTE]
 ====
-The draft is a work in progress, and the format subject to
-change. At the time of writing, the latest version of the draft is
-https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-02[version
-02].
 
-_compactor_ writes C-DNS as described in the latest version
-of the draft, with the following changes:
+_compactor_ writes C-DNS as described in
+https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-04[version
+04] of the draft,  with the following changes:
 
 * The format major version is set to 0.
 * The format minor version is set to 5.
@@ -90,7 +95,7 @@ changes.
 
 [IMPORTANT]
 ====
-The current release does not support the following facilities defined in the current draft:
+The current release does not support the following facilities defined in the draft:
 
 * Picosecond timestamps. Only microsecond resolution is supported.
 * Malformed packet data recorded directly into C-DNS.
