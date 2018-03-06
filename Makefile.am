@@ -109,6 +109,14 @@ AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) -DCONFFILE=\"$(conffile)\" \
 
 doc/user-guide.html : $(user_guide_sources) ; @ASCIIDOC@ -b html5 -d article -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
 
+doc/user-guide.pdf : $(user_guide_sources) ; @ASCIIDOC@ -b pdf -d article -r asciidoctor-pdf -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
+
+.PHONY: user-guide user-guide-html user-guide-pdf
+
+user-guide : user-guide-html user-guide-pdf
+user-guide-html : doc/user-guide.html
+user-guide-pdf : doc/user-guide.pdf
+
 compactor_headers = \
         src/addressevent.hpp \
         src/baseoutputwriter.hpp \
