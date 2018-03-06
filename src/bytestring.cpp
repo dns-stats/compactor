@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,7 +17,6 @@ byte_string operator "" _b(const char* s, std::size_t len)
     return byte_string(reinterpret_cast<const unsigned char*>(s), len);
 }
 
-// cppcheck-suppress unusedFunction
 byte_string to_byte_string(const std::string& s)
 {
     return byte_string(reinterpret_cast<const unsigned char *>(s.data()), s.size());
