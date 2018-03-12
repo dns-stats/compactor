@@ -43,7 +43,7 @@ $ sudo apt install dns-stats-inspector
 
 [TIP]
 ====
-After installation _compactor_ can be used <<command-line,from the
+After installation _compactor_ can be used <<running.adoc#command-line,from the
 command line>>, for example for ad-hoc captures or converting PCAP
 capture files.
 ====
