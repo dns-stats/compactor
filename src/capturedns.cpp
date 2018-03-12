@@ -194,6 +194,7 @@ uint16_t CaptureDNS::read_dname_offset(uint16_t offset, const uint8_t *buffer, u
 }
 
 // Implementation taken from Libtins dns.cpp.
+// cppcheck-suppress unusedFunction
 std::string CaptureDNS::decode_domain_name(const byte_string& label)
 {
     std::string output;

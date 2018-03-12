@@ -472,10 +472,10 @@ int main(int ac, char *av[])
     std::string pcap_file_name;
     std::string info_file_name;
     std::string compression_type;
-    // cppcheck-suppress unusedVariable
+#if ENABLE_PSEUDOANONYMISATION
     std::string pseudo_anon_passphrase;
     std::string pseudo_anon_key;
-
+#endif
     Options options;
 
     po::options_description visible("Options");

@@ -109,6 +109,14 @@ AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) -DCONFFILE=\"$(conffile)\" \
 
 doc/user-guide.html : $(user_guide_sources) ; @ASCIIDOC@ -b html5 -d article -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
 
+doc/user-guide.pdf : $(user_guide_sources) ; @ASCIIDOC@ -b pdf -d article -r asciidoctor-pdf -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
+
+.PHONY: user-guide user-guide-html user-guide-pdf
+
+user-guide : user-guide-html user-guide-pdf
+user-guide-html : doc/user-guide.html
+user-guide-pdf : doc/user-guide.pdf
+
 compactor_headers = \
         src/addressevent.hpp \
         src/baseoutputwriter.hpp \
@@ -290,5 +298,17 @@ inspector_LDADD += \
 inspector_LDFLAGS += \
         $(OPENSSL_LDFLAGS)
 endif
+
+.PHONY: cppcheck
+
+CPPCHECK_DIRS = $(srcdir)/src
+CPPCHECK_INCLUDE_DIRS = -I$(srcdir)/src
+CPPCHECK_CMD = cppcheck \
+        --std=c++11 --language=c++ \
+        --xml --xml-version=2 \
+        --inline-suppr
+CPPCHECK_FLAGS = -U DLT_PKTAP --suppress=missingIncludeSystem
+
+cppcheck: ; $(CPPCHECK_CMD) $(CPPCHECK_INCLUDE_DIRS) $(CPPCHECK_FLAGS) --enable=all $(CPPCHECK_DIRS)
 
 @DX_RULES@
