@@ -92,7 +92,10 @@ AS_IF([test "x$with_tcmalloc" != xno],
             fi])
         ])
 
-PKG_CHECK_MODULES(libtins, libtins >= 3.4)
+PKG_CHECK_MODULES(libtins,
+                  libtins >= 4.0,
+                  [AC_DEFINE([HAVE_LIBTINS4], [1], [Define to 1 if using libtins version 4.0 or later])],
+                  [PKG_CHECK_MODULES(libtins, libtins >= 3.4)])
 AC_SUBST(libtins_LIBS)
 
 # Checks for header files.
