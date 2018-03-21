@@ -11,6 +11,9 @@ INSP=./inspector
 DATAFILE=./knot-live.raw.pcap
 INFOFILE=$srcdir/test-scripts/knot-live.anon.info
 
+command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }
+command -v grep > /dev/null 2>&1 || { echo "No grep, skipping test." >&2; exit 77; }
+
 #set -x
 
 tmpdir=`mktemp -d -t "pseudoanon-inspector-output.XXXXXX"`

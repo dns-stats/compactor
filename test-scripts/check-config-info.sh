@@ -10,6 +10,8 @@ COMP=./compactor
 INSP=./inspector
 DATAFILE=./dns.pcap
 
+command -v grep > /dev/null 2>&1 || { echo "No grep, skipping test." >&2; exit 77; }
+
 tmpdir=`mktemp -d -t "check-config-info.XXXXXX"`
 
 cleanup()

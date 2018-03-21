@@ -10,12 +10,12 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 COMP=./compactor
 INSP=./inspector
-TSHARK=tshark
-INPUT_FILES="matching.pcap
-unmatched.pcap"
+
+INPUT_FILES="matching.pcap unmatched.pcap"
 
 #set -x
 
+command -v tshark > /dev/null 2>&1 || { echo "No tshark, skipping test." >&2; exit 77; }
 
 if [ -z "$1" ] ; then
     echo "Using default input"
@@ -42,7 +42,7 @@ cleanup()
 call_tshark()
 {
     # Should be able to remove the last 2 deletions when we have name compression
-     $TSHARK -nr $1 -Y $FILTER_COND -T text -V  >  $tmpdir/tshark$2.full
+     tshark -nr $1 -Y $FILTER_COND -T text -V  >  $tmpdir/tshark$2.full
      sed -r -e '/Frame [0-9]/,/^.*\[Time shift/d' \
               -e '/^.*\[Time delta/,/Internet/d' \
               -e '/^.*Version: 4/,/Fragment offset:/d' \
@@ -101,7 +101,7 @@ do
 
     good=0
     total=0
-    $TSHARK -nr $DATAFILE -T fields -e dns.id | sort -u | sed '/^\s*$/d' > $tmpdir/ids.out
+    tshark -nr $DATAFILE -T fields -e dns.id | sort -u | sed '/^\s*$/d' > $tmpdir/ids.out
     readarray ids < $tmpdir/ids.out
 
     for i in "${ids[@]}" ; do

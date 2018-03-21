@@ -18,10 +18,15 @@
 
 COMP=./compactor
 INSP=./inspector
+
 CBOR2DIAG=cbor2diag.rb
 DATAFILE=./testcontent.pcap
 DATADIAG=$srcdir/test-scripts/testcontent.diag
 DATAQR=$srcdir/test-scripts/testcontent.debugqr
+
+command -v $CBOR2DIAG > /dev/null 2>&1 || { echo "No cbor2diag, skipping test." >&2; exit 77; }
+command -v cmp > /dev/null 2>&1 || { echo "No cmp, skipping test." >&2; exit 77; }
+command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }
 
 tmpdir=`mktemp -d -t "check-testcontent.XXXXXX"`
 
@@ -32,8 +37,6 @@ cleanup()
 }
 
 trap "cleanup 1" HUP INT TERM
-
-command -v $CBOR2DIAG > /dev/null 2>&1 || { echo "No cbor2diag, skipping test." >&2; exit 77; }
 
 $COMP -c /dev/null --omit-system-id -n all -o $tmpdir/out.cbor $DATAFILE
 if [ $? -ne 0 ]; then
