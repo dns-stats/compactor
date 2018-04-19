@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -350,8 +350,13 @@ void QueryResponseMatcher::add_query(std::unique_ptr<DNSMessage>& m)
     data_->output.push_back(qr);
 
     // See if any queued responses can now be consumed.
-    for ( auto& r : data_->response_queue )
-        add_response(r);
+    for ( auto it = data_->response_queue.begin();
+          it != data_->response_queue.end();
+          ++it )
+    {
+        if (*it)
+            add_response(*it);
+    }
 }
 
 void QueryResponseMatcher::add_response(std::unique_ptr<DNSMessage>& m)
