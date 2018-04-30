@@ -11,7 +11,7 @@ CHECK=$srcdir/test-scripts/check-live-pcap.sh
 do_check()
 {
     $CHECK $1 $2
-    checkres = $?
+    checkres=$?
     if [ $checkres -ne 0 ]; then
         echo "Checking $1 failed."
         exit $checkres
