@@ -11,11 +11,12 @@
 
 COMP=./compactor
 INSP=./inspector
-TSHARK=tshark
-COMM=comm
 INPUT_FILES="nsd-live.raw.pcap knot-live.raw.pcap"
 
 #set -x
+
+command -v comm > /dev/null 2>&1 || { echo "No comm, skipping test." >&2; exit 77; }
+command -v tshark > /dev/null 2>&1 || { echo "No tshark, skipping test." >&2; exit 77; }
 
 tmpdir=`mktemp -d -t "pseudoanon-output.XXXXXX"`
 
@@ -30,7 +31,7 @@ trap "cleanup 1" HUP INT TERM
 # Error if a line in $1 is the same as the corresponding line in $2
 cmpfiles()
 {
-    $COMM -12 $1 $2 > $tmpdir/comm.out
+    comm -12 $1 $2 > $tmpdir/comm.out
     if [ -s $tmpdir/comm.out ]; then
         cleanup 1
     fi
@@ -53,34 +54,34 @@ do
         cleanup 1
     fi
 
-    $TSHARK -n -T fields -e frame.time -e ip.src -e ip.dst -r $DATAFILE ip.src | sort > $tmpdir/$DATAFILE.ip
+    tshark -n -T fields -e frame.time -e ip.src -e ip.dst -r $DATAFILE ip.src | sort > $tmpdir/$DATAFILE.ip
     if [ $? -ne 0 ]; then
         echo "tshark failed"
         cleanup 1
     fi
-    $TSHARK -n -T fields -e frame.time -e ip.src -e ip.dst -r $tmpdir/$ANONDATAFILE ip.src | sort > $tmpdir/$ANONDATAFILE.ip
-    if [ $? -ne 0 ]; then
-        echo "tshark failed"
-        cleanup 1
-    fi
-
-    $TSHARK -n -T fields -e frame.time -e ipv6.src -e ipv6.dst -r $DATAFILE ipv6.src | sort > $tmpdir/$DATAFILE.ip6
-    if [ $? -ne 0 ]; then
-        echo "tshark failed"
-        cleanup 1
-    fi
-    $TSHARK -n -T fields -e frame.time -e ipv6.src -e ipv6.dst -r $tmpdir/$ANONDATAFILE ipv6.src | sort > $tmpdir/$ANONDATAFILE.ip6
+    tshark -n -T fields -e frame.time -e ip.src -e ip.dst -r $tmpdir/$ANONDATAFILE ip.src | sort > $tmpdir/$ANONDATAFILE.ip
     if [ $? -ne 0 ]; then
         echo "tshark failed"
         cleanup 1
     fi
 
-    $TSHARK -n -T fields -e frame.time -e dns.opt.client.addr4 -r $DATAFILE dns.opt.client.addr4 | sort > $tmpdir/$DATAFILE.ecs4
+    tshark -n -T fields -e frame.time -e ipv6.src -e ipv6.dst -r $DATAFILE ipv6.src | sort > $tmpdir/$DATAFILE.ip6
     if [ $? -ne 0 ]; then
         echo "tshark failed"
         cleanup 1
     fi
-    $TSHARK -n -T fields -e frame.time -e dns.opt.client.addr4 -r $tmpdir/$ANONDATAFILE dns.opt.client.addr4 | sort > $tmpdir/$ANONDATAFILE.ecs4
+    tshark -n -T fields -e frame.time -e ipv6.src -e ipv6.dst -r $tmpdir/$ANONDATAFILE ipv6.src | sort > $tmpdir/$ANONDATAFILE.ip6
+    if [ $? -ne 0 ]; then
+        echo "tshark failed"
+        cleanup 1
+    fi
+
+    tshark -n -T fields -e frame.time -e dns.opt.client.addr4 -r $DATAFILE dns.opt.client.addr4 | sort > $tmpdir/$DATAFILE.ecs4
+    if [ $? -ne 0 ]; then
+        echo "tshark failed"
+        cleanup 1
+    fi
+    tshark -n -T fields -e frame.time -e dns.opt.client.addr4 -r $tmpdir/$ANONDATAFILE dns.opt.client.addr4 | sort > $tmpdir/$ANONDATAFILE.ecs4
     if [ $? -ne 0 ]; then
         echo "tshark failed"
         cleanup 1

@@ -10,7 +10,9 @@
 COMP=./compactor
 INSP=./inspector
 DATAFILE=./dns.pcap
-CMP=/usr/bin/cmp
+
+command -v cmp > /dev/null 2>&1 || { echo "No cmp, skipping test." >&2; exit 77; }
+command -v unxz > /dev/null 2>&1 || { echo "No unxz, skipping test." >&2; exit 77; }
 
 tmpdir=`mktemp -d -t "same-output-xz.XXXXXX"`
 
