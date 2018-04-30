@@ -25,6 +25,8 @@
 #include <tins/tins.h>
 #include <tins/memory_helpers.h>
 
+#include "config.h"
+
 #include "bytestring.hpp"
 
 /**
@@ -1224,14 +1226,18 @@ private:
     /**
      * \brief write serialised version of the packet.
      *
-     * This function is for `libtins` use when serialising the packet. Don't
-     * use it.
+     * This function is for `libtins` use when serialising the packet.
+     *  Don't use it.
      *
      * \param buffer    the packet data.
      * \param total_sz  the packet length.
-     * \param parent    the parent PDU.
+     * \param parent    the parent PDU (libtins < 4.0 only).
      */
+#ifdef HAVE_LIBTINS4
+    void write_serialization(uint8_t* buffer, uint32_t total_sz);
+#else
     void write_serialization(uint8_t* buffer, uint32_t total_sz, const PDU* parent);
+#endif
 
     /**
      * \brief the DNS packet header.
