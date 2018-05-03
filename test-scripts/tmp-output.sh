@@ -10,6 +10,8 @@ COMP=./compactor
 INSP=./inspector
 DATAFILE=./dns.pcap
 
+command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
+
 tmpdir=`mktemp -d -t "tmp-output.XXXXXX"`
 
 cleanup()

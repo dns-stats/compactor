@@ -10,6 +10,9 @@ COMP=./compactor
 DATAFILE=./gold.pcap
 CDDL=$srcdir/doc/c-dns-working.cddl
 
+command -v cddl > /dev/null 2>&1 || { echo "No cddl, skipping test." >&2; exit 77; }
+command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
+
 tmpdir=`mktemp -d -t "verify-cddl.XXXXXX"`
 
 cleanup()
@@ -19,8 +22,6 @@ cleanup()
 }
 
 trap "cleanup 1" HUP INT TERM
-
-command -v cddl > /dev/null 2>&1 || { echo "No cddl, skipping test." >&2; exit 77; }
 
 # Run the conversion.
 $COMP -c /dev/null --include all -o $tmpdir/out.cbor $DATAFILE

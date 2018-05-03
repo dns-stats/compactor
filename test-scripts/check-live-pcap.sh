@@ -23,6 +23,11 @@ INSP=./inspector
 
 TCPDUMP=/usr/sbin/tcpdump
 
+command -v cmp > /dev/null 2>&1 || { echo "No cmp, skipping test." >&2; exit 77; }
+command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }
+command -v mergecap > /dev/null 2>&1 || { echo "No mergecap, skipping test." >&2; exit 77; }
+command -v $TCPDUMP > /dev/null 2>&1 || { echo "No tcpdump, skipping test." >&2; exit 77; }
+
 tmpdir=$(mktemp -d -t "check_live_pcap.XXXXXX")
 
 cleanup()

@@ -9,8 +9,12 @@
 
 COMP=./compactor
 INSP=./inspector
+
 DATAFILE=./dns.pcap
-CMP=/usr/bin/cmp
+
+command -v cmp > /dev/null 2>&1 || { echo "No cmp, skipping test." >&2; exit 77; }
+command -v gunzip > /dev/null 2>&1 || { echo "No gunzip, skipping test." >&2; exit 77; }
+command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
 
 tmpdir=`mktemp -d -t "same-output-gzip.XXXXXX"`
 

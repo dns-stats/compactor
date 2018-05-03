@@ -9,6 +9,9 @@
 DNSCAP=./compactor
 DATAFILE=./dns.pcap
 
+command -v cmp > /dev/null 2>&1 || { echo "No cmp, skipping test." >&2; exit 77; }
+command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
+
 #set -x
 
 tmpdir=`mktemp -d -t "same-output.XXXXXX"`
