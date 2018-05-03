@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
 # 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,9 +10,9 @@ KNOWN ISSUES/LIMITATIONS:
 -------------------------
 
 * Timestamps are recorded at microsecond granularity. Picosecond
-  timestamps as described in the current C-DNS draft are not supported.
+  timestamps as described in the implemented C-DNS draft are not supported.
 
-* Malformed packet recording as described in the current C-DNS draft
+* Malformed packet recording as described in the implemented C-DNS draft
   is not supported. However, the compactor can record malformed
   packets in a separate PCAP file with the `--ignored-pcap` option.
 

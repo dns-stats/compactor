@@ -6,6 +6,13 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 0.11.1-rc1 - 2018-05-03
+-------------------------------
+
+* Enable use with libtins v4.0.
+* Fix potential (but never seen) segfault in response matching.
+* Check for required tools in test scripts and skip test if not found.
+
 Version 0.11.0 - 2018-03-12
 ---------------------------
 
