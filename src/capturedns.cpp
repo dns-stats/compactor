@@ -1032,8 +1032,12 @@ namespace {
 }
 
 // This is used by libtins only.
+#ifdef HAVE_LIBTINS4
 // cppcheck-suppress unusedFunction
-void CaptureDNS::write_serialization(uint8_t* buffer, uint32_t total_sz, const PDU*)
+void CaptureDNS::write_serialization(uint8_t* buffer, uint32_t total_sz)
+#else
+void CaptureDNS::write_serialization(uint8_t* buffer, uint32_t total_sz, const PDU *)
+#endif
 {
     LabelCompressionInfo lci;
     OutputBufferStream stream(buffer, total_sz);

@@ -18,6 +18,8 @@
 #include "capturedns.hpp"
 #undef private
 
+#include "config.h"
+
 SCENARIO("Serialising DNS packets", "[dnspacket]")
 {
     GIVEN("A sample DNS message with one compression")
@@ -57,7 +59,11 @@ SCENARIO("Serialising DNS packets", "[dnspacket]")
             REQUIRE(pkt_size == EXPECTED.size());
 
             std::vector<uint8_t> buf(pkt_size);
+#ifdef HAVE_LIBTINS4
+            msg.write_serialization(buf.data(), pkt_size);
+#else
             msg.write_serialization(buf.data(), pkt_size, nullptr);
+#endif
             REQUIRE(buf == EXPECTED);
         }
     }
@@ -109,7 +115,11 @@ SCENARIO("Serialising DNS packets", "[dnspacket]")
             REQUIRE(pkt_size == EXPECTED.size());
 
             std::vector<uint8_t> buf(pkt_size);
+#ifdef HAVE_LIBTINS4
+            msg.write_serialization(buf.data(), pkt_size);
+#else
             msg.write_serialization(buf.data(), pkt_size, nullptr);
+#endif
             REQUIRE(buf == EXPECTED);
         }
     }
@@ -161,7 +171,11 @@ SCENARIO("Serialising DNS packets", "[dnspacket]")
             REQUIRE(pkt_size == EXPECTED.size());
 
             std::vector<uint8_t> buf(pkt_size);
+#ifdef HAVE_LIBTINS4
+            msg.write_serialization(buf.data(), pkt_size);
+#else
             msg.write_serialization(buf.data(), pkt_size, nullptr);
+#endif
             REQUIRE(buf == EXPECTED);
         }
     }
