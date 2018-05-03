@@ -16,6 +16,7 @@ INPUT_FILES="matching.pcap unmatched.pcap"
 #set -x
 
 command -v tshark > /dev/null 2>&1 || { echo "No tshark, skipping test." >&2; exit 77; }
+command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
 
 if [ -z "$1" ] ; then
     echo "Using default input"

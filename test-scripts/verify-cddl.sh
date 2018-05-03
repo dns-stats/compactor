@@ -11,6 +11,7 @@ DATAFILE=./gold.pcap
 CDDL=$srcdir/doc/c-dns-working.cddl
 
 command -v cddl > /dev/null 2>&1 || { echo "No cddl, skipping test." >&2; exit 77; }
+command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
 
 tmpdir=`mktemp -d -t "verify-cddl.XXXXXX"`
 
