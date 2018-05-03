@@ -27,6 +27,7 @@ DATAQR=$srcdir/test-scripts/testcontent.debugqr
 command -v $CBOR2DIAG > /dev/null 2>&1 || { echo "No cbor2diag, skipping test." >&2; exit 77; }
 command -v cmp > /dev/null 2>&1 || { echo "No cmp, skipping test." >&2; exit 77; }
 command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }
+command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
 
 tmpdir=`mktemp -d -t "check-testcontent.XXXXXX"`
 
