@@ -1032,8 +1032,8 @@ namespace {
 }
 
 // This is used by libtins only.
-// cppcheck-suppress unusedFunction
 #ifdef HAVE_LIBTINS4
+// cppcheck-suppress unusedFunction
 void CaptureDNS::write_serialization(uint8_t* buffer, uint32_t total_sz)
 #else
 void CaptureDNS::write_serialization(uint8_t* buffer, uint32_t total_sz, const PDU *)
