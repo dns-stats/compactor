@@ -88,9 +88,9 @@ https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-04[version
 * The format minor version is set to 5.
 * A private version ID of 1000 is present.
 
-_inspector_ reads C-DNS as described all versions of
-the draft, and will continue to be backwards compatible over format
-changes.
+_inspector_ reads C-DNS as described in version 04 of
+the draft, and is intended to be backwards compatible over
+future format changes.
 ====
 
 [IMPORTANT]
