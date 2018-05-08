@@ -79,7 +79,7 @@ source, see the documentation for those items.
 |===
 
 | `{cpp} compiler` | _compactor_ and _inspector_ are written in
-  {cpp}. To build them, a {cpp} compiler and tool chain compatible
+  {cpp}. Building them requires a {cpp} compiler and tool chain compatible
   with the 2011 ISO standard, otherwise {cpp}11.
 
 | `boost-log`
