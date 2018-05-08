@@ -15,10 +15,10 @@ can be used to control _inspector_ .
 
 On startup, _compactor_ attempts to read a configuration file. By
 default this is named `compactor.conf`, and is located in a
-`dns-stats` sytem configuration directory.
+`dns-stats-compactor` sytem configuration directory.
 
 If installed from a binary package on Linux, the configuration file
-will be at `/etc/dns-stats/compactor.conf`.
+will be at `/etc/dns-stats-compactor/compactor.conf`.
 
 ===== Default configuration
 
@@ -33,7 +33,7 @@ but is otherwise configured to collect traffic:
 * A new output file is commenced every 5 minutes.
 * The 'raw' traffic is also recorded to a PCAP output file
 * The 'ignored' traffic is also recorded to a PCAP output file
-* On both Linux the output files are stored under `/var/lib/dns-stats`
+* The output files are stored under `/var/lib/dns-stats-compactor`
 in subdirectories `cdns`, `pcap/raw` and `pcap/ignored`.
 
 An alternate path for the configuration file can be specified to the

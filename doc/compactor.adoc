@@ -64,7 +64,7 @@ Command options are given on the command line.
 
 *-c, --configfile*::
   The configuration file to read. If not specified, the default configuration file
- `/etc/dns-stats/collector.conf` is read if present.
+ `/etc/dns-stats-compactor/compactor.conf` is read if present.
 
 *--debug-dns*::
    Print a summary of each DNS packet to standard output after decoding.
