@@ -52,7 +52,7 @@ Whenever the _compactor_ package is installed, the system will attempt
 to start _compactor_ as a service.
 
 The first time the _compactor_ package is installed, it installs a
-default configuration file `/etc/dns-stats/compactor.conf`. This
+default configuration file `/etc/dns-stats-compactor/compactor.conf`. This
 default configuration does not specify a capture interface, so the
 attempt at starting _compactor_ as a service will fail.  Before
 using _compactor_ as a service, you need to edit the default
@@ -79,7 +79,7 @@ source, see the documentation for those items.
 |===
 
 | `{cpp} compiler` | _compactor_ and _inspector_ are written in
-  {cpp}. To build them, a {cpp} compiler and tool chain compatible
+  {cpp}. Building them requires a {cpp} compiler and tool chain compatible
   with the 2011 ISO standard, otherwise {cpp}11.
 
 | `boost-log`
