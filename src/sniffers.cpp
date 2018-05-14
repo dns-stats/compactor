@@ -136,7 +136,8 @@ BaseSniffers::BaseSniffers(unsigned chan_max_size)
 BaseSniffers::~BaseSniffers()
 {
     breakloop();
-    t_.join();
+    if ( t_.joinable() )
+        t_.join();
 
     for ( auto h : handles_ )
         pcap_close(h);
