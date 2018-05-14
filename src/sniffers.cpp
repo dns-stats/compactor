@@ -231,7 +231,7 @@ void BaseSniffers::packet_read_thread()
                     {
                         packets_.put(make_packet(h, hdr, data));
                     }
-                    catch (Tins::malformed_packet&)
+                    catch (Tins::exception_base&)
                     {
                         // Unlike libtins, which just ignores them, pass malformed
                         // packets - packets where transport level decode fails -
