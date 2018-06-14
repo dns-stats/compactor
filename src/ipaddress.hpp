@@ -87,6 +87,11 @@ public:
     byte_string asNetworkBinary() const;
 
     /**
+     * \brief Return a string representation of the address.
+     */
+    std::string str() const;
+
+    /**
      * \brief Equality operator.
      *
      * \param rhs the address to compare to.
