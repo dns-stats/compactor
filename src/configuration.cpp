@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -194,6 +194,7 @@ Configuration::Configuration()
       promisc_mode(false),
       output_options_queries(0), output_options_responses(0),
       max_block_qr_items(5000),
+      max_blocks_in_file(0),
       report_info(false), log_network_stats_period(0),
       debug_dns(false), debug_qr(false), omit_sysid(false),
       max_channel_size(10000),
@@ -275,6 +276,9 @@ Configuration::Configuration()
         ("max-block-qr-items",
          po::value<unsigned int>(&max_block_qr_items)->default_value(5000),
          "maximum number of query/response items in an output block.")
+        ("max-blocks-in-file",
+         po::value<unsigned int>(&max_blocks_in_file)->default_value(0),
+         "maximum number of blocks in an output file.")
         ("output,o",
          po::value<std::string>(&output_pattern),
          "filename pattern for storing C-DNS output.")
@@ -378,6 +382,7 @@ void Configuration::dump_config(std::ostream& os) const
        << "  Skew timeout         : " << skew_timeout << " microseconds\n"
        << "  Snap length          : " << snaplen << "\n"
        << "  Max block items      : " << max_block_qr_items << "\n"
+       << "  Max blocks in file   : " << max_blocks_in_file << "\n"
        << "  File rotation period : " << rotation_period << "\n"
        << "  Promiscuous mode     : " << (promisc_mode ? "On" : "Off") << "\n"
        << "  Capture interfaces   : ";

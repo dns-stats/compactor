@@ -186,7 +186,8 @@ example, to set the snap length to 64, the configuration file entry must read
 *-t, --rotation-period* _SECONDS_::
   Specify the frequency with which all output file path patterns should be re-examined.
   If the file path has changed, the existing output file is closed and a new one opened
-  using the new pattern expansion. The default period is 300 seconds.
+  using the new pattern expansion. If the file path has not changed, the pattern
+  is re-examined every second until it changes. The default period is 300 seconds.
 
 *-n, --include* _SECTIONS_::
   Indicate which optional sections should be included in the main output. This argument
@@ -209,6 +210,13 @@ example, to set the snap length to 64, the configuration file entry must read
    Set the maximum number of query/response items included in a single
    output C-DNS block. _arg_ must be a positive integer. The default maximum
    size is 5000.
+
+*--max-blocks-in-file* _arg_::
+   Set the maximum number of blocks to be included in a single output file before
+   the output file path pattern is re-examined. If the file path has changed, the existing
+   output file is closed and a new one opened. If the file path has not changed, the pattern
+   is re-examined every second until it changes. _arg_ must be a positive integer. The
+   default value is 0, which indicates there is no maximum number of blocks.
 
 ==== Query/response matching
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -200,6 +200,11 @@ public:
      * \brief set the maximum number of query/response items in a block.
      */
     unsigned int max_block_qr_items;
+
+    /**
+     * \brief set the maximum number of blocks in a file. 0 = no limit.
+     */
+    unsigned int max_blocks_in_file;
 
     /**
      * \brief which RR types are to be included on output.

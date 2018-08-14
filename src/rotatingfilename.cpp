@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -55,21 +55,25 @@ namespace {
 }
 
 bool RotatingFileName::need_rotate(const std::chrono::system_clock::time_point& t,
-                                   const Configuration& config)
+                                   const Configuration& config, bool force)
 {
-    if ( t < next_rot_ )
+    if ( t < next_check_ )
         return false;
 
-    std::string new_base = baseFilename(t, config);
-    if ( new_base == filename_base_ )
+    if ( t >= next_rot_ || force )
     {
-        // Period rolled over, but base is unchanged. Allow another
-        // period to elapse before checking again.
-        next_rot_ = t + period_;
-        return false;
-    }
-    else
+        // Generate new base filename and see if it's changed.
+        std::string new_base = baseFilename(t, config);
+        if ( new_base == filename_base_ )
+        {
+            // A rotation is required, but not possible because the
+            // base is unchanged. Don't check for another second.
+            next_check_ = t + std::chrono::seconds(1);
+            return false;
+        }
         return true;
+    }
+    return false;
 }
 
 std::string RotatingFileName::filename(const std::chrono::system_clock::time_point& t,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -58,6 +58,12 @@ SCENARIO("Rotating file name changes", "[rotation]")
             REQUIRE(rfn.filename(t, config) == "19891227-000000.test");
             t += std::chrono::seconds(20);
             REQUIRE(!rfn.need_rotate(t, config));
+        }
+        AND_THEN("check rotation is needed in time period if forced")
+        {
+            REQUIRE(rfn.filename(t, config) == "19891227-000000.test");
+            t += std::chrono::seconds(20);
+            REQUIRE(rfn.need_rotate(t, config, true));
         }
 
         AND_THEN("check rotation is needed after time period")

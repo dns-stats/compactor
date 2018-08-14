@@ -61,12 +61,17 @@ void BlockCborWriter::writeAE(const std::shared_ptr<AddressEvent>& ae,
 
 void BlockCborWriter::checkForRotation(const std::chrono::system_clock::time_point& timestamp)
 {
-    if ( !enc_->is_open() || output_pattern_.need_rotate(timestamp, config_) )
+    if ( !enc_->is_open() ||
+         output_pattern_.need_rotate(timestamp,
+                                     config_,
+                                     config_.max_blocks_in_file > 0 &&
+                                     blocks_in_file_ >= config_.max_blocks_in_file) )
     {
         close();
         filename_ = output_pattern_.filename(timestamp, config_);
         enc_->open(filename_);
         writeFileHeader();
+        blocks_in_file_ = 0;
     }
 }
 
@@ -365,4 +370,5 @@ void BlockCborWriter::writeBlock()
     data_->last_packet_statistics = last_end_block_statistics_;
     data_->writeCbor(*enc_);
     data_->clear();
+    blocks_in_file_++;
 }

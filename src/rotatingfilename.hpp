@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -59,10 +59,11 @@ public:
      *
      * \param t      the new time point.
      * \param config the current configuration.
+     * \param force  force rotation if possible.
      * \returns `true` if a file rotation is required.
      */
     bool need_rotate(const std::chrono::system_clock::time_point& t,
-                     const Configuration& config);
+                     const Configuration& config, bool force=false);
 
     /**
      * \brief Generate the filename with time/date items at the specified time.
@@ -107,9 +108,14 @@ protected:
 
 private:
     /**
-     * \brief time for the next rotation check.
+     * \brief time for the next rotation.
      */
     std::chrono::system_clock::time_point next_rot_;
+
+    /**
+     * \brief next time to check rotation.
+     */
+    std::chrono::system_clock::time_point next_check_;
 
     /**
      * \brief the rotation period.

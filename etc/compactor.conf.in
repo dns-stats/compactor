@@ -41,6 +41,12 @@
 # Output file rotation period, in seconds.
 # rotation-period=300
 
+# Maximum Query/Response records in a file block.
+# max-block-qr-items=5000
+
+# Maximum number of blocks in a file before rotation triggered. 0=no limit.
+# max-blocks-in-file=0
+
 # C-DNS output file pattern.
 # output=
 output=@DSLOCALSTATEDIR@/cdns/%Y%m%d-%H%M%S_%{rotate-period}_%{interface}.cdns

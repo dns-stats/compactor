@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -45,6 +45,7 @@ public:
      */
     BlockCborWriter(const Configuration& config,
                       std::unique_ptr<CborBaseStreamFileEncoder> enc);
+
     /**
      * \brief Destructor.
      *
@@ -189,6 +190,11 @@ private:
      * \brief the final current filename.
      */
     std::string filename_;
+
+    /**
+     * \brief the number of blocks in the file to date.
+     */
+    unsigned blocks_in_file_;
 
     /**
      * \brief the output CBOR encoder.
