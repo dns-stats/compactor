@@ -35,6 +35,7 @@ conffile=$(dsconfdir)/compactor.conf
 
 check_PROGRAMS = compactor-tests
 check_SCRIPTS = test-scripts/check-config-info.sh \
+                test-scripts/check-dnscap.sh \
                 test-scripts/check-outputs.sh \
                 test-scripts/check-testcontent.sh \
                 test-scripts/inspector-outputs.sh \
@@ -62,6 +63,7 @@ endif
 
 dist_check_DATA = doc/c-dns-working.cddl \
                   test-scripts/dns.pcap.xz \
+                  test-scripts/dnscap.pcap.xz \
                   test-scripts/gold.pcap.xz \
                   test-scripts/gold.cbor.xz \
                   test-scripts/gold.cbor02.xz \
@@ -84,6 +86,7 @@ dist_check_DATA = doc/c-dns-working.cddl \
 EXTRA_DIST = getversion.sh .version
 
 check_DATA = dns.pcap \
+             dnscap.pcap \
              gold.pcap \
              gold.cbor \
              gold.cbor02 \

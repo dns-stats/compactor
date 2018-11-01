@@ -121,6 +121,9 @@ namespace {
         case DLT_PPI:
             return make_generic_packet<Tins::PPI>(hdr, data);
 
+        case DLT_RAW:
+            return make_generic_packet<Tins::RawPDU>(hdr, data);
+
         default:
             throw Tins::unknown_link_type();
         }
