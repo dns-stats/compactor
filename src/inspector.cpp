@@ -567,6 +567,8 @@ int main(int ac, char *av[])
             return 1;
         }
 
+        po::notify(vm);
+
         if ( vm.count("pseudo-anonymisation-key") != 0 &&
              pseudo_anon_key.size() != 16 )
         {
@@ -595,8 +597,6 @@ int main(int ac, char *av[])
         options.report_only = ( vm.count("report-only") != 0 );
         if ( options.report_only )
             options.report_info = true;
-
-        po::notify(vm);
     }
     catch (po::error& err)
     {
