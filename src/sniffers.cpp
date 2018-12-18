@@ -121,6 +121,9 @@ namespace {
         case DLT_PPI:
             return make_generic_packet<Tins::PPI>(hdr, data);
 
+        case DLT_RAW:
+            return make_generic_packet<Tins::RawPDU>(hdr, data);
+
         default:
             throw Tins::unknown_link_type();
         }
@@ -136,7 +139,8 @@ BaseSniffers::BaseSniffers(unsigned chan_max_size)
 BaseSniffers::~BaseSniffers()
 {
     breakloop();
-    t_.join();
+    if ( t_.joinable() )
+        t_.join();
 
     for ( auto h : handles_ )
         pcap_close(h);
@@ -230,7 +234,7 @@ void BaseSniffers::packet_read_thread()
                     {
                         packets_.put(make_packet(h, hdr, data));
                     }
-                    catch (Tins::malformed_packet&)
+                    catch (Tins::exception_base&)
                     {
                         // Unlike libtins, which just ignores them, pass malformed
                         // packets - packets where transport level decode fails -

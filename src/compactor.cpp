@@ -714,7 +714,8 @@ int main(int ac, char *av[])
 
         // Wait for in progress output to complete.
         for ( auto& thread : threads )
-            thread.join();
+            if ( thread.joinable() )
+                thread.join();
     }
     catch (po::error& err)
     {
