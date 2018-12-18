@@ -182,6 +182,37 @@ namespace {
     }
 }
 
+void validate(boost::any& v, const std::vector<std::string>& values,
+              Size* val1, int val2)
+{
+    po::validators::check_first_occurrence(v);
+    std::string s = po::validators::get_single_string(values);
+    char suffix = s.back();
+    std::uintmax_t factor = 1;
+
+    switch(suffix)
+    {
+    case 'k': factor = 1024ull; break;
+    case 'K': factor = 1000ull; break;
+    case 'm': factor = 1024ull*1024; break;
+    case 'M': factor = 1000ull*1000; break;
+    case 'g': factor = 1024ull*1024*1024; break;
+    case 'G': factor = 1000ull*1000*1000; break;
+    case 't': factor = 1024ull*1024*1024*1024; break;
+    case 'T': factor = 1000ull*1000*1000*1000; break;
+
+    default:
+        if ( ! ( suffix >= '0' && suffix <= '9' ) )
+            throw po::validation_error(po::validation_error::invalid_option_value);
+        break;
+    }
+
+    if ( factor > 1 )
+        s.pop_back();
+
+    v = boost::any(Size(std::stoull(s) * factor));
+}
+
 Configuration::Configuration()
     : gzip_output(false), gzip_level(6),
       xz_output(false), xz_preset(6),
@@ -194,7 +225,7 @@ Configuration::Configuration()
       promisc_mode(false),
       output_options_queries(0), output_options_responses(0),
       max_block_qr_items(5000),
-      max_blocks_in_file(0),
+      max_output_size(0),
       report_info(false), log_network_stats_period(0),
       debug_dns(false), debug_qr(false), omit_sysid(false),
       max_channel_size(10000),
@@ -276,9 +307,9 @@ Configuration::Configuration()
         ("max-block-qr-items",
          po::value<unsigned int>(&max_block_qr_items)->default_value(5000),
          "maximum number of query/response items in an output block.")
-        ("max-blocks-in-file",
-         po::value<unsigned int>(&max_blocks_in_file)->default_value(0),
-         "maximum number of blocks in an output file.")
+        ("max-output-size",
+         po::value<Size>(&max_output_size),
+         "maximum size of output (uncompressed) before rotation.")
         ("output,o",
          po::value<std::string>(&output_pattern),
          "filename pattern for storing C-DNS output.")
@@ -381,9 +412,10 @@ void Configuration::dump_config(std::ostream& os) const
        << "  Query timeout        : " << query_timeout << " seconds\n"
        << "  Skew timeout         : " << skew_timeout << " microseconds\n"
        << "  Snap length          : " << snaplen << "\n"
-       << "  Max block items      : " << max_block_qr_items << "\n"
-       << "  Max blocks in file   : " << max_blocks_in_file << "\n"
-       << "  File rotation period : " << rotation_period << "\n"
+       << "  Max block items      : " << max_block_qr_items << "\n";
+    if ( max_output_size.size > 0 )
+        os << "  Max output size      : " << max_output_size.size << "\n";
+    os << "  File rotation period : " << rotation_period << "\n"
        << "  Promiscuous mode     : " << (promisc_mode ? "On" : "Off") << "\n"
        << "  Capture interfaces   : ";
     for ( const auto& i : network_interfaces )

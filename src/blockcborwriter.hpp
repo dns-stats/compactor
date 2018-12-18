@@ -14,6 +14,7 @@
 #define BLOCKEDCBORWRITER_HPP
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
 
 #include "baseoutputwriter.hpp"
@@ -192,9 +193,9 @@ private:
     std::string filename_;
 
     /**
-     * \brief the number of blocks in the file to date.
+     * \brief bytes written to this file so far.
      */
-    unsigned blocks_in_file_;
+    std::uintmax_t bytes_written_;
 
     /**
      * \brief the output CBOR encoder.

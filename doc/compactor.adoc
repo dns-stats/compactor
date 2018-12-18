@@ -211,12 +211,14 @@ example, to set the snap length to 64, the configuration file entry must read
    output C-DNS block. _arg_ must be a positive integer. The default maximum
    size is 5000.
 
-*--max-blocks-in-file* _arg_::
-   Set the maximum number of blocks to be included in a single output file before
-   the output file path pattern is re-examined. If the file path has changed, the existing
-   output file is closed and a new one opened. If the file path has not changed, the pattern
-   is re-examined every second until it changes. _arg_ must be a positive integer. The
-   default value is 0, which indicates there is no maximum number of blocks.
+*--max-output-size* _arg_::
+   Sets a maximum size for the uncompressed output before an output file
+   rotation is triggered. _arg_ must be a positive integer, and may optionally
+   be followed by one of the following multiplicative suffixes: _k_=1024, _K_=1000,
+   _m_=1024*1024, _M_=1000*1000 and similarly for _g_, and _t_.
+   If a file rotation is triggered, the remaining block and the file postlude will
+   be written, so the final file size will exceed this setting by a small margin. The
+   default value is 0, which indicates there is no maximum size.
 
 ==== Query/response matching
 

@@ -54,16 +54,14 @@ public:
      *
      * If the rotation period has expired, a rotation is needed if the
      * filename generated from the pattern has changed. If the filename
-     * has not changed, allow another rotation period to elapse before
-     * checking again.
+     * has not changed, allow a second to elapse before checking again.
      *
      * \param t      the new time point.
      * \param config the current configuration.
-     * \param force  force rotation if possible.
      * \returns `true` if a file rotation is required.
      */
     bool need_rotate(const std::chrono::system_clock::time_point& t,
-                     const Configuration& config, bool force=false);
+                     const Configuration& config);
 
     /**
      * \brief Generate the filename with time/date items at the specified time.

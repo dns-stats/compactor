@@ -55,12 +55,12 @@ namespace {
 }
 
 bool RotatingFileName::need_rotate(const std::chrono::system_clock::time_point& t,
-                                   const Configuration& config, bool force)
+                                   const Configuration& config)
 {
     if ( t < next_check_ )
         return false;
 
-    if ( t >= next_rot_ || force )
+    if ( t >= next_rot_ )
     {
         // Generate new base filename and see if it's changed.
         std::string new_base = baseFilename(t, config);

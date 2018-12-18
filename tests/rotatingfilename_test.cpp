@@ -59,12 +59,6 @@ SCENARIO("Rotating file name changes", "[rotation]")
             t += std::chrono::seconds(20);
             REQUIRE(!rfn.need_rotate(t, config));
         }
-        AND_THEN("check rotation is needed in time period if forced")
-        {
-            REQUIRE(rfn.filename(t, config) == "19891227-000000.test");
-            t += std::chrono::seconds(20);
-            REQUIRE(rfn.need_rotate(t, config, true));
-        }
 
         AND_THEN("check rotation is needed after time period")
         {

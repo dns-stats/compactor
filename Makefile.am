@@ -38,6 +38,7 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/check-outputs.sh \
                 test-scripts/check-testcontent.sh \
                 test-scripts/inspector-outputs.sh \
+                test-scripts/output-size-limit.sh \
                 test-scripts/same-output.sh \
                 test-scripts/same-output-gzip.sh \
                 test-scripts/same-output-xz.sh \
