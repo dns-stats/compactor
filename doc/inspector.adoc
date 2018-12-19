@@ -79,6 +79,10 @@ output file must be specified with the *--output* option.
 *-I, --info-only*::
    Don't write any PCAP output files, just write the `.info` files.
 
+*-S, --stats*::
+  For each input file, write the number of query/response records converted and the time
+  taken to standard error  on completion.
+
 *-k, --pseudo-anonymisation-key*::
    Key to use during output pseudo-anonymisation. Must be 16 bytes long.
 

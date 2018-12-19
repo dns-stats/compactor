@@ -55,6 +55,11 @@ struct Options
     bool generate_output{true};
 
     /**
+     * \brief print conversion stats to stderr.
+     */
+    bool generate_stats{false};
+
+    /**
      * \brief generate info to file?
      */
     bool generate_info{true};
@@ -97,6 +102,9 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
 
     try
     {
+        auto start = std::chrono::system_clock::now();
+        unsigned long long nrecs = 0;
+
         for ( std::shared_ptr<QueryResponse> qr = cbr.readQR();
               qr;
               qr = cbr.readQR() )
@@ -134,6 +142,7 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
                 std::cout << *qr;
 
             backend->output(qr, config);
+            nrecs++;
         }
 
         // Approximate the rotation period with the difference between the first
@@ -145,6 +154,13 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
 
         if ( options.report_info )
             report(std::cout, config, cbr, backend);
+
+        if ( options.generate_stats )
+        {
+            auto end = std::chrono::system_clock::now();
+            std::chrono::duration<double> elapsed = end - start;
+            std::cerr << "Converted " << nrecs << " q/r pairs in " << elapsed.count() << "s (" << nrecs/elapsed.count() << "rec/s)\n";
+        }
     }
     catch (const std::exception& e)
     {
@@ -219,6 +235,8 @@ int main(int ac, char *av[])
          "don't generate PCAP output files, only info files.")
         ("report-only,R",
          "don't write output files, just report info.")
+        ("stats,S",
+         "report conversion statistics.")
 #if ENABLE_PSEUDOANONYMISATION
         ("pseudo-anonymisation-key,k",
          po::value<std::string>(&pseudo_anon_key),
@@ -308,6 +326,7 @@ int main(int ac, char *av[])
         pcap_options.xz_output = ( vm.count("xz-output") != 0 );
         pcap_options.query_only = ( vm.count("query-only") != 0 );
         options.debug_qr = ( vm.count("debug-qr") != 0 );
+        options.generate_stats = ( vm.count("stats") != 0 );
 
         options.generate_output = true;
         options.generate_info = true;
