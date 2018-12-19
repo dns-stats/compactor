@@ -151,6 +151,7 @@ inspector_headers = \
         src/addressevent.hpp \
         src/capturedns.hpp \
         src/cbordecoder.hpp \
+        src/backend.hpp \
         src/blockcbor.hpp \
         src/blockcbordata.hpp \
         src/blockcborreader.hpp \
@@ -265,6 +266,7 @@ endif
 
 inspector_SOURCES = \
         $(inspector_headers) \
+        src/backend.cpp \
         src/baseoutputwriter.cpp \
         src/rotatingfilename.cpp \
         src/bytestring.cpp \
