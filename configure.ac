@@ -102,7 +102,7 @@ AC_CHECK_HEADERS([ctemplate/template.h])
 SAVED_LIBS=$LIBS
 LIBS="$LIBS -lctemplate"
 AC_LINK_IFELSE(
-  [AC_LANG_PROGRAM([#include <ctemplate/template_string.h>], 
+  [AC_LANG_PROGRAM([#include <ctemplate/template_string.h>],
     [ctemplate::TemplateString s("example")])],
         [
             AC_SUBST([CTEMPLATE_LIB], ["-lctemplate"])
