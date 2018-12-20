@@ -98,6 +98,27 @@ PKG_CHECK_MODULES(libtins,
                   [PKG_CHECK_MODULES(libtins, libtins >= 3.4)])
 AC_SUBST(libtins_LIBS)
 
+AC_CHECK_HEADERS([ctemplate/template.h])
+SAVED_LIBS=$LIBS
+LIBS="$LIBS -lctemplate"
+AC_LINK_IFELSE(
+  [AC_LANG_PROGRAM([#include <ctemplate/template_string.h>], 
+    [ctemplate::TemplateString s("example")])],
+        [
+            AC_SUBST([CTEMPLATE_LIB], ["-lctemplate"])
+            AC_DEFINE([HAVE_LIBCTEMPLATE], [1], [Define to 1 if you have the `ctemplate' library (-lctemplate)])
+        ],
+        [AC_MSG_ERROR([ctemplate library not found])])
+LIBS="$SAVED_LIBS"
+
+AC_CHECK_LIB([maxminddb],[MMDB_open],
+        [
+            AC_SUBST([MAXMINDDB_LIB], ["-lmaxminddb"])
+            AC_DEFINE([HAVE_LIBMAXMINDDB], [1], [Define to 1 if you have the `maxminddb' library (-lmaxminddb)])
+        ],
+        [AC_MSG_ERROR([maxminddb library not found])])
+AC_CHECK_HEADERS([maxminddb.h])
+
 # Checks for header files.
 
 # Checks for typedefs, structures, and compiler characteristics.

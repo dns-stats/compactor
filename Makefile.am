@@ -157,6 +157,7 @@ inspector_headers = \
         src/blockcborreader.hpp \
         src/configuration.hpp \
         src/dnsmessage.hpp \
+        src/geoip.hpp \
         src/ipaddress.hpp \
         src/log.hpp \
         src/makeunique.hpp \
@@ -164,7 +165,8 @@ inspector_headers = \
         src/pcapwriter.hpp \
         src/pseudoanonymise.hpp \
         src/queryresponse.hpp \
-        src/streamwriter.hpp
+        src/streamwriter.hpp \
+        src/template-backend.hpp
 
 # _internal_test items work by #including the corresponding .cpp to get
 # access to its internals. You can't have the _internal_test.cpp and the .cpp
@@ -277,12 +279,14 @@ inspector_SOURCES = \
         src/blockcbordata.cpp \
         src/blockcborreader.cpp \
         src/configuration.cpp \
+        src/geoip.cpp \
         src/ipaddress.cpp \
         src/dnsmessage.cpp \
         src/inspector.cpp \
         src/log.cpp \
         src/pseudoanonymise.cpp \
-        src/streamwriter.cpp
+        src/streamwriter.cpp \
+        src/template-backend.cpp
 
 inspector_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
 inspector_LDADD = \
@@ -294,7 +298,9 @@ inspector_LDADD = \
         $(BOOST_THREAD_LIB) \
         $(LZMA_LIB) \
         @PTHREAD_LIBS@ \
-        $(libtins_LIBS)
+        $(libtins_LIBS) \
+        $(CTEMPLATE_LIB) \
+        $(MAXMINDDB_LIB)
 inspector_LDFLAGS = \
         $(BOOST_LDFLAGS)
 if ENABLE_PSEUDOANONYMISATION

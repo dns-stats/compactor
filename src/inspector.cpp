@@ -30,9 +30,11 @@
 #include "log.hpp"
 #include "makeunique.hpp"
 #include "pseudoanonymise.hpp"
+#include "template-backend.hpp"
 
 const std::string PROGNAME = "inspector";
 const std::string PCAP_EXT = ".pcap";
+const std::string TEMPLATE_EXT = ".txt";
 const std::string INFO_EXT = ".info";
 
 namespace po = boost::program_options;
@@ -209,6 +211,10 @@ int main(int ac, char *av[])
 #endif
     Options options;
     PcapBackendOptions pcap_options;
+    TemplateBackendOptions template_options;
+    bool template_backend = false;
+    std::string backend;
+    std::vector<std::string> vals;
 
     po::options_description visible("Options");
     visible.add_options()
@@ -217,13 +223,25 @@ int main(int ac, char *av[])
         ("output,o",
          po::value<std::string>(&output_file_name),
          "output file name.")
+        ("backend,B",
+         po::value<std::string>(&backend),
+         "output backend. 'pcap' (default) or 'template'.")
+        ("template,t",
+         po::value<std::string>(&template_options.template_name),
+         "name of template to use for template output.")
+        ("value,V",
+         po::value<std::vector<std::string>>(&vals),
+         "<key>=<value> to substitute in the template. This argument can be repeated.")
+        ("geoip-db-dir,g",
+         po::value<std::string>(&template_options.geoip_db_dir_path)->default_value("/var/lib/GeoIP"),
+         "path of directory with the GeoIP databases.")
         ("gzip-output,z",
-         "compress PCAP data using gzip. Adds .gz extension to output file.")
+         "compress output data using gzip. Adds .gz extension to output file.")
         ("gzip-level,y",
          po::value<unsigned int>(&pcap_options.baseopts.gzip_level)->default_value(6),
          "gzip compression level.")
         ("xz-output,x",
-         "compress PCAP data using xz. Adds .xz extension to output file.")
+         "compress output data using xz. Adds .xz extension to output file.")
         ("xz-preset,u",
          po::value<unsigned int>(&pcap_options.baseopts.xz_preset)->default_value(6),
          "xz compression preset level.")
@@ -232,9 +250,9 @@ int main(int ac, char *av[])
         ("report-info,r",
          "report info (config and stats summary) on exit.")
         ("info-only,I",
-         "don't generate PCAP output files, only info files.")
+         "don't generate output data files, only info files.")
         ("report-only,R",
-         "don't write output files, just report info.")
+         "don't write output data files, just report info.")
         ("stats,S",
          "report conversion statistics.")
 #if ENABLE_PSEUDOANONYMISATION
@@ -303,6 +321,27 @@ int main(int ac, char *av[])
 
         po::notify(vm);
 
+        if ( vm.count("backend") != 0 )
+        {
+            if ( backend == "pcap" )
+                template_backend = false;
+            else if ( backend == "template" )
+                template_backend = true;
+            else
+            {
+                std::cerr << PROGNAME
+                          << ":  Error:\tBackend must be 'pcap' or 'template'.\n";
+                return 1;
+            }
+        }
+
+        if ( template_backend && vm.count("template") == 0 )
+        {
+            std::cerr << PROGNAME
+                << ":  Error:\tTemplate backend requires a template to be specified.\n";
+            return 1;
+        }
+
         if ( vm.count("pseudo-anonymisation-key") != 0 &&
              pseudo_anon_key.size() != 16 )
         {
@@ -347,6 +386,8 @@ int main(int ac, char *av[])
 
         if ( !options.generate_output )
             pcap_options.baseopts.write_output = false;
+
+        template_options.baseopts = pcap_options.baseopts;
     }
     catch (po::error& err)
     {
@@ -387,11 +428,22 @@ int main(int ac, char *av[])
         }
     }
 
+    for ( auto&& val : vals )
+    {
+        auto eq_pos = val.find('=');
+        if ( eq_pos == std::string::npos )
+        {
+            std::cerr << PROGNAME << ": Value '" << val << " not of form <keyname>=<value>." << std::endl;
+            return 1;
+        }
+        std::string key = val.substr(0, eq_pos);
+        std::string keyval = val.substr(eq_pos + 1);
+        template_options.values.push_back(std::make_pair(key, keyval));
+    }
+
     try
     {
         std::unique_ptr<OutputBackend> backend;
-        std::string pcap_file_name;
-        std::string info_file_name;
         std::ofstream info;
         bool output_specified = false;
 
@@ -406,7 +458,7 @@ int main(int ac, char *av[])
                     if ( options.report_info || options.debug_qr )
                     {
                         std::cerr << PROGNAME
-                                  << ":  Writing PCAP to standard output can't be combined with info reporting or printing Query/Response details.\n";
+                                  << ":  Writing output to standard output can't be combined with info reporting or printing Query/Response details.\n";
                         return 1;
                     }
                     options.generate_info = false;
@@ -421,7 +473,10 @@ int main(int ac, char *av[])
                     return 1;
             }
 
-            backend = make_unique<PcapBackend>(pcap_options, output_file_name);
+            if ( template_backend )
+                backend = make_unique<TemplateBackend>(template_options, output_file_name);
+            else
+                backend = make_unique<PcapBackend>(pcap_options, output_file_name);
         }
 
         if ( !vm.count("cdns-file") )
@@ -438,12 +493,20 @@ int main(int ac, char *av[])
         {
             if ( !output_specified )
             {
-                std::string pcap_fname = fname + PCAP_EXT;
+                std::string out_fname;
 
-                if ( !open_info_file(pcap_fname, info, options) )
+                if ( template_backend )
+                    out_fname = fname + TEMPLATE_EXT;
+                else
+                    out_fname = fname + PCAP_EXT;
+
+                if ( !open_info_file(out_fname, info, options) )
                     return 1;
 
-                backend = make_unique<PcapBackend>(pcap_options, pcap_fname);
+                if ( template_backend )
+                    backend = make_unique<TemplateBackend>(template_options, out_fname);
+                else
+                    backend = make_unique<PcapBackend>(pcap_options, out_fname);
             }
 
             if ( options.report_info )
