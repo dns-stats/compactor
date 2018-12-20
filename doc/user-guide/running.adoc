@@ -303,12 +303,13 @@ signal, existing compression threads are not affected.
 
 == Running _inspector_
 
-_inspector_ is run from the command line to reconstruct network
-traffic in PCAP format from one or more C-DNS files. Each PCAP file
-output may be accompanied by a text `info` file giving basic
+_inspector_ is run from the command line to convert C-DNS from one or more
+C-DNS file to PCAP. Alternatively, it can be used to convert C-DNS to text,
+based on a template file specifying the output for each query/response record.
+Each output file may be accompanied by a text `info` file giving basic
 information on the C-DNS file contents (configuration and basic
 statistics).  Alternatively just the `info` file can be output with no
-PCAP files.
+output files.
 
 IMPORTANT: `info` files are not part of the C-DNS specification. Their
 contents are specific to this implementation, and are subject to
@@ -327,16 +328,15 @@ Options:
   -h [ --help ]                show this help message.
   -v [ --version ]             show version information.
   -o [ --output ] arg          output file name.
-  -z [ --gzip-output ]         compress PCAP data using gzip. Adds .gz 
+  -z [ --gzip-output ]         compress output data using gzip. Adds .gz 
                                extension to output file.
   -y [ --gzip-level ] arg (=6) gzip compression level.
-  -x [ --xz-output ]           compress PCAP data using xz. Adds .xz extension 
+  -x [ --xz-output ]           compress output data using xz. Adds .xz extension 
                                to output file.
   -u [ --xz-preset ] arg (=6)  xz compression preset level.
   -q [ --query-only ]          write only query messages to output.
   -r [ --report-info ]         report info (config and stats summary) on exit.
-  -I [ --info-only ]           don't generate PCAP output files, only info 
-                               files.
+  -I [ --info-only ]           don't generate output files, only info files.
   -R [ --report-only ]         don't write output files, just report info.
   -k [ --pseudo-anonymisation-key ] arg pseudo-anonymisation key.
   -P [ --pseudo-anonymisation-passphrase ] arg
