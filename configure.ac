@@ -119,6 +119,12 @@ AC_CHECK_LIB([maxminddb],[MMDB_open],
         [AC_MSG_ERROR([maxminddb library not found])])
 AC_CHECK_HEADERS([maxminddb.h])
 
+AC_ARG_WITH([geoip-data-dir],
+        [AS_HELP_STRING([--with-geoip-data-dir=DIR], [Look in given directory for GeoIP data files. @<:@default=LOCALSTATEDIR/GeoIP@:>@])],
+        [],
+        [with_geoip_data_dir=${localstatedir}/lib/GeoIP])
+AC_SUBST([geoipdir], [$with_geoip_data_dir])
+
 # Checks for header files.
 
 # Checks for typedefs, structures, and compiler characteristics.

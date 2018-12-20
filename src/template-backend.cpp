@@ -17,6 +17,7 @@
 
 #include "capturedns.hpp"
 #include "geoip.hpp"
+#include "log.hpp"
 
 #include "template-backend.hpp"
 
@@ -273,7 +274,12 @@ namespace
     IP6AddrModifier ip6addrModifier;
     IP6AddrBinModifier ip6addrBinModifier;
 
-    void load_modifiers()
+    std::unique_ptr<GeoIPContext> geoip;
+    std::unique_ptr<IPAddrGeoLocationModifier> ipaddr_geoloc;
+    std::unique_ptr<IPAddrGeoASNModifier> ipaddr_geoasn;
+    std::unique_ptr<NoGeoLocationModifier> no_geoloc;
+
+    void load_modifiers(const std::string& db_dir)
     {
         ctemplate::AddModifier("x-cstring", &cStringModifier);
         ctemplate::AddModifier("x-hexstring", &hexStringModifier);
@@ -281,6 +287,22 @@ namespace
         ctemplate::AddModifier("x-ipaddr", &ipaddrModifier);
         ctemplate::AddModifier("x-ip6addr", &ip6addrModifier);
         ctemplate::AddModifier("x-ip6addr-bin", &ip6addrBinModifier);
+
+        try
+        {
+            geoip = make_unique<GeoIPContext>(db_dir);
+            ipaddr_geoloc = make_unique<IPAddrGeoLocationModifier>(*geoip);
+            ipaddr_geoasn = make_unique<IPAddrGeoASNModifier>(*geoip);
+            ctemplate::AddModifier("x-ipaddr-geo-location", ipaddr_geoloc.get());
+            ctemplate::AddModifier("x-ipaddr-geo-asn", ipaddr_geoasn.get());
+        }
+        catch (const geoip_error& e)
+        {
+            LOG_INFO << "No GeoIP data available " << e.what();
+            no_geoloc = make_unique<NoGeoLocationModifier>();
+            ctemplate::AddModifier("x-ipaddr-geo-location", no_geoloc.get());
+            ctemplate::AddModifier("x-ipaddr-geo-asn", no_geoloc.get());
+        }
     }
 }
 
@@ -296,7 +318,7 @@ TemplateBackend::TemplateBackend(const TemplateBackendOptions& opts, const std::
 {
     if ( !loaded_modifiers )
     {
-        load_modifiers();
+        load_modifiers(opts.geoip_db_dir_path);
         loaded_modifiers = true;
     }
 

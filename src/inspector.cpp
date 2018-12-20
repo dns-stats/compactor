@@ -233,7 +233,7 @@ int main(int ac, char *av[])
          po::value<std::vector<std::string>>(&vals),
          "<key>=<value> to substitute in the template. This argument can be repeated.")
         ("geoip-db-dir,g",
-         po::value<std::string>(&template_options.geoip_db_dir_path)->default_value("/var/lib/GeoIP"),
+         po::value<std::string>(&template_options.geoip_db_dir_path)->default_value(GEOIPDIR),
          "path of directory with the GeoIP databases.")
         ("gzip-output,z",
          "compress output data using gzip. Adds .gz extension to output file.")

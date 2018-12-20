@@ -108,10 +108,13 @@ CLEANFILES = $(check_DATA) $(dist_man_MANS)
 
 % :: test-scripts/%.xz ; xz --decompress --to-stdout $< > $@
 
+AM_TESTS_ENVIRONMENT = \
+        GEOIPDIR=$(geoipdir); export GEOIPDIR;
+
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
 AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) -DCONFFILE=\"$(conffile)\" \
-              $(OPENSSL_INCLUDES)
+              $(OPENSSL_INCLUDES) -DGEOIPDIR=\"$(geoipdir)\"
 
 %.1 :: %.adoc ; @ASCIIDOC@ -b manpage -d manpage -o $@ $<
 
