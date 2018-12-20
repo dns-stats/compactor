@@ -29,11 +29,6 @@
 struct OutputBackendOptions
 {
     /**
-     * \brief write only query messages to output.
-     */
-    bool query_only{false};
-
-    /**
      * \brief write output data? Possibly we just analyse.
      */
     bool write_output{true};
@@ -120,8 +115,18 @@ private:
  * \struct PcapBackendOptions
  * \brief Options for the PCAP backend.
  */
-struct PcapBackendOptions : public OutputBackendOptions
+struct PcapBackendOptions
 {
+    /**
+     * \brief base options.
+     */
+    OutputBackendOptions baseopts;
+
+    /**
+     * \brief write only query messages to output.
+     */
+    bool query_only{false};
+
     /**
      * \brief auto choose name compression.
      */

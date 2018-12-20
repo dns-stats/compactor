@@ -57,17 +57,17 @@ std::string OutputBackend::output_name(const std::string& name)
  **/
 
 PcapBackend::PcapBackend(const PcapBackendOptions& opts, const std::string& fname)
-    : OutputBackend(opts), opts_(opts),
+    : OutputBackend(opts.baseopts), opts_(opts),
       auto_compression_(opts.auto_compression)
 {
     using_compression_ = ( CaptureDNS::name_compression() != CaptureDNS::NONE );
 
     output_path_ = output_name(fname);
 
-    if ( opts.xz_output )
-        writer_ = make_unique<PcapWriter<XzStreamWriter>>(output_path_, opts.xz_preset, 65535);
-    else if ( opts.gzip_output )
-        writer_ = make_unique<PcapWriter<GzipStreamWriter>>(output_path_, opts.gzip_level, 65535);
+    if ( opts.baseopts.xz_output )
+        writer_ = make_unique<PcapWriter<XzStreamWriter>>(output_path_, opts.baseopts.xz_preset, 65535);
+    else if ( opts.baseopts.gzip_output )
+        writer_ = make_unique<PcapWriter<GzipStreamWriter>>(output_path_, opts.baseopts.gzip_level, 65535);
     else
         writer_ = make_unique<PcapWriter<StreamWriter>>(output_path_, 0, 65535);
 }
@@ -99,7 +99,7 @@ void PcapBackend::output(std::shared_ptr<QueryResponse>& qr, const Configuration
             bad_response_wire_size_count_++;
     }
 
-    if ( !opts_.write_output)
+    if ( !opts_.baseopts.write_output)
         return;
 
     if ( ( qr->has_query() && qr->query().tcp ) ||

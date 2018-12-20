@@ -220,12 +220,12 @@ int main(int ac, char *av[])
         ("gzip-output,z",
          "compress PCAP data using gzip. Adds .gz extension to output file.")
         ("gzip-level,y",
-         po::value<unsigned int>(&pcap_options.gzip_level)->default_value(6),
+         po::value<unsigned int>(&pcap_options.baseopts.gzip_level)->default_value(6),
          "gzip compression level.")
         ("xz-output,x",
          "compress PCAP data using xz. Adds .xz extension to output file.")
         ("xz-preset,u",
-         po::value<unsigned int>(&pcap_options.xz_preset)->default_value(6),
+         po::value<unsigned int>(&pcap_options.baseopts.xz_preset)->default_value(6),
          "xz compression preset level.")
         ("query-only,q",
          "write only query messages to output.")
@@ -322,8 +322,8 @@ int main(int ac, char *av[])
             return 1;
         }
 
-        pcap_options.gzip_output = ( vm.count("gzip-output") != 0 );
-        pcap_options.xz_output = ( vm.count("xz-output") != 0 );
+        pcap_options.baseopts.gzip_output = ( vm.count("gzip-output") != 0 );
+        pcap_options.baseopts.xz_output = ( vm.count("xz-output") != 0 );
         pcap_options.query_only = ( vm.count("query-only") != 0 );
         options.debug_qr = ( vm.count("debug-qr") != 0 );
         options.generate_stats = ( vm.count("stats") != 0 );
@@ -346,7 +346,7 @@ int main(int ac, char *av[])
         }
 
         if ( !options.generate_output )
-            pcap_options.write_output = false;
+            pcap_options.baseopts.write_output = false;
     }
     catch (po::error& err)
     {
@@ -364,7 +364,7 @@ int main(int ac, char *av[])
     }
 #endif
 
-    if ( pcap_options.gzip_output && pcap_options.xz_output )
+    if ( pcap_options.baseopts.gzip_output && pcap_options.baseopts.xz_output )
     {
         std::cerr << PROGNAME << ": Error: Specify gzip or xz compression, not both." << std::endl;
         return 1;
