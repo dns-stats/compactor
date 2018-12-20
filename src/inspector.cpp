@@ -387,90 +387,98 @@ int main(int ac, char *av[])
         }
     }
 
-    std::unique_ptr<OutputBackend> backend;
-    std::string pcap_file_name;
-    std::string info_file_name;
-    std::ofstream info;
-    bool output_specified = false;
-
-    if ( vm.count("output") )
+    try
     {
-        output_specified = true;
+        std::unique_ptr<OutputBackend> backend;
+        std::string pcap_file_name;
+        std::string info_file_name;
+        std::ofstream info;
+        bool output_specified = false;
 
-        if ( output_file_name == StreamWriter::STDOUT_FILE_NAME )
+        if ( vm.count("output") )
         {
-            if ( options.generate_output )
+            output_specified = true;
+
+            if ( output_file_name == StreamWriter::STDOUT_FILE_NAME )
             {
-                if ( options.report_info || options.debug_qr )
+                if ( options.generate_output )
                 {
-                    std::cerr << PROGNAME
-                              << ":  Writing PCAP to standard output can't be combined with info reporting or printing Query/Response details.\n";
-                    return 1;
+                    if ( options.report_info || options.debug_qr )
+                    {
+                        std::cerr << PROGNAME
+                                  << ":  Writing PCAP to standard output can't be combined with info reporting or printing Query/Response details.\n";
+                        return 1;
+                    }
+                    options.generate_info = false;
+                } else {
+                    options.generate_info = false;
+                    options.report_info = true;
                 }
-                options.generate_info = false;
-            } else {
-                options.generate_info = false;
-                options.report_info = true;
             }
-        }
-        else
-        {
-            if ( !open_info_file(output_file_name, info, options) )
-                return 1;
-        }
-
-        backend = make_unique<PcapBackend>(pcap_options, output_file_name);
-    }
-
-    if ( !vm.count("cdns-file") )
-    {
-        if ( !output_specified )
-        {
-                    std::cerr << PROGNAME << ":  output file must be specified when reading from standard input." << std::endl;
+            else
+            {
+                if ( !open_info_file(output_file_name, info, options) )
                     return 1;
+            }
+
+            backend = make_unique<PcapBackend>(pcap_options, output_file_name);
         }
-        return convert_stream_to_backend(("(stdin)"), std::cin, backend, info, options);
-    }
 
-    for ( auto& fname : vm["cdns-file"].as<std::vector<std::string>>() )
-    {
-        if ( !output_specified )
+        if ( !vm.count("cdns-file") )
         {
-            std::string pcap_fname = fname + PCAP_EXT;
+            if ( !output_specified )
+            {
+                std::cerr << PROGNAME << ":  output file must be specified when reading from standard input." << std::endl;
+                return 1;
+            }
+            return convert_stream_to_backend(("(stdin)"), std::cin, backend, info, options);
+        }
 
-            if ( !open_info_file(pcap_fname, info, options) )
+        for ( auto& fname : vm["cdns-file"].as<std::vector<std::string>>() )
+        {
+            if ( !output_specified )
+            {
+                std::string pcap_fname = fname + PCAP_EXT;
+
+                if ( !open_info_file(pcap_fname, info, options) )
+                    return 1;
+
+                backend = make_unique<PcapBackend>(pcap_options, pcap_fname);
+            }
+
+            if ( options.report_info )
+            {
+                std::cout << " INPUT : " << fname;
+                if ( options.generate_info || options.generate_output )
+                    std::cout << "\n OUTPUT: " << backend->output_file();
+                std::cout << "\n\n";
+            }
+
+            std::ifstream ifs;
+            ifs.open(fname, std::ifstream::binary);
+            if ( !ifs.is_open() )
+            {
+                std::cerr << PROGNAME << ":  Can't open input: " << fname << std::endl;
+                return 1;
+            }
+
+            if ( convert_stream_to_backend(fname, ifs, backend, info, options) != 0 )
                 return 1;
 
-            backend = make_unique<PcapBackend>(pcap_options, pcap_fname);
+            if ( !output_specified )
+            {
+                if ( options.generate_info )
+                    info.close();
+                backend.reset(nullptr);
+            }
+
+            ifs.close();
         }
-
-        if ( options.report_info )
-        {
-            std::cout << " INPUT : " << fname;
-            if ( options.generate_info || options.generate_output )
-                std::cout << "\n OUTPUT: " << backend->output_file();
-            std::cout << "\n\n";
-        }
-
-        std::ifstream ifs;
-        ifs.open(fname, std::ifstream::binary);
-        if ( !ifs.is_open() )
-        {
-            std::cerr << PROGNAME << ":  Can't open input: " << fname << std::endl;
-            return 1;
-        }
-
-        if ( convert_stream_to_backend(fname, ifs, backend, info, options) != 0 )
-            return 1;
-
-        if ( !output_specified )
-        {
-            if ( options.generate_info )
-                info.close();
-            backend.reset(nullptr);
-        }
-
-        ifs.close();
+    }
+    catch (const std::runtime_error& err)
+    {
+        std::cerr << PROGNAME << "Error: " << err.what() << std::endl;
+        return 1;
     }
 
     return 0;
