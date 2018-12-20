@@ -37,6 +37,7 @@ check_PROGRAMS = compactor-tests
 check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/check-dnscap.sh \
                 test-scripts/check-outputs.sh \
+                test-scripts/check-template.sh \
                 test-scripts/check-testcontent.sh \
                 test-scripts/inspector-outputs.sh \
                 test-scripts/same-output.sh \
@@ -74,6 +75,7 @@ dist_check_DATA = doc/c-dns-working.cddl \
                   test-scripts/testcontent.diag \
                   test-scripts/testcontent.debugqr \
                   test-scripts/unmatched.pcap.xz \
+                  test-scripts/nsd-live.dump.xz \
                   test-scripts/nsd-live.raw.pcap.xz \
                   test-scripts/nsd-live.ignored.pcap.xz \
                   test-scripts/nsd-live.info \
@@ -81,7 +83,9 @@ dist_check_DATA = doc/c-dns-working.cddl \
                   test-scripts/knot-live.ignored.pcap.xz \
                   test-scripts/knot-live.info \
                   test-scripts/knot-live.anon.info \
-                  test-scripts/check-live-pcap.sh
+                  test-scripts/check-live-pcap.sh \
+                  test-scripts/test.tpl
+
 
 EXTRA_DIST = getversion.sh .version
 
@@ -94,6 +98,7 @@ check_DATA = dns.pcap \
              matching.pcap \
              testcontent.pcap \
              unmatched.pcap \
+             nsd-live.dump \
              nsd-live.raw.pcap \
              nsd-live.ignored.pcap \
              knot-live.raw.pcap \
