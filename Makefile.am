@@ -37,8 +37,10 @@ check_PROGRAMS = compactor-tests
 check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/check-dnscap.sh \
                 test-scripts/check-outputs.sh \
+                test-scripts/check-template.sh \
                 test-scripts/check-testcontent.sh \
                 test-scripts/inspector-outputs.sh \
+                test-scripts/output-size-limit.sh \
                 test-scripts/same-output.sh \
                 test-scripts/same-output-gzip.sh \
                 test-scripts/same-output-xz.sh \
@@ -74,6 +76,7 @@ dist_check_DATA = doc/c-dns-working.cddl \
                   test-scripts/testcontent.diag \
                   test-scripts/testcontent.debugqr \
                   test-scripts/unmatched.pcap.xz \
+                  test-scripts/nsd-live.dump.xz \
                   test-scripts/nsd-live.raw.pcap.xz \
                   test-scripts/nsd-live.ignored.pcap.xz \
                   test-scripts/nsd-live.info \
@@ -81,7 +84,9 @@ dist_check_DATA = doc/c-dns-working.cddl \
                   test-scripts/knot-live.ignored.pcap.xz \
                   test-scripts/knot-live.info \
                   test-scripts/knot-live.anon.info \
-                  test-scripts/check-live-pcap.sh
+                  test-scripts/check-live-pcap.sh \
+                  test-scripts/test.tpl
+
 
 EXTRA_DIST = getversion.sh .version
 
@@ -94,6 +99,7 @@ check_DATA = dns.pcap \
              matching.pcap \
              testcontent.pcap \
              unmatched.pcap \
+             nsd-live.dump \
              nsd-live.raw.pcap \
              nsd-live.ignored.pcap \
              knot-live.raw.pcap \
@@ -103,10 +109,13 @@ CLEANFILES = $(check_DATA) $(dist_man_MANS)
 
 % :: test-scripts/%.xz ; xz --decompress --to-stdout $< > $@
 
+AM_TESTS_ENVIRONMENT = \
+        GEOIPDIR=$(geoipdir); export GEOIPDIR;
+
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
 AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) -DCONFFILE=\"$(conffile)\" \
-              $(OPENSSL_INCLUDES)
+              $(OPENSSL_INCLUDES) -DGEOIPDIR=\"$(geoipdir)\"
 
 %.1 :: %.adoc ; @ASCIIDOC@ -b manpage -d manpage -o $@ $<
 
@@ -151,11 +160,13 @@ inspector_headers = \
         src/addressevent.hpp \
         src/capturedns.hpp \
         src/cbordecoder.hpp \
+        src/backend.hpp \
         src/blockcbor.hpp \
         src/blockcbordata.hpp \
         src/blockcborreader.hpp \
         src/configuration.hpp \
         src/dnsmessage.hpp \
+        src/geoip.hpp \
         src/ipaddress.hpp \
         src/log.hpp \
         src/makeunique.hpp \
@@ -163,7 +174,8 @@ inspector_headers = \
         src/pcapwriter.hpp \
         src/pseudoanonymise.hpp \
         src/queryresponse.hpp \
-        src/streamwriter.hpp
+        src/streamwriter.hpp \
+        src/template-backend.hpp
 
 # _internal_test items work by #including the corresponding .cpp to get
 # access to its internals. You can't have the _internal_test.cpp and the .cpp
@@ -265,6 +277,7 @@ endif
 
 inspector_SOURCES = \
         $(inspector_headers) \
+        src/backend.cpp \
         src/baseoutputwriter.cpp \
         src/rotatingfilename.cpp \
         src/bytestring.cpp \
@@ -275,12 +288,14 @@ inspector_SOURCES = \
         src/blockcbordata.cpp \
         src/blockcborreader.cpp \
         src/configuration.cpp \
+        src/geoip.cpp \
         src/ipaddress.cpp \
         src/dnsmessage.cpp \
         src/inspector.cpp \
         src/log.cpp \
         src/pseudoanonymise.cpp \
-        src/streamwriter.cpp
+        src/streamwriter.cpp \
+        src/template-backend.cpp
 
 inspector_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
 inspector_LDADD = \
@@ -292,7 +307,9 @@ inspector_LDADD = \
         $(BOOST_THREAD_LIB) \
         $(LZMA_LIB) \
         @PTHREAD_LIBS@ \
-        $(libtins_LIBS)
+        $(libtins_LIBS) \
+        $(CTEMPLATE_LIB) \
+        $(MAXMINDDB_LIB)
 inspector_LDFLAGS = \
         $(BOOST_LDFLAGS)
 if ENABLE_PSEUDOANONYMISATION

@@ -61,7 +61,10 @@ void BlockCborWriter::writeAE(const std::shared_ptr<AddressEvent>& ae,
 
 void BlockCborWriter::checkForRotation(const std::chrono::system_clock::time_point& timestamp)
 {
-    if ( !enc_->is_open() || output_pattern_.need_rotate(timestamp, config_) )
+    if ( !enc_->is_open() ||
+         ( config_.max_output_size.size > 0 &&
+           enc_->bytes_written() >= config_.max_output_size.size ) ||
+         output_pattern_.need_rotate(timestamp, config_) )
     {
         close();
         filename_ = output_pattern_.filename(timestamp, config_);

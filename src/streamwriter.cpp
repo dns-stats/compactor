@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,6 +49,11 @@ StreamWriter::~StreamWriter()
         if ( std::rename(temp_name_.c_str(), name_.c_str()) != 0 )
             LOG_ERROR << "file rename from " << temp_name_ << " to " << name_ << " failed";
     }
+}
+
+void StreamWriter::writeBytes(const std::string& s)
+{
+    writeBytes(reinterpret_cast<const uint8_t *>(s.c_str()), s.length());
 }
 
 void StreamWriter::writeBytes(const uint8_t *p, std::ptrdiff_t n_bytes)

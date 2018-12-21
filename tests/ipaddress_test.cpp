@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -39,6 +39,8 @@ SCENARIO("IPAddress wrapper for v4 and v6 addresses does the right thing",
                 REQUIRE(a_bin[2] == 29);
                 REQUIRE(a_bin[3] == 226);
 
+                REQUIRE(a.str() == "193.0.29.226");
+
                 std::ostringstream oss;
                 oss << a;
                 REQUIRE(oss.str() == "193.0.29.226");
@@ -49,6 +51,15 @@ SCENARIO("IPAddress wrapper for v4 and v6 addresses does the right thing",
                 byte_string a_bin = a.asNetworkBinary();
                 IPAddress a2(a_bin);
                 REQUIRE(a == a2);
+            }
+
+            AND_THEN("the IPv6 representation is correct")
+            {
+                Tins::IPv6Address a4_a6 = a;
+
+                std::ostringstream oss;
+                oss << a4_a6;
+                REQUIRE(oss.str() == "::ffff:193.0.29.226");
             }
         }
 
@@ -71,6 +82,8 @@ SCENARIO("IPAddress wrapper for v4 and v6 addresses does the right thing",
                 REQUIRE((a_bin[10] << 8 | a_bin[11]) == 0x34ce);
                 REQUIRE((a_bin[12] << 8 | a_bin[13]) == 0x2801);
                 REQUIRE((a_bin[14] << 8 | a_bin[15]) == 0x9686);
+
+                REQUIRE(a.str() == "2001:67c:64:42:bdcd:34ce:2801:9686");
 
                 std::ostringstream oss;
                 oss << a;

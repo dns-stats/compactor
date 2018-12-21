@@ -253,6 +253,11 @@ public:
      */
     virtual const char* suggested_extension() = 0;
 
+    /**
+     * \brief Count of the bytes written since opening.
+     */
+    virtual std::uintmax_t bytes_written() = 0;
+
 protected:
     /**
      * \brief Write all accumulated output to the file.
@@ -302,6 +307,7 @@ public:
             throw std::runtime_error("Can't open file when one already open.");
 
         writer_ = make_unique<Writer>(name, level_);
+        bytes_written_ = 0;
     }
 
     /**
@@ -332,6 +338,14 @@ public:
         return Writer::suggested_extension();
     }
 
+    /**
+     * \brief Count of the bytes written since opening.
+     */
+    virtual std::uintmax_t bytes_written()
+    {
+        return bytes_written_;
+    }
+
 protected:
     /**
      * \brief Write all accumulated output to the file.
@@ -345,6 +359,7 @@ protected:
             throw std::runtime_error("Can't write to file when not open.");
 
         writer_->writeBytes(p, n_bytes);
+        bytes_written_ += n_bytes;
     }
 
 private:
@@ -357,6 +372,11 @@ private:
      * \brief The compression level, if used.
      */
     unsigned level_;
+
+    /**
+     * \brief The number of bytes written.
+     */
+    std::uintmax_t bytes_written_;
 };
 
 /**
