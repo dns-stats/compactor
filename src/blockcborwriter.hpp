@@ -193,11 +193,6 @@ private:
     std::string filename_;
 
     /**
-     * \brief bytes written to this file so far.
-     */
-    std::uintmax_t bytes_written_;
-
-    /**
      * \brief the output CBOR encoder.
      */
     std::unique_ptr<CborBaseStreamFileEncoder> enc_;
