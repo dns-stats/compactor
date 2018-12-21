@@ -19,18 +19,16 @@
 #include <utility>
 
 #include <boost/filesystem.hpp>
-#include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 
 #include "config.h"
 
+#include "backend.hpp"
 #include "bytestring.hpp"
-#include "capturedns.hpp"
 #include "cbordecoder.hpp"
 #include "blockcborreader.hpp"
 #include "log.hpp"
 #include "makeunique.hpp"
-#include "pcapwriter.hpp"
 #include "pseudoanonymise.hpp"
 
 const std::string PROGNAME = "inspector";
@@ -47,54 +45,34 @@ namespace po = boost::program_options;
 struct Options
 {
     /**
-     * \brief auto choose name compression.
-     */
-    bool auto_compression{true};
-
-    /**
      * \brief dump text summary of query/response pairs.
      */
     bool debug_qr{false};
 
     /**
-     * \brief report conversion information on completion.
+     * \brief should conversion take place?
+     */
+    bool generate_output{true};
+
+    /**
+     * \brief print conversion stats to stderr.
+     */
+    bool generate_stats{false};
+
+    /**
+     * \brief generate info to file?
+     */
+    bool generate_info{true};
+
+    /**
+     * \brief name of the info file.
+     */
+    std::string info_file_name;
+
+    /**
+     * \brief report info?
      */
     bool report_info{false};
-
-    /**
-     * \brief don't write conversion only report information.
-     */
-    bool report_only{false};
-
-    /**
-     * \brief don't write PCAP files, only info files.
-     */
-    bool info_only{false};
-
-    /**
-     * \brief write only query messages to output.
-     */
-    bool query_only{false};
-
-    /**
-     * \brief compress output data using gzip.
-     */
-    bool gzip_output{false};
-
-    /**
-     * \brief gzip compression level to use.
-     */
-    unsigned int gzip_level{6};
-
-    /**
-     * \brief compress output data using xz.
-     */
-    bool xz_output{false};
-
-    /**
-     * \brief xz compression preset to use.
-     */
-    unsigned int xz_preset{6};
 
     /**
      * \brief pseudo-anonymisation, if to use.
@@ -102,360 +80,115 @@ struct Options
     boost::optional<PseudoAnonymise> pseudo_anon;
 };
 
-using PacketSink = std::function<void (std::shared_ptr<QueryResponse>)>;
-
-static void report_regeneration(std::ostream& os, unsigned wire_size)
-{
-    if ( wire_size > 0 )
-        os <<
-            "REGENERATION ERRORS:\n"
-            "  Incorrect wire size: " << wire_size << " packets\n\n";
-}
-
-static void report(std::ostream& os, Configuration& config, BlockCborReader& cbr,
-                   unsigned bad_response_wire_size_count)
+static void report(std::ostream& os,
+                   Configuration& config,
+                   BlockCborReader& cbr,
+                   std::unique_ptr<OutputBackend>& backend)
 {
     config.dump_config(os);
     cbr.dump_collector(os);
     cbr.dump_stats(os);
     cbr.dump_address_events(os);
-    report_regeneration(os, bad_response_wire_size_count);
+    backend->report(os);
 }
 
-static void convert_stream(std::istream& is, PacketSink packet_sink, std::ofstream& info, const Options& options, const std::string& out)
+static int convert_stream_to_backend(const std::string& fname, std::istream& is, std::unique_ptr<OutputBackend>& backend, std::ofstream& info, Options& options)
 {
     Configuration config;
     CborStreamDecoder dec(is);
     BlockCborReader cbr(dec, config, options.pseudo_anon);
-    unsigned bad_response_wire_size_count = 0;
-    bool auto_compression = options.auto_compression;
-    bool using_compression = ( CaptureDNS::name_compression() != CaptureDNS::NONE );
     std::chrono::system_clock::time_point earliest_time, latest_time;
     bool first_time = true;
 
-    for ( std::shared_ptr<QueryResponse> qr = cbr.readQR();
-          qr;
-          qr = cbr.readQR() )
-    {
-        // Check size of generated response packet if all sections recorded.
-        if ( using_compression &&
-             qr->has_response() &&
-             config.output_options_responses == Configuration::ALL &&
-             qr->response().wire_size != qr->response().dns.size() )
-        {
-            if ( auto_compression )
-            {
-                // See if Knot works better. If it does, stick with it.
-                CaptureDNS::set_name_compression(CaptureDNS::KNOT_1_6);
-                qr->response().dns.clear_cached_size();
-                if ( qr->response().wire_size != qr->response().dns.size() )
-                {
-                    CaptureDNS::set_name_compression(CaptureDNS::DEFAULT);
-                    bad_response_wire_size_count++;
-                }
-                auto_compression = false;
-            }
-            else
-                bad_response_wire_size_count++;
-        }
-
-        if ( qr->has_query() )
-        {
-            std::chrono::system_clock::time_point t = qr->query().timestamp;
-
-            if ( first_time )
-            {
-                earliest_time = latest_time = t;
-                first_time = false;
-            }
-            else if ( t < earliest_time )
-                earliest_time = t;
-            else if ( t > latest_time )
-                latest_time = t;
-        }
-        if ( qr->has_response() )
-        {
-            std::chrono::system_clock::time_point t = qr->response().timestamp;
-
-            if ( first_time )
-            {
-                earliest_time = latest_time = t;
-                first_time = false;
-            }
-            else if ( t < earliest_time )
-                earliest_time = t;
-            else if ( t > latest_time )
-                latest_time = t;
-        }
-
-        packet_sink(qr);
-    }
-
-    // Approximate the rotation period with the difference between the first
-    // and last timestamps, rounded to the nearest second.
-    config.rotation_period = (std::chrono::duration_cast<std::chrono::milliseconds>(latest_time - earliest_time).count() + 500) / 1000;
-
-    if ( !options.report_only )
-    {
-        if ( info.is_open() )
-            report(info, config, cbr, bad_response_wire_size_count);
-    }
-
-    if ( options.report_info )
-        report(std::cout, config, cbr, bad_response_wire_size_count);
-}
-
-static void write_packet(PcapBaseWriter& writer,
-                         Tins::PDU* pdu,
-                         const IPAddress& src,
-                         const IPAddress& dst,
-                         uint8_t hoplimit,
-                         const std::chrono::system_clock::time_point& timestamp)
-{
-    Tins::EthernetII ethernet;
-
-    if ( src.is_ipv6() )
-    {
-        Tins::IPv6 ipv6(dst, src);
-        ipv6.hop_limit(hoplimit);
-        ipv6.inner_pdu(*pdu);
-        ethernet.inner_pdu(ipv6);
-    }
-    else
-    {
-        Tins::IP ip(dst, src);
-        ip.ttl(hoplimit);
-        ip.inner_pdu(*pdu);
-        ethernet.inner_pdu(ip);
-    }
-
-    writer.write_packet(ethernet, timestamp);
-}
-
-static void write_UDP_packet(PcapBaseWriter& writer, const DNSMessage& dns)
-{
-    IPAddress clientIP = dns.clientIP;
-    IPAddress serverIP = dns.serverIP;
-    uint16_t clientPort = dns.clientPort;
-    uint16_t serverPort = dns.serverPort;
-
-    if ( dns.dns.type() == CaptureDNS::RESPONSE )
-    {
-        std::swap(clientIP, serverIP);
-        std::swap(clientPort, serverPort);
-    }
-
-    Tins::UDP udp;
-    udp.sport(clientPort);
-    udp.dport(serverPort);
-    udp.inner_pdu(dns.dns);
-
-    write_packet(writer, &udp, clientIP, serverIP, dns.hoplimit, dns.timestamp);
-}
-
-static void writeQRwithUDP(PcapBaseWriter& writer, std::shared_ptr<QueryResponse> qr, const Options& options)
-{
-    if ( qr->has_query() )
-        write_UDP_packet(writer, qr->query());
-    if ( qr->has_response() && !options.query_only )
-        write_UDP_packet(writer, qr->response());
-}
-
-static void writeQRwithTCP(PcapBaseWriter& writer, std::shared_ptr<QueryResponse> qr, const Options& options)
-{
-    IPAddress client_address, server_address;
-    uint16_t client_port, server_port;
-    uint8_t client_hoplimit, server_hoplimit;
-    std::chrono::system_clock::time_point query_timestamp, response_timestamp;
-
-    if ( qr->has_query() )
-    {
-        client_address = qr->query().clientIP;
-        server_address = qr->query().serverIP;
-        client_port = qr->query().clientPort;
-        server_port = qr->query().serverPort;
-        client_hoplimit = qr->query().hoplimit;
-        query_timestamp = qr->query().timestamp;
-        if ( qr->has_response() )
-        {
-            server_hoplimit = qr->response().hoplimit;
-            response_timestamp = qr->response().timestamp;
-        }
-        else
-        {
-            server_hoplimit = client_hoplimit;
-            response_timestamp = query_timestamp;
-        }
-    }
-    else
-    {
-        client_address = qr->response().clientIP;
-        server_address = qr->response().serverIP;
-        client_port = qr->response().clientPort;
-        server_port = qr->response().serverPort;
-        client_hoplimit = qr->response().hoplimit;
-        server_hoplimit = client_hoplimit;
-        query_timestamp = qr->response().timestamp;
-        response_timestamp = query_timestamp;
-    }
-
-    // Client SYN -> server.
-    Tins::TCP ctcp(server_port, client_port);
-    ctcp.set_flag(Tins::TCP::SYN, 1);
-    write_packet(writer, &ctcp, client_address, server_address, client_hoplimit, query_timestamp);
-    ctcp.set_flag(Tins::TCP::SYN, 0);
-    ctcp.seq(ctcp.seq() + 1);
-
-    // Server ACK -> client.
-    Tins::TCP stcp(client_port, server_port);
-    stcp.set_flag(Tins::TCP::SYN, 1);
-    stcp.set_flag(Tins::TCP::ACK, 1);
-    stcp.ack_seq(ctcp.seq());
-    write_packet(writer, &stcp, server_address, client_address, server_hoplimit, query_timestamp);
-    stcp.set_flag(Tins::TCP::SYN, 0);
-    stcp.seq(stcp.seq() + 1);
-
-    // Client SYN/ACK -> server.
-    ctcp.set_flag(Tins::TCP::ACK, 1);
-    ctcp.ack_seq(stcp.seq());
-    write_packet(writer, &ctcp, client_address, server_address, client_hoplimit, query_timestamp);
-
-    // Client Query -> server.
-    if ( qr->has_query() )
-    {
-        CaptureDNS dnsmsg = qr->query().dns;
-        uint32_t dnssize = dnsmsg.size();
-        Tins::PDU::serialization_type dnsbuf = dnsmsg.serialize();
-        byte_string buf(dnsbuf.data(), dnssize);
-        buf.reserve(dnssize + 2);
-        buf.insert(buf.begin(), dnssize & 0xff);
-        buf.insert(buf.begin(), (dnssize >> 8) & 0xff);
-        Tins::RawPDU raw_pdu(buf.data(), buf.size());
-        ctcp.inner_pdu(raw_pdu);
-        ctcp.set_flag(Tins::TCP::PSH, 1);
-        write_packet(writer, &ctcp, client_address, server_address, client_hoplimit, query_timestamp);
-        ctcp.set_flag(Tins::TCP::PSH, 0);
-        ctcp.seq(ctcp.seq() + buf.size());
-        ctcp.inner_pdu(nullptr);
-
-        stcp.ack_seq(ctcp.seq());
-        write_packet(writer, &stcp, server_address, client_address, server_hoplimit, query_timestamp);
-    }
-
-    // Server Response -> client.
-    if ( qr->has_response() && !options.query_only )
-    {
-        CaptureDNS dnsmsg = qr->response().dns;
-        uint32_t dnssize = dnsmsg.size();
-        Tins::PDU::serialization_type dnsbuf = dnsmsg.serialize();
-        byte_string buf(dnsbuf.data(), dnssize);
-        buf.reserve(dnssize + 2);
-        buf.insert(buf.begin(), dnssize & 0xff);
-        buf.insert(buf.begin(), (dnssize >> 8) & 0xff);
-        Tins::RawPDU raw_pdu(buf.data(), buf.size());
-        stcp.inner_pdu(raw_pdu);
-        stcp.set_flag(Tins::TCP::PSH, 1);
-        write_packet(writer, &stcp, server_address, client_address, server_hoplimit, response_timestamp);
-        stcp.set_flag(Tins::TCP::PSH, 0);
-        stcp.seq(stcp.seq() + buf.size());
-        stcp.inner_pdu(nullptr);
-
-        ctcp.ack_seq(stcp.seq());
-        write_packet(writer, &ctcp, client_address, server_address, client_hoplimit, response_timestamp);
-    }
-
-    // Client FIN -> server.
-    ctcp.set_flag(Tins::TCP::FIN, 1);
-    ctcp.ack_seq(stcp.seq());
-    write_packet(writer, &ctcp, client_address, server_address, client_hoplimit, response_timestamp);
-    ctcp.seq(ctcp.seq() + 1);
-
-    // Server FIN -> client.
-    stcp.set_flag(Tins::TCP::FIN, 1);
-    stcp.ack_seq(ctcp.seq());
-    write_packet(writer, &stcp, server_address, client_address, server_hoplimit, response_timestamp);
-    stcp.seq(stcp.seq() + 1);
-
-    // Client ACK -> server.
-    ctcp.set_flag(Tins::TCP::FIN, 0);
-    ctcp.ack_seq(stcp.seq());
-    write_packet(writer, &ctcp, client_address, server_address, client_hoplimit, response_timestamp);
-}
-
-static void writeQR(PcapBaseWriter& writer, std::shared_ptr<QueryResponse> qr, const Options& options)
-{
-    if ( ( qr->has_query() && qr->query().tcp ) ||
-         ( qr->has_response() && qr->response().tcp ) )
-        writeQRwithTCP(writer, qr, options);
-    else
-        writeQRwithUDP(writer, qr, options);
-}
-
-static std::string new_file(const std::string& name)
-{
-    int count = 0;
-
-    for(;;)
-    {
-        std::ostringstream oss;
-        oss << name;
-        if ( count > 0 )
-            oss << "-" << count;
-        if ( !boost::filesystem::exists(oss.str()) )
-            return oss.str();
-        count++;
-    }
-}
-
-static bool convert_stream_to_packet_writer(std::istream& is,
-                                            std::unique_ptr<PcapBaseWriter>& writer,
-                                            std::ofstream& info,
-                                            const Options& options,
-                                            const std::string& out)
-{
     try
     {
-        convert_stream(
-            is,
-            [&](std::shared_ptr<QueryResponse> qr)
+        auto start = std::chrono::system_clock::now();
+        unsigned long long nrecs = 0;
+
+        for ( std::shared_ptr<QueryResponse> qr = cbr.readQR();
+              qr;
+              qr = cbr.readQR() )
+        {
+            if ( qr->has_query() )
             {
-                if ( options.debug_qr )
-                    std::cout << *qr;
-                if ( !options.report_only && !options.info_only )
-                    writeQR(*writer, qr, options);
-            },
-            info,
-            options,
-            out);
+                std::chrono::system_clock::time_point t = qr->query().timestamp;
+
+                if ( first_time )
+                {
+                    earliest_time = latest_time = t;
+                    first_time = false;
+                }
+                else if ( t < earliest_time )
+                    earliest_time = t;
+                else if ( t > latest_time )
+                    latest_time = t;
+            }
+            if ( qr->has_response() )
+            {
+                std::chrono::system_clock::time_point t = qr->response().timestamp;
+
+                if ( first_time )
+                {
+                    earliest_time = latest_time = t;
+                    first_time = false;
+                }
+                else if ( t < earliest_time )
+                    earliest_time = t;
+                else if ( t > latest_time )
+                    latest_time = t;
+            }
+
+            if ( options.debug_qr )
+                std::cout << *qr;
+
+            backend->output(qr, config);
+            nrecs++;
+        }
+
+        // Approximate the rotation period with the difference between the first
+        // and last timestamps, rounded to the nearest second.
+        config.rotation_period = (std::chrono::duration_cast<std::chrono::milliseconds>(latest_time - earliest_time).count() + 500) / 1000;
+
+        if ( options.generate_info )
+            report(info, config, cbr, backend);
+
+        if ( options.report_info )
+            report(std::cout, config, cbr, backend);
+
+        if ( options.generate_stats )
+        {
+            auto end = std::chrono::system_clock::now();
+            std::chrono::duration<double> elapsed = end - start;
+            std::cerr << "Converted " << nrecs << " q/r pairs in " << elapsed.count() << "s (" << nrecs/elapsed.count() << "rec/s)\n";
+        }
     }
     catch (const std::exception& e)
     {
         std::cerr << PROGNAME << ":  Conversion error while processing: "
-                  << out << " Error: " << e.what() << std::endl;
-        return false;
+                  << fname << " Error: " << e.what() << std::endl;
+        if ( !backend->output_file().empty() )
+            boost::filesystem::remove(backend->output_file());
+        if ( !options.info_file_name.empty() )
+            boost::filesystem::remove(options.info_file_name);
+        return 1;
     }
 
+    return 0;
+}
+
+static bool open_info_file(const std::string& fname, std::ofstream& info, Options& options)
+{
+    if ( !options.generate_info )
+        return true;
+
+    options.info_file_name = fname + INFO_EXT;
+    info.open(options.info_file_name);
+    if ( !info.is_open() )
+    {
+        std::cerr << PROGNAME << ":  Can't create " << fname << std::endl;
+        return false;
+    }
     return true;
-}
-
-static std::string make_output_name(const std::string& name, const Options& options)
-{
-    if ( options.xz_output )
-        return name + XzStreamWriter::suggested_extension();
-    else if ( options.gzip_output )
-        return name + GzipStreamWriter::suggested_extension();
-    else
-        return name + StreamWriter::suggested_extension();
-}
-
-static std::unique_ptr<PcapBaseWriter> make_writer(const std::string& name, const Options& options)
-{
-    if ( options.xz_output )
-        return make_unique<PcapWriter<XzStreamWriter>>(name, options.xz_preset, 65535);
-    else if ( options.gzip_output )
-        return make_unique<PcapWriter<GzipStreamWriter>>(name, options.gzip_level, 65535);
-    else
-        return make_unique<PcapWriter<StreamWriter>>(name, 0, 65535);
 }
 
 int main(int ac, char *av[])
@@ -469,14 +202,13 @@ int main(int ac, char *av[])
     init_logging();
 
     std::string output_file_name;
-    std::string pcap_file_name;
-    std::string info_file_name;
     std::string compression_type;
 #if ENABLE_PSEUDOANONYMISATION
     std::string pseudo_anon_passphrase;
     std::string pseudo_anon_key;
 #endif
     Options options;
+    PcapBackendOptions pcap_options;
 
     po::options_description visible("Options");
     visible.add_options()
@@ -488,12 +220,12 @@ int main(int ac, char *av[])
         ("gzip-output,z",
          "compress PCAP data using gzip. Adds .gz extension to output file.")
         ("gzip-level,y",
-         po::value<unsigned int>(&options.gzip_level)->default_value(6),
+         po::value<unsigned int>(&pcap_options.baseopts.gzip_level)->default_value(6),
          "gzip compression level.")
         ("xz-output,x",
          "compress PCAP data using xz. Adds .xz extension to output file.")
         ("xz-preset,u",
-         po::value<unsigned int>(&options.xz_preset)->default_value(6),
+         po::value<unsigned int>(&pcap_options.baseopts.xz_preset)->default_value(6),
          "xz compression preset level.")
         ("query-only,q",
          "write only query messages to output.")
@@ -503,6 +235,8 @@ int main(int ac, char *av[])
          "don't generate PCAP output files, only info files.")
         ("report-only,R",
          "don't write output files, just report info.")
+        ("stats,S",
+         "report conversion statistics.")
 #if ENABLE_PSEUDOANONYMISATION
         ("pseudo-anonymisation-key,k",
          po::value<std::string>(&pseudo_anon_key),
@@ -588,15 +322,31 @@ int main(int ac, char *av[])
             return 1;
         }
 
-        options.gzip_output = ( vm.count("gzip-output") != 0 );
-        options.xz_output = ( vm.count("xz-output") != 0 );
+        pcap_options.baseopts.gzip_output = ( vm.count("gzip-output") != 0 );
+        pcap_options.baseopts.xz_output = ( vm.count("xz-output") != 0 );
+        pcap_options.query_only = ( vm.count("query-only") != 0 );
         options.debug_qr = ( vm.count("debug-qr") != 0 );
-        options.report_info = ( vm.count("report-info") != 0 );
-        options.info_only = ( vm.count("info-only") != 0 );
-        options.query_only = ( vm.count("query-only") != 0 );
-        options.report_only = ( vm.count("report-only") != 0 );
-        if ( options.report_only )
+        options.generate_stats = ( vm.count("stats") != 0 );
+
+        options.generate_output = true;
+        options.generate_info = true;
+        options.report_info = false;
+
+        if ( vm.count("info-only") != 0 )
+            options.generate_output = false;
+
+        if ( vm.count("report-info") != 0 )
             options.report_info = true;
+
+        if ( vm.count("report-only") != 0 )
+        {
+            options.generate_output = false;
+            options.generate_info = false;
+            options.report_info = true;
+        }
+
+        if ( !options.generate_output )
+            pcap_options.baseopts.write_output = false;
     }
     catch (po::error& err)
     {
@@ -614,24 +364,21 @@ int main(int ac, char *av[])
     }
 #endif
 
-    if ( options.gzip_output && options.xz_output )
+    if ( pcap_options.baseopts.gzip_output && pcap_options.baseopts.xz_output )
     {
         std::cerr << PROGNAME << ": Error: Specify gzip or xz compression, not both." << std::endl;
         return 1;
     }
 
-    std::unique_ptr<PcapBaseWriter> writer;
-    std::ofstream info;
-
     if ( vm.count("compression") )
     {
-        options.auto_compression = false;
+        pcap_options.auto_compression = false;
         if ( compression_type == "knot" )
             CaptureDNS::set_name_compression(CaptureDNS::KNOT_1_6);
         else if ( compression_type == "none" )
             CaptureDNS::set_name_compression(CaptureDNS::NONE);
         else if ( compression_type == "auto" )
-            options.auto_compression = true;
+            pcap_options.auto_compression = true;
         else if ( compression_type != "default" )
         {
             std::cerr << PROGNAME
@@ -640,111 +387,98 @@ int main(int ac, char *av[])
         }
     }
 
-    if ( vm.count("output") )
+    try
     {
-        if ( output_file_name == StreamWriter::STDOUT_FILE_NAME )
-        {
-            if ( options.report_only || options.info_only || options.report_info )
-            {
-                std::cerr << PROGNAME
-                          << ":  Writing PCAP to standard output can't be combined with info reporting.\n";
-                return 1;
-            }
-            writer = make_writer(output_file_name, options);
-        }
-        else
-        {
-            pcap_file_name = new_file(make_output_name(output_file_name, options));
-            info_file_name = output_file_name + INFO_EXT;
-            if ( !options.report_only )
-            {
-                if ( !options.info_only )
-                    writer = make_writer(pcap_file_name, options);
-                info.open(info_file_name);
-                if ( !info.is_open() )
-                {
-                    std::cerr << PROGNAME << ":  Can't create " << info_file_name << std::endl;
-                    return 1;
-                }
-            }
-        }
-    }
+        std::unique_ptr<OutputBackend> backend;
+        std::string pcap_file_name;
+        std::string info_file_name;
+        std::ofstream info;
+        bool output_specified = false;
 
-    if ( !vm.count("cdns-file") )
-    {
-        if ( !convert_stream_to_packet_writer(std::cin, writer, info, options, output_file_name) )
+        if ( vm.count("output") )
         {
-            std::remove(pcap_file_name.c_str());
-            std::remove(info_file_name.c_str());
-            return 1;
-        }
-    }
-    else
-    {
-        int fail = 0;
-        for ( auto& fname : vm["cdns-file"].as<std::vector<std::string>>() )
-        {
-            if ( !vm.count("output") )
+            output_specified = true;
+
+            if ( output_file_name == StreamWriter::STDOUT_FILE_NAME )
             {
-                pcap_file_name = new_file(make_output_name(fname + PCAP_EXT, options));
-                info_file_name = fname + PCAP_EXT + INFO_EXT;
-                if ( !options.report_only )
+                if ( options.generate_output )
                 {
-                    if ( !options.info_only )
-                        writer = make_writer(pcap_file_name, options);
-                    info.open(info_file_name);
-                    if ( !info.is_open() )
+                    if ( options.report_info || options.debug_qr )
                     {
-                        std::cerr << PROGNAME << ":  Can't create " << info_file_name << std::endl;
+                        std::cerr << PROGNAME
+                                  << ":  Writing PCAP to standard output can't be combined with info reporting or printing Query/Response details.\n";
                         return 1;
                     }
+                    options.generate_info = false;
+                } else {
+                    options.generate_info = false;
+                    options.report_info = true;
                 }
+            }
+            else
+            {
+                if ( !open_info_file(output_file_name, info, options) )
+                    return 1;
+            }
+
+            backend = make_unique<PcapBackend>(pcap_options, output_file_name);
+        }
+
+        if ( !vm.count("cdns-file") )
+        {
+            if ( !output_specified )
+            {
+                std::cerr << PROGNAME << ":  output file must be specified when reading from standard input." << std::endl;
+                return 1;
+            }
+            return convert_stream_to_backend(("(stdin)"), std::cin, backend, info, options);
+        }
+
+        for ( auto& fname : vm["cdns-file"].as<std::vector<std::string>>() )
+        {
+            if ( !output_specified )
+            {
+                std::string pcap_fname = fname + PCAP_EXT;
+
+                if ( !open_info_file(pcap_fname, info, options) )
+                    return 1;
+
+                backend = make_unique<PcapBackend>(pcap_options, pcap_fname);
             }
 
             if ( options.report_info )
             {
                 std::cout << " INPUT : " << fname;
-                if ( !options.report_only )
-                    std::cout << "\n OUTPUT: " << pcap_file_name;
+                if ( options.generate_info || options.generate_output )
+                    std::cout << "\n OUTPUT: " << backend->output_file();
                 std::cout << "\n\n";
             }
 
             std::ifstream ifs;
             ifs.open(fname, std::ifstream::binary);
-            if ( ifs.is_open() )
-            {
-                if ( !convert_stream_to_packet_writer(ifs, writer, info, options, fname))
-                {
-                    if ( !vm.count("output") )
-                    {
-                        if ( !options.report_only )
-                        {
-                            if ( !options.info_only )
-                                std::remove(pcap_file_name.c_str());
-                            std::remove(info_file_name.c_str());
-                        }
-                    }
-                    fail = 1;
-                }
-            }
-            else
+            if ( !ifs.is_open() )
             {
                 std::cerr << PROGNAME << ":  Can't open input: " << fname << std::endl;
-                if ( !vm.count("output") )
-                {
-                    if ( !options.report_only )
-                    {
-                        if ( !options.info_only )
-                            std::remove(pcap_file_name.c_str());
-                        std::remove(info_file_name.c_str());
-                    }
-                }
-                fail = 1;
+                return 1;
             }
-            if ( !options.report_only )
-                info.close();
+
+            if ( convert_stream_to_backend(fname, ifs, backend, info, options) != 0 )
+                return 1;
+
+            if ( !output_specified )
+            {
+                if ( options.generate_info )
+                    info.close();
+                backend.reset(nullptr);
+            }
+
+            ifs.close();
         }
-        return fail;
+    }
+    catch (const std::runtime_error& err)
+    {
+        std::cerr << PROGNAME << "Error: " << err.what() << std::endl;
+        return 1;
     }
 
     return 0;

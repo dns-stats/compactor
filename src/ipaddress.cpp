@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,6 +11,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 
 #include <tins/tins.h>
 
@@ -84,6 +85,14 @@ byte_string IPAddress::asNetworkBinary() const
         u.uint_val = addr4_;
         return byte_string(std::begin(u.c), std::end(u.c));
     }
+}
+
+std::string IPAddress::str() const
+{
+    if ( ipv6_ )
+        return addr6_.to_string();
+    else
+        return addr4_.to_string();
 }
 
 std::ostream& operator<<(std::ostream& output, const IPAddress& addr)
