@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,6 +60,13 @@ public:
      * Make sure the stream is closed.
      */
     virtual ~StreamWriter();
+
+    /**
+     * \brief Write to the output file.
+     *
+     * \param str       string to write.
+     */
+    virtual void writeBytes(const std::string& str);
 
     /**
      * \brief Write to the output file.
