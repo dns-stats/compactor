@@ -44,8 +44,13 @@
 # Maximum Query/Response records in a file block.
 # max-block-qr-items=5000
 
-# Maximum number of blocks in a file before rotation triggered. 0=no limit.
-# max-blocks-in-file=0
+# Maximum size of uncompressed output before rotation triggered. 0=no limit.
+# Multiplicative suffices:
+#     k (1024), K (1000)
+#     m (1024*k), M (1000*K)
+#     g (1024*m), G (1000*M)
+#     t (1024*g), T (1000*G)
+# max-output-size=0
 
 # C-DNS output file pattern.
 # output=
