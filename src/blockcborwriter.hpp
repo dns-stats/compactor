@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,6 +14,7 @@
 #define BLOCKEDCBORWRITER_HPP
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
 
 #include "baseoutputwriter.hpp"
@@ -45,6 +46,7 @@ public:
      */
     BlockCborWriter(const Configuration& config,
                       std::unique_ptr<CborBaseStreamFileEncoder> enc);
+
     /**
      * \brief Destructor.
      *
@@ -189,6 +191,11 @@ private:
      * \brief the final current filename.
      */
     std::string filename_;
+
+    /**
+     * \brief bytes written to this file so far.
+     */
+    std::uintmax_t bytes_written_;
 
     /**
      * \brief the output CBOR encoder.
