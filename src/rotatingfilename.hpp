@@ -50,6 +50,13 @@ public:
     }
 
     /**
+     * \brief Destructor.
+     *
+     * This only exists to confirm the destructor is virtual.
+     */
+    virtual ~RotatingFileName() { }
+
+    /**
      * \brief Is a file rotation is needed?
      *
      * If the rotation period has expired, a rotation is needed if the
