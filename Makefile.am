@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -64,6 +64,8 @@ else
 endif
 
 dist_check_DATA = doc/c-dns-working.cddl \
+                  test-scripts/GeoLite2-ASN.mmdb.xz \
+                  test-scripts/GeoLite2-City.mmdb.xz \
                   test-scripts/dns.pcap.xz \
                   test-scripts/dnscap.pcap.xz \
                   test-scripts/gold.pcap.xz \
@@ -90,7 +92,9 @@ dist_check_DATA = doc/c-dns-working.cddl \
 
 EXTRA_DIST = getversion.sh .version
 
-check_DATA = dns.pcap \
+check_DATA = GeoLite2-ASN.mmdb \
+             GeoLite2-City.mmdb \
+             dns.pcap \
              dnscap.pcap \
              gold.pcap \
              gold.cbor \
@@ -108,9 +112,6 @@ check_DATA = dns.pcap \
 CLEANFILES = $(check_DATA) $(dist_man_MANS)
 
 % :: test-scripts/%.xz ; xz --decompress --to-stdout $< > $@
-
-AM_TESTS_ENVIRONMENT = \
-        GEOIPDIR=$(geoipdir); export GEOIPDIR;
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 

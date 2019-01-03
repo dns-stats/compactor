@@ -1,5 +1,5 @@
 # 
-# Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
 # 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -118,12 +118,6 @@ AC_CHECK_LIB([maxminddb],[MMDB_open],
         ],
         [AC_MSG_ERROR([maxminddb library not found])])
 AC_CHECK_HEADERS([maxminddb.h])
-
-AC_ARG_WITH([geoip-data-dir],
-        [AS_HELP_STRING([--with-geoip-data-dir=DIR], [Look in given directory for GeoIP data files. @<:@default=LOCALSTATEDIR/GeoIP@:>@])],
-        [],
-        [with_geoip_data_dir=${localstatedir}/lib/GeoIP])
-AC_SUBST([geoipdir], [$with_geoip_data_dir])
 
 # Checks for header files.
 
