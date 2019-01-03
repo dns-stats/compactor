@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
+ * Copyright 2018-2019 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -58,7 +58,7 @@ std::string OutputBackend::output_name(const std::string& name)
 
 PcapBackend::PcapBackend(const PcapBackendOptions& opts, const std::string& fname)
     : OutputBackend(opts.baseopts), opts_(opts),
-      auto_compression_(opts.auto_compression)
+      auto_compression_(opts.auto_compression), bad_response_wire_size_count_(0)
 {
     using_compression_ = ( CaptureDNS::name_compression() != CaptureDNS::NONE );
 
