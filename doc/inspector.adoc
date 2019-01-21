@@ -280,9 +280,6 @@ with a data item named `NAME` from the query/response (QR) item.
 | `response_delay_nanosecs`
 | Nano-seconds between query and response timestamps. 0 if no query or no response.
 
-| `timestamp_date`
-| QR timestamp date YYYY-MM-DD.
-
 | `timestamp_secs`
 | QR timestamp seconds since epoch.
 
@@ -322,7 +319,7 @@ e.g. `{{client_address:x-aipaddr}}`.
 | Output binary input data using C string style escapes,  e.g. `Hello, world\n\0`.  Non-printable characters without a defined  escape are output as `\xaa`.
 
 | `x-csvescape`
-| Output input data escaping `"` for use with CSV, e.g. `Hello, \"Fred\"`.
+| Output input data escaping for use with CSV as described in https://tools.ietf.org/html/rfc4180[RFC4180], e.g. `"Hello, ""world"""`.
 
 | `x-hexstring`
 | Output binary input data as hex characters. A 0 byte is output as `\0`, all other values as `\xaa`.
@@ -335,10 +332,18 @@ e.g. `{{client_address:x-aipaddr}}`.
 
 | `x-ip6addr-bin`
 | Output IPv4 or IPv6 addresses as a 16 byte binary IPv6 address. IPv4 addresses  are output as `0x00000000000000000000ffffc0000219`.
+
+| `x-date`
+| Output timestamp in seconds as a date in ISO601 format (YYYY-MM-DD).
+
+| `x-datetime`
+| Output timestamp in seconds as a date and time in ISO601 format (YYYY-MM-DD HH:MM:SS).
+
 |===
 
 Other predefined modifiers designed for use with HTML output are available.
-See https://htmlpreview.github.io/?https://raw.githubusercontent.com/OlafvdSpek/ctemplate/master/doc/reference.html#template_modifier.
+See the documentation for the `ctemplate` library at
+https://github.com/OlafvdSpek/ctemplate.
 
 == EXIT STATUS
 

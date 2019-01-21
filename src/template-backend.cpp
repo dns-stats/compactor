@@ -132,6 +132,7 @@ namespace
         }
     };
 
+    // CSV escaping as per RFC4180.
     class CSVEscapeModifier : public ctemplate::TemplateModifier
     {
     public:
@@ -140,21 +141,31 @@ namespace
                             ctemplate::ExpandEmitter* out,
                             const std::string& arg) const
         {
-            const char* pos = in;
-            const char* const limit = in + inlen;
+            bool need_escape = false;
 
-            while (pos < limit) {
-                switch (*pos) {
-                case '"':
-                    out->Emit("\"\"");
-                    break;
-
-                default:
-                    out->Emit(pos, 1);
+            for ( const char* pos = in; pos < in + inlen; ++pos )
+            {
+                if ( *pos == '"' || *pos == ',' ||
+                     *pos == '\r' || *pos == '\n' )
+                {
+                    need_escape = true;
                     break;
                 }
-                pos++;
             }
+
+            if ( need_escape )
+            {
+                out->Emit('"');
+                for ( const char* pos = in; pos < in + inlen; ++pos )
+                {
+                    if ( *pos == '"' )
+                        out->Emit('"');
+                    out->Emit(*pos);
+                }
+                out->Emit('"');
+            }
+            else
+                out->Emit(in, inlen);
         }
     };
 
@@ -268,12 +279,48 @@ namespace
         }
     };
 
+    class DateModifier : public ctemplate::TemplateModifier
+    {
+    public:
+        virtual void Modify(const char* in, size_t inlen,
+                            const ctemplate::PerExpandData* per_expand_data,
+                            ctemplate::ExpandEmitter* out,
+                            const std::string& arg) const
+        {
+            std::string s(in, inlen);
+            std::time_t t = static_cast<std::time_t>(std::stoll(s));
+            std::tm tm = *std::gmtime(&t);
+            char buf[40];
+            std::strftime(buf, sizeof(buf), "%F", &tm);
+            out->Emit(buf);
+        }
+    };
+
+    class DateTimeModifier : public ctemplate::TemplateModifier
+    {
+    public:
+        virtual void Modify(const char* in, size_t inlen,
+                            const ctemplate::PerExpandData* per_expand_data,
+                            ctemplate::ExpandEmitter* out,
+                            const std::string& arg) const
+        {
+            std::string s(in, inlen);
+            std::time_t t = static_cast<std::time_t>(std::stoll(s));
+            std::tm tm = *std::gmtime(&t);
+            char buf[40];
+            std::strftime(buf, sizeof(buf), "%F %T", &tm);
+            out->Emit(buf);
+        }
+    };
+
     CStringModifier cStringModifier;
     HexStringModifier hexStringModifier;
     CSVEscapeModifier csvEscapeModifier;
     IPAddrModifier ipaddrModifier;
     IP6AddrModifier ip6addrModifier;
     IP6AddrBinModifier ip6addrBinModifier;
+    DateModifier dateModifier;
+    DateTimeModifier dateTimeModifier;
 
     std::unique_ptr<GeoIPContext> geoip;
     std::unique_ptr<IPAddrGeoLocationModifier> ipaddr_geoloc;
@@ -284,10 +331,12 @@ namespace
     {
         ctemplate::AddModifier("x-cstring", &cStringModifier);
         ctemplate::AddModifier("x-hexstring", &hexStringModifier);
-        ctemplate::AddModifier("x-csv-escape", &csvEscapeModifier);
+        ctemplate::AddModifier("x-csvescape", &csvEscapeModifier);
         ctemplate::AddModifier("x-ipaddr", &ipaddrModifier);
         ctemplate::AddModifier("x-ip6addr", &ip6addrModifier);
         ctemplate::AddModifier("x-ip6addr-bin", &ip6addrBinModifier);
+        ctemplate::AddModifier("x-date", &dateModifier);
+        ctemplate::AddModifier("x-datetime", &dateTimeModifier);
 
         try
         {
@@ -448,12 +497,6 @@ void TemplateBackend::output(std::shared_ptr<QueryResponse>& qr, const Configura
     if ( client_address.is_ipv6() )
         transport_flags |= (1 << 1);
     dict.SetIntValue("transport_ipv6", client_address.is_ipv6());
-
-    std::time_t t = std::chrono::system_clock::to_time_t(query_timestamp);
-    std::tm tm = *std::gmtime(&t);
-    char buf[40];
-    std::strftime(buf, sizeof(buf), "%Y-%m-%d", &tm);
-    dict.SetValue("timestamp_date", buf);
 
     dict.SetValue("timestamp_secs", ToString(std::chrono::duration_cast<std::chrono::seconds>(query_timestamp.time_since_epoch()).count()));
 
