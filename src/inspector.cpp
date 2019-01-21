@@ -223,9 +223,9 @@ int main(int ac, char *av[])
         ("output,o",
          po::value<std::string>(&output_file_name),
          "output file name.")
-        ("backend,B",
+        ("output-format,F",
          po::value<std::string>(&backend),
-         "output backend. 'pcap' (default) or 'template'.")
+         "output format. 'pcap' (default) or 'template'.")
         ("template,t",
          po::value<std::string>(&template_options.template_name),
          "name of template to use for template output.")
@@ -321,7 +321,7 @@ int main(int ac, char *av[])
 
         po::notify(vm);
 
-        if ( vm.count("backend") != 0 )
+        if ( vm.count("output-format") != 0 )
         {
             if ( backend == "pcap" )
                 template_backend = false;
@@ -330,16 +330,36 @@ int main(int ac, char *av[])
             else
             {
                 std::cerr << PROGNAME
-                          << ":  Error:\tBackend must be 'pcap' or 'template'.\n";
+                          << ":  Error:\tOutput format must be 'pcap' or 'template'.\n";
                 return 1;
             }
         }
 
-        if ( template_backend && vm.count("template") == 0 )
+        if ( template_backend  )
         {
-            std::cerr << PROGNAME
-                << ":  Error:\tTemplate backend requires a template to be specified.\n";
-            return 1;
+            if ( vm.count("template") == 0 )
+            {
+                std::cerr << PROGNAME
+                          << ":  Error:\tTemplate output format requires a template to be specified.\n";
+                return 1;
+            }
+            if ( vm.count("query_only") != 0 )
+            {
+                std::cerr << PROGNAME
+                          << ":  Error:\tquery-only option does not apply when using template output format.\n";
+                return 1;
+            }
+        }
+        else
+        {
+            std::string template_args[] = { "template", "value" };
+            for ( const std::string& arg : template_args )
+                if ( vm.count(arg) != 0 )
+                {
+                    std::cerr << PROGNAME
+                              << ":  Error:\t" << arg << " option does not apply when using PCAP output format.\n";
+                    return 1;
+                }
         }
 
         if ( vm.count("pseudo-anonymisation-key") != 0 &&

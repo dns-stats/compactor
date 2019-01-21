@@ -15,14 +15,14 @@ inspector - convert C-DNS query/response info to PCAP or text
 == DESCRIPTION
 
 *inspector* reads C-DNS query/response files produced by *compactor* and
-writes output files using one of two backends. Optionally, IP addresses may be
+writes output files using one of two output formats. Optionally, IP addresses may be
 pseudo-anonymised.
 
-By default, *inspector* writes output using a PCAP backend. This generates
+By default, *inspector* writes output using PCAP. This generates
 reconstructed traffic for the query/responses in the C-DNS file.
 
-Alternatively, *inspector* can use a templated text backend. This generates output
-based on a template which specifies the output to be produced for each
+Alternatively, *inspector* can use a templated text output. This generates output
+based on a text template which specifies the output to be produced for each
 query/response record.
 
 *inspector* also writes a `.info` file for each output data file written. This is a plain
@@ -51,11 +51,11 @@ output file must be specified with the *--output* option.
   named as the input file with `.pcap` or `.txt` appended to the name. In either
   case, if the file already exists, a counter is appended to the
   filename (e.g. `-1`) until a filename is generated that does not
-  exist.  exist. If _FILENAME_ is `-`, output is written to standard output.
+  exist. If _FILENAME_ is `-`, output is written to standard output.
   In this case, no info (configuration and statistics summary) is generated.
 
-*-B, --backend* _BACKEND_::
-  Write output using the nominated _BACKEND_. This must be either
+*-F, --output-format* _FORMAT_::
+  Write output using the nominated _FORMAT_. This must be either
   `pcap` or `template`. If not specified, `pcap` is the default.
 
 *-z, --gzip-output* [_arg_]::

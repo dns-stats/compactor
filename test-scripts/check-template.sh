@@ -42,7 +42,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Template output, first 100 lines.
-$INSP -o - -B template -g . -t $FMT --value node=42 $tmpdir/gold.cdns > $tmpdir/gold.dump.full
+$INSP -o - -F template -g . -t $FMT --value node=42 $tmpdir/gold.cdns > $tmpdir/gold.dump.full
 if [ $? -ne 0 ]; then
     error "dumper failed"
 fi
