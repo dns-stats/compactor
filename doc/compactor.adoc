@@ -188,6 +188,8 @@ example, to set the snap length to 64, the configuration file entry must read
   If the file path has changed, the existing output file is closed and a new one opened
   using the new pattern expansion. If the file path has not changed, the pattern
   is re-examined every second until it changes. The default period is 300 seconds.
+  This may be combined with maximum output file size rotation, in which case
+  rotation happens when either condition is met.
 
 *-n, --include* _SECTIONS_::
   Indicate which optional sections should be included in the main output. This argument
@@ -219,6 +221,8 @@ example, to set the snap length to 64, the configuration file entry must read
    If a file rotation is triggered, the remaining block and the file postlude will
    be written, so the final file size will exceed this setting by a small margin. The
    default value is 0, which indicates there is no maximum size.
+   This may be combined with a rotation period, in which case
+   rotation happens when either condition is met.
 
 ==== Query/response matching
 
