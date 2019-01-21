@@ -49,6 +49,8 @@ ICMPv6 DEST UNREACHABLE:
   Code:  1  Count:     7  Address: 3923:96a5:46df:bd71:d2ea:2443:527f:55df
   Code:  4  Count:     3  Address: 210a:3c44:990b:d1f0:42a9:bc3f:63e1:240a
 
+====================
+
 REGENERATION ERRORS:
   Incorrect wire size: 11 packets
 

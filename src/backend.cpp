@@ -113,6 +113,7 @@ void PcapBackend::report(std::ostream& os)
 {
     if ( bad_response_wire_size_count_ > 0 )
         os <<
+            "====================\n\n"
             "REGENERATION ERRORS:\n"
             "  Incorrect wire size: "
            << bad_response_wire_size_count_ << " packets\n\n";

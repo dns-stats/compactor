@@ -13,7 +13,9 @@ Version 0.12.1-rc1 - 2019-01-21
 * Accept PCAP with link type RAW as produced by dnscap.
 * Add optional file rotation on compactor output when uncompressed
   output reaches a specified limit.
-* Add text template inspector output backend as alternative to PCAP output.
+* Add text template inspector output format as alternative to PCAP output.
+* Small change to .info format when reporting inconsistencies converting
+  C-DNS to PCAP.
 * Improve error handling on packet decode.
 
 Version 0.11.1 - 2018-05-08
