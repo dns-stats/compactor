@@ -30,7 +30,7 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-# There should be one out file and 3 out2 files.
+# There should be one out file and 5 out2 files.
 NOUT=$(ls $tmpdir/out.cbor* | wc -l)
 NOUT2=$(ls $tmpdir/out2.cbor* | wc -l)
 if [ $NOUT -eq 1 -a $NOUT2 -eq 5 ]; then
