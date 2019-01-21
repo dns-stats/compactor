@@ -6,7 +6,7 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
-Version 0.12.1-rc1 - 2019-01-xx
+Version 0.12.1-rc1 - 2019-01-21
 -------------------------------
 
 * Fix bug stopping pseudo-anonymisation key specification on command line.
