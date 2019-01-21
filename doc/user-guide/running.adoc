@@ -325,24 +325,38 @@ Full details of available command options are in the _inspector_ manual page,
 $ inspector -h
 Usage: inspector [options] [cdns-file [...]]
 Options:
-  -h [ --help ]                show this help message.
-  -v [ --version ]             show version information.
-  -o [ --output ] arg          output file name.
-  -z [ --gzip-output ]         compress output data using gzip. Adds .gz 
-                               extension to output file.
-  -y [ --gzip-level ] arg (=6) gzip compression level.
-  -x [ --xz-output ]           compress output data using xz. Adds .xz extension 
-                               to output file.
-  -u [ --xz-preset ] arg (=6)  xz compression preset level.
-  -q [ --query-only ]          write only query messages to output.
-  -r [ --report-info ]         report info (config and stats summary) on exit.
-  -I [ --info-only ]           don't generate output files, only info files.
-  -R [ --report-only ]         don't write output files, just report info.
+  -h [ --help ]                         show this help message.
+  -v [ --version ]                      show version information.
+  -o [ --output ] arg                   output file name.
+  -F [ --output-format ] arg            output format. 'pcap' (default) or
+                                        'template'.
+  -t [ --template ] arg                 name of template to use for template
+                                        output.
+  -V [ --value ] arg                    <key>=<value> to substitute in the
+                                        template. This argument can be
+                                        repeated.
+  -g [ --geoip-db-dir ] arg (=/usr/local/var/lib/GeoIP)
+                                        path of directory with the GeoIP
+                                        databases.
+  -z [ --gzip-output ]                  compress output data using gzip. Adds
+                                        .gz extension to output file.
+  -y [ --gzip-level ] arg (=6)          gzip compression level.
+  -x [ --xz-output ]                    compress output data using xz. Adds .xz
+                                        extension to output file.
+  -u [ --xz-preset ] arg (=6)           xz compression preset level.
+  -q [ --query-only ]                   write only query messages to output.
+  -r [ --report-info ]                  report info (config and stats summary)
+                                        on exit.
+  -I [ --info-only ]                    don't generate output data files, only
+                                        info files.
+  -R [ --report-only ]                  don't write output data files, just
+                                        report info.
+  -S [ --stats ]                        report conversion statistics.
   -k [ --pseudo-anonymisation-key ] arg pseudo-anonymisation key.
   -P [ --pseudo-anonymisation-passphrase ] arg
                                         pseudo-anonymisation passphrase.
   -p [ --pseudo-anonymise ]             pseudo-anonymise output.
-  --debug-qr                   print Query/Response details.
+  --debug-qr                            print Query/Response details.
 ----
 
 For example, to generate PCAP output corresponding to the DNS traffic
@@ -357,14 +371,146 @@ generates `capture.pcap.info`.
 
 NOTE: The -q option will only write DNS queries to the output PCAP file.
 
+=== Templated text output
+
+By default, _inspector_ converts input C-DNS to PCAP. Alternatively, though, it
+can be used to convert input C-DNS to text output based on a text template file.
+
+==== Template format
+
+===== Template data items
+
+The text in the template file specifies what should be output for each query/response
+record in the C-DNS file. Any items in the template enclosed in double braces,
+known as template markers e.g. `{{NAME}}`,  are replaced with a value `NAME` from
+the query/response (QR) item. Marker values may also be specified on the command
+line.
+
+A full list of query/response template markers is given in
+the _inspector_ manual page, *inspector*(1). The following table gives a selection
+of common markers:
+
+[cols="2*"]
+|===
+| `client_address`
+| IP address of client as raw bytes, 4 for IPv4, 16 for IPv6.
+
+| `client_port`
+| Port used by client.
+
+| `server_address`
+| IP address of server as raw bytes, 4 for IPv4, 16 for IPv6.
+
+| `server_port`
+| Port used by server.
+
+| `client_hoplimit`
+| Value of query client hoplimit. Blank if no query.
+
+| `id`
+| Query ID, or response ID if no query.
+
+| `query_name`
+| QNAME in first Question. Blank if no question.
+
+| `query_type`
+| QTYPE in first Question. Blank if no question.
+
+| `query_response_has_query`
+| 1 if QR contains a query, otherwise 0.
+
+| `query_response_has_response`
+| 1 if QR contains a response, otherwise 0.
+
+| `query_response_query_has_question`
+| 1 if QR contains a query which has a question, otherwise 0. Blank if no query.
+
+| `response_rcode`
+| Value of response RCODE. Blank if no response.
+
+| `response_delay_nanosecs`
+| Nano-seconds between query and response timestamps. 0 if no query or no response.
+
+| `timestamp_secs`
+| QR timestamp seconds since epoch.
+
+| `timestamp_microsecs`
+| QR timestamp micro-seconds since epoch.
+
+| `timestamp_nanosecs`
+| QR timestamp nano-seconds since epoch.
+
+| `transport_ipv6`
+| 1 if the IPv4 used, 0 if IPv4.
+
+| `transport_tcp`
+| 1 if the transport used was TCP, 0 if UDP.
+|===
+
+===== Template marker modifiers
+
+The text substituted into a template marker may be modified by a marker modifier.
+A marker modifier is a filter that is applied when the template is expanded and
+modifies the value of the marker before it is output. Modifiers are specified by
+following the marker name with a colon and the modifier name,
+e.g. `{{client_address:x-aipaddr}}`.
+
+There is a selection of marker modifiers useful for C-DNS.
+
+[cols="2*"]
+|===
+| `x-cstring`
+| Output binary input data using C string style escapes,  e.g. `Hello, world\n\0`.  Non-printable characters without a defined  escape are output as `\xaa`.
+
+| `x-csvescape`
+| Output input data escaping for use with CSV as described in https://tools.ietf.org/html/rfc4180[RFC4180], e.g. `"Hello, ""world"""`.
+
+| `x-hexstring`
+| Output binary input data as hex characters. A 0 byte is output as `\0`, all other values as `\xaa`.
+
+| `x-ipaddr`
+| Output text representation of a IPv4 or IPv6 address, depending on whether  filter input was 4 or 16 bytes.
+
+| `x-ip6addr`
+| Output IPv4 or IPv6 address as the IPv6 printable address representation. IPv4  addresses are output as `::ffff:192.0.2.25`.
+
+| `x-ip6addr-bin`
+| Output IPv4 or IPv6 addresses as a 16 byte binary IPv6 address. IPv4 addresses  are output as `0x00000000000000000000ffffc0000219`.
+
+| `x-date`
+| Output timestamp in seconds as a date in ISO601 format (YYYY-MM-DD).
+
+| `x-datetime`
+| Output timestamp in seconds as a date and time in ISO601 format (YYYY-MM-DD HH:MM:SS).
+|===
+
+==== Template example
+
+The following template file `test.tpl` outputs the timestamp, a node identifier
+(supplied outside C-DNS), the client address and client port and the query name
+in one query/response as a single record in comma-separated value format (CSV).
+
+----
+{{timestamp_secs:x-datetime}},{{node}},{{client_address:x-ipaddr}},{{client_port}},{{query_name:x-csvescape}}
+----
+
+When run with input C-DNS file `input.cdns` using this command line, it produces
+the illustrated sample output:
+----
+$ ./inspector -o - -F template -t ./test.tpl --value node=42 ./input.cdns
+2018-02-07 12:38:10,42,173.253.104.205,37529,www.haokan.party.local
+2018-02-07 12:38:10,42,19.134.250.211,36396,"36.5.84.123, 10.121.88.32, 10.121.87.219"
+2018-02-07 12:38:10,42,242.68.160.159,50139,nllczxstbgfa.local
+----
+
 === Pseudo-anonymised output
 
 _inspector_ output may be optionally pseudo-anonymised (see
 <<pseudoanonymisation, Appendix A>> for a full description). 
 
-Briefly, this means that client and server IP addresses in PCAP output are
-pseudo-anonymised, as are all IP addresses in counts of events recorded. IP
-addresses in data returned from server to client are not anonymised. Client IP
+Briefly, this means that client and server IP addresses in PCAP or templated text
+output are pseudo-anonymised, as are all IP addresses in counts of events recorded.
+IP addresses in data returned from server to client are not anonymised. Client IP
 address information sent from the client is pseudo-anonymised provided it occurs
 in locations prescribed in DNS standards.
 
@@ -473,6 +619,8 @@ ICMPv6 DEST UNREACHABLE:
   Code:  1  Count:     4  Address: 3923:96a5:46df:bd71:e9eb:6464:e35:795
   Code:  1  Count:     7  Address: 3923:96a5:46df:bd71:d2ea:2443:527f:55df
   Code:  4  Count:     3  Address: 210a:3c44:990b:d1f0:42a9:bc3f:63e1:240a
+
+====================
 
 REGENERATION ERRORS:
   Incorrect wire size: 11 packets
