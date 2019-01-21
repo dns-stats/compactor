@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2018-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -60,7 +60,7 @@ public:
      * \param geoip_db_dir_path path to geoip data directory.
      * \throws geoip_error on error
      */
-    GeoIPContext(std::string const & geoip_db_dir_path);
+    explicit GeoIPContext(std::string const & geoip_db_dir_path);
 
     /**
      * \brief Constructor.

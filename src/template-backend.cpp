@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
+ * Copyright 2018-2019 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -30,6 +30,7 @@ namespace
     class CStringModifier : public ctemplate::TemplateModifier
     {
     public:
+        // cppcheck-suppress unusedFunction
         virtual void Modify(const char* in, size_t inlen,
                             const ctemplate::PerExpandData* per_expand_data,
                             ctemplate::ExpandEmitter* out,
@@ -220,7 +221,7 @@ namespace
     class IPAddrGeoLocationModifier : public ctemplate::TemplateModifier
     {
     public:
-        IPAddrGeoLocationModifier(GeoIPContext& ctx) : ctx_(ctx) {}
+        explicit IPAddrGeoLocationModifier(GeoIPContext& ctx) : ctx_(ctx) {}
 
         virtual void Modify(const char* in, size_t inlen,
                             const ctemplate::PerExpandData* per_expand_data,
@@ -239,7 +240,7 @@ namespace
     class IPAddrGeoASNModifier : public ctemplate::TemplateModifier
     {
     public:
-        IPAddrGeoASNModifier(GeoIPContext& ctx) : ctx_(ctx) {}
+        explicit IPAddrGeoASNModifier(GeoIPContext& ctx) : ctx_(ctx) {}
 
         virtual void Modify(const char* in, size_t inlen,
                             const ctemplate::PerExpandData* per_expand_data,

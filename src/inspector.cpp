@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -100,12 +100,12 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
     CborStreamDecoder dec(is);
     BlockCborReader cbr(dec, config, options.pseudo_anon);
     std::chrono::system_clock::time_point earliest_time, latest_time;
-    bool first_time = true;
 
     try
     {
         auto start = std::chrono::system_clock::now();
         unsigned long long nrecs = 0;
+        bool first_time = true;
 
         for ( std::shared_ptr<QueryResponse> qr = cbr.readQR();
               qr;
