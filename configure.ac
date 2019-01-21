@@ -42,6 +42,12 @@ AC_ARG_ENABLE([pseudo-anonymisation],
         [],
         [enable_pseudo_anonymisation=yes])
 AM_CONDITIONAL([ENABLE_PSEUDOANONYMISATION], [test "x$enable_pseudo_anonymisation" == "xyes"])
+AC_ARG_WITH([geoip-data-dir],
+        [AS_HELP_STRING([--with-geoip-data-dir=DIR],
+                [default directory containing geoip data @<:@default=$localstatedir/lib/GeoIP@:>@.])],
+        [geoipdir=$withval],
+        [geoipdir="$localstatedir/lib/GeoIP"])
+AC_SUBST([geoipdir], [$geoipdir])
 
 # Checks for libraries.
 AC_LANG([C++])
