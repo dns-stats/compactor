@@ -334,10 +334,10 @@ e.g. `{{client_address:x-aipaddr}}`.
 | Output IPv4 or IPv6 addresses as a 16 byte binary IPv6 address. IPv4 addresses  are output as `0x00000000000000000000ffffc0000219`.
 
 | `x-date`
-| Output timestamp in seconds as a date in ISO601 format (YYYY-MM-DD).
+| Output timestamp in seconds as a UTC date in ISO601 format (YYYY-MM-DD).
 
 | `x-datetime`
-| Output timestamp in seconds as a date and time in ISO601 format (YYYY-MM-DD HH:MM:SS).
+| Output timestamp in seconds as a UTC date and time in ISO601 format (YYYY-MM-DD HH:MM:SS).
 
 |===
 
