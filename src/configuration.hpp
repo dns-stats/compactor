@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,12 +13,37 @@
 #ifndef CONFIGURATION_HPP
 #define CONFIGURATION_HPP
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
 #include <boost/program_options.hpp>
 
 #include "ipaddress.hpp"
+
+/**
+ * \struct Size
+ * \brief A value holding a size, an unsigned number that may be specified
+ * with a suffix of k, K, m, M, g, G, t, T.
+ */
+struct Size
+{
+public:
+    Size() : size(0) {}
+    explicit Size(std::uintmax_t n) : size(n) {}
+    std::uintmax_t size;
+};
+
+/**
+ * \brief Overload <code>validate()</code> for Size.
+ *
+ * @param v             holder for result.
+ * @param values        input values.
+ * @param val1          compiler workaround.
+ * @param val2          compiler workaround.
+ */
+void validate(boost::any& v, const std::vector<std::string>& values,
+              Size* val1, int val2);
 
 /**
  * \class Configuration
@@ -200,6 +225,11 @@ public:
      * \brief set the maximum number of query/response items in a block.
      */
     unsigned int max_block_qr_items;
+
+    /**
+     * \brief set the maximum uncompressed output size. 0 = no limit.
+     */
+    Size max_output_size;
 
     /**
      * \brief which RR types are to be included on output.

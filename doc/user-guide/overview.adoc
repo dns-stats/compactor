@@ -37,7 +37,8 @@ The DNS-STATS Compactor suite currently comprises two programs:
   by _compactor_. It outputs one or more PCAP files suitable for
   direct inspection or input to existing analysis tools. See
   <<running.adoc#_reconstructed_pcap_files,Reconstructed PCAP files>> for
-  limitations on the reconstruction.
+  limitations on the reconstruction. Alternatively, _inspector_ can be used
+  to convert C-DNS files to text, based on a user-specified template.
 
 _compactor_ is resource efficient, and can therefore be co-located
 on a nameserver. Alternatively it can be run on a standalone server

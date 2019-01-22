@@ -6,7 +6,7 @@ Jim Hague, Sinodun Internet Technologies
 
 == NAME
 
-inspector - convert C-DNS query/response info to PCAP
+inspector - convert C-DNS query/response info to PCAP or text
 
 == SYNOPSIS
 
@@ -15,11 +15,18 @@ inspector - convert C-DNS query/response info to PCAP
 == DESCRIPTION
 
 *inspector* reads C-DNS query/response files produced by *compactor* and
-writes output files in PCAP containing reconstructed traffic for the query/responses
-in the C-DNS file. Optionally, IP addresses may be pseudo-anonymised.
+writes output files using one of two output formats. Optionally, IP addresses may be
+pseudo-anonymised.
 
-*inspector* also writes a `.info` file for each PCAP output file written. This is a plain
-text file, named as the PCAP output file but with `.info` appended. It contains
+By default, *inspector* writes output using PCAP. This generates
+reconstructed traffic for the query/responses in the C-DNS file.
+
+Alternatively, *inspector* can use a templated text output. This generates output
+based on a text template which specifies the output to be produced for each
+query/response record.
+
+*inspector* also writes a `.info` file for each output data file written. This is a plain
+text file, named as the output file but with `.info` appended. It contains
 a configuration and statistics summary for the capture.
 
 If no input file is given, *inspector* reads its standard input. In this case, an
@@ -38,37 +45,38 @@ output file must be specified with the *--output* option.
 === Outputs
 
 *-o, --output* _FILENAME_::
-  Write a single output file named _FILENAME_ containing PCAP
+  Write a single output file named _FILENAME_ containing output
   generated from all the input files specified. If no output filename
-  is specified, a PCAP output file is written for each input file
-  named as the input file with `.pcap` appended to the name. In either
+  is specified, an output file is written for each input file
+  named as the input file with `.pcap` or `.txt` appended to the name. In either
   case, if the file already exists, a counter is appended to the
   filename (e.g. `-1`) until a filename is generated that does not
-  exist.  exist. If _FILENAME_ is `-`, PCAP output is written to standard output.
+  exist. If _FILENAME_ is `-`, output is written to standard output.
   In this case, no info (configuration and statistics summary) is generated.
 
+*-F, --output-format* _FORMAT_::
+  Write output using the nominated _FORMAT_. This must be either
+  `pcap` or `template`. If not specified, `pcap` is the default.
+
 *-z, --gzip-output* [_arg_]::
-  Compress data in the PCAP output files using gzip(1) format. _arg_ may be
+  Compress data in the output files using gzip(1) format. _arg_ may be
   `true` or `1` to  enable compression, `false` or `0` to disable compression.
   If _arg_ is omitted,  it defaults to `true`. If compression is enabled, an
   extension `.gz` is added to  the output filename.
 
 *-y, --gzip-level* [_arg_]::
-  Compression level to use when producing gzip(1) PCAP output. _arg_ must be
+  Compression level to use when producing gzip(1) output. _arg_ must be
   a single digit `0` to `9`.  If not specified, the default level is `6`.
 
 *-x, --xz-output* [_arg_]::
-  Compress data in the PCAP output files using xz(1) format. _arg_ may be `true`
+  Compress data in the output files using xz(1) format. _arg_ may be `true`
   or `1` to enable compression, `false` or `0` to disable compression. If _arg_ is omitted,
   it defaults to `true`. If compression is enabled, an extension `.xz` is added to
   the output filename.
 
 *-u, --xz-preset* [_arg_]::
-  Compression preset level to use when producing xz(1) PCAP output. _arg_ must be
+  Compression preset level to use when producing xz(1) output. _arg_ must be
   a single digit `0` to `9`.  If not specified, the default level is `6`.
-
-*-q, --query-only*::
-  When writing the output file, write only query messages to the output.
 
 *-r. --report-info*::
   Report info (config and statistics summary) to standard output on exit.
@@ -78,6 +86,10 @@ output file must be specified with the *--output* option.
 
 *-I, --info-only*::
    Don't write any PCAP output files, just write the `.info` files.
+
+*-S, --stats*::
+  For each input file, write the number of query/response records converted and the time
+  taken to standard error  on completion.
 
 *-k, --pseudo-anonymisation-key*::
    Key to use during output pseudo-anonymisation. Must be 16 bytes long.
@@ -92,6 +104,247 @@ output file must be specified with the *--output* option.
    Print a summary of each query/response pair to standard output on reading
    from the input C-DNS file.
 
+=== PCAP-specific options
+
+*-q, --query-only*::
+  Write only query messages to the output.
+
+=== Template-specific options
+
+*-t, --template* _FILENAME_::
+  Write output based on the template in the file named _FILENAME_.
+
+*-v, --value* _NAME=TEXT_::
+  Set a value named _NAME_ with value _TEXT_ on the command line. This value
+  can be used in the template. This parameter may be repeated multiple times
+  to specify different values.
+
+*-g, --geoip-db-dir* _DIR_::
+  `inspector` can present geographic  IP data in the output. This requires
+  the MaxMind GeoLite2 database files, which
+  should be found in directory _DIR_. *inspector* needs
+  files _GeoLite2-ASN.mmdb_ and _GeoLite2-City.mmdb_ to be present to enable
+  geographic IP data in the output.
+
+== TEMPLATE FILES
+
+A template file describes the output generated by *inspector* for each
+query/response item in a C-DNS file.
+
+=== Template markers
+
+When output for each query/response item
+is generated, elements, or markers, like `{{NAME}}` in the template are replaced
+with a data item named `NAME` from the query/response (QR) item.
+
+[cols="2*"]
+|===
+| `client_address`
+| IP address of client as raw bytes, 4 for IPv4, 16 for IPv6.
+
+| `client_port`
+| Port used by client.
+
+| `server_address`
+| IP address of server as raw bytes, 4 for IPv4, 16 for IPv6.
+
+| `server_port`
+| Port used by server.
+
+| `client_hoplimit`
+| Value of query client hoplimit. Blank if no query.
+
+| `dns_flags`
+| DNS flags value. See C-DNS definition for values.
+
+| `id`
+| Query ID, or response ID if no query.
+
+| `query_name`
+| QNAME in first Question. Blank if no question.
+
+| `query_class`
+| QCLASS in first Question. Blank if no question.
+
+| `query_type`
+| QTYPE in first Question. Blank if no question.
+
+| `query_authoritative_answer`
+| Value of query AA flag. Blank if no query.
+
+| `query_authenticated_data`
+| Value of query AD flag. Blank if no query.
+
+| `query_checking_disabled`
+| Value of query CD flag. Blank if no query.
+
+| `query_checking_recursion_available`
+| Value of query RA flag. Blank if no query.
+
+| `query_checking_recursion_desired`
+| Value of query RD flag. Blank if no query.
+
+| `query_truncated`
+| Value of query TC flag. Blank if no query.
+
+| `query_z`
+| Value of query Z flag. Blank if no query.
+
+| `query_do`
+| Value of query EDNS0 DO bit. Blank if no query EDNS0.
+
+| `query_edns_udp_payload_size`
+| Value of query EDNS0 UDP payload size. Blank if no query EDNS0.
+
+| `query_edns_version`
+| Value of query EDNS0 version bit. Blank if no query EDNS0.
+
+| `query_len`
+| Value of query length on the wire. Blank if no query.
+
+| `query_opcode`
+| Value of query OPCODE. Blank if no query.
+
+| `query_rcode`
+| Value of query RCODE. Blank if no query.
+
+| `query_qdcount`
+| Value of query QDCOUNT. Blank if no query.
+
+| `query_ancount`
+| Value of query ANCOUNT. Blank if no query.
+
+| `query_nscount`
+| Value of query NSCOUNT. Blank if no query.
+
+| `query_arcount`
+| Value of query ARCOUNT. Blank if no query.
+
+| `query_response_has_query`
+| 1 if QR contains a query, otherwise 0.
+
+| `query_response_has_response`
+| 1 if QR contains a response, otherwise 0.
+
+| `query_response_query_has_opt`
+| 1 if QR contains a query which has OPT, otherwise 0. Blank if no query.
+
+| `query_response_query_has_question`
+| 1 if QR contains a query which has a question, otherwise 0. Blank if no query.
+
+| `query_response_response_has_opt`
+| 1 if QR contains a response which has OPT, otherwise 0. Blank if no response.
+
+| `query_response_flags`
+| Query/Response flags value. See C-DNS definition for values.
+
+| `response_authoritative_answer`
+| Value of response AA flag. Blank if no response.
+
+| `response_authenticated_data`
+| Value of response AD flag. Blank if no response.
+
+| `response_checking_disabled`
+| Value of response CD flag. Blank if no response.
+
+| `response_checking_recursion_available`
+| Value of response RA flag. Blank if no response.
+
+| `response_checking_recursion_desired`
+| Value of response RD flag. Blank if no response.
+
+| `response_truncated`
+| Value of response TC flag. Blank if no response.
+
+| `response_z`
+| Value of response Z flag. Blank if no response.
+
+| `response_len`
+| Value of response length on the wire. Blank if no response.
+
+| `response_rcode`
+| Value of response RCODE. Blank if no response.
+
+| `response_qdcount`
+| Value of response QDCOUNT. Blank if no response.
+
+| `response_ancount`
+| Value of response ANCOUNT. Blank if no response.
+
+| `response_nscount`
+| Value of response NSCOUNT. Blank if no response.
+
+| `response_arcount`
+| Value of response ARCOUNT. Blank if no response.
+
+| `response_delay_nanosecs`
+| Nano-seconds between query and response timestamps. 0 if no query or no response.
+
+| `timestamp_secs`
+| QR timestamp seconds since epoch.
+
+| `timestamp_microsecs`
+| QR timestamp micro-seconds since epoch.
+
+| `timestamp_nanosecs`
+| QR timestamp nano-seconds since epoch.
+
+| `transport_flags`
+| Transport flags value. See C-DNS definition for values.
+
+| `transport_ipv6`
+| 1 if the IPv4 used, 0 if IPv4.
+
+| `transport_tcp`
+| 1 if the transport used was TCP, 0 if UDP.
+|===
+
+=== Template section
+
+A template may optionally contain a section start marker
+`{{#QUERY_RESPONSE_HEADER}}` and a section end marker
+`{{/QUERY_RESPONSE_HEADER}}`. If present, text between these markers
+is output before the first query/response output record.
+
+=== Template marker modifiers
+
+A marker modifier is a filter that is applied at template expansion time and modifies
+the value of the marker before it is output. Modifiers are specified by following the
+marker name with a colon and the modifier name,
+e.g. `{{client_address:x-ipaddr}}`.
+
+[cols="2*"]
+|===
+| `x-cstring`
+| Output binary input data using C string style escapes,  e.g. `Hello, world\n\0`.  Non-printable characters without a defined  escape are output as `\xaa`.
+
+| `x-csvescape`
+| Output input data escaping for use with CSV as described in https://tools.ietf.org/html/rfc4180[RFC4180], e.g. `"Hello, ""quotes"""`.
+
+| `x-hexstring`
+| Output binary input data as hex characters. A 0 byte is output as `\0`, all other values as `\xaa`.
+
+| `x-ipaddr`
+| Output text representation of a IPv4 or IPv6 address, depending on whether  filter input was 4 or 16 bytes.
+
+| `x-ip6addr`
+| Output IPv4 or IPv6 address as the IPv6 printable address representation. IPv4  addresses are output as `::ffff:192.0.2.25`.
+
+| `x-ip6addr-bin`
+| Output IPv4 or IPv6 addresses as a 16 byte binary IPv6 address. IPv4 addresses  are output as `0x00000000000000000000ffffc0000219`.
+
+| `x-date`
+| Output timestamp in seconds as a UTC date in ISO601 format (YYYY-MM-DD).
+
+| `x-datetime`
+| Output timestamp in seconds as a UTC date and time in ISO601 format (YYYY-MM-DD HH:MM:SS).
+
+|===
+
+Other predefined modifiers designed for use with HTML output are available.
+See the documentation for the `ctemplate` library at
+https://github.com/OlafvdSpek/ctemplate.
+
 == EXIT STATUS
 
 The exit status is 1 if any error occurred. A successful run ends with an exit status of 0.
@@ -102,7 +355,8 @@ There will be a website one day.
 
 == COPYRIGHT
 
-Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers and
+Sinodun Internet Technologies.
 
 Free use of this software is granted under the terms of the Mozilla Public
 Licence, version 2.0. See the source for full details.

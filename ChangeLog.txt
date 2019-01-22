@@ -1,10 +1,22 @@
 #
-# Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
+
+Version 0.12.1-rc1 - 2019-01-21
+-------------------------------
+
+* Fix bug stopping pseudo-anonymisation key specification on command line.
+* Accept PCAP with link type RAW as produced by dnscap.
+* Add optional file rotation on compactor output when uncompressed
+  output reaches a specified limit.
+* Add text template inspector output format as alternative to PCAP output.
+* Small change to .info format when reporting inconsistencies converting
+  C-DNS to PCAP.
+* Improve error handling on packet decode.
 
 Version 0.11.1 - 2018-05-08
 ---------------------------

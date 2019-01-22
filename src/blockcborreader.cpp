@@ -65,6 +65,7 @@ void BlockCborReader::readFileHeader(Configuration& config)
         {
             nblocks_ = n_elems;
             blocks_indef_ = indef;
+            fields_ = make_unique<block_cbor::FileVersionFields>(0, block_cbor::OLD_FILE_FORMAT_VERSION, 0);
         }
     }
     catch (const std::logic_error& e)
@@ -143,6 +144,9 @@ void BlockCborReader::readFilePreamble(Configuration& config, bool old)
             break;
         }
     }
+
+    if ( !fields_ )
+        throw cbor_file_format_error("File preamble missing version information");
 }
 
 void BlockCborReader::readConfiguration(Configuration& config)

@@ -1,5 +1,5 @@
 # 
-# Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
 # 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -42,6 +42,12 @@ AC_ARG_ENABLE([pseudo-anonymisation],
         [],
         [enable_pseudo_anonymisation=yes])
 AM_CONDITIONAL([ENABLE_PSEUDOANONYMISATION], [test "x$enable_pseudo_anonymisation" == "xyes"])
+AC_ARG_WITH([geoip-data-dir],
+        [AS_HELP_STRING([--with-geoip-data-dir=DIR],
+                [default directory containing geoip data @<:@default=$localstatedir/lib/GeoIP@:>@.])],
+        [geoipdir=$withval],
+        [geoipdir="$localstatedir/lib/GeoIP"])
+AC_SUBST([geoipdir], [$geoipdir])
 
 # Checks for libraries.
 AC_LANG([C++])
@@ -97,6 +103,27 @@ PKG_CHECK_MODULES(libtins,
                   [AC_DEFINE([HAVE_LIBTINS4], [1], [Define to 1 if using libtins version 4.0 or later])],
                   [PKG_CHECK_MODULES(libtins, libtins >= 3.4)])
 AC_SUBST(libtins_LIBS)
+
+AC_CHECK_HEADERS([ctemplate/template.h])
+SAVED_LIBS=$LIBS
+LIBS="$LIBS -lctemplate"
+AC_LINK_IFELSE(
+  [AC_LANG_PROGRAM([#include <ctemplate/template_string.h>],
+    [ctemplate::TemplateString s("example")])],
+        [
+            AC_SUBST([CTEMPLATE_LIB], ["-lctemplate"])
+            AC_DEFINE([HAVE_LIBCTEMPLATE], [1], [Define to 1 if you have the `ctemplate' library (-lctemplate)])
+        ],
+        [AC_MSG_ERROR([ctemplate library not found])])
+LIBS="$SAVED_LIBS"
+
+AC_CHECK_LIB([maxminddb],[MMDB_open],
+        [
+            AC_SUBST([MAXMINDDB_LIB], ["-lmaxminddb"])
+            AC_DEFINE([HAVE_LIBMAXMINDDB], [1], [Define to 1 if you have the `maxminddb' library (-lmaxminddb)])
+        ],
+        [AC_MSG_ERROR([maxminddb library not found])])
+AC_CHECK_HEADERS([maxminddb.h])
 
 # Checks for header files.
 

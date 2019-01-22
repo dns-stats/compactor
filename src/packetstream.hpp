@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -211,11 +211,11 @@ protected:
     /**
      * \brief Find the IP or IPv6 PDU in the packet.
      *
-     * \param pcap the incoming packet.
+     * \param pdu the incoming PDU.
      * \returns pointer to IP or IPv6 packet, `null` if ignored VLAN.
      * \throws unhandled_packet if no IP/IPv6 PDU found.
      */
-    Tins::PDU* find_ip_pdu(std::shared_ptr<PcapItem>& pcap);
+    Tins::PDU* find_ip_pdu(Tins::PDU* pdu);
 
     /**
      * \brief Process IPv4 packet.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -62,18 +62,16 @@ void PacketStream::on_new_stream_data(Tins::TCPIP::Stream::payload_type& payload
     }
 }
 
-Tins::PDU* PacketStream::find_ip_pdu(std::shared_ptr<PcapItem>& pcap)
+Tins::PDU* PacketStream::find_ip_pdu(Tins::PDU* pdu)
 {
-    Tins::PDU* res = pcap->pdu.get();
-
-    while ( res &&
-            res->pdu_type() != Tins::PDU::IP &&
-            res->pdu_type() != Tins::PDU::IPv6 )
+    while ( pdu &&
+            pdu->pdu_type() != Tins::PDU::IP &&
+            pdu->pdu_type() != Tins::PDU::IPv6 )
     {
-        if ( res->pdu_type() == Tins::PDU::DOT1Q &&
+        if ( pdu->pdu_type() == Tins::PDU::DOT1Q &&
              !config_.vlan_ids.empty() )
         {
-            const Tins::Dot1Q* dot1q = reinterpret_cast<const Tins::Dot1Q*>(res);
+            const Tins::Dot1Q* dot1q = reinterpret_cast<const Tins::Dot1Q*>(pdu);
             bool watched_vlan = false;
 
             for ( auto vl_id : config_.vlan_ids )
@@ -87,13 +85,13 @@ Tins::PDU* PacketStream::find_ip_pdu(std::shared_ptr<PcapItem>& pcap)
                 return nullptr;
         }
 
-        res = res->inner_pdu();
+        pdu = pdu->inner_pdu();
     }
 
-    if ( !res )
+    if ( !pdu )
         throw unhandled_packet();
 
-    return res;
+    return pdu;
 }
 
 Tins::PDU* PacketStream::ipv4_packet(Tins::IP* ip, PktData& pkt_data)
@@ -279,7 +277,39 @@ void PacketStream::dispatch_dns(Tins::RawPDU* pdu, PktData& pkt_data)
 
 void PacketStream::process_packet(std::shared_ptr<PcapItem>& pcap)
 {
-    Tins::PDU* pdu = find_ip_pdu(pcap);
+    Tins::PDU* pdu = pcap->pdu.get();
+    std::unique_ptr<Tins::IP> ip;
+    std::unique_ptr<Tins::IPv6> ipv6;
+
+    if ( pdu->pdu_type() == Tins::PDU::RAW )
+    {
+        Tins::RawPDU* raw_pdu = reinterpret_cast<Tins::RawPDU*>(pdu);
+        try
+        {
+            switch(raw_pdu->payload()[0] >> 4)
+            {
+            case 4:
+                ip = make_unique<Tins::IP>(raw_pdu->payload().data(), raw_pdu->payload_size());
+                pdu = ip.get();
+                break;
+
+            case 6:
+                ipv6 = make_unique<Tins::IPv6>(raw_pdu->payload().data(), raw_pdu->payload_size());
+                pdu = ipv6.get();
+                break;
+
+            default:
+                pdu = nullptr;
+                break;
+            }
+        }
+        catch (Tins::malformed_packet&)
+        {
+            pdu = nullptr;
+        }
+    }
+    else
+        pdu = find_ip_pdu(pdu);
 
     if ( !pdu )
         return;
