@@ -453,7 +453,7 @@ The text substituted into a template marker may be modified by a marker modifier
 A marker modifier is a filter that is applied when the template is expanded and
 modifies the value of the marker before it is output. Modifiers are specified by
 following the marker name with a colon and the modifier name,
-e.g. `{{client_address:x-aipaddr}}`.
+e.g. `{{client_address:x-ipaddr}}`.
 
 There is a selection of marker modifiers useful for C-DNS.
 
@@ -463,7 +463,7 @@ There is a selection of marker modifiers useful for C-DNS.
 | Output binary input data using C string style escapes,  e.g. `Hello, world\n\0`.  Non-printable characters without a defined  escape are output as `\xaa`.
 
 | `x-csvescape`
-| Output input data escaping for use with CSV as described in https://tools.ietf.org/html/rfc4180[RFC4180], e.g. `"Hello, ""world"""`.
+| Output input data escaping for use with CSV as described in https://tools.ietf.org/html/rfc4180[RFC4180], e.g. `"Hello, ""quotes"""`.
 
 | `x-hexstring`
 | Output binary input data as hex characters. A 0 byte is output as `\0`, all other values as `\xaa`.
@@ -486,7 +486,7 @@ There is a selection of marker modifiers useful for C-DNS.
 
 ==== Template example
 
-The following template file `test.tpl` outputs the timestamp, a node identifier
+The following template file `test.tpl` outputs a UTC timestamp, a node identifier
 (supplied outside C-DNS), the client address and client port and the query name
 in one query/response as a single record in comma-separated value format (CSV).
 

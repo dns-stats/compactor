@@ -311,7 +311,7 @@ is output before the first query/response output record.
 A marker modifier is a filter that is applied at template expansion time and modifies
 the value of the marker before it is output. Modifiers are specified by following the
 marker name with a colon and the modifier name,
-e.g. `{{client_address:x-aipaddr}}`.
+e.g. `{{client_address:x-ipaddr}}`.
 
 [cols="2*"]
 |===
@@ -319,7 +319,7 @@ e.g. `{{client_address:x-aipaddr}}`.
 | Output binary input data using C string style escapes,  e.g. `Hello, world\n\0`.  Non-printable characters without a defined  escape are output as `\xaa`.
 
 | `x-csvescape`
-| Output input data escaping for use with CSV as described in https://tools.ietf.org/html/rfc4180[RFC4180], e.g. `"Hello, ""world"""`.
+| Output input data escaping for use with CSV as described in https://tools.ietf.org/html/rfc4180[RFC4180], e.g. `"Hello, ""quotes"""`.
 
 | `x-hexstring`
 | Output binary input data as hex characters. A 0 byte is output as `\0`, all other values as `\xaa`.
