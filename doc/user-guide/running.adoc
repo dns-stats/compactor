@@ -523,6 +523,7 @@ NOTE:  Pseudo-anonymisation is currently an experimental feature.
 The pseudo-anonymisation services provided and
 the details of the mechanism used are subject to change.
 
+[#reconstructed_pcap_files]
 === Reconstructed PCAP files
 
 The PCAP files generated from C-DNS are not an exact reproduction of
