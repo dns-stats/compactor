@@ -10,7 +10,7 @@ inspector - convert C-DNS query/response info to PCAP or text
 
 == SYNOPSIS
 
-*inspector* ['OPTIONS']... ['FILE' ['FILE'...]]
+*inspector* ['OPTIONS']... ['FILE'...]
 
 == DESCRIPTION
 
