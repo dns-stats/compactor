@@ -46,7 +46,7 @@ with access to the network traffic to be recorded.
 
 _compactor_ can be configured to produce multiple output files from a single
 data source. _compactor_ can optionally compress output files using the popular
-http://www.gzip.org[_gzip_] or _https://tukaani.org/xz[_xz_] compression schemes.
+http://www.gzip.org[_gzip_] or https://tukaani.org/xz[_xz_] compression schemes.
 The output file types that may be produced are:
 
 * C-DNS.  These contain captured DNS traffic, along with some
