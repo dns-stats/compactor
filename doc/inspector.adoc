@@ -333,6 +333,12 @@ e.g. `{{client_address:x-ipaddr}}`.
 | `x-ip6addr-bin`
 | Output IPv4 or IPv6 addresses as a 16 byte binary IPv6 address. IPv4 addresses  are output as `0x00000000000000000000ffffc0000219`.
 
+| `x-ipaddr-geo-location`
+| Given an IPv4 or IPv6 address, output the location ID reported by the MaxMind database for that address. The city ID is reported if found, otherwise the country ID if found, otherwise the continent ID if found, otherwise 0. Error if no MaxMind database files are found.
+
+| `x-ipaddr-geo-asn`
+| Given an IPv4 or IPv6 address, output the ASN reported by the MaxMind database for that address, or 0 if not found. Error if no MaxMind database files are found.
+
 | `x-date`
 | Output timestamp in seconds as a UTC date in ISO601 format (YYYY-MM-DD).
 
