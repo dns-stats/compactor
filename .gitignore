@@ -28,7 +28,6 @@ stamp-h1
 */doxygen-doc
 ._*
 .*
-*.pcap
 build*
 *.orig
 *.rej
