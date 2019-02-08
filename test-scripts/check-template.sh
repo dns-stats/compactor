@@ -29,7 +29,7 @@ error()
 }
 
 RAW=nsd-live.raw.pcap
-FMT=$srcdir/test-scripts/test.tpl
+FMT=$srcdir/test-scripts/test-csv.tpl
 
 if [ ! \( -r $RAW -a $FMT \) ]; then
     error "Missing input file"
