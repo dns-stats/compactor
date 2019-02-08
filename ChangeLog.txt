@@ -6,6 +6,15 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 0.12.2 - 2019-02-08
+---------------------------
+
+* Bug fix: inspector was not reading query size from C-DNS and
+  reporting 0 for query_size in templates.
+* Correct response delay field name in test template and add
+  additional template test.
+* Documentation: Document Geo template modifiers.
+
 Version 0.12.1 - 2019-02-06
 ---------------------------
 
