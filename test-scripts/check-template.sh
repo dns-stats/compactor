@@ -52,4 +52,32 @@ if [ $? -ne 0 ]; then
 fi
 
 diff -q $tmpdir/gold.dump nsd-live.dump
-cleanup $?
+if [ $? -ne 0]; then
+    error "CSV dump failed"
+fi
+
+RAW_EYEBALL=$srcdir/test-scripts/template.pcap
+FMT_EYEBALL=$srcdir/test-scripts/test-block.tpl
+
+if [ ! \( -r $RAW_EYEBALL -a $FMT_EYEBALL \) ]; then
+    error "Missing input file"
+fi
+
+# Convert to C-DNS.
+$COMP -c /dev/null --omit-system-id -n all -o $tmpdir/gold2.cdns $RAW_EYEBALL
+if [ $? -ne 0 ]; then
+    error "compactor failed"
+fi
+
+# Template output
+$INSP -o - -F template -g . -t $FMT_EYEBALL --value node=42 $tmpdir/gold2.cdns > $tmpdir/gold2.dump
+if [ $? -ne 0 ]; then
+    error "dumper failed (2)"
+fi
+
+diff -q $tmpdir/gold2.dump $srcdir/test-scripts/template.dump
+if [ $? -ne 0 ]; then
+    error "Eyeball dump failed"
+fi
+
+cleanup 0

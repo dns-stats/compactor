@@ -87,7 +87,9 @@ dist_check_DATA = doc/c-dns-working.cddl \
                   test-scripts/knot-live.info \
                   test-scripts/knot-live.anon.info \
                   test-scripts/check-live-pcap.sh \
-                  test-scripts/test-csv.tpl
+                  test-scripts/template.pcap \
+                  test-scripts/test-csv.tpl \
+                  test-scripts/test-block.tpl
 
 
 EXTRA_DIST = getversion.sh .version
