@@ -7,6 +7,7 @@ ClientPort=33887
 ClientHoplimit=64
 ClientAddress/X-IPAddr-Geo-Location=0
 ClientAddress/X-IPAddr-Geo-ASN=0
+ClientAddress/X-IPAddr-Geo-AS-Netmask=0
 ServerAddress/X-IP6Addr-Bin/X-HexString=\x20\x01\x48\x60\x48\x60\0\0\0\0\0\0\0\0\x88\x88
 ServerPort=53
 TransportFlags=2

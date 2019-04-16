@@ -16,7 +16,7 @@ tmpdir=`mktemp -d -t "check-template.XXXXXX"`
 
 cleanup()
 {
-    rm -rf $tmpdir
+    #rm -rf $tmpdir
     exit $1
 }
 

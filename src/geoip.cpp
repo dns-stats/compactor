@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2018-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -58,19 +58,19 @@ uint32_t GeoIPContext::location_code(IPAddress const & addr)
     /* Look first for city, country if not there, otherwise continent. */
     MMDB_entry_data_s entry_data;
     int status = MMDB_get_value(&res.entry, &entry_data, "city", "geoname_id", NULL);
-    if ( status == MMDB_SUCCESS && entry_data.has_data )
+    if ( status == MMDB_SUCCESS && entry_data.has_data && entry_data.type == MMDB_DATA_TYPE_UINT32 )
         return entry_data.uint32;
     if ( status != MMDB_SUCCESS && status != MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR )
         throw geoip_error("MMDB entry error");
 
     status = MMDB_get_value(&res.entry, &entry_data, "country", "geoname_id", NULL);
-    if ( status == MMDB_SUCCESS && entry_data.has_data )
+    if ( status == MMDB_SUCCESS && entry_data.has_data && entry_data.type == MMDB_DATA_TYPE_UINT32 )
         return entry_data.uint32;
     if ( status != MMDB_SUCCESS && status != MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR )
         throw geoip_error("MMDB entry error");
 
     status = MMDB_get_value(&res.entry, &entry_data, "continent", "geoname_id", NULL);
-    if ( status == MMDB_SUCCESS && entry_data.has_data )
+    if ( status == MMDB_SUCCESS && entry_data.has_data && entry_data.type == MMDB_DATA_TYPE_UINT32 )
         return entry_data.uint32;
     if ( status != MMDB_SUCCESS && status != MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR )
         throw geoip_error("MMDB entry error");
@@ -85,9 +85,36 @@ uint32_t GeoIPContext::as_number(IPAddress const & addr)
 
     MMDB_entry_data_s entry_data;
     int status = MMDB_get_value(&res.entry, &entry_data, "autonomous_system_number", NULL);
-    if ( status == MMDB_SUCCESS && entry_data.has_data )
+    if ( status == MMDB_SUCCESS && entry_data.has_data && entry_data.type == MMDB_DATA_TYPE_UINT32 )
         return entry_data.uint32;
     if ( status != MMDB_SUCCESS && status != MMDB_LOOKUP_PATH_DOES_NOT_MATCH_DATA_ERROR )
         throw geoip_error("MMDB entry error");
     return 0;
+}
+
+uint16_t GeoIPContext::as_netmask(IPAddress const & addr)
+{
+    MMDB_lookup_result_s res = lookup(&as_db, addr);
+    if ( res.found_entry )
+    {
+        /*
+         * If the database is IPv6, then the netmask returned for
+         * IPv4 addresses is the IPv6 netmask appropriate for the
+         * in-database IPv4 representation. To return this to the
+         * expected IPv4 netmask, we need to subtract 96. See
+         * https://github.com/maxmind/libmaxminddb/issues/105.
+         */
+        if ( addr.is_ipv6() )
+            return res.netmask;
+        else
+        {
+            if ( res.netmask >= 96 )
+                res.netmask -= 96;
+            if ( res.netmask > 32 )
+                throw geoip_error("MMDB netmask error");
+            return res.netmask;
+        }
+    }
+    else
+        return 0;
 }

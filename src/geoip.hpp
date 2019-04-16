@@ -98,6 +98,16 @@ public:
      */
     uint32_t as_number(IPAddress const & addr);
 
+    /**
+     * \brief Get the netmask for the matching subnet in an AS lookup.
+     *
+     * \param addr the address to look up.
+     * \returns the netmask, or 0 if no match.
+     * if none available.
+     * \throws geoip_error on error
+     */
+    uint16_t as_netmask(IPAddress const & addr);
+
 private:
     /**
      * \brief the city database.
