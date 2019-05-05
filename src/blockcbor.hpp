@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -58,15 +58,15 @@ namespace block_cbor {
     /**
      * \brief Fixed file format string.
      */
-    extern const std::string& OLD_FILE_FORMAT_ID;
+    extern const std::string& FILE_FORMAT_02_ID;
 
     /**
-     * \brief Old output format version.
+     * \brief 0.2 output format version.
      *
      * This is assigned to the format minor version,
      * with a major format version of 0.
      */
-    extern const unsigned OLD_FILE_FORMAT_VERSION;
+    extern const unsigned FILE_FORMAT_02_VERSION;
 
     /**
      * \enum Maps

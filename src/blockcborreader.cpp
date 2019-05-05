@@ -53,7 +53,7 @@ void BlockCborReader::readFileHeader(Configuration& config)
             std::string file_type_id = dec_.read_string();
             if ( file_type_id == block_cbor::FILE_FORMAT_ID )
                 readFilePreamble(config, false);
-            else if ( file_type_id == block_cbor::OLD_FILE_FORMAT_ID )
+            else if ( file_type_id == block_cbor::FILE_FORMAT_02_ID )
                 readFilePreamble(config, true);
             else
                 throw cbor_file_format_error("This is not a C-DNS file");
@@ -65,7 +65,7 @@ void BlockCborReader::readFileHeader(Configuration& config)
         {
             nblocks_ = n_elems;
             blocks_indef_ = indef;
-            fields_ = make_unique<block_cbor::FileVersionFields>(0, block_cbor::OLD_FILE_FORMAT_VERSION, 0);
+            fields_ = make_unique<block_cbor::FileVersionFields>(0, block_cbor::FILE_FORMAT_02_VERSION, 0);
         }
     }
     catch (const std::logic_error& e)
@@ -100,7 +100,7 @@ void BlockCborReader::readFilePreamble(Configuration& config, bool old)
             if ( !old )
                 throw cbor_file_format_error("Unexpected version item reading header");
             minor_version = dec_.read_unsigned();
-            if ( minor_version != block_cbor::OLD_FILE_FORMAT_VERSION )
+            if ( minor_version != block_cbor::FILE_FORMAT_02_VERSION )
                 throw cbor_file_format_error("Wrong file format version");
             break;
 

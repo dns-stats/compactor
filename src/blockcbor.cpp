@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,12 +35,12 @@ namespace block_cbor {
     /**
      * \brief Pre-draft format id.
      */
-    const std::string& OLD_FILE_FORMAT_ID = "DNS-STAT";
+    const std::string& FILE_FORMAT_02_ID = "DNS-STAT";
 
     /**
      * \brief Pre-draft version ID.
      */
-    const unsigned OLD_FILE_FORMAT_VERSION = 2;
+    const unsigned FILE_FORMAT_02_VERSION = 2;
 
     /**
      ** Old formats tables.
@@ -137,7 +137,7 @@ namespace block_cbor {
              minor_version == FILE_FORMAT_MINOR_VERSION )
             return;
 
-        if ( major_version == 0 && minor_version == OLD_FILE_FORMAT_VERSION )
+        if ( major_version == 0 && minor_version == FILE_FORMAT_02_VERSION )
         {
             block_statistics_ = version_0_2_block_statistics;
             query_response_ = version_0_2_query_response;
