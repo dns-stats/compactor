@@ -691,9 +691,9 @@ namespace block_cbor {
      *
      * The index of a entry in the array is the file map value of that entry.
      */
-    constexpr BlockPreambleField current_block_preamble[] = {
-        BlockPreambleField::unknown,
+    constexpr BlockPreambleField format_10_block_preamble[] = {
         BlockPreambleField::earliest_time,
+        BlockPreambleField::block_parameters_index
     };
 
     /**
@@ -705,7 +705,7 @@ namespace block_cbor {
      */
     constexpr unsigned find_block_preamble_index(BlockPreambleField index)
     {
-        return find_index(current_block_preamble, index);
+        return find_index(format_10_block_preamble, index);
     }
 
     /**

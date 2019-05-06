@@ -58,13 +58,25 @@ namespace block_cbor {
     const unsigned FILE_FORMAT_02_VERSION = 2;
 
     /**
-     ** Old formats tables.
+     ** Old formats tables - format 0.5.
+     **/
+
+    /**
+     * \brief 0.5 block preamble
+     */
+    const std::vector<BlockPreambleField> format_05_block_preamble = {
+        BlockPreambleField::unknown,
+        BlockPreambleField::earliest_time
+    };
+
+    /**
+     ** Old formats tables - format 0.2.
      **/
 
     /**
      * \brief 0.2 statistics.
      */
-    const std::vector<BlockStatisticsField> version_0_2_block_statistics = {
+    const std::vector<BlockStatisticsField> format_02_block_statistics = {
         BlockStatisticsField::total_packets,
         BlockStatisticsField::total_pairs,
         BlockStatisticsField::unmatched_queries,
@@ -80,7 +92,7 @@ namespace block_cbor {
     /**
      * \brief 0.2 query/response.
      */
-    const std::vector<QueryResponseField> version_0_2_query_response = {
+    const std::vector<QueryResponseField> format_02_query_response = {
         QueryResponseField::time_useconds,
         QueryResponseField::client_address_index,
         QueryResponseField::client_port,
@@ -136,7 +148,7 @@ namespace block_cbor {
     FileVersionFields::FileVersionFields()
         : configuration_(current_configuration, current_configuration + countof(current_configuration)),
           block_(current_block, current_block + countof(current_block)),
-          block_preamble_(current_block_preamble, current_block_preamble + countof(current_block_preamble)),
+          block_preamble_(format_10_block_preamble, format_10_block_preamble + countof(format_10_block_preamble)),
           block_statistics_(current_block_statistics, current_block_statistics + countof(current_block_statistics)),
           block_tables_(current_block_tables, current_block_tables + countof(current_block_tables)),
           query_response_(current_query_response, current_query_response + countof(current_query_response)),
@@ -159,10 +171,16 @@ namespace block_cbor {
              minor_version == FILE_FORMAT_10_MINOR_VERSION )
             return;
 
+        if ( major_version == FILE_FORMAT_05_MAJOR_VERSION &&
+             minor_version == FILE_FORMAT_05_MINOR_VERSION )
+        {
+            block_preamble_ = format_05_block_preamble;
+        }
+
         if ( major_version == 0 && minor_version == FILE_FORMAT_02_VERSION )
         {
-            block_statistics_ = version_0_2_block_statistics;
-            query_response_ = version_0_2_query_response;
+            block_statistics_ = format_02_block_statistics;
+            query_response_ = format_02_query_response;
             return;
         }
 
