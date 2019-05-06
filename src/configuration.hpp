@@ -222,9 +222,10 @@ public:
     std::vector<unsigned> ignore_rr_types;
 
     /**
-     * \brief set the maximum number of query/response items in a block.
+     * \brief set the maximum number of query/response items
+     * or address event items in a block.
      */
-    unsigned int max_block_qr_items;
+    unsigned int max_block_items;
 
     /**
      * \brief set the maximum uncompressed output size. 0 = no limit.

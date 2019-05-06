@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1096,18 +1096,19 @@ namespace block_cbor {
     {
     private:
         /**
-         * \brief maximum number of query/response items in block.
+         * \brief maximum number of query/response items
+         * or address event items in block.
          */
-        unsigned max_block_qr_items_;
+        unsigned max_block_items_;
 
     public:
         /**
          * Constructor.
          *
-         * \param max_block_qr_items number of query/response items to full.
+         * \param max_block_items number of query/response items to full.
          */
-        explicit BlockData(unsigned max_block_qr_items = DEFAULT_MAX_BLOCK_ITEMS)
-            : max_block_qr_items_(max_block_qr_items)
+        explicit BlockData(unsigned max_block_items = DEFAULT_MAX_BLOCK_ITEMS)
+            : max_block_items_(max_block_items)
         {
             init();
         }
@@ -1213,7 +1214,9 @@ namespace block_cbor {
          */
         bool is_full()
         {
-            return ( query_response_items.size() >= max_block_qr_items_ );
+            return
+                ( query_response_items.size() >= max_block_items_ ||
+                  address_event_counts.size() >= max_block_items_ );
         }
 
         /**

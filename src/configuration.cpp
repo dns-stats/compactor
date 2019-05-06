@@ -225,7 +225,7 @@ Configuration::Configuration()
       snaplen(65535),
       promisc_mode(false),
       output_options_queries(0), output_options_responses(0),
-      max_block_qr_items(5000),
+      max_block_items(5000),
       max_output_size(0),
       report_info(false), log_network_stats_period(0),
       debug_dns(false), debug_qr(false),
@@ -306,9 +306,9 @@ Configuration::Configuration()
         ("ignore-rr-type,g",
          po::value<std::vector<std::string>>(),
         "RR types to be ignored.")
-        ("max-block-qr-items",
-         po::value<unsigned int>(&max_block_qr_items)->default_value(5000),
-         "maximum number of query/response items in an output block.")
+        ("max-block-items",
+         po::value<unsigned int>(&max_block_items)->default_value(5000),
+         "maximum number of items in an output block.")
         ("max-output-size",
          po::value<Size>(&max_output_size),
          "maximum size of output (uncompressed) before rotation.")
@@ -414,7 +414,7 @@ void Configuration::dump_config(std::ostream& os) const
        << "  Query timeout        : " << query_timeout << " seconds\n"
        << "  Skew timeout         : " << skew_timeout << " microseconds\n"
        << "  Snap length          : " << snaplen << "\n"
-       << "  Max block items      : " << max_block_qr_items << "\n";
+       << "  Max block items      : " << max_block_items << "\n";
     if ( max_output_size.size > 0 )
         os << "  Max output size      : " << max_output_size.size << "\n";
     os << "  File rotation period : " << rotation_period << "\n"

@@ -27,7 +27,7 @@
 BlockCborReader::BlockCborReader(CborBaseDecoder& dec, Configuration &config,
                                  boost::optional<PseudoAnonymise> pseudo_anon)
     : dec_(dec), next_item_(0), need_block_(true),
-      block_(config.max_block_qr_items), current_block_num_(0),
+      block_(config.max_block_items), current_block_num_(0),
       pseudo_anon_(pseudo_anon)
 {
     readFileHeader(config);
@@ -279,7 +279,7 @@ void BlockCborReader::readConfiguration(Configuration& config)
             break;
 
         case block_cbor::ConfigurationField::max_block_qr_items:
-            config.max_block_qr_items = dec_.read_unsigned();
+            config.max_block_items = dec_.read_unsigned();
             break;
 
         default:

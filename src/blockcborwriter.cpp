@@ -31,7 +31,7 @@ BlockCborWriter::BlockCborWriter(const Configuration& config,
     : BaseOutputWriter(config),
       output_pattern_(config.output_pattern + enc->suggested_extension(),
                       std::chrono::seconds(config.rotation_period)),
-      enc_(std::move(enc)), data_(make_unique<block_cbor::BlockData>(config.max_block_qr_items)),
+      enc_(std::move(enc)), data_(make_unique<block_cbor::BlockData>(config.max_block_items)),
       query_response_(), ext_rr_(nullptr), ext_group_(nullptr),
       last_end_block_statistics_()
 {
@@ -309,7 +309,7 @@ void BlockCborWriter::writeStorageParameters()
     enc_->write(ticks_per_second_index);
     enc_->write(1000000);       // Compactor works in microseconds
     enc_->write(max_block_items_index);
-    enc_->write(config_.max_block_qr_items);
+    enc_->write(config_.max_block_items);
     enc_->write(storage_hints_index);
     writeStorageHints();
 
