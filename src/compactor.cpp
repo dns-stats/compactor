@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -657,7 +657,7 @@ int main(int ac, char *av[])
         if ( vm.count("version") )
         {
             std::cout << PROGNAME << " " PACKAGE_VERSION "\n"
-                      << "https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-04\n";
+                      << "https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-10\n";
             return 1;
         }
 
@@ -678,9 +678,13 @@ int main(int ac, char *av[])
             return 1;
         }
 
-        // Disable collection stats logging if reading from file.
+        // Disable collection stats logging and disable logging
+        // the hostname if reading from file.
         if ( vm.count("capture-file") )
+        {
             configuration.log_network_stats_period = 0;
+            configuration.omit_hostid = true;
+        }
 
         // To enable a SIGHUP to not lose data, file compression
         // must survive the restart. That means compression

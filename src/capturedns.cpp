@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -30,6 +30,99 @@ namespace {
     const unsigned MAX_DNAME_LEN = 512;
     const unsigned DO_BIT = (1 << 15);
 }
+
+const std::vector<CaptureDNS::Opcode> CaptureDNS::OPCODES =
+{
+    OP_QUERY,
+    OP_IQUERY,
+    OP_STATUS,
+    OP_NOTIFY,
+    OP_UPDATE,
+    OP_DSO
+};
+
+const std::vector<CaptureDNS::QueryType> CaptureDNS::QUERYTYPES =
+{
+    A,
+    NS,
+    MD,
+    MF,
+    CNAME,
+    SOA,
+    MB,
+    MG,
+    MR,
+    NULL_R,
+    WKS,
+    PTR,
+    HINFO,
+    MINFO,
+    MX,
+    TXT,
+    RP,
+    AFSDB,
+    X25,
+    ISDN,
+    RT,
+    NSAP,
+    NSAP_PTR,
+    SIG,
+    KEY,
+    PX,
+    GPOS,
+    AAAA,
+    LOC,
+    NXT,
+    EID,
+    NIMLOC,
+    SRV,
+    ATMA,
+    NAPTR,
+    KX,
+    CERTIFICATE,
+    A6,
+    DNAM,
+    SINK,
+    OPT,
+    APL,
+    DS,
+    SSHFP,
+    IPSECKEY,
+    RRSIG,
+    NSEC,
+    DNSKEY,
+    DHCID,
+    NSEC3,
+    NSEC3PARAM,
+    TLSA,
+    HIP,
+    NINFO,
+    RKEY,
+    TALINK,
+    CDS,
+    SPF,
+    UINFO,
+    UID,
+    GID,
+    UNSPEC,
+    NID,
+    L32,
+    L64,
+    LP,
+    EU148,
+    EUI64,
+    TKEY,
+    TSIG,
+    IXFR,
+    AXFR,
+    MAILB,
+    MAILA,
+    TYPE_ANY,
+    URI,
+    CAA,
+    TA,
+    DLV
+};
 
 CaptureDNS::NameCompression CaptureDNS::name_compression_ = CaptureDNS::DEFAULT;
 

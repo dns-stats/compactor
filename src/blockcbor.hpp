@@ -41,22 +41,37 @@ public:
 
 namespace block_cbor {
     /**
-     * \brief Fixed file format string.
+     * \brief Output format 05 onwards file format string.
      */
     extern const std::string& FILE_FORMAT_ID;
 
     /**
      * \brief Current output format major version.
      */
-    extern const unsigned FILE_FORMAT_MAJOR_VERSION;
+    extern const unsigned FILE_FORMAT_10_MAJOR_VERSION;
 
     /**
      * \brief Current output format minor version.
      */
-    extern const unsigned FILE_FORMAT_MINOR_VERSION;
+    extern const unsigned FILE_FORMAT_10_MINOR_VERSION;
 
     /**
-     * \brief Fixed file format string.
+     * \brief Current output format private version.
+     */
+    extern const unsigned FILE_FORMAT_10_PRIVATE_VERSION;
+
+    /**
+     * \brief Output format 05 major version.
+     */
+    extern const unsigned FILE_FORMAT_05_MAJOR_VERSION;
+
+    /**
+     * \brief Output format 05 minor version.
+     */
+    extern const unsigned FILE_FORMAT_05_MINOR_VERSION;
+
+    /**
+     * \brief Output format 02 file format string.
      */
     extern const std::string& FILE_FORMAT_02_ID;
 
@@ -67,6 +82,16 @@ namespace block_cbor {
      * with a major format version of 0.
      */
     extern const unsigned FILE_FORMAT_02_VERSION;
+
+    /**
+     * \brief the known file formats.
+     */
+    enum class FileFormatVersion
+    {
+        format_02,
+        format_05,
+        format_10
+    };
 
     /**
      * \enum Maps
@@ -113,14 +138,85 @@ namespace block_cbor {
      */
     enum class FilePreambleField
     {
-        // Obsolete fields.
+        // Obsolete format 02 fields.
         format_version,
+
+        // Obsolete format 05 fields.
+        configuration,
+        generator_id,
+        host_id,
 
         // Current fields.
         major_format_version,
         minor_format_version,
         private_version,
-        configuration,
+        block_parameters,
+
+        unknown = -1
+    };
+
+    /**
+     * \enum BlockParametersField
+     * \brief Fields in block parameters map.
+     */
+    enum class BlockParametersField
+    {
+        storage_parameters,
+        collection_parameters,
+
+        unknown = -1
+    };
+
+    /**
+     * \enum StorageParametersField
+     * \brief Fields in storage parameters map.
+     */
+    enum class StorageParametersField
+    {
+        ticks_per_second,
+        max_block_items,
+        storage_hints,
+        opcodes,
+        rr_types,
+        storage_flags,
+        client_address_prefix_ipv4,
+        client_address_prefix_ipv6,
+        server_address_prefix_ipv4,
+        server_address_prefix_ipv6,
+        sampling_method,
+        anonymisation_method,
+
+        unknown = -1
+    };
+
+    /**
+     * \enum StorageHintsField
+     * \brief Fields in storage hints map.
+     */
+    enum class StorageHintsField
+    {
+        query_response_hints,
+        query_response_signature_hints,
+        rr_hints,
+        other_data_hints,
+
+        unknown = -1
+    };
+
+    /**
+     * \enum CollectionParametersField
+     * \brief Fields in collection parameters map.
+     */
+    enum class CollectionParametersField
+    {
+        query_timeout,
+        skew_timeout,
+        snaplen,
+        promisc,
+        interfaces,
+        server_addresses,
+        vlan_ids,
+        filter,
         generator_id,
         host_id,
 
@@ -172,6 +268,7 @@ namespace block_cbor {
     enum class BlockPreambleField
     {
         earliest_time,
+        block_parameters_index,
 
         unknown = -1
     };
@@ -369,7 +466,19 @@ namespace block_cbor {
      *
      * The index of a entry in the array is the file map value of that entry.
      */
-    constexpr FilePreambleField current_file_preamble[] = {
+    constexpr FilePreambleField format_10_file_preamble[] = {
+        FilePreambleField::major_format_version,
+        FilePreambleField::minor_format_version,
+        FilePreambleField::private_version,
+        FilePreambleField::block_parameters
+    };
+
+    /**
+     * \brief Map of format 05 file preamble indexes.
+     *
+     * The index of a entry in the array is the file map value of that entry.
+     */
+    constexpr FilePreambleField format_05_file_preamble[] = {
         FilePreambleField::major_format_version,
         FilePreambleField::minor_format_version,
         FilePreambleField::private_version,
@@ -379,11 +488,11 @@ namespace block_cbor {
     };
 
     /**
-     * \brief Map of pre-draft file preamble indexes.
+     * \brief Map of format 02 file preamble indexes.
      *
      * The index of a entry in the array is the file map value of that entry.
      */
-    constexpr FilePreambleField old_file_preamble[] = {
+    constexpr FilePreambleField format_02_file_preamble[] = {
         FilePreambleField::format_version,
         FilePreambleField::configuration,
         FilePreambleField::generator_id,
@@ -399,17 +508,125 @@ namespace block_cbor {
      */
     constexpr unsigned find_file_preamble_index(FilePreambleField index)
     {
-        return find_index(current_file_preamble, index);
+        return find_index(format_10_file_preamble, index);
     }
 
     /**
      * \brief Find preamble field identifier from map index.
      *
      * \param index the map index.
-     * \param old   <code>true</code> if the preamble is pre-draft.
+     * \param ver   the format version
      * \returns the field identifier, or <code>unknown</code> if not found.
      */
-    FilePreambleField file_preamble_field(unsigned index, bool old);
+    FilePreambleField file_preamble_field(unsigned index, FileFormatVersion ver);
+
+    /**
+     * \brief Map of current block parameters indexes.
+     *
+     * The index of a entry in the array is the file map value of that entry.
+     */
+    constexpr BlockParametersField format_10_block_parameters[] = {
+        BlockParametersField::storage_parameters,
+        BlockParametersField::collection_parameters
+    };
+
+    /**
+     * \brief find map index of block parameters fields for current format.
+     *
+     * \param index the field identifier.
+     * \return the field index.
+     * \throws std::logic_error if the item is specified in the format.
+     */
+    constexpr unsigned find_block_parameters_index(BlockParametersField index)
+    {
+        return find_index(format_10_block_parameters, index);
+    }
+
+    /**
+     * \brief Map of current storage parameters indexes.
+     *
+     * The index of a entry in the array is the file map value of that entry.
+     */
+    constexpr StorageParametersField format_10_storage_parameters[] = {
+        StorageParametersField::ticks_per_second,
+        StorageParametersField::max_block_items,
+        StorageParametersField::storage_hints,
+        StorageParametersField::opcodes,
+        StorageParametersField::rr_types,
+        StorageParametersField::storage_flags,
+        StorageParametersField::client_address_prefix_ipv4,
+        StorageParametersField::client_address_prefix_ipv6,
+        StorageParametersField::server_address_prefix_ipv4,
+        StorageParametersField::server_address_prefix_ipv6,
+        StorageParametersField::sampling_method,
+        StorageParametersField::anonymisation_method
+    };
+
+    /**
+     * \brief find map index of storage parameters fields for current format.
+     *
+     * \param index the field identifier.
+     * \return the field index.
+     * \throws std::logic_error if the item is specified in the format.
+     */
+    constexpr unsigned find_storage_parameters_index(StorageParametersField index)
+    {
+        return find_index(format_10_storage_parameters, index);
+    }
+
+    /**
+     * \brief Map of current storage hints indexes.
+     *
+     * The index of a entry in the array is the file map value of that entry.
+     */
+    constexpr StorageHintsField format_10_storage_hints[] = {
+        StorageHintsField::query_response_hints,
+        StorageHintsField::query_response_signature_hints,
+        StorageHintsField::rr_hints,
+        StorageHintsField::other_data_hints
+    };
+
+    /**
+     * \brief find map index of storage hints fields for current format.
+     *
+     * \param index the field identifier.
+     * \return the field index.
+     * \throws std::logic_error if the item is specified in the format.
+     */
+    constexpr unsigned find_storage_hints_index(StorageHintsField index)
+    {
+        return find_index(format_10_storage_hints, index);
+    }
+
+    /**
+     * \brief Map of current collection parameters indexes.
+     *
+     * The index of a entry in the array is the file map value of that entry.
+     */
+    constexpr CollectionParametersField format_10_collection_parameters[] = {
+        CollectionParametersField::query_timeout,
+        CollectionParametersField::skew_timeout,
+        CollectionParametersField::snaplen,
+        CollectionParametersField::promisc,
+        CollectionParametersField::interfaces,
+        CollectionParametersField::server_addresses,
+        CollectionParametersField::vlan_ids,
+        CollectionParametersField::filter,
+        CollectionParametersField::generator_id,
+        CollectionParametersField::host_id
+    };
+
+    /**
+     * \brief find map index of collection parameters fields for current format.
+     *
+     * \param index the field identifier.
+     * \return the field index.
+     * \throws std::logic_error if the item is specified in the format.
+     */
+    constexpr unsigned find_collection_parameters_index(CollectionParametersField index)
+    {
+        return find_index(format_10_collection_parameters, index);
+    }
 
     /**
      * \brief Map of current configuration indexes.

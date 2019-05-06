@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -107,12 +107,12 @@ protected:
      * therein.
      *
      * \param config extracted configuration information.
-     * \param old    is this the old format preamble?
+     * \param ver    the file format version.
      * \throws cbor_decode_error if the CBOR is invalid.
      * \throws std::logic_error on unexpected CBOR content.
      * \throws cbor_file_format_error on unexpected CBOR content.
      */
-    void readFilePreamble(Configuration& config, bool old);
+    void readFilePreamble(Configuration& config, block_cbor::FileFormatVersion ver);
 
     /**
      * \brief Read the configuration.

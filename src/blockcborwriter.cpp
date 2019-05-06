@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -261,55 +261,130 @@ void BlockCborWriter::writeFileHeader()
 {
     constexpr unsigned major_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::major_format_version);
     constexpr unsigned minor_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::minor_format_version);
-    constexpr unsigned configuration_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::configuration);
-    constexpr unsigned generator_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::generator_id);
-    constexpr unsigned host_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::host_id);
+    constexpr unsigned private_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::private_version);
+    constexpr unsigned block_parameters_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::block_parameters);
 
     enc_->writeArrayHeader(3);
     enc_->write(block_cbor::FILE_FORMAT_ID);
 
     // File preamble.
-    enc_->writeMapHeader();
+    enc_->writeMapHeader(4);
     enc_->write(major_format_index);
-    enc_->write(block_cbor::FILE_FORMAT_MAJOR_VERSION);
+    enc_->write(block_cbor::FILE_FORMAT_10_MAJOR_VERSION);
     enc_->write(minor_format_index);
-    enc_->write(block_cbor::FILE_FORMAT_MINOR_VERSION);
+    enc_->write(block_cbor::FILE_FORMAT_10_MINOR_VERSION);
+    enc_->write(private_format_index);
+    enc_->write(block_cbor::FILE_FORMAT_10_PRIVATE_VERSION);
 
-    enc_->write(configuration_index);
-    writeConfiguration();
-
-    if ( !config_.omit_sysid )
-    {
-        enc_->write(generator_index);
-        enc_->write(PACKAGE_STRING);
-
-        char buf[_POSIX_HOST_NAME_MAX];
-        gethostname(buf, sizeof(buf));
-        buf[_POSIX_HOST_NAME_MAX - 1] = '\0';
-        enc_->write(host_index);
-        enc_->write(std::string(buf));
-    }
-    enc_->writeBreak(); // End of preamble
+    enc_->write(block_parameters_index);
+    writeBlockParameters();
 
     // Write file header: Start of file blocks.
     enc_->writeArrayHeader();
 }
 
-void BlockCborWriter::writeConfiguration()
+void BlockCborWriter::writeBlockParameters()
 {
-    constexpr unsigned query_timeout_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::query_timeout);
-    constexpr unsigned skew_timeout_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::skew_timeout);
-    constexpr unsigned snaplen_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::snaplen);
-    constexpr unsigned promisc_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::promisc);
-    constexpr unsigned interfaces_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::interfaces);
-    constexpr unsigned server_addresses_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::server_addresses);
-    constexpr unsigned vlan_ids_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::vlan_ids);
-    constexpr unsigned filter_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::filter);
-    constexpr unsigned query_options_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::query_options);
-    constexpr unsigned response_options_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::response_options);
-    constexpr unsigned accept_rr_types_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::accept_rr_types);
-    constexpr unsigned ignore_rr_types_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::ignore_rr_types);
-    constexpr unsigned max_block_qr_items_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::max_block_qr_items);
+    constexpr unsigned storage_parameters_index = block_cbor::find_block_parameters_index(block_cbor::BlockParametersField::storage_parameters);
+    constexpr unsigned collection_parameters_index = block_cbor::find_block_parameters_index(block_cbor::BlockParametersField::collection_parameters);
+
+    enc_->writeArrayHeader(1);
+    enc_->writeMapHeader(2);
+    enc_->write(storage_parameters_index);
+    writeStorageParameters();
+    enc_->write(collection_parameters_index);
+    writeCollectionParameters();
+}
+
+void BlockCborWriter::writeStorageParameters()
+{
+    constexpr unsigned ticks_per_second_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::ticks_per_second);
+    constexpr unsigned max_block_items_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::max_block_items);
+    constexpr unsigned storage_hints_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::storage_hints);
+    constexpr unsigned opcodes_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::opcodes);
+    constexpr unsigned rr_types_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::rr_types);
+
+    enc_->writeMapHeader();
+
+    enc_->write(ticks_per_second_index);
+    enc_->write(1000000);       // Compactor works in microseconds
+    enc_->write(max_block_items_index);
+    enc_->write(config_.max_block_qr_items);
+    enc_->write(storage_hints_index);
+    writeStorageHints();
+
+    // List of opcodes recorded. Currently compactor doesn't
+    // filter on opcodes, so set this to all current opcodes.
+    enc_->write(opcodes_index);
+    enc_->writeArrayHeader();
+    for (const auto op : CaptureDNS::OPCODES)
+        enc_->write(op);
+    enc_->writeBreak(); // End of opcodes
+
+    // List of RR types recorded.
+    enc_->write(rr_types_index);
+    enc_->writeArrayHeader();
+    for ( const auto rr : CaptureDNS::QUERYTYPES )
+        if ( outputRRType(rr) )
+            enc_->write(rr);
+    enc_->writeBreak(); // End of RR types
+
+    // Compactor currently doesn't support anonymisation,
+    // sampling or name normalisation, so we don't give
+    // storage flags or sampling or anonymisation methods.
+
+    // Compactor currently doesn't support client or server address
+    // prefix length setting, so we don't give that parameter.
+
+    enc_->writeBreak(); // End of storage parameters
+}
+
+void BlockCborWriter::writeStorageHints()
+{
+    constexpr unsigned query_response_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::query_response_hints);
+    constexpr unsigned query_response_signature_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::query_response_signature_hints);
+    constexpr unsigned rr_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::rr_hints);
+    constexpr unsigned other_data_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::other_data_hints);
+
+    enc_->writeMapHeader();
+
+    // Query response hints. Compactor always gives time_offset to
+    // response size inclusive. It does not currently give response
+    // processing data.
+    uint32_t response_hints = 0x3f |
+        config_.output_options_queries << 11 |
+        (config_.output_options_responses & 0xe) << 15;
+    enc_->write(query_response_hints_index);
+    enc_->write(response_hints);
+
+    // Query response signature hints. Compacts always writes everything.
+    enc_->write(query_response_signature_hints_index);
+    enc_->write(0x1ff);
+
+    // RR hints. Compactor always writes everything.
+    enc_->write(rr_hints_index);
+    enc_->write(0x3);
+
+    // Other data hints. Compactor always writes address event hints,
+    // but does not currently write malformed messages.
+    enc_->write(other_data_hints_index);
+    enc_->write(0x2);
+
+    enc_->writeBreak(); // End of storage hints
+}
+
+void BlockCborWriter::writeCollectionParameters()
+{
+    constexpr unsigned query_timeout_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::query_timeout);
+    constexpr unsigned skew_timeout_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::skew_timeout);
+    constexpr unsigned snaplen_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::snaplen);
+    constexpr unsigned promisc_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::promisc);
+    constexpr unsigned interfaces_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::interfaces);
+    constexpr unsigned server_addresses_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::server_addresses);
+    constexpr unsigned vlan_ids_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::vlan_ids);
+    constexpr unsigned filter_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::filter);
+    constexpr unsigned generator_id_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::generator_id);
+    constexpr unsigned host_id_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::host_id);
 
     enc_->writeMapHeader();
 
@@ -338,22 +413,20 @@ void BlockCborWriter::writeConfiguration()
     enc_->writeBreak();
     enc_->write(filter_index);
     enc_->write(config_.filter);
-    enc_->write(query_options_index);
-    enc_->write(config_.output_options_queries);
-    enc_->write(response_options_index);
-    enc_->write(config_.output_options_responses);
-    enc_->write(accept_rr_types_index);
-    enc_->writeArrayHeader();
-    for ( const auto&a_rr : config_.accept_rr_types )
-        enc_->write(a_rr);
-    enc_->writeBreak();
-    enc_->write(ignore_rr_types_index);
-    enc_->writeArrayHeader();
-    for ( const auto& i_rr : config_.ignore_rr_types )
-        enc_->write(i_rr);
-    enc_->writeBreak();
-    enc_->write(max_block_qr_items_index);
-    enc_->write(config_.max_block_qr_items);
+    if ( !config_.omit_sysid )
+    {
+        enc_->write(generator_id_index);
+        enc_->write(PACKAGE_STRING);
+
+        if ( !config_.omit_hostid )
+        {
+            char buf[_POSIX_HOST_NAME_MAX];
+            gethostname(buf, sizeof(buf));
+            buf[_POSIX_HOST_NAME_MAX - 1] = '\0';
+            enc_->write(host_id_index);
+            enc_->write(std::string(buf));
+        }
+    }
 
     enc_->writeBreak(); // End of config info
 }

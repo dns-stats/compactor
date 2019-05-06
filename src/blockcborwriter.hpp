@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -172,9 +172,24 @@ protected:
     void writeBlock();
 
     /**
-     * \brief Write configuration out to file.
+     * \brief Write block parameters out to file.
      */
-    void writeConfiguration();
+    void writeBlockParameters();
+
+    /**
+     * \brief Write storage parameters out to file.
+     */
+    void writeStorageParameters();
+
+    /**
+     * \brief Write storage hints out to file.
+     */
+    void writeStorageHints();
+
+    /**
+     * \brief Write collection parameters out to file.
+     */
+    void writeCollectionParameters();
 
 private:
     /**

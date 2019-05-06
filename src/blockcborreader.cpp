@@ -52,9 +52,9 @@ void BlockCborReader::readFileHeader(Configuration& config)
 
             std::string file_type_id = dec_.read_string();
             if ( file_type_id == block_cbor::FILE_FORMAT_ID )
-                readFilePreamble(config, false);
+                readFilePreamble(config, block_cbor::FileFormatVersion::format_05);
             else if ( file_type_id == block_cbor::FILE_FORMAT_02_ID )
-                readFilePreamble(config, true);
+                readFilePreamble(config, block_cbor::FileFormatVersion::format_02);
             else
                 throw cbor_file_format_error("This is not a C-DNS file");
 
@@ -74,7 +74,7 @@ void BlockCborReader::readFileHeader(Configuration& config)
     }
 }
 
-void BlockCborReader::readFilePreamble(Configuration& config, bool old)
+void BlockCborReader::readFilePreamble(Configuration& config, block_cbor::FileFormatVersion ver)
 {
     unsigned major_version = 0;
     unsigned minor_version = 0;
@@ -89,7 +89,7 @@ void BlockCborReader::readFilePreamble(Configuration& config, bool old)
             break;
         }
 
-        block_cbor::FilePreambleField key = block_cbor::file_preamble_field(dec_.read_unsigned(), old);
+        block_cbor::FilePreambleField key = block_cbor::file_preamble_field(dec_.read_unsigned(), ver);
 
         if ( !fields_ && key >= block_cbor::FilePreambleField::configuration )
             fields_ = make_unique<block_cbor::FileVersionFields>(major_version, minor_version, private_version);
@@ -97,7 +97,7 @@ void BlockCborReader::readFilePreamble(Configuration& config, bool old)
         switch(key)
         {
         case block_cbor::FilePreambleField::format_version:
-            if ( !old )
+            if ( ver != block_cbor::FileFormatVersion::format_02 )
                 throw cbor_file_format_error("Unexpected version item reading header");
             minor_version = dec_.read_unsigned();
             if ( minor_version != block_cbor::FILE_FORMAT_02_VERSION )
@@ -105,19 +105,19 @@ void BlockCborReader::readFilePreamble(Configuration& config, bool old)
             break;
 
         case block_cbor::FilePreambleField::major_format_version:
-            if ( old )
+            if ( ver != block_cbor::FileFormatVersion::format_05 )
                 throw cbor_file_format_error("Unexpected version item reading header");
             major_version = dec_.read_unsigned();
             break;
 
         case block_cbor::FilePreambleField::minor_format_version:
-            if ( old )
+            if ( ver != block_cbor::FileFormatVersion::format_05 )
                 throw cbor_file_format_error("Unexpected version item reading header");
             minor_version = dec_.read_unsigned();
             break;
 
         case block_cbor::FilePreambleField::private_version:
-            if ( old )
+            if ( ver != block_cbor::FileFormatVersion::format_05 )
                 throw cbor_file_format_error("Unexpected version item reading header");
             private_version = dec_.read_unsigned();
             break;

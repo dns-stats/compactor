@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,7 @@
 
 #include <list>
 #include <string>
+#include <vector>
 
 #include <boost/optional.hpp>
 
@@ -89,6 +90,21 @@ public:
         QUERY = 0,
         RESPONSE = 1
     };
+
+    /**
+     * \brief DNS opcodes.
+     */
+    enum Opcode
+    {
+        OP_QUERY = 0,
+        OP_IQUERY,
+        OP_STATUS,
+        OP_NOTIFY = 4,
+        OP_UPDATE,
+        OP_DSO
+    };
+
+    static const std::vector<Opcode> OPCODES;
 
     /**
      * \brief Query types enum.
@@ -179,6 +195,7 @@ public:
         CERT = CERTIFICATE
     };
 
+    static const std::vector<QueryType> QUERYTYPES;
     /**
      * \brief Query classes enum.
      */

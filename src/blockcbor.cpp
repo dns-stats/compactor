@@ -25,12 +25,27 @@ namespace block_cbor {
     /**
      * \brief Current output format major version.
      */
-    const unsigned FILE_FORMAT_MAJOR_VERSION = 0;
+    const unsigned FILE_FORMAT_10_MAJOR_VERSION = 0;
 
     /**
      * \brief Current output format minor version.
      */
-    const unsigned FILE_FORMAT_MINOR_VERSION = 5;
+    const unsigned FILE_FORMAT_10_MINOR_VERSION = 5;
+
+    /**
+     * \brief Current output format private version.
+     */
+    const unsigned FILE_FORMAT_10_PRIVATE_VERSION = 1;
+
+    /**
+     * \brief Current output format major version.
+     */
+    const unsigned FILE_FORMAT_05_MAJOR_VERSION = 0;
+
+    /**
+     * \brief Current output format minor version.
+     */
+    const unsigned FILE_FORMAT_05_MINOR_VERSION = 5;
 
     /**
      * \brief Pre-draft format id.
@@ -89,20 +104,27 @@ namespace block_cbor {
         return N;
     }
 
-    FilePreambleField file_preamble_field(unsigned index, bool old)
+    FilePreambleField file_preamble_field(unsigned index, FileFormatVersion ver)
     {
         std::size_t arrsize;
         const FilePreambleField* arr;
 
-        if ( old )
+        switch(ver)
         {
-            arr = old_file_preamble;
-            arrsize = countof(old_file_preamble);
-        }
-        else
-        {
-            arr = current_file_preamble;
-            arrsize = countof(current_file_preamble);
+        case FileFormatVersion::format_02:
+            arr = format_02_file_preamble;
+            arrsize = countof(format_02_file_preamble);
+            break;
+
+        case FileFormatVersion::format_05:
+            arr = format_05_file_preamble;
+            arrsize = countof(format_05_file_preamble);
+            break;
+
+        default:
+            arr = format_10_file_preamble;
+            arrsize = countof(format_10_file_preamble);
+            break;
         }
 
         if ( index >= arrsize )
@@ -133,8 +155,8 @@ namespace block_cbor {
         : FileVersionFields()
     {
         // If the current version, we're done.
-        if ( major_version == FILE_FORMAT_MAJOR_VERSION &&
-             minor_version == FILE_FORMAT_MINOR_VERSION )
+        if ( major_version == FILE_FORMAT_10_MAJOR_VERSION &&
+             minor_version == FILE_FORMAT_10_MINOR_VERSION )
             return;
 
         if ( major_version == 0 && minor_version == FILE_FORMAT_02_VERSION )

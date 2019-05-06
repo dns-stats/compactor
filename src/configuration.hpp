@@ -257,7 +257,15 @@ public:
     bool debug_qr;
 
     /**
-     * \brief don't write system identifier info to CBOR output.
+     * \brief don't write host identifier info to CBOR output.
+     *
+     * This is not a command line parameter, but driven from
+     * whether the input is a PCAP.
+     */
+    bool omit_hostid;
+
+    /**
+     * \brief don't write system identifier infos to CBOR output.
      *
      * This is a hidden debug parameter.
      */
