@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -151,10 +151,10 @@ SCENARIO("IPAddress string constructor does the right thing",
         {
             THEN("it throws")
             {
-                REQUIRE_THROWS_AS(IPAddress a1("192.168.1.xx"), Tins::invalid_address);
-                REQUIRE_THROWS_AS(IPAddress a2("xyzzy"), Tins::invalid_address);
-                REQUIRE_THROWS_AS(IPAddress a3("2001:67c:64::42::0"), Tins::invalid_address);
-                REQUIRE_THROWS_AS(IPAddress a4("2001:67c:64::42:fred"), Tins::invalid_address);
+                REQUIRE_THROWS_AS(IPAddress("192.168.1.xx"), Tins::invalid_address);
+                REQUIRE_THROWS_AS(IPAddress("xyzzy"), Tins::invalid_address);
+                REQUIRE_THROWS_AS(IPAddress("2001:67c:64::42::0"), Tins::invalid_address);
+                REQUIRE_THROWS_AS(IPAddress("2001:67c:64::42:fred"), Tins::invalid_address);
             }
         }
     }
