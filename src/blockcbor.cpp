@@ -25,12 +25,12 @@ namespace block_cbor {
     /**
      * \brief Current output format major version.
      */
-    const unsigned FILE_FORMAT_10_MAJOR_VERSION = 0;
+    const unsigned FILE_FORMAT_10_MAJOR_VERSION = 1;
 
     /**
      * \brief Current output format minor version.
      */
-    const unsigned FILE_FORMAT_10_MINOR_VERSION = 5;
+    const unsigned FILE_FORMAT_10_MINOR_VERSION = 0;
 
     /**
      * \brief Current output format private version.
