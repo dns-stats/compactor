@@ -357,9 +357,10 @@ void BlockCborWriter::writeStorageHints()
     enc_->write(query_response_hints_index);
     enc_->write(response_hints);
 
-    // Query response signature hints. Compacts always writes everything.
+    // Query response signature hints. Compactor always writes everything
+    // except qr-type, where it has no data.
     enc_->write(query_response_signature_hints_index);
-    enc_->write(0x1ff);
+    enc_->write(0x1f7);
 
     // RR hints. Compactor always writes everything.
     enc_->write(rr_hints_index);
