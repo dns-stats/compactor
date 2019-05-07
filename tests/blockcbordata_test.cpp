@@ -43,11 +43,13 @@ namespace {
 
         bool compareBytes(const uint8_t *buf, std::size_t buflen)
         {
+            const uint8_t *p = buf;
+
             if ( buflen != bytes.size() )
                 return false;
 
             for ( auto b : bytes )
-                if ( b != *buf++ )
+                if ( b != *p++ )
                     return false;
 
             return true;
@@ -710,7 +712,7 @@ SCENARIO("BlockData items can be written", "[block]")
                 const uint8_t EXPECTED[] =
                     {
                         (5 << 5) | 31,
-                        0, (5 << 5) | 1, 0 , (4 << 5) | 2, 1, 0,
+                        0, (5 << 5) | 1, 0, (4 << 5) | 2, 1, 0,
 
                         1,
                         (5 << 5) | 31,
@@ -728,21 +730,7 @@ SCENARIO("BlockData items can be written", "[block]")
 
                         2,
                         (5 << 5) | 31,
-                        0, (4 << 5) | 0,
-                        1, (4 << 5) | 0,
-                        2, (4 << 5) | 0,
-                        3, (4 << 5) | 0,
-                        4, (4 << 5) | 0,
-                        5, (4 << 5) | 0,
-                        6, (4 << 5) | 0,
-                        7, (4 << 5) | 0,
                         0xff,
-
-                        3,
-                        (4 << 5) | 0,
-
-                        4,
-                        (4 << 5) | 0,
 
                         0xff
                     };

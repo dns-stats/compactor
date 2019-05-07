@@ -351,9 +351,9 @@ void BlockCborWriter::writeStorageHints()
     // Query response hints. Compactor always gives time_offset to
     // response size inclusive. It does not currently give response
     // processing data.
-    uint32_t response_hints = 0x3f |
+    uint32_t response_hints = 0x3ff |
         config_.output_options_queries << 11 |
-        (config_.output_options_responses & 0xe) << 15;
+        (config_.output_options_responses & 0xe) << 14;
     enc_->write(query_response_hints_index);
     enc_->write(response_hints);
 
@@ -397,23 +397,35 @@ void BlockCborWriter::writeCollectionParameters()
     enc_->write(config_.snaplen);
     enc_->write(promisc_index);
     enc_->write(config_.promisc_mode);
-    enc_->write(interfaces_index);
-    enc_->writeArrayHeader();
-    for ( const auto& s : config_.network_interfaces )
-        enc_->write(s);
-    enc_->writeBreak();
-    enc_->write(server_addresses_index);
-    enc_->writeArrayHeader();
-    for ( const auto& s : config_.server_addresses )
-        enc_->write(s.asNetworkBinary());
-    enc_->writeBreak();
-    enc_->write(vlan_ids_index);
-    enc_->writeArrayHeader();
-    for ( const auto& id : config_.vlan_ids )
-        enc_->write(id);
-    enc_->writeBreak();
-    enc_->write(filter_index);
-    enc_->write(config_.filter);
+    if ( config_.network_interfaces.size() > 0 )
+    {
+        enc_->write(interfaces_index);
+        enc_->writeArrayHeader();
+        for ( const auto& s : config_.network_interfaces )
+            enc_->write(s);
+        enc_->writeBreak();
+    }
+    if ( config_.server_addresses.size() > 0 )
+    {
+        enc_->write(server_addresses_index);
+        enc_->writeArrayHeader();
+        for ( const auto& s : config_.server_addresses )
+            enc_->write(s.asNetworkBinary());
+        enc_->writeBreak();
+    }
+    if ( config_.vlan_ids.size() > 0 )
+    {
+        enc_->write(vlan_ids_index);
+        enc_->writeArrayHeader();
+        for ( const auto& id : config_.vlan_ids )
+            enc_->write(id);
+        enc_->writeBreak();
+    }
+    if ( config_.filter.size() > 0 )
+    {
+        enc_->write(filter_index);
+        enc_->write(config_.filter);
+    }
     if ( !config_.omit_sysid )
     {
         enc_->write(generator_id_index);
@@ -429,7 +441,7 @@ void BlockCborWriter::writeCollectionParameters()
         }
     }
 
-    enc_->writeBreak(); // End of config info
+    enc_->writeBreak(); // End of collection parameter info
 }
 
 void BlockCborWriter::writeFileFooter()

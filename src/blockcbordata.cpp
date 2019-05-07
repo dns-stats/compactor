@@ -1010,8 +1010,6 @@ namespace block_cbor {
         constexpr int preamble_index = find_block_index(BlockField::preamble);
         constexpr int statistics_index = find_block_index(BlockField::statistics);
         constexpr int tables_index = find_block_index(BlockField::tables);
-        constexpr int queries_index = find_block_index(BlockField::queries);
-        constexpr int aec_index = find_block_index(BlockField::address_event_counts);
         constexpr int earliest_time_index = find_block_preamble_index(BlockPreambleField::earliest_time);
 
         // Block header.
@@ -1032,11 +1030,9 @@ namespace block_cbor {
         writeHeaders(enc);
 
         // Block items.
-        enc.write(queries_index);
         writeItems(enc);
 
         // Address event items.
-        enc.write(aec_index);
         writeAddressEventCounts(enc);
 
         // Block terminator.
@@ -1055,30 +1051,60 @@ namespace block_cbor {
         constexpr int rr_index = find_block_tables_index(BlockTablesField::rr);
 
         enc.writeMapHeader();
-        enc.write(ipaddress_index);
-        ip_addresses.writeCbor(enc);
-        enc.write(classtype_index);
-        class_types.writeCbor(enc);
-        enc.write(name_rdata_index);
-        names_rdatas.writeCbor(enc);
-        enc.write(query_response_signature_index);
-        query_response_signatures.writeCbor(enc);
-        enc.write(question_list_index);
-        questions_lists.writeCbor(enc);
-        enc.write(question_rr_index);
-        questions.writeCbor(enc);
-        enc.write(rr_list_index);
-        rrs_lists.writeCbor(enc);
-        enc.write(rr_index);
-        resource_records.writeCbor(enc);
+        if ( ip_addresses.size() > 0 )
+        {
+            enc.write(ipaddress_index);
+            ip_addresses.writeCbor(enc);
+        }
+        if ( class_types.size() > 0 )
+        {
+            enc.write(classtype_index);
+            class_types.writeCbor(enc);
+        }
+        if ( names_rdatas.size() > 0 )
+        {
+            enc.write(name_rdata_index);
+            names_rdatas.writeCbor(enc);
+        }
+        if ( query_response_signatures.size() > 0 )
+        {
+            enc.write(query_response_signature_index);
+            query_response_signatures.writeCbor(enc);
+        }
+        if ( questions_lists.size() > 0 )
+        {
+            enc.write(question_list_index);
+            questions_lists.writeCbor(enc);
+        }
+        if ( questions.size() > 0 )
+        {
+            enc.write(question_rr_index);
+            questions.writeCbor(enc);
+        }
+        if ( rrs_lists.size() > 0 )
+        {
+            enc.write(rr_list_index);
+            rrs_lists.writeCbor(enc);
+        }
+        if ( resource_records.size() > 0 )
+        {
+            enc.write(rr_index);
+            resource_records.writeCbor(enc);
+        }
         enc.writeBreak();
     }
 
     void BlockData::writeItems(CborBaseEncoder& enc)
     {
-        enc.writeArrayHeader(query_response_items.size());
-        for ( auto& qri : query_response_items )
-            qri.writeCbor(enc, earliest_time);
+        constexpr int queries_index = find_block_index(BlockField::queries);
+
+        if ( query_response_items.size() > 0 )
+        {
+            enc.write(queries_index);
+            enc.writeArrayHeader(query_response_items.size());
+            for ( auto& qri : query_response_items )
+                qri.writeCbor(enc, earliest_time);
+        }
     }
 
     void BlockData::writeStats(CborBaseEncoder& enc)
@@ -1120,13 +1146,19 @@ namespace block_cbor {
 
     void BlockData::writeAddressEventCounts(CborBaseEncoder& enc)
     {
-        enc.writeArrayHeader(address_event_counts.size());
-        for ( auto& aeci : address_event_counts )
+        constexpr int aec_index = find_block_index(BlockField::address_event_counts);
+
+        if ( address_event_counts.size() > 0 )
         {
-            AddressEventCount aec;
-            aec.aei = aeci.first;
-            aec.count = aeci.second;
-            aec.writeCbor(enc);
+            enc.write(aec_index);
+            enc.writeArrayHeader(address_event_counts.size());
+            for ( auto& aeci : address_event_counts )
+            {
+                AddressEventCount aec;
+                aec.aei = aeci.first;
+                aec.count = aeci.second;
+                aec.writeCbor(enc);
+            }
         }
     }
 
