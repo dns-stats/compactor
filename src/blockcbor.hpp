@@ -322,20 +322,23 @@ namespace block_cbor {
      */
     enum class QueryResponseField
     {
-        time_useconds,
-        time_pseconds,
+        time_offset,
         client_address_index,
         client_port,
         transaction_id,
-        query_response_signature_index,
+        qr_signature_index,
         client_hoplimit,
-        delay_useconds,
-        delay_pseconds,
+        response_delay,
         query_name_index,
         query_size,
         response_size,
+        response_processing_data,
         query_extended,
         response_extended,
+
+        // Obsolete items
+        time_pseconds,
+        response_delay_pseconds,
 
         unknown = -1
     };
@@ -893,23 +896,22 @@ namespace block_cbor {
     }
 
     /**
-     * \brief Map of current query response indexes.
+     * \brief Map of format 1.0 query response indexes.
      *
      * The index of a entry in the array is the file map value of that entry.
      */
-    constexpr QueryResponseField current_query_response[] = {
-        QueryResponseField::time_useconds,
-        QueryResponseField::time_pseconds,
+    constexpr QueryResponseField format_10_query_response[] = {
+        QueryResponseField::time_offset,
         QueryResponseField::client_address_index,
         QueryResponseField::client_port,
         QueryResponseField::transaction_id,
-        QueryResponseField::query_response_signature_index,
+        QueryResponseField::qr_signature_index,
         QueryResponseField::client_hoplimit,
-        QueryResponseField::delay_useconds,
-        QueryResponseField::delay_pseconds,
+        QueryResponseField::response_delay,
         QueryResponseField::query_name_index,
         QueryResponseField::query_size,
         QueryResponseField::response_size,
+        QueryResponseField::response_processing_data,
         QueryResponseField::query_extended,
         QueryResponseField::response_extended,
     };
@@ -923,7 +925,7 @@ namespace block_cbor {
      */
     constexpr int find_query_response_index(QueryResponseField index)
     {
-        return find_index(current_query_response, index);
+        return find_index(format_10_query_response, index);
     }
 
     /**

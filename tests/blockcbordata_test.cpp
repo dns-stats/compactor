@@ -624,13 +624,13 @@ SCENARIO("QueryResponseItems can be written", "[block]")
                 constexpr uint8_t EXPECTED[] =
                     {
                         (5 << 5) | 31,
-                        find_query_response_index(QueryResponseField::time_useconds), 5,
+                        find_query_response_index(QueryResponseField::time_offset), 5,
                         find_query_response_index(QueryResponseField::client_address_index), 1,
                         find_query_response_index(QueryResponseField::client_port), 2,
                         find_query_response_index(QueryResponseField::transaction_id), 21,
-                        find_query_response_index(QueryResponseField::query_response_signature_index), 6,
+                        find_query_response_index(QueryResponseField::qr_signature_index), 6,
                         find_query_response_index(QueryResponseField::client_hoplimit), 20,
-                        find_query_response_index(QueryResponseField::delay_useconds), 10,
+                        find_query_response_index(QueryResponseField::response_delay), 10,
                         find_query_response_index(QueryResponseField::query_name_index), 5,
                         find_query_response_index(QueryResponseField::query_size), 10,
                         find_query_response_index(QueryResponseField::response_size), 20,
@@ -1101,13 +1101,13 @@ SCENARIO("QueryResponseItems can be read", "[block]")
             constexpr uint8_t INPUT[] =
                 {
                     (5 << 5) | 31,
-                    find_query_response_index(QueryResponseField::time_useconds), 5,
+                    find_query_response_index(QueryResponseField::time_offset), 5,
                     find_query_response_index(QueryResponseField::client_address_index), 1,
                     find_query_response_index(QueryResponseField::client_port), 2,
                     find_query_response_index(QueryResponseField::transaction_id), 21,
-                    find_query_response_index(QueryResponseField::query_response_signature_index), 6,
+                    find_query_response_index(QueryResponseField::qr_signature_index), 6,
                     find_query_response_index(QueryResponseField::client_hoplimit), 20,
-                    find_query_response_index(QueryResponseField::delay_useconds), 10,
+                    find_query_response_index(QueryResponseField::response_delay), 10,
                     find_query_response_index(QueryResponseField::query_name_index), 5,
                     find_query_response_index(QueryResponseField::query_size), 10,
                     find_query_response_index(QueryResponseField::response_size), 20,

@@ -574,7 +574,7 @@ namespace block_cbor {
 
                 switch(fields.query_response_field(dec.read_unsigned()))
                 {
-                case QueryResponseField::time_useconds:
+                case QueryResponseField::time_offset:
                     tstamp = earliest_time + std::chrono::microseconds(dec.read_signed());
                     break;
 
@@ -590,7 +590,7 @@ namespace block_cbor {
                     id = dec.read_unsigned();
                     break;
 
-                case QueryResponseField::query_response_signature_index:
+                case QueryResponseField::qr_signature_index:
                     signature = dec.read_unsigned();
                     break;
 
@@ -599,7 +599,7 @@ namespace block_cbor {
                     qr_flags |= QUERY_ONLY;
                     break;
 
-                case QueryResponseField::delay_useconds:
+                case QueryResponseField::response_delay:
                     response_delay = std::chrono::microseconds(dec.read_signed());
                     qr_flags |= QUERY_AND_RESPONSE;
                     break;
@@ -643,13 +643,13 @@ namespace block_cbor {
     void QueryResponseItem::writeCbor(CborBaseEncoder& enc,
                                       const std::chrono::system_clock::time_point& earliest_time)
     {
-        constexpr int time_index = find_query_response_index(QueryResponseField::time_useconds);
+        constexpr int time_index = find_query_response_index(QueryResponseField::time_offset);
         constexpr int client_address_index = find_query_response_index(QueryResponseField::client_address_index);
         constexpr int client_port_index = find_query_response_index(QueryResponseField::client_port);
         constexpr int transaction_id_index = find_query_response_index(QueryResponseField::transaction_id);
-        constexpr int query_response_signature_index = find_query_response_index(QueryResponseField::query_response_signature_index);
+        constexpr int qr_signature_index = find_query_response_index(QueryResponseField::qr_signature_index);
         constexpr int client_hoplimit_index = find_query_response_index(QueryResponseField::client_hoplimit);
-        constexpr int delay_index = find_query_response_index(QueryResponseField::delay_useconds);
+        constexpr int delay_index = find_query_response_index(QueryResponseField::response_delay);
         constexpr int query_name_index = find_query_response_index(QueryResponseField::query_name_index);
         constexpr int query_size_index = find_query_response_index(QueryResponseField::query_size);
         constexpr int response_size_index = find_query_response_index(QueryResponseField::response_size);
@@ -665,7 +665,7 @@ namespace block_cbor {
         enc.write(client_port);
         enc.write(transaction_id_index);
         enc.write(id);
-        enc.write(query_response_signature_index);
+        enc.write(qr_signature_index);
         enc.write(signature);
 
         if ( qr_flags & QUERY_ONLY )

@@ -113,6 +113,26 @@ namespace block_cbor {
     };
 
     /**
+     * \brief 0.5 query response
+     */
+    const std::vector<QueryResponseField> format_05_query_response = {
+        QueryResponseField::time_offset,
+        QueryResponseField::time_pseconds,
+        QueryResponseField::client_address_index,
+        QueryResponseField::client_port,
+        QueryResponseField::transaction_id,
+        QueryResponseField::qr_signature_index,
+        QueryResponseField::client_hoplimit,
+        QueryResponseField::response_delay,
+        QueryResponseField::response_delay_pseconds,
+        QueryResponseField::query_name_index,
+        QueryResponseField::query_size,
+        QueryResponseField::response_size,
+        QueryResponseField::query_extended,
+        QueryResponseField::response_extended,
+    };
+
+    /**
      ** Old formats tables - format 0.2.
      **/
 
@@ -136,13 +156,13 @@ namespace block_cbor {
      * \brief 0.2 query/response.
      */
     const std::vector<QueryResponseField> format_02_query_response = {
-        QueryResponseField::time_useconds,
+        QueryResponseField::time_offset,
         QueryResponseField::client_address_index,
         QueryResponseField::client_port,
         QueryResponseField::transaction_id,
-        QueryResponseField::query_response_signature_index,
+        QueryResponseField::qr_signature_index,
         QueryResponseField::client_hoplimit,
-        QueryResponseField::delay_useconds,
+        QueryResponseField::response_delay,
         QueryResponseField::query_name_index,
         QueryResponseField::response_size,
         QueryResponseField::query_extended,
@@ -195,7 +215,7 @@ namespace block_cbor {
           block_statistics_(format_10_block_statistics, format_10_block_statistics + countof(format_10_block_statistics)),
           block_statistics_private_(format_10_block_statistics_private, format_10_block_statistics_private + countof(format_10_block_statistics_private)),
           block_tables_(current_block_tables, current_block_tables + countof(current_block_tables)),
-          query_response_(current_query_response, current_query_response + countof(current_query_response)),
+          query_response_(format_10_query_response, format_10_query_response + countof(format_10_query_response)),
           class_type_(current_class_type, current_class_type + countof(current_class_type)),
           query_response_signature_(format_10_query_response_signature, format_10_query_response_signature + countof(format_10_query_response_signature)),
           question_(current_question, current_question + countof(current_question)),
@@ -223,6 +243,7 @@ namespace block_cbor {
             block_preamble_ = format_05_block_preamble;
             block_statistics_ = format_05_block_statistics;
             query_response_signature_ = format_05_query_response_signature;
+            query_response_ = format_05_query_response;
         }
 
         if ( major_version == 0 && minor_version == FILE_FORMAT_02_VERSION )
