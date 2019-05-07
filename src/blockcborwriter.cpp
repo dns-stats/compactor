@@ -92,7 +92,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
 {
     const DNSMessage &d(qr->has_query() ? qr->query() : qr->response());
     block_cbor::QueryResponseItem& qri = query_response_;
-    block_cbor::QuerySignature qs;
+    block_cbor::QueryResponseSignature qs;
 
     qri.qr_flags = 0;
 
@@ -108,7 +108,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     // Basic query signature info.
     qs.server_address = data_->add_address(d.serverIP);
     qs.server_port = d.serverPort;
-    qs.transport_flags = transportFlags(qr);
+    qs.qr_transport_flags = transportFlags(qr);
     qs.dns_flags = dnsFlags(qr);
 
     // Basic query/response info.
@@ -177,7 +177,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         qri.response_delay = std::chrono::duration_cast<std::chrono::microseconds>(qr->response().timestamp - qr->query().timestamp);
 
     qs.qr_flags = qri.qr_flags;
-    qri.signature = data_->add_query_signature(qs);
+    qri.signature = data_->add_query_response_signature(qs);
 }
 
 void BlockCborWriter::startExtendedQueryGroup()

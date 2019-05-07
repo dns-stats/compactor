@@ -342,7 +342,7 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
     const block_cbor::QueryResponseItem& qri = block_.query_response_items[next_item_];
     need_block_ = (block_.query_response_items.size() == ++next_item_);
 
-    const block_cbor::QuerySignature& sig = block_.query_signatures[qri.signature];
+    const block_cbor::QueryResponseSignature& sig = block_.query_response_signatures[qri.signature];
     if ( sig.qr_flags & block_cbor::QUERY_ONLY )
     {
         query = make_unique<DNSMessage>();
@@ -352,7 +352,7 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
         query->clientPort = qri.client_port;
         query->serverPort = sig.server_port;
         query->hoplimit = qri.hoplimit;
-        query->tcp = sig.transport_flags & BaseOutputWriter::TCP;
+        query->tcp = sig.qr_transport_flags & BaseOutputWriter::TCP;
         query->dns.type(CaptureDNS::QRType::QUERY);
         query->dns.id(qri.id);
         query->dns.opcode(sig.query_opcode);
@@ -402,7 +402,7 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
         response->serverIP = block_.ip_addresses[sig.server_address].addr;
         response->clientPort = qri.client_port;
         response->serverPort = sig.server_port;
-        response->tcp = sig.transport_flags & BaseOutputWriter::TCP;
+        response->tcp = sig.qr_transport_flags & BaseOutputWriter::TCP;
         response->dns.type(CaptureDNS::QRType::RESPONSE);
         response->dns.id(qri.id);
         response->dns.opcode(sig.query_opcode);

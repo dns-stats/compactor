@@ -411,16 +411,16 @@ namespace block_cbor {
     std::size_t hash_value(const ResourceRecord& rr);
 
     /**
-     * \struct QuerySignature
+     * \struct QueryResponseSignature
      * \brief A DNS Query Signature.
      */
-    struct QuerySignature
+    struct QueryResponseSignature
     {
         /**
          * \brief Default constructor.
          */
-        QuerySignature() :
-            qr_flags(), server_address(), server_port(), transport_flags(),
+        QueryResponseSignature() :
+            qr_flags(), server_address(), server_port(), qr_transport_flags(),
             query_rcode(), response_rcode(), query_opcode(),
             query_edns_version(), query_edns_payload_size(),
             query_opt_rdata(), dns_flags(), query_classtype(),
@@ -444,7 +444,7 @@ namespace block_cbor {
         /**
          * \brief transport flags.
          */
-        uint8_t transport_flags;
+        uint8_t qr_transport_flags;
 
         /**
          * \brief query RCODE, incorporating extended RCODE.
@@ -509,7 +509,7 @@ namespace block_cbor {
         /**
          * \brief return the key to be used for storing values.
          */
-        const QuerySignature& key() const
+        const QueryResponseSignature& key() const
         {
             return *this;
         }
@@ -520,11 +520,11 @@ namespace block_cbor {
          * \param rhs item to compare to.
          * \returns `true` if the two are equal.
          */
-        bool operator==(const QuerySignature& rhs) const {
+        bool operator==(const QueryResponseSignature& rhs) const {
             if ( qr_flags != rhs.qr_flags ||
                  server_address != rhs.server_address ||
                  server_port != rhs.server_port ||
-                 transport_flags != rhs.transport_flags ||
+                 qr_transport_flags != rhs.qr_transport_flags ||
                  dns_flags != rhs.dns_flags ||
                  qdcount != rhs.qdcount )
                 return false;
@@ -560,7 +560,7 @@ namespace block_cbor {
          * \param rhs the class/type to compare to.
          * \returns `false` if the two are equal.
          */
-        bool operator!=(const QuerySignature& rhs) const {
+        bool operator!=(const QueryResponseSignature& rhs) const {
             return !(*this == rhs);
         }
 
@@ -588,7 +588,7 @@ namespace block_cbor {
      *
      * \returns hash value.
      */
-    std::size_t hash_value(const QuerySignature& qs);
+    std::size_t hash_value(const QueryResponseSignature& qs);
 
     /**
      * \struct QueryResponseExtraInfo
@@ -1158,7 +1158,7 @@ namespace block_cbor {
         /**
          * \brief the header list of query signatures.
          */
-        HeaderList<QuerySignature> query_signatures;
+        HeaderList<QueryResponseSignature> query_response_signatures;
 
         /**
          * \brief the header list of question lists.
@@ -1190,7 +1190,7 @@ namespace block_cbor {
             questions.clear();
             resource_records.clear();
             names_rdatas.clear();
-            query_signatures.clear();
+            query_response_signatures.clear();
             query_response_items.clear();
             questions_lists.clear();
             rrs_lists.clear();
@@ -1249,14 +1249,14 @@ namespace block_cbor {
         }
 
         /**
-         * brief Add a new query signature to the block headers.
+         * brief Add a new query response signature to the block headers.
          *
-         * \param qs the query signature to add.
-         * \returns the index of the query signature.
+         * \param qs the query response signature to add.
+         * \returns the index of the query response signature.
          */
-        index_t add_query_signature(const QuerySignature& qs)
+        index_t add_query_response_signature(const QueryResponseSignature& qs)
         {
-            return query_signatures.add(qs);
+            return query_response_signatures.add(qs);
         }
 
         /**

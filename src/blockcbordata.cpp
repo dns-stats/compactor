@@ -264,7 +264,7 @@ namespace block_cbor {
         return seed;
     }
 
-    void QuerySignature::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    void QueryResponseSignature::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
         try
         {
@@ -278,69 +278,69 @@ namespace block_cbor {
                     break;
                 }
 
-                switch(fields.query_signature_field(dec.read_unsigned()))
+                switch(fields.query_response_signature_field(dec.read_unsigned()))
                 {
-                case QuerySignatureField::server_address_index:
+                case QueryResponseSignatureField::server_address_index:
                     server_address = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::server_port:
+                case QueryResponseSignatureField::server_port:
                     server_port = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::transport_flags:
-                    transport_flags = dec.read_unsigned();
+                case QueryResponseSignatureField::qr_transport_flags:
+                    qr_transport_flags = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::qr_dns_flags:
+                case QueryResponseSignatureField::qr_dns_flags:
                     dns_flags = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::qr_sig_flags:
+                case QueryResponseSignatureField::qr_sig_flags:
                     qr_flags = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::query_qd_count:
+                case QueryResponseSignatureField::query_qd_count:
                     qdcount = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::query_classtype_index:
+                case QueryResponseSignatureField::query_classtype_index:
                     query_classtype = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::query_rcode:
+                case QueryResponseSignatureField::query_rcode:
                     query_rcode = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::query_opcode:
+                case QueryResponseSignatureField::query_opcode:
                     query_opcode = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::query_an_count:
+                case QueryResponseSignatureField::query_an_count:
                     query_ancount = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::query_ar_count:
+                case QueryResponseSignatureField::query_ar_count:
                     query_arcount = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::query_ns_count:
+                case QueryResponseSignatureField::query_ns_count:
                     query_nscount = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::edns_version:
+                case QueryResponseSignatureField::edns_version:
                     query_edns_version = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::udp_buf_size:
+                case QueryResponseSignatureField::udp_buf_size:
                     query_edns_payload_size = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::opt_rdata_index:
+                case QueryResponseSignatureField::opt_rdata_index:
                     query_opt_rdata = dec.read_unsigned();
                     break;
 
-                case QuerySignatureField::response_rcode:
+                case QueryResponseSignatureField::response_rcode:
                     response_rcode = dec.read_unsigned();
                     break;
 
@@ -353,36 +353,36 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading QuerySignature");
+            throw cbor_file_format_error("Unexpected CBOR item reading QueryResponseSignature");
         }
     }
 
-    void QuerySignature::writeCbor(CborBaseEncoder& enc)
+    void QueryResponseSignature::writeCbor(CborBaseEncoder& enc)
     {
-        constexpr int server_address_index = find_query_signature_index(QuerySignatureField::server_address_index);
-        constexpr int server_port_index = find_query_signature_index(QuerySignatureField::server_port);
-        constexpr int transport_flags_index = find_query_signature_index(QuerySignatureField::transport_flags);
-        constexpr int qr_sig_flags_index = find_query_signature_index(QuerySignatureField::qr_sig_flags);
-        constexpr int query_opcode_index = find_query_signature_index(QuerySignatureField::query_opcode);
-        constexpr int qr_dns_flags_index = find_query_signature_index(QuerySignatureField::qr_dns_flags);
-        constexpr int query_rcode_index = find_query_signature_index(QuerySignatureField::query_rcode);
-        constexpr int query_classtype_index = find_query_signature_index(QuerySignatureField::query_classtype_index);
-        constexpr int query_qd_index = find_query_signature_index(QuerySignatureField::query_qd_count);
-        constexpr int query_an_index = find_query_signature_index(QuerySignatureField::query_an_count);
-        constexpr int query_ar_index = find_query_signature_index(QuerySignatureField::query_ar_count);
-        constexpr int query_ns_index = find_query_signature_index(QuerySignatureField::query_ns_count);
-        constexpr int edns_version_index = find_query_signature_index(QuerySignatureField::edns_version);
-        constexpr int udp_buf_size_index = find_query_signature_index(QuerySignatureField::udp_buf_size);
-        constexpr int opt_rdata_index = find_query_signature_index(QuerySignatureField::opt_rdata_index);
-        constexpr int response_rcode_index = find_query_signature_index(QuerySignatureField::response_rcode);
+        constexpr int server_address_index = find_query_response_signature_index(QueryResponseSignatureField::server_address_index);
+        constexpr int server_port_index = find_query_response_signature_index(QueryResponseSignatureField::server_port);
+        constexpr int qr_transport_flags_index = find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags);
+        constexpr int qr_sig_flags_index = find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags);
+        constexpr int query_opcode_index = find_query_response_signature_index(QueryResponseSignatureField::query_opcode);
+        constexpr int qr_dns_flags_index = find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags);
+        constexpr int query_rcode_index = find_query_response_signature_index(QueryResponseSignatureField::query_rcode);
+        constexpr int query_classtype_index = find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index);
+        constexpr int query_qd_index = find_query_response_signature_index(QueryResponseSignatureField::query_qd_count);
+        constexpr int query_an_index = find_query_response_signature_index(QueryResponseSignatureField::query_an_count);
+        constexpr int query_ar_index = find_query_response_signature_index(QueryResponseSignatureField::query_ar_count);
+        constexpr int query_ns_index = find_query_response_signature_index(QueryResponseSignatureField::query_ns_count);
+        constexpr int edns_version_index = find_query_response_signature_index(QueryResponseSignatureField::edns_version);
+        constexpr int udp_buf_size_index = find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size);
+        constexpr int opt_rdata_index = find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index);
+        constexpr int response_rcode_index = find_query_response_signature_index(QueryResponseSignatureField::response_rcode);
 
         enc.writeMapHeader();
         enc.write(server_address_index);
         enc.write(server_address);
         enc.write(server_port_index);
         enc.write(server_port);
-        enc.write(transport_flags_index);
-        enc.write(transport_flags);
+        enc.write(qr_transport_flags_index);
+        enc.write(qr_transport_flags);
         enc.write(qr_dns_flags_index);
         enc.write(dns_flags);
         enc.write(qr_sig_flags_index);
@@ -425,11 +425,11 @@ namespace block_cbor {
         enc.writeBreak();
     }
 
-    std::size_t hash_value(const QuerySignature& qs)
+    std::size_t hash_value(const QueryResponseSignature& qs)
     {
         std::size_t seed = boost::hash_value(qs.server_address);
         boost::hash_combine(seed, qs.server_port);
-        boost::hash_combine(seed, qs.transport_flags);
+        boost::hash_combine(seed, qs.qr_transport_flags);
         boost::hash_combine(seed, qs.dns_flags);
         boost::hash_combine(seed, qs.qr_flags);
         boost::hash_combine(seed, qs.qdcount);
@@ -590,7 +590,7 @@ namespace block_cbor {
                     id = dec.read_unsigned();
                     break;
 
-                case QueryResponseField::query_signature_index:
+                case QueryResponseField::query_response_signature_index:
                     signature = dec.read_unsigned();
                     break;
 
@@ -647,7 +647,7 @@ namespace block_cbor {
         constexpr int client_address_index = find_query_response_index(QueryResponseField::client_address_index);
         constexpr int client_port_index = find_query_response_index(QueryResponseField::client_port);
         constexpr int transaction_id_index = find_query_response_index(QueryResponseField::transaction_id);
-        constexpr int query_signature_index = find_query_response_index(QueryResponseField::query_signature_index);
+        constexpr int query_response_signature_index = find_query_response_index(QueryResponseField::query_response_signature_index);
         constexpr int client_hoplimit_index = find_query_response_index(QueryResponseField::client_hoplimit);
         constexpr int delay_index = find_query_response_index(QueryResponseField::delay_useconds);
         constexpr int query_name_index = find_query_response_index(QueryResponseField::query_name_index);
@@ -665,7 +665,7 @@ namespace block_cbor {
         enc.write(client_port);
         enc.write(transaction_id_index);
         enc.write(id);
-        enc.write(query_signature_index);
+        enc.write(query_response_signature_index);
         enc.write(signature);
 
         if ( qr_flags & QUERY_ONLY )
@@ -877,8 +877,8 @@ namespace block_cbor {
                 names_rdatas.readCbor(dec, fields);
                 break;
 
-            case BlockTablesField::query_signature:
-                query_signatures.readCbor(dec, fields);
+            case BlockTablesField::query_response_signature:
+                query_response_signatures.readCbor(dec, fields);
                 break;
 
             case BlockTablesField::question_list:
@@ -1048,7 +1048,7 @@ namespace block_cbor {
         constexpr int ipaddress_index = find_block_tables_index(BlockTablesField::ip_address);
         constexpr int classtype_index = find_block_tables_index(BlockTablesField::classtype);
         constexpr int name_rdata_index = find_block_tables_index(BlockTablesField::name_rdata);
-        constexpr int query_signature_index = find_block_tables_index(BlockTablesField::query_signature);
+        constexpr int query_response_signature_index = find_block_tables_index(BlockTablesField::query_response_signature);
         constexpr int question_list_index = find_block_tables_index(BlockTablesField::question_list);
         constexpr int question_rr_index = find_block_tables_index(BlockTablesField::question_rr);
         constexpr int rr_list_index = find_block_tables_index(BlockTablesField::rr_list);
@@ -1061,8 +1061,8 @@ namespace block_cbor {
         class_types.writeCbor(enc);
         enc.write(name_rdata_index);
         names_rdatas.writeCbor(enc);
-        enc.write(query_signature_index);
-        query_signatures.writeCbor(enc);
+        enc.write(query_response_signature_index);
+        query_response_signatures.writeCbor(enc);
         enc.write(question_list_index);
         questions_lists.writeCbor(enc);
         enc.write(question_rr_index);

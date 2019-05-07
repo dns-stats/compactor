@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -444,14 +444,14 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
     }
 }
 
-SCENARIO("QuerySignatures can be compared and written", "[block]")
+SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
 {
-    GIVEN("Some sample QuerySignature items")
+    GIVEN("Some sample QueryResponseSignature items")
     {
-        QuerySignature qs1, qs2;
+        QueryResponseSignature qs1, qs2;
         qs1.server_address = 1;
         qs1.server_port = 2;
-        qs1.transport_flags = 3;
+        qs1.qr_transport_flags = 3;
         qs1.qr_flags = 0x1f;
         qs1.qdcount = 1;
         qs1.query_rcode = 22;
@@ -496,22 +496,22 @@ SCENARIO("QuerySignatures can be compared and written", "[block]")
                 constexpr uint8_t EXPECTED[] =
                     {
                         (5 << 5) | 31,
-                        find_query_signature_index(QuerySignatureField::server_address_index), 1,
-                        find_query_signature_index(QuerySignatureField::server_port), 2,
-                        find_query_signature_index(QuerySignatureField::transport_flags), 3,
-                        find_query_signature_index(QuerySignatureField::qr_dns_flags), 8,
-                        find_query_signature_index(QuerySignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
-                        find_query_signature_index(QuerySignatureField::query_qd_count), 1,
-                        find_query_signature_index(QuerySignatureField::query_classtype_index), 3,
-                        find_query_signature_index(QuerySignatureField::query_rcode), 22,
-                        find_query_signature_index(QuerySignatureField::query_opcode), 2,
-                        find_query_signature_index(QuerySignatureField::query_an_count), 2,
-                        find_query_signature_index(QuerySignatureField::query_ar_count), 3,
-                        find_query_signature_index(QuerySignatureField::query_ns_count), 4,
-                        find_query_signature_index(QuerySignatureField::edns_version), 0,
-                        find_query_signature_index(QuerySignatureField::udp_buf_size), 22,
-                        find_query_signature_index(QuerySignatureField::opt_rdata_index), 4,
-                        find_query_signature_index(QuerySignatureField::response_rcode), 23,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_rcode), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_opcode), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_an_count), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ar_count), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ns_count), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::edns_version), 0,
+                        find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
                         0xff
                     };
 
@@ -628,7 +628,7 @@ SCENARIO("QueryResponseItems can be written", "[block]")
                         find_query_response_index(QueryResponseField::client_address_index), 1,
                         find_query_response_index(QueryResponseField::client_port), 2,
                         find_query_response_index(QueryResponseField::transaction_id), 21,
-                        find_query_response_index(QueryResponseField::query_signature_index), 6,
+                        find_query_response_index(QueryResponseField::query_response_signature_index), 6,
                         find_query_response_index(QueryResponseField::client_hoplimit), 20,
                         find_query_response_index(QueryResponseField::delay_useconds), 10,
                         find_query_response_index(QueryResponseField::query_name_index), 5,
@@ -1006,15 +1006,15 @@ SCENARIO("ResourceRecords can be read", "[block]")
     }
 }
 
-SCENARIO("QuerySignatures can be read", "[block]")
+SCENARIO("QueryResponseSignatures can be read", "[block]")
 {
     GIVEN("A test CBOR decoder and sample query signature data")
     {
         TestCborDecoder tcbd;
-        QuerySignature qs1;
+        QueryResponseSignature qs1;
         qs1.server_address = 1;
         qs1.server_port = 2;
-        qs1.transport_flags = 3;
+        qs1.qr_transport_flags = 3;
         qs1.qr_flags = 0x1f;
         qs1.qdcount = 1;
         qs1.query_rcode = 22;
@@ -1034,22 +1034,22 @@ SCENARIO("QuerySignatures can be read", "[block]")
             constexpr uint8_t INPUT[] =
                 {
                     (5 << 5) | 31,
-                    find_query_signature_index(QuerySignatureField::server_address_index), 1,
-                    find_query_signature_index(QuerySignatureField::server_port), 2,
-                    find_query_signature_index(QuerySignatureField::transport_flags), 3,
-                    find_query_signature_index(QuerySignatureField::qr_dns_flags), 8,
-                    find_query_signature_index(QuerySignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
-                    find_query_signature_index(QuerySignatureField::query_qd_count), 1,
-                    find_query_signature_index(QuerySignatureField::query_classtype_index), 3,
-                    find_query_signature_index(QuerySignatureField::query_rcode), 22,
-                    find_query_signature_index(QuerySignatureField::query_opcode), 2,
-                    find_query_signature_index(QuerySignatureField::query_an_count), 2,
-                    find_query_signature_index(QuerySignatureField::query_ar_count), 3,
-                    find_query_signature_index(QuerySignatureField::query_ns_count), 4,
-                    find_query_signature_index(QuerySignatureField::edns_version), 0,
-                    find_query_signature_index(QuerySignatureField::udp_buf_size), 22,
-                    find_query_signature_index(QuerySignatureField::opt_rdata_index), 4,
-                    find_query_signature_index(QuerySignatureField::response_rcode), 23,
+                    find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
+                    find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
+                    find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                    find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
+                    find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
+                    find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
+                    find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
+                    find_query_response_signature_index(QueryResponseSignatureField::query_rcode), 22,
+                    find_query_response_signature_index(QueryResponseSignatureField::query_opcode), 2,
+                    find_query_response_signature_index(QueryResponseSignatureField::query_an_count), 2,
+                    find_query_response_signature_index(QueryResponseSignatureField::query_ar_count), 3,
+                    find_query_response_signature_index(QueryResponseSignatureField::query_ns_count), 4,
+                    find_query_response_signature_index(QueryResponseSignatureField::edns_version), 0,
+                    find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
+                    find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
+                    find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
                     0xff
                 };
             std::vector<uint8_t> bytes(INPUT, INPUT + sizeof(INPUT));
@@ -1057,7 +1057,7 @@ SCENARIO("QuerySignatures can be read", "[block]")
 
             THEN("decoder input is correct")
             {
-                QuerySignature qs1_r;
+                QueryResponseSignature qs1_r;
                 block_cbor::FileVersionFields fields;
                 qs1_r.readCbor(tcbd, fields);
 
@@ -1105,7 +1105,7 @@ SCENARIO("QueryResponseItems can be read", "[block]")
                     find_query_response_index(QueryResponseField::client_address_index), 1,
                     find_query_response_index(QueryResponseField::client_port), 2,
                     find_query_response_index(QueryResponseField::transaction_id), 21,
-                    find_query_response_index(QueryResponseField::query_signature_index), 6,
+                    find_query_response_index(QueryResponseField::query_response_signature_index), 6,
                     find_query_response_index(QueryResponseField::client_hoplimit), 20,
                     find_query_response_index(QueryResponseField::delay_useconds), 10,
                     find_query_response_index(QueryResponseField::query_name_index), 5,

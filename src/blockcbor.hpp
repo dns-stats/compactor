@@ -107,7 +107,7 @@ namespace block_cbor {
         block_tables,
         query_response,
         class_type,
-        query_signature,
+        query_response_signature,
         question,
         rr,
         query_response_extended,
@@ -307,7 +307,7 @@ namespace block_cbor {
         ip_address,
         classtype,
         name_rdata,
-        query_signature,
+        query_response_signature,
         question_list,
         question_rr,
         rr_list,
@@ -327,7 +327,7 @@ namespace block_cbor {
         client_address_index,
         client_port,
         transaction_id,
-        query_signature_index,
+        query_response_signature_index,
         client_hoplimit,
         delay_useconds,
         delay_pseconds,
@@ -353,14 +353,15 @@ namespace block_cbor {
     };
 
     /**
-     * \enum QuerySignatureField
-     * \brief Fields in query signature map.
+     * \enum QueryResponseSignatureField
+     * \brief Fields in query response signature map.
      */
-    enum class QuerySignatureField
+    enum class QueryResponseSignatureField
     {
         server_address_index,
         server_port,
-        transport_flags,
+        qr_transport_flags,
+        qr_type,
         qr_sig_flags,
         query_opcode,
         qr_dns_flags,
@@ -368,8 +369,8 @@ namespace block_cbor {
         query_classtype_index,
         query_qd_count,
         query_an_count,
-        query_ar_count,
         query_ns_count,
+        query_ar_count,
         edns_version,
         udp_buf_size,
         opt_rdata_index,
@@ -767,7 +768,7 @@ namespace block_cbor {
         BlockTablesField::ip_address,
         BlockTablesField::classtype,
         BlockTablesField::name_rdata,
-        BlockTablesField::query_signature,
+        BlockTablesField::query_response_signature,
         BlockTablesField::question_list,
         BlockTablesField::question_rr,
         BlockTablesField::rr_list,
@@ -855,39 +856,40 @@ namespace block_cbor {
     }
 
     /**
-     * \brief Map of current query signature indexes.
+     * \brief Map of format 1.0 query response signature indexes.
      *
      * The index of a entry in the array is the file map value of that entry.
      */
-    constexpr QuerySignatureField current_query_signature[] = {
-        QuerySignatureField::server_address_index,
-        QuerySignatureField::server_port,
-        QuerySignatureField::transport_flags,
-        QuerySignatureField::qr_sig_flags,
-        QuerySignatureField::query_opcode,
-        QuerySignatureField::qr_dns_flags,
-        QuerySignatureField::query_rcode,
-        QuerySignatureField::query_classtype_index,
-        QuerySignatureField::query_qd_count,
-        QuerySignatureField::query_an_count,
-        QuerySignatureField::query_ar_count,
-        QuerySignatureField::query_ns_count,
-        QuerySignatureField::edns_version,
-        QuerySignatureField::udp_buf_size,
-        QuerySignatureField::opt_rdata_index,
-        QuerySignatureField::response_rcode,
+    constexpr QueryResponseSignatureField format_10_query_response_signature[] = {
+        QueryResponseSignatureField::server_address_index,
+        QueryResponseSignatureField::server_port,
+        QueryResponseSignatureField::qr_transport_flags,
+        QueryResponseSignatureField::qr_type,
+        QueryResponseSignatureField::qr_sig_flags,
+        QueryResponseSignatureField::query_opcode,
+        QueryResponseSignatureField::qr_dns_flags,
+        QueryResponseSignatureField::query_rcode,
+        QueryResponseSignatureField::query_classtype_index,
+        QueryResponseSignatureField::query_qd_count,
+        QueryResponseSignatureField::query_an_count,
+        QueryResponseSignatureField::query_ns_count,
+        QueryResponseSignatureField::query_ar_count,
+        QueryResponseSignatureField::edns_version,
+        QueryResponseSignatureField::udp_buf_size,
+        QueryResponseSignatureField::opt_rdata_index,
+        QueryResponseSignatureField::response_rcode,
     };
 
     /**
-     * \brief find map index of query signature fields for current format.
+     * \brief find map index of query response signature fields for current format.
      *
      * \param index the field identifier.
      * \return the field index.
      * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr int find_query_signature_index(QuerySignatureField index)
+    constexpr int find_query_response_signature_index(QueryResponseSignatureField index)
     {
-        return find_index(current_query_signature, index);
+        return find_index(format_10_query_response_signature, index);
     }
 
     /**
@@ -901,7 +903,7 @@ namespace block_cbor {
         QueryResponseField::client_address_index,
         QueryResponseField::client_port,
         QueryResponseField::transaction_id,
-        QueryResponseField::query_signature_index,
+        QueryResponseField::query_response_signature_index,
         QueryResponseField::client_hoplimit,
         QueryResponseField::delay_useconds,
         QueryResponseField::delay_pseconds,
@@ -1057,12 +1059,12 @@ namespace block_cbor {
         ClassTypeField class_type_field(int index) const;
 
         /**
-         * \brief Return query signature field for given map index.
+         * \brief Return query response signature field for given map index.
          *
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        QuerySignatureField query_signature_field(int index) const;
+        QueryResponseSignatureField query_response_signature_field(int index) const;
 
         /**
          * \brief Return question field for given map index.
@@ -1139,9 +1141,9 @@ namespace block_cbor {
         std::vector<ClassTypeField> class_type_;
 
         /**
-         * \brief query signature index map.
+         * \brief query response signature index map.
          */
-        std::vector<QuerySignatureField> query_signature_;
+        std::vector<QueryResponseSignatureField> query_response_signature_;
 
         /**
          * \brief question index map.

@@ -69,6 +69,9 @@ namespace block_cbor {
         BlockPreambleField::earliest_time
     };
 
+    /**
+     * \brief 0.5 block statistics
+     */
     const std::vector<BlockStatisticsField> format_05_block_statistics = {
         BlockStatisticsField::processed_messages,
         BlockStatisticsField::qr_data_items,
@@ -85,6 +88,28 @@ namespace block_cbor {
         BlockStatisticsField::compactor_missing_pairs,
         BlockStatisticsField::compactor_missing_packets,
         BlockStatisticsField::compactor_missing_non_dns,
+    };
+
+    /**
+     * \brief 0.5 query response signature
+     */
+    const std::vector<QueryResponseSignatureField> format_05_query_response_signature = {
+        QueryResponseSignatureField::server_address_index,
+        QueryResponseSignatureField::server_port,
+        QueryResponseSignatureField::qr_transport_flags,
+        QueryResponseSignatureField::qr_sig_flags,
+        QueryResponseSignatureField::query_opcode,
+        QueryResponseSignatureField::qr_dns_flags,
+        QueryResponseSignatureField::query_rcode,
+        QueryResponseSignatureField::query_classtype_index,
+        QueryResponseSignatureField::query_qd_count,
+        QueryResponseSignatureField::query_an_count,
+        QueryResponseSignatureField::query_ar_count,
+        QueryResponseSignatureField::query_ns_count,
+        QueryResponseSignatureField::edns_version,
+        QueryResponseSignatureField::udp_buf_size,
+        QueryResponseSignatureField::opt_rdata_index,
+        QueryResponseSignatureField::response_rcode,
     };
 
     /**
@@ -115,7 +140,7 @@ namespace block_cbor {
         QueryResponseField::client_address_index,
         QueryResponseField::client_port,
         QueryResponseField::transaction_id,
-        QueryResponseField::query_signature_index,
+        QueryResponseField::query_response_signature_index,
         QueryResponseField::client_hoplimit,
         QueryResponseField::delay_useconds,
         QueryResponseField::query_name_index,
@@ -172,7 +197,7 @@ namespace block_cbor {
           block_tables_(current_block_tables, current_block_tables + countof(current_block_tables)),
           query_response_(current_query_response, current_query_response + countof(current_query_response)),
           class_type_(current_class_type, current_class_type + countof(current_class_type)),
-          query_signature_(current_query_signature, current_query_signature + countof(current_query_signature)),
+          query_response_signature_(format_10_query_response_signature, format_10_query_response_signature + countof(format_10_query_response_signature)),
           question_(current_question, current_question + countof(current_question)),
           rr_(current_rr, current_rr + countof(current_rr)),
           query_response_extended_(current_query_response_extended, current_query_response_extended + countof(current_query_response_extended)),
@@ -197,12 +222,15 @@ namespace block_cbor {
         {
             block_preamble_ = format_05_block_preamble;
             block_statistics_ = format_05_block_statistics;
+            query_response_signature_ = format_05_query_response_signature;
         }
 
         if ( major_version == 0 && minor_version == FILE_FORMAT_02_VERSION )
         {
+            block_preamble_ = format_05_block_preamble;
             block_statistics_ = format_02_block_statistics;
             query_response_ = format_02_query_response;
+            query_response_signature_ = format_05_query_response_signature;
             return;
         }
 
@@ -267,12 +295,12 @@ namespace block_cbor {
             return ClassTypeField::unknown;
     }
 
-    QuerySignatureField FileVersionFields::query_signature_field(int index) const
+    QueryResponseSignatureField FileVersionFields::query_response_signature_field(int index) const
     {
-        if ( index < query_signature_.size() )
-            return query_signature_[index];
+        if ( index < query_response_signature_.size() )
+            return query_response_signature_[index];
         else
-            return QuerySignatureField::unknown;
+            return QueryResponseSignatureField::unknown;
     }
 
     QuestionField FileVersionFields::question_field(int index) const
