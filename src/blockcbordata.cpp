@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -119,8 +119,8 @@ namespace block_cbor {
 
     void ClassType::writeCbor(CborBaseEncoder& enc)
     {
-        constexpr unsigned type_index = find_class_type_index(ClassTypeField::type_id);
-        constexpr unsigned class_index = find_class_type_index(ClassTypeField::class_id);
+        constexpr int type_index = find_class_type_index(ClassTypeField::type_id);
+        constexpr int class_index = find_class_type_index(ClassTypeField::class_id);
 
         enc.writeMapHeader(2);
         enc.write(type_index);
@@ -175,8 +175,8 @@ namespace block_cbor {
 
     void Question::writeCbor(CborBaseEncoder& enc)
     {
-        constexpr unsigned qname_index = find_question_index(QuestionField::name_index);
-        constexpr unsigned classtype_index = find_question_index(QuestionField::classtype_index);
+        constexpr int qname_index = find_question_index(QuestionField::name_index);
+        constexpr int classtype_index = find_question_index(QuestionField::classtype_index);
 
         enc.writeMapHeader(2);
         enc.write(qname_index);
@@ -239,10 +239,10 @@ namespace block_cbor {
 
     void ResourceRecord::writeCbor(CborBaseEncoder& enc)
     {
-        constexpr unsigned name_index = find_rr_index(RRField::name_index);
-        constexpr unsigned classtype_index = find_rr_index(RRField::classtype_index);
-        constexpr unsigned ttl_index = find_rr_index(RRField::ttl);
-        constexpr unsigned rdata_index = find_rr_index(RRField::rdata_index);
+        constexpr int name_index = find_rr_index(RRField::name_index);
+        constexpr int classtype_index = find_rr_index(RRField::classtype_index);
+        constexpr int ttl_index = find_rr_index(RRField::ttl);
+        constexpr int rdata_index = find_rr_index(RRField::rdata_index);
 
         enc.writeMapHeader(4);
         enc.write(name_index);
@@ -359,22 +359,22 @@ namespace block_cbor {
 
     void QuerySignature::writeCbor(CborBaseEncoder& enc)
     {
-        constexpr unsigned server_address_index = find_query_signature_index(QuerySignatureField::server_address_index);
-        constexpr unsigned server_port_index = find_query_signature_index(QuerySignatureField::server_port);
-        constexpr unsigned transport_flags_index = find_query_signature_index(QuerySignatureField::transport_flags);
-        constexpr unsigned qr_sig_flags_index = find_query_signature_index(QuerySignatureField::qr_sig_flags);
-        constexpr unsigned query_opcode_index = find_query_signature_index(QuerySignatureField::query_opcode);
-        constexpr unsigned qr_dns_flags_index = find_query_signature_index(QuerySignatureField::qr_dns_flags);
-        constexpr unsigned query_rcode_index = find_query_signature_index(QuerySignatureField::query_rcode);
-        constexpr unsigned query_classtype_index = find_query_signature_index(QuerySignatureField::query_classtype_index);
-        constexpr unsigned query_qd_index = find_query_signature_index(QuerySignatureField::query_qd_count);
-        constexpr unsigned query_an_index = find_query_signature_index(QuerySignatureField::query_an_count);
-        constexpr unsigned query_ar_index = find_query_signature_index(QuerySignatureField::query_ar_count);
-        constexpr unsigned query_ns_index = find_query_signature_index(QuerySignatureField::query_ns_count);
-        constexpr unsigned edns_version_index = find_query_signature_index(QuerySignatureField::edns_version);
-        constexpr unsigned udp_buf_size_index = find_query_signature_index(QuerySignatureField::udp_buf_size);
-        constexpr unsigned opt_rdata_index = find_query_signature_index(QuerySignatureField::opt_rdata_index);
-        constexpr unsigned response_rcode_index = find_query_signature_index(QuerySignatureField::response_rcode);
+        constexpr int server_address_index = find_query_signature_index(QuerySignatureField::server_address_index);
+        constexpr int server_port_index = find_query_signature_index(QuerySignatureField::server_port);
+        constexpr int transport_flags_index = find_query_signature_index(QuerySignatureField::transport_flags);
+        constexpr int qr_sig_flags_index = find_query_signature_index(QuerySignatureField::qr_sig_flags);
+        constexpr int query_opcode_index = find_query_signature_index(QuerySignatureField::query_opcode);
+        constexpr int qr_dns_flags_index = find_query_signature_index(QuerySignatureField::qr_dns_flags);
+        constexpr int query_rcode_index = find_query_signature_index(QuerySignatureField::query_rcode);
+        constexpr int query_classtype_index = find_query_signature_index(QuerySignatureField::query_classtype_index);
+        constexpr int query_qd_index = find_query_signature_index(QuerySignatureField::query_qd_count);
+        constexpr int query_an_index = find_query_signature_index(QuerySignatureField::query_an_count);
+        constexpr int query_ar_index = find_query_signature_index(QuerySignatureField::query_ar_count);
+        constexpr int query_ns_index = find_query_signature_index(QuerySignatureField::query_ns_count);
+        constexpr int edns_version_index = find_query_signature_index(QuerySignatureField::edns_version);
+        constexpr int udp_buf_size_index = find_query_signature_index(QuerySignatureField::udp_buf_size);
+        constexpr int opt_rdata_index = find_query_signature_index(QuerySignatureField::opt_rdata_index);
+        constexpr int response_rcode_index = find_query_signature_index(QuerySignatureField::response_rcode);
 
         enc.writeMapHeader();
         enc.write(server_address_index);
@@ -513,10 +513,10 @@ namespace block_cbor {
         void writeExtraInfo(CborBaseEncoder& enc, int id,
                             const QueryResponseExtraInfo& ei)
         {
-            constexpr unsigned questions_index = find_query_response_extended_index(QueryResponseExtendedField::question_index);
-            constexpr unsigned answer_index = find_query_response_extended_index(QueryResponseExtendedField::answer_index);
-            constexpr unsigned authority_index = find_query_response_extended_index(QueryResponseExtendedField::authority_index);
-            constexpr unsigned additional_index = find_query_response_extended_index(QueryResponseExtendedField::additional_index);
+            constexpr int questions_index = find_query_response_extended_index(QueryResponseExtendedField::question_index);
+            constexpr int answer_index = find_query_response_extended_index(QueryResponseExtendedField::answer_index);
+            constexpr int authority_index = find_query_response_extended_index(QueryResponseExtendedField::authority_index);
+            constexpr int additional_index = find_query_response_extended_index(QueryResponseExtendedField::additional_index);
 
             enc.write(id);
             enc.writeMapHeader();
@@ -643,18 +643,18 @@ namespace block_cbor {
     void QueryResponseItem::writeCbor(CborBaseEncoder& enc,
                                       const std::chrono::system_clock::time_point& earliest_time)
     {
-        constexpr unsigned time_index = find_query_response_index(QueryResponseField::time_useconds);
-        constexpr unsigned client_address_index = find_query_response_index(QueryResponseField::client_address_index);
-        constexpr unsigned client_port_index = find_query_response_index(QueryResponseField::client_port);
-        constexpr unsigned transaction_id_index = find_query_response_index(QueryResponseField::transaction_id);
-        constexpr unsigned query_signature_index = find_query_response_index(QueryResponseField::query_signature_index);
-        constexpr unsigned client_hoplimit_index = find_query_response_index(QueryResponseField::client_hoplimit);
-        constexpr unsigned delay_index = find_query_response_index(QueryResponseField::delay_useconds);
-        constexpr unsigned query_name_index = find_query_response_index(QueryResponseField::query_name_index);
-        constexpr unsigned query_size_index = find_query_response_index(QueryResponseField::query_size);
-        constexpr unsigned response_size_index = find_query_response_index(QueryResponseField::response_size);
-        constexpr unsigned query_extended_index = find_query_response_index(QueryResponseField::query_extended);
-        constexpr unsigned response_extended_index = find_query_response_index(QueryResponseField::response_extended);
+        constexpr int time_index = find_query_response_index(QueryResponseField::time_useconds);
+        constexpr int client_address_index = find_query_response_index(QueryResponseField::client_address_index);
+        constexpr int client_port_index = find_query_response_index(QueryResponseField::client_port);
+        constexpr int transaction_id_index = find_query_response_index(QueryResponseField::transaction_id);
+        constexpr int query_signature_index = find_query_response_index(QueryResponseField::query_signature_index);
+        constexpr int client_hoplimit_index = find_query_response_index(QueryResponseField::client_hoplimit);
+        constexpr int delay_index = find_query_response_index(QueryResponseField::delay_useconds);
+        constexpr int query_name_index = find_query_response_index(QueryResponseField::query_name_index);
+        constexpr int query_size_index = find_query_response_index(QueryResponseField::query_size);
+        constexpr int response_size_index = find_query_response_index(QueryResponseField::response_size);
+        constexpr int query_extended_index = find_query_response_index(QueryResponseField::query_extended);
+        constexpr int response_extended_index = find_query_response_index(QueryResponseField::response_extended);
 
         enc.writeMapHeader();
         enc.write(time_index);
@@ -765,10 +765,10 @@ namespace block_cbor {
 
     void AddressEventCount::writeCbor(CborBaseEncoder& enc)
     {
-        constexpr unsigned type_index = find_address_event_count_index(AddressEventCountField::ae_type);
-        constexpr unsigned code_index = find_address_event_count_index(AddressEventCountField::ae_code);
-        constexpr unsigned address_index = find_address_event_count_index(AddressEventCountField::ae_address_index);
-        constexpr unsigned count_index = find_address_event_count_index(AddressEventCountField::ae_count);
+        constexpr int type_index = find_address_event_count_index(AddressEventCountField::ae_type);
+        constexpr int code_index = find_address_event_count_index(AddressEventCountField::ae_code);
+        constexpr int address_index = find_address_event_count_index(AddressEventCountField::ae_address_index);
+        constexpr int count_index = find_address_event_count_index(AddressEventCountField::ae_count);
 
         enc.writeMapHeader();
         enc.write(type_index);
@@ -938,9 +938,9 @@ namespace block_cbor {
                 break;
             }
 
-            switch(fields.block_statistics_field(dec.read_unsigned()))
+            switch(fields.block_statistics_field(dec.read_signed()))
             {
-            case BlockStatisticsField::completely_malformed_packets:
+            case BlockStatisticsField::malformed_items:
                 last_packet_statistics.malformed_packet_count += dec.read_unsigned();
                 break;
 
@@ -952,7 +952,7 @@ namespace block_cbor {
                 last_packet_statistics.out_of_order_packet_count += dec.read_unsigned();
                 break;
 
-            case BlockStatisticsField::total_packets:
+            case BlockStatisticsField::processed_messages:
                 last_packet_statistics.raw_packet_count += dec.read_unsigned();
                 break;
 
@@ -968,7 +968,7 @@ namespace block_cbor {
                 last_packet_statistics.response_without_query_count += dec.read_unsigned();
                 break;
 
-            case BlockStatisticsField::total_pairs:
+            case BlockStatisticsField::qr_data_items:
                 last_packet_statistics.qr_pair_count += dec.read_unsigned();
                 break;
 
@@ -1007,12 +1007,12 @@ namespace block_cbor {
 
     void BlockData::writeCbor(CborBaseEncoder& enc)
     {
-        constexpr unsigned preamble_index = find_block_index(BlockField::preamble);
-        constexpr unsigned statistics_index = find_block_index(BlockField::statistics);
-        constexpr unsigned tables_index = find_block_index(BlockField::tables);
-        constexpr unsigned queries_index = find_block_index(BlockField::queries);
-        constexpr unsigned aec_index = find_block_index(BlockField::address_event_counts);
-        constexpr unsigned earliest_time_index = find_block_preamble_index(BlockPreambleField::earliest_time);
+        constexpr int preamble_index = find_block_index(BlockField::preamble);
+        constexpr int statistics_index = find_block_index(BlockField::statistics);
+        constexpr int tables_index = find_block_index(BlockField::tables);
+        constexpr int queries_index = find_block_index(BlockField::queries);
+        constexpr int aec_index = find_block_index(BlockField::address_event_counts);
+        constexpr int earliest_time_index = find_block_preamble_index(BlockPreambleField::earliest_time);
 
         // Block header.
         enc.writeMapHeader();
@@ -1045,14 +1045,14 @@ namespace block_cbor {
 
     void BlockData::writeHeaders(CborBaseEncoder& enc)
     {
-        constexpr unsigned ipaddress_index = find_block_tables_index(BlockTablesField::ip_address);
-        constexpr unsigned classtype_index = find_block_tables_index(BlockTablesField::classtype);
-        constexpr unsigned name_rdata_index = find_block_tables_index(BlockTablesField::name_rdata);
-        constexpr unsigned query_signature_index = find_block_tables_index(BlockTablesField::query_signature);
-        constexpr unsigned question_list_index = find_block_tables_index(BlockTablesField::question_list);
-        constexpr unsigned question_rr_index = find_block_tables_index(BlockTablesField::question_rr);
-        constexpr unsigned rr_list_index = find_block_tables_index(BlockTablesField::rr_list);
-        constexpr unsigned rr_index = find_block_tables_index(BlockTablesField::rr);
+        constexpr int ipaddress_index = find_block_tables_index(BlockTablesField::ip_address);
+        constexpr int classtype_index = find_block_tables_index(BlockTablesField::classtype);
+        constexpr int name_rdata_index = find_block_tables_index(BlockTablesField::name_rdata);
+        constexpr int query_signature_index = find_block_tables_index(BlockTablesField::query_signature);
+        constexpr int question_list_index = find_block_tables_index(BlockTablesField::question_list);
+        constexpr int question_rr_index = find_block_tables_index(BlockTablesField::question_rr);
+        constexpr int rr_list_index = find_block_tables_index(BlockTablesField::rr_list);
+        constexpr int rr_index = find_block_tables_index(BlockTablesField::rr);
 
         enc.writeMapHeader();
         enc.write(ipaddress_index);
@@ -1083,27 +1083,27 @@ namespace block_cbor {
 
     void BlockData::writeStats(CborBaseEncoder& enc)
     {
-        constexpr unsigned total_packets_index = find_block_statistics_index(BlockStatisticsField::total_packets);
-        constexpr unsigned total_pairs_index = find_block_statistics_index(BlockStatisticsField::total_pairs);
-        constexpr unsigned unmatched_queries_index = find_block_statistics_index(BlockStatisticsField::unmatched_queries);
-        constexpr unsigned unmatched_responses_index = find_block_statistics_index(BlockStatisticsField::unmatched_responses);
-        constexpr unsigned malformed_packets_index = find_block_statistics_index(BlockStatisticsField::completely_malformed_packets);
-        constexpr unsigned non_dns_packets_index = find_block_statistics_index(BlockStatisticsField::compactor_non_dns_packets);
-        constexpr unsigned out_of_order_packets_index = find_block_statistics_index(BlockStatisticsField::compactor_out_of_order_packets);
-        constexpr unsigned missing_pairs_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_pairs);
-        constexpr unsigned missing_packets_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_packets);
-        constexpr unsigned missing_non_dns_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_non_dns);
+        constexpr int processed_messages_index = find_block_statistics_index(BlockStatisticsField::processed_messages);
+        constexpr int qr_data_items_index = find_block_statistics_index(BlockStatisticsField::qr_data_items);
+        constexpr int unmatched_queries_index = find_block_statistics_index(BlockStatisticsField::unmatched_queries);
+        constexpr int unmatched_responses_index = find_block_statistics_index(BlockStatisticsField::unmatched_responses);
+        constexpr int malformed_items_index = find_block_statistics_index(BlockStatisticsField::malformed_items);
+        constexpr int non_dns_packets_index = find_block_statistics_index(BlockStatisticsField::compactor_non_dns_packets);
+        constexpr int out_of_order_packets_index = find_block_statistics_index(BlockStatisticsField::compactor_out_of_order_packets);
+        constexpr int missing_pairs_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_pairs);
+        constexpr int missing_packets_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_packets);
+        constexpr int missing_non_dns_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_non_dns);
 
         enc.writeMapHeader();
-        enc.write(total_packets_index);
+        enc.write(processed_messages_index);
         enc.write(last_packet_statistics.raw_packet_count - start_packet_statistics.raw_packet_count);
-        enc.write(total_pairs_index);
+        enc.write(qr_data_items_index);
         enc.write(last_packet_statistics.qr_pair_count - start_packet_statistics.qr_pair_count);
         enc.write(unmatched_queries_index);
         enc.write(last_packet_statistics.query_without_response_count - start_packet_statistics.query_without_response_count);
         enc.write(unmatched_responses_index);
         enc.write(last_packet_statistics.response_without_query_count - start_packet_statistics.response_without_query_count);
-        enc.write(malformed_packets_index);
+        enc.write(malformed_items_index);
         enc.write(last_packet_statistics.malformed_packet_count - start_packet_statistics.malformed_packet_count);
         enc.write(non_dns_packets_index);
         enc.write(last_packet_statistics.unhandled_packet_count - start_packet_statistics.unhandled_packet_count);

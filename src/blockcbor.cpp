@@ -69,6 +69,24 @@ namespace block_cbor {
         BlockPreambleField::earliest_time
     };
 
+    const std::vector<BlockStatisticsField> format_05_block_statistics = {
+        BlockStatisticsField::processed_messages,
+        BlockStatisticsField::qr_data_items,
+        BlockStatisticsField::unmatched_queries,
+        BlockStatisticsField::unmatched_responses,
+        BlockStatisticsField::malformed_items,
+        BlockStatisticsField::partially_malformed_packets,
+        BlockStatisticsField::unknown,
+        BlockStatisticsField::unknown,
+        BlockStatisticsField::unknown,
+        BlockStatisticsField::unknown,
+        BlockStatisticsField::compactor_non_dns_packets,
+        BlockStatisticsField::compactor_out_of_order_packets,
+        BlockStatisticsField::compactor_missing_pairs,
+        BlockStatisticsField::compactor_missing_packets,
+        BlockStatisticsField::compactor_missing_non_dns,
+    };
+
     /**
      ** Old formats tables - format 0.2.
      **/
@@ -77,11 +95,11 @@ namespace block_cbor {
      * \brief 0.2 statistics.
      */
     const std::vector<BlockStatisticsField> format_02_block_statistics = {
-        BlockStatisticsField::total_packets,
-        BlockStatisticsField::total_pairs,
+        BlockStatisticsField::processed_messages,
+        BlockStatisticsField::qr_data_items,
         BlockStatisticsField::unmatched_queries,
         BlockStatisticsField::unmatched_responses,
-        BlockStatisticsField::completely_malformed_packets,
+        BlockStatisticsField::malformed_items,
         BlockStatisticsField::compactor_non_dns_packets,
         BlockStatisticsField::compactor_out_of_order_packets,
         BlockStatisticsField::compactor_missing_pairs,
@@ -149,7 +167,8 @@ namespace block_cbor {
         : configuration_(current_configuration, current_configuration + countof(current_configuration)),
           block_(current_block, current_block + countof(current_block)),
           block_preamble_(format_10_block_preamble, format_10_block_preamble + countof(format_10_block_preamble)),
-          block_statistics_(current_block_statistics, current_block_statistics + countof(current_block_statistics)),
+          block_statistics_(format_10_block_statistics, format_10_block_statistics + countof(format_10_block_statistics)),
+          block_statistics_private_(format_10_block_statistics_private, format_10_block_statistics_private + countof(format_10_block_statistics_private)),
           block_tables_(current_block_tables, current_block_tables + countof(current_block_tables)),
           query_response_(current_query_response, current_query_response + countof(current_query_response)),
           class_type_(current_class_type, current_class_type + countof(current_class_type)),
@@ -171,10 +190,13 @@ namespace block_cbor {
              minor_version == FILE_FORMAT_10_MINOR_VERSION )
             return;
 
+        block_statistics_private_.clear();
+
         if ( major_version == FILE_FORMAT_05_MAJOR_VERSION &&
              minor_version == FILE_FORMAT_05_MINOR_VERSION )
         {
             block_preamble_ = format_05_block_preamble;
+            block_statistics_ = format_05_block_statistics;
         }
 
         if ( major_version == 0 && minor_version == FILE_FORMAT_02_VERSION )
@@ -187,7 +209,7 @@ namespace block_cbor {
         throw cbor_file_format_error("Unknown file format version");
     }
 
-    ConfigurationField FileVersionFields::configuration_field(unsigned index) const
+    ConfigurationField FileVersionFields::configuration_field(int index) const
     {
         if ( index < configuration_.size() )
             return configuration_[index];
@@ -195,7 +217,7 @@ namespace block_cbor {
             return ConfigurationField::unknown;
     }
 
-    BlockField FileVersionFields::block_field(unsigned index) const
+    BlockField FileVersionFields::block_field(int index) const
     {
         if ( index < block_.size() )
             return block_[index];
@@ -203,7 +225,7 @@ namespace block_cbor {
             return BlockField::unknown;
     }
 
-    BlockPreambleField FileVersionFields::block_preamble_field(unsigned index) const
+    BlockPreambleField FileVersionFields::block_preamble_field(int index) const
     {
         if ( index < block_preamble_.size() )
             return block_preamble_[index];
@@ -211,15 +233,17 @@ namespace block_cbor {
             return BlockPreambleField::unknown;
     }
 
-    BlockStatisticsField FileVersionFields::block_statistics_field(unsigned index) const
+    BlockStatisticsField FileVersionFields::block_statistics_field(int index) const
     {
-        if ( index < block_statistics_.size() )
+        if ( index < 0 && index > -1 - block_statistics_private_.size() )
+            return block_statistics_private_[-index - 1];
+        else if ( index < block_statistics_.size() )
             return block_statistics_[index];
         else
             return BlockStatisticsField::unknown;
     }
 
-    BlockTablesField FileVersionFields::block_tables_field(unsigned index) const
+    BlockTablesField FileVersionFields::block_tables_field(int index) const
     {
         if ( index < block_tables_.size() )
             return block_tables_[index];
@@ -227,7 +251,7 @@ namespace block_cbor {
             return BlockTablesField::unknown;
     }
 
-    QueryResponseField FileVersionFields::query_response_field(unsigned index) const
+    QueryResponseField FileVersionFields::query_response_field(int index) const
     {
         if ( index < query_response_.size() )
             return query_response_[index];
@@ -235,7 +259,7 @@ namespace block_cbor {
             return QueryResponseField::unknown;
     }
 
-    ClassTypeField FileVersionFields::class_type_field(unsigned index) const
+    ClassTypeField FileVersionFields::class_type_field(int index) const
     {
         if ( index < class_type_.size() )
             return class_type_[index];
@@ -243,7 +267,7 @@ namespace block_cbor {
             return ClassTypeField::unknown;
     }
 
-    QuerySignatureField FileVersionFields::query_signature_field(unsigned index) const
+    QuerySignatureField FileVersionFields::query_signature_field(int index) const
     {
         if ( index < query_signature_.size() )
             return query_signature_[index];
@@ -251,7 +275,7 @@ namespace block_cbor {
             return QuerySignatureField::unknown;
     }
 
-    QuestionField FileVersionFields::question_field(unsigned index) const
+    QuestionField FileVersionFields::question_field(int index) const
     {
         if ( index < question_.size() )
             return question_[index];
@@ -259,7 +283,7 @@ namespace block_cbor {
             return QuestionField::unknown;
     }
 
-    RRField FileVersionFields::rr_field(unsigned index) const
+    RRField FileVersionFields::rr_field(int index) const
     {
         if ( index < rr_.size() )
             return rr_[index];
@@ -267,7 +291,7 @@ namespace block_cbor {
             return RRField::unknown;
     }
 
-    QueryResponseExtendedField FileVersionFields::query_response_extended_field(unsigned index) const
+    QueryResponseExtendedField FileVersionFields::query_response_extended_field(int index) const
     {
         if ( index < query_response_extended_.size() )
             return query_response_extended_[index];
@@ -275,7 +299,7 @@ namespace block_cbor {
             return QueryResponseExtendedField::unknown;
     }
 
-    AddressEventCountField FileVersionFields::address_event_count_field(unsigned index) const
+    AddressEventCountField FileVersionFields::address_event_count_field(int index) const
     {
         if ( index < address_event_count_.size() )
             return address_event_count_[index];

@@ -259,10 +259,10 @@ void BlockCborWriter::startAdditionalSection()
 
 void BlockCborWriter::writeFileHeader()
 {
-    constexpr unsigned major_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::major_format_version);
-    constexpr unsigned minor_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::minor_format_version);
-    constexpr unsigned private_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::private_version);
-    constexpr unsigned block_parameters_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::block_parameters);
+    constexpr int major_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::major_format_version);
+    constexpr int minor_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::minor_format_version);
+    constexpr int private_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::private_version);
+    constexpr int block_parameters_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::block_parameters);
 
     enc_->writeArrayHeader(3);
     enc_->write(block_cbor::FILE_FORMAT_ID);
@@ -285,8 +285,8 @@ void BlockCborWriter::writeFileHeader()
 
 void BlockCborWriter::writeBlockParameters()
 {
-    constexpr unsigned storage_parameters_index = block_cbor::find_block_parameters_index(block_cbor::BlockParametersField::storage_parameters);
-    constexpr unsigned collection_parameters_index = block_cbor::find_block_parameters_index(block_cbor::BlockParametersField::collection_parameters);
+    constexpr int storage_parameters_index = block_cbor::find_block_parameters_index(block_cbor::BlockParametersField::storage_parameters);
+    constexpr int collection_parameters_index = block_cbor::find_block_parameters_index(block_cbor::BlockParametersField::collection_parameters);
 
     enc_->writeArrayHeader(1);
     enc_->writeMapHeader(2);
@@ -298,11 +298,11 @@ void BlockCborWriter::writeBlockParameters()
 
 void BlockCborWriter::writeStorageParameters()
 {
-    constexpr unsigned ticks_per_second_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::ticks_per_second);
-    constexpr unsigned max_block_items_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::max_block_items);
-    constexpr unsigned storage_hints_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::storage_hints);
-    constexpr unsigned opcodes_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::opcodes);
-    constexpr unsigned rr_types_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::rr_types);
+    constexpr int ticks_per_second_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::ticks_per_second);
+    constexpr int max_block_items_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::max_block_items);
+    constexpr int storage_hints_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::storage_hints);
+    constexpr int opcodes_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::opcodes);
+    constexpr int rr_types_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::rr_types);
 
     enc_->writeMapHeader();
 
@@ -341,10 +341,10 @@ void BlockCborWriter::writeStorageParameters()
 
 void BlockCborWriter::writeStorageHints()
 {
-    constexpr unsigned query_response_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::query_response_hints);
-    constexpr unsigned query_response_signature_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::query_response_signature_hints);
-    constexpr unsigned rr_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::rr_hints);
-    constexpr unsigned other_data_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::other_data_hints);
+    constexpr int query_response_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::query_response_hints);
+    constexpr int query_response_signature_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::query_response_signature_hints);
+    constexpr int rr_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::rr_hints);
+    constexpr int other_data_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::other_data_hints);
 
     enc_->writeMapHeader();
 
@@ -375,16 +375,16 @@ void BlockCborWriter::writeStorageHints()
 
 void BlockCborWriter::writeCollectionParameters()
 {
-    constexpr unsigned query_timeout_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::query_timeout);
-    constexpr unsigned skew_timeout_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::skew_timeout);
-    constexpr unsigned snaplen_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::snaplen);
-    constexpr unsigned promisc_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::promisc);
-    constexpr unsigned interfaces_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::interfaces);
-    constexpr unsigned server_addresses_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::server_addresses);
-    constexpr unsigned vlan_ids_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::vlan_ids);
-    constexpr unsigned filter_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::filter);
-    constexpr unsigned generator_id_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::generator_id);
-    constexpr unsigned host_id_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::host_id);
+    constexpr int query_timeout_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::query_timeout);
+    constexpr int skew_timeout_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::skew_timeout);
+    constexpr int snaplen_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::snaplen);
+    constexpr int promisc_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::promisc);
+    constexpr int interfaces_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::interfaces);
+    constexpr int server_addresses_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::server_addresses);
+    constexpr int vlan_ids_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::vlan_ids);
+    constexpr int filter_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::filter);
+    constexpr int generator_id_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::generator_id);
+    constexpr int host_id_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::host_id);
 
     enc_->writeMapHeader();
 

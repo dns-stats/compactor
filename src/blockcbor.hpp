@@ -279,17 +279,21 @@ namespace block_cbor {
      */
     enum class BlockStatisticsField
     {
-        total_packets,
-        total_pairs,
+        processed_messages,
+        qr_data_items,
         unmatched_queries,
         unmatched_responses,
-        completely_malformed_packets,
-        partially_malformed_packets,
+        discarded_opcode,
+        malformed_items,
+
         compactor_non_dns_packets,
         compactor_out_of_order_packets,
         compactor_missing_pairs,
         compactor_missing_packets,
         compactor_missing_non_dns,
+
+        // Obsolete
+        partially_malformed_packets,
 
         unknown = -1
     };
@@ -433,32 +437,37 @@ namespace block_cbor {
      *
      * Compile time searching of a C array.
      *
-     * \param begin pointer to first item of array.
-     * \param end   pointer to end of array, one beyond the last item.
-     * \param val   value of entry we're looking for.
-     * \returns pointer to matched item.
-     * \throws std::logic_error if the item is not in the array.
-     */
-    template<typename T, typename V>
-    constexpr T* find_index_item(T* begin, T* end, V val)
-    {
-        return ( begin != end ) ? ( *begin == val ) ? begin : find_index_item(begin + 1, end, val ) : throw std::logic_error("");
-    }
-
-    /**
-     * \brief find item in a C array.
-     *
-     * Compile time searching of a C array.
-     *
      * \param arr the C array.
      * \param val value of entry we're looking for.
      * \returns index of matched item.
      * \throws std::logic_error if the item is not in the array.
      */
     template<typename T, std::size_t N, typename V>
-    constexpr unsigned find_index(T (&arr)[N], V val)
+    constexpr int find_index(T (&arr)[N], V val, int i = 0)
     {
-        return find_index_item(arr, arr + N, val) - arr;
+        return ( i < N )
+            ? ( arr[i] == val ) ? i : find_index(arr, val, i + 1)
+            : throw std::logic_error("");
+    }
+
+    /**
+     * \brief find item in 2 C arrays.
+     *
+     * Compile time searching of 2 C arrays.
+     *
+     * \param arr1 the first C array.
+     * \param arr2 the second C array.
+     * \param val value of entry we're looking for.
+     * \returns index of matched item if in first array, or -1 - (index
+     *          of matched item) if in second array.
+     * \throws std::logic_error if the item is not in the array.
+     */
+    template<typename T, std::size_t N1, std::size_t N2, typename V>
+    constexpr int find_index(T (&arr1)[N1], T (&arr2)[N2], V val, int i = 0)
+    {
+        return ( i < N1 )
+            ? ( arr1[i] == val ) ? i : find_index(arr1, arr2, val, i + 1)
+            : -1 - find_index(arr2, val);
     }
 
     /**
@@ -504,9 +513,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_file_preamble_index(FilePreambleField index)
+    constexpr int find_file_preamble_index(FilePreambleField index)
     {
         return find_index(format_10_file_preamble, index);
     }
@@ -535,9 +544,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_block_parameters_index(BlockParametersField index)
+    constexpr int find_block_parameters_index(BlockParametersField index)
     {
         return find_index(format_10_block_parameters, index);
     }
@@ -567,9 +576,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_storage_parameters_index(StorageParametersField index)
+    constexpr int find_storage_parameters_index(StorageParametersField index)
     {
         return find_index(format_10_storage_parameters, index);
     }
@@ -591,9 +600,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_storage_hints_index(StorageHintsField index)
+    constexpr int find_storage_hints_index(StorageHintsField index)
     {
         return find_index(format_10_storage_hints, index);
     }
@@ -621,9 +630,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_collection_parameters_index(CollectionParametersField index)
+    constexpr int find_collection_parameters_index(CollectionParametersField index)
     {
         return find_index(format_10_collection_parameters, index);
     }
@@ -654,9 +663,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_configuration_index(ConfigurationField index)
+    constexpr int find_configuration_index(ConfigurationField index)
     {
         return find_index(current_configuration, index);
     }
@@ -679,9 +688,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_block_index(BlockField index)
+    constexpr int find_block_index(BlockField index)
     {
         return find_index(current_block, index);
     }
@@ -701,9 +710,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_block_preamble_index(BlockPreambleField index)
+    constexpr int find_block_preamble_index(BlockPreambleField index)
     {
         return find_index(format_10_block_preamble, index);
     }
@@ -713,17 +722,23 @@ namespace block_cbor {
      *
      * The index of a entry in the array is the file map value of that entry.
      */
-    constexpr BlockStatisticsField current_block_statistics[] = {
-        BlockStatisticsField::total_packets,
-        BlockStatisticsField::total_pairs,
+    constexpr BlockStatisticsField format_10_block_statistics[] = {
+        BlockStatisticsField::processed_messages,
+        BlockStatisticsField::qr_data_items,
         BlockStatisticsField::unmatched_queries,
         BlockStatisticsField::unmatched_responses,
-        BlockStatisticsField::completely_malformed_packets,
-        BlockStatisticsField::partially_malformed_packets,
-        BlockStatisticsField::unknown,
-        BlockStatisticsField::unknown,
-        BlockStatisticsField::unknown,
-        BlockStatisticsField::unknown,
+        BlockStatisticsField::discarded_opcode,
+        BlockStatisticsField::malformed_items,
+    };
+
+    /**
+     * \brief Map of current private (implementation-specific) block
+     * statistics indexes.
+     *
+     * The index of a entry in the array subtracted from -1 is the map
+     * value of that entry.
+     */
+    constexpr BlockStatisticsField format_10_block_statistics_private[] = {
         BlockStatisticsField::compactor_non_dns_packets,
         BlockStatisticsField::compactor_out_of_order_packets,
         BlockStatisticsField::compactor_missing_pairs,
@@ -736,11 +751,11 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_block_statistics_index(BlockStatisticsField index)
+    constexpr int find_block_statistics_index(BlockStatisticsField index)
     {
-        return find_index(current_block_statistics, index);
+        return find_index(format_10_block_statistics, format_10_block_statistics_private, index);
     }
 
     /**
@@ -764,9 +779,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_block_tables_index(BlockTablesField index)
+    constexpr int find_block_tables_index(BlockTablesField index)
     {
         return find_index(current_block_tables, index);
     }
@@ -786,9 +801,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_class_type_index(ClassTypeField index)
+    constexpr int find_class_type_index(ClassTypeField index)
     {
         return find_index(current_class_type, index);
     }
@@ -808,9 +823,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_question_index(QuestionField index)
+    constexpr int find_question_index(QuestionField index)
     {
         return find_index(current_question, index);
     }
@@ -832,9 +847,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_rr_index(RRField index)
+    constexpr int find_rr_index(RRField index)
     {
         return find_index(current_rr, index);
     }
@@ -868,9 +883,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_query_signature_index(QuerySignatureField index)
+    constexpr int find_query_signature_index(QuerySignatureField index)
     {
         return find_index(current_query_signature, index);
     }
@@ -902,9 +917,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_query_response_index(QueryResponseField index)
+    constexpr int find_query_response_index(QueryResponseField index)
     {
         return find_index(current_query_response, index);
     }
@@ -927,9 +942,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_query_response_extended_index(QueryResponseExtendedField index)
+    constexpr int find_query_response_extended_index(QueryResponseExtendedField index)
     {
         return find_index(current_query_response_extended, index);
     }
@@ -951,9 +966,9 @@ namespace block_cbor {
      *
      * \param index the field identifier.
      * \return the field index.
-     * \throws std::logic_error if the item is specified in the format.
+     * \throws std::logic_error if the item isn't specified in the format.
      */
-    constexpr unsigned find_address_event_count_index(AddressEventCountField index)
+    constexpr int find_address_event_count_index(AddressEventCountField index)
     {
         return find_index(current_address_event_count, index);
     }
@@ -991,7 +1006,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        ConfigurationField configuration_field(unsigned index) const;
+        ConfigurationField configuration_field(int index) const;
 
         /**
          * \brief Return block field for given map index.
@@ -999,7 +1014,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        BlockField block_field(unsigned index) const;
+        BlockField block_field(int index) const;
 
         /**
          * \brief Return block preamble field for given map index.
@@ -1007,7 +1022,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        BlockPreambleField block_preamble_field(unsigned index) const;
+        BlockPreambleField block_preamble_field(int index) const;
 
         /**
          * \brief Return block statistics field for given map index.
@@ -1015,7 +1030,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        BlockStatisticsField block_statistics_field(unsigned index) const;
+        BlockStatisticsField block_statistics_field(int index) const;
 
         /**
          * \brief Return block tables field for given map index.
@@ -1023,7 +1038,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        BlockTablesField block_tables_field(unsigned index) const;
+        BlockTablesField block_tables_field(int index) const;
 
         /**
          * \brief Return query response field for given map index.
@@ -1031,7 +1046,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        QueryResponseField query_response_field(unsigned index) const;
+        QueryResponseField query_response_field(int index) const;
 
         /**
          * \brief Return class type field for given map index.
@@ -1039,7 +1054,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        ClassTypeField class_type_field(unsigned index) const;
+        ClassTypeField class_type_field(int index) const;
 
         /**
          * \brief Return query signature field for given map index.
@@ -1047,7 +1062,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        QuerySignatureField query_signature_field(unsigned index) const;
+        QuerySignatureField query_signature_field(int index) const;
 
         /**
          * \brief Return question field for given map index.
@@ -1055,7 +1070,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        QuestionField question_field(unsigned index) const;
+        QuestionField question_field(int index) const;
 
         /**
          * \brief Return RR field for given map index.
@@ -1063,7 +1078,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        RRField rr_field(unsigned index) const;
+        RRField rr_field(int index) const;
 
         /**
          * \brief Return query response extended information field
@@ -1072,7 +1087,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        QueryResponseExtendedField query_response_extended_field(unsigned index) const;
+        QueryResponseExtendedField query_response_extended_field(int index) const;
 
         /**
          * \brief Return address event count field for given map index.
@@ -1080,7 +1095,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        AddressEventCountField address_event_count_field(unsigned index) const;
+        AddressEventCountField address_event_count_field(int index) const;
 
     private:
         /**
@@ -1102,6 +1117,11 @@ namespace block_cbor {
          * \brief block statistics index map.
          */
         std::vector<BlockStatisticsField> block_statistics_;
+
+        /**
+         * \brief block statistics private index map.
+         */
+        std::vector<BlockStatisticsField> block_statistics_private_;
 
         /**
          * \brief block table index map.
