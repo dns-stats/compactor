@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -111,6 +111,24 @@ SCENARIO("Check CBOR encoder encodes correct basic values", "[cbor]")
                         0x20 | 26, 0xff, 0xff, 0xff, 0xff,
                         0x20 | 27, 0, 0, 0, 1, 0, 0, 0, 0,
                         0x20 | 27, 0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("boolean values are encoded")
+        {
+            tcbe.write(false);
+            tcbe.write(true);
+            tcbe.flush();
+
+            THEN("encoder output is correct")
+            {
+                const uint8_t EXPECTED[] =
+                    {
+                        0xE0 | 20,
+                        0xE0 | 21
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -78,6 +78,11 @@ void CborBaseEncoder::writeTypeValue64(unsigned cbor_type, unsigned long long va
     }
 }
 
+void CborBaseEncoder::write(bool value)
+{
+    writeByte((7 << 5) | (value ? 21 : 20));
+}
+
 void CborBaseEncoder::write(unsigned int value)
 {
     writeTypeValue(0, value);
@@ -115,6 +120,12 @@ void CborBaseEncoder::write(long long value)
         writeTypeValue64(1, static_cast<unsigned long long>(-1 - value));
     else
         writeTypeValue64(0, static_cast<unsigned long long>(value));
+}
+
+void CborBaseEncoder::write(const char* str, bool is_text)
+{
+    std::string s(str);
+    write(s, is_text);
 }
 
 void CborBaseEncoder::write(const std::string& str, bool is_text)

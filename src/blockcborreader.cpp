@@ -179,7 +179,7 @@ void BlockCborReader::readConfiguration(Configuration& config)
             break;
 
         case block_cbor::ConfigurationField::promisc:
-            config.promisc_mode = ( dec_.read_unsigned() != 0 );
+            config.promisc_mode = dec_.read_bool();
             break;
 
         case block_cbor::ConfigurationField::interfaces:

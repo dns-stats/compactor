@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -62,6 +62,26 @@ int64_t CborBaseDecoder::read_signed()
         return uint_val;
     else
         return -1 - uint_val;
+}
+
+bool CborBaseDecoder::read_bool()
+{
+    unsigned major, minor;
+    uint64_t uint_val;
+
+    needRead();
+    read_type_unsigned(major, minor, uint_val);
+    if ( major != TYPE_SIGNED && major != TYPE_UNSIGNED &&
+         !( major == TYPE_SIMPLE && (minor == 20 || minor == 21) ) )
+        throw std::logic_error("read_signed() called on wrong type");
+    if ( major == TYPE_SIMPLE )
+        return ( minor == 21 );
+    if ( minor > 27 )
+            throw cbor_decode_error("minor > 27 in signed");
+    if ( major == TYPE_UNSIGNED )
+        return ( uint_val != 0 );
+    else
+        return true;
 }
 
 byte_string CborBaseDecoder::read_binary()

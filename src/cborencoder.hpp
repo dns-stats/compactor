@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -51,6 +51,13 @@ public:
     CborBaseEncoder() : buf_(), p_(&buf_[0]) {}
 
     /**
+     * \brief Write a boolean value.
+     *
+     * \param value the value to write.
+     */
+    void write(bool value);
+
+    /**
      * \brief Write a signed integer value.
      *
      * \param value the value to write.
@@ -98,6 +105,7 @@ public:
      * \param str           the value to write.
      * \param is_text write as text if true.
      */
+    void write(const char* str, bool is_text=true);
     void write(const std::string& str, bool is_text=true);
 
     /**
