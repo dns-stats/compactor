@@ -1119,6 +1119,11 @@ namespace block_cbor {
         std::chrono::system_clock::time_point earliest_time;
 
         /**
+         * \brief the index of the parameters applicable to this block.
+         */
+        unsigned block_parameters_index;
+
+        /**
          * \brief packet statistics at the start of the block.
          */
         PacketStatistics start_packet_statistics;

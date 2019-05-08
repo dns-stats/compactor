@@ -830,6 +830,7 @@ namespace block_cbor {
     {
         bool indef;
         uint64_t n_elems = dec.readMapHeader(indef);
+        block_parameters_index = 0; // Default value if not read.
         while ( indef || n_elems-- > 0 )
         {
             if ( indef && dec.type() == CborBaseDecoder::TYPE_BREAK )
@@ -842,6 +843,10 @@ namespace block_cbor {
             {
             case BlockPreambleField::earliest_time:
                 earliest_time = dec.read_time();
+                break;
+
+            case BlockPreambleField::block_parameters_index:
+                block_parameters_index = dec.read_unsigned();
                 break;
 
             default:
@@ -1011,6 +1016,7 @@ namespace block_cbor {
         constexpr int statistics_index = find_block_index(BlockField::statistics);
         constexpr int tables_index = find_block_index(BlockField::tables);
         constexpr int earliest_time_index = find_block_preamble_index(BlockPreambleField::earliest_time);
+        constexpr int block_parameters_index_index = find_block_preamble_index(BlockPreambleField::block_parameters_index);
 
         // Block header.
         enc.writeMapHeader();
@@ -1020,6 +1026,11 @@ namespace block_cbor {
         enc.writeMapHeader(1);
         enc.write(earliest_time_index);
         enc.write(earliest_time);
+        if ( block_parameters_index > 0 )
+        {
+            enc.write(block_parameters_index_index);
+            enc.write(block_parameters_index);
+        }
 
         // Statistics.
         enc.write(statistics_index);
