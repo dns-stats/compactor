@@ -14,6 +14,69 @@
 
 namespace block_cbor {
 
+    void StorageHints::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    {
+        try
+        {
+            bool indef;
+            uint64_t n_elems = dec.readMapHeader(indef);
+            while ( indef || n_elems-- > 0 )
+            {
+                if ( indef && dec.type() == CborBaseDecoder::TYPE_BREAK )
+                {
+                    dec.readBreak();
+                    break;
+                }
+
+                switch(fields.storage_hints_field(dec.read_unsigned()))
+                {
+                case StorageHintsField::query_response_hints:
+                    query_response_hints = QueryResponseHintFlags(dec.read_unsigned());
+                    break;
+
+                case StorageHintsField::query_response_signature_hints:
+                    query_response_signature_hints = QueryResponseSignatureHintFlags(dec.read_unsigned());
+                    break;
+
+                case StorageHintsField::rr_hints:
+                    rr_hints = RRHintFlags(dec.read_unsigned());
+                    break;
+
+                case StorageHintsField::other_data_hints:
+                    other_data_hints = OtherDataHintFlags(dec.read_unsigned());
+                    break;
+
+                default:
+                    // Unknown item, skip.
+                    dec.skip();
+                    break;
+                }
+            }
+        }
+        catch (const std::logic_error& e)
+        {
+            throw cbor_file_format_error("Unexpected CBOR item reading storage hints");
+        }
+    }
+
+    void StorageHints::writeCbor(CborBaseEncoder& enc)
+    {
+        constexpr int query_response_hints_index = find_storage_hints_index(StorageHintsField::query_response_hints);
+        constexpr int query_response_signature_hints_index = find_storage_hints_index(StorageHintsField::query_response_signature_hints);
+        constexpr int rr_hints_index = find_storage_hints_index(StorageHintsField::rr_hints);
+        constexpr int other_data_hints_index = find_storage_hints_index(StorageHintsField::other_data_hints);
+
+        enc.writeMapHeader(4);
+        enc.write(query_response_hints_index);
+        enc.write(query_response_hints);
+        enc.write(query_response_signature_hints_index);
+        enc.write(query_response_signature_hints);
+        enc.write(rr_hints_index);
+        enc.write(rr_hints);
+        enc.write(other_data_hints_index);
+        enc.write(other_data_hints);
+    }
+
     void IndexVectorItem::readCbor(CborBaseDecoder& dec, const FileVersionFields&)
     {
         try

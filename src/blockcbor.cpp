@@ -221,7 +221,8 @@ namespace block_cbor {
           question_(current_question, current_question + countof(current_question)),
           rr_(current_rr, current_rr + countof(current_rr)),
           query_response_extended_(current_query_response_extended, current_query_response_extended + countof(current_query_response_extended)),
-          address_event_count_(current_address_event_count, current_address_event_count + countof(current_address_event_count))
+          address_event_count_(current_address_event_count, current_address_event_count + countof(current_address_event_count)),
+          storage_hints_(format_10_storage_hints, format_10_storage_hints + countof(format_10_storage_hints))
     {
     }
 
@@ -354,5 +355,13 @@ namespace block_cbor {
             return address_event_count_[index];
         else
             return AddressEventCountField::unknown;
+    }
+
+    StorageHintsField FileVersionFields::storage_hints_field(int index) const
+    {
+        if ( index < storage_hints_.size() )
+            return storage_hints_[index];
+        else
+            return StorageHintsField::unknown;
     }
 };

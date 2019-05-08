@@ -138,6 +138,77 @@ namespace {
 
 }
 
+SCENARIO("StorageHints can be written", "[block]")
+{
+    GIVEN("A sample StorageHints item")
+    {
+        StorageHints sh1;
+        sh1.query_response_hints = QueryResponseHintFlags(TIME_OFFSET | CLIENT_ADDRESS_INDEX | CLIENT_PORT | TRANSACTION_ID);
+        sh1.query_response_signature_hints = QueryResponseSignatureHintFlags(SERVER_ADDRESS | SERVER_PORT | QR_TRANSPORT_FLAGS | QR_SIG_FLAGS);
+        sh1.rr_hints = RRHintFlags(TTL);
+        sh1.other_data_hints = OtherDataHintFlags(SAMPLED_DATA);
+
+        WHEN("values are encoded")
+        {
+            TestCborEncoder tcbe;
+            sh1.writeCbor(tcbe);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 4,
+                        find_storage_hints_index(StorageHintsField::query_response_hints), 0xf,
+                        find_storage_hints_index(StorageHintsField::query_response_signature_hints), 0x17,
+                        find_storage_hints_index(StorageHintsField::rr_hints), 1,
+                        find_storage_hints_index(StorageHintsField::other_data_hints), 2
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+    }
+}
+
+SCENARIO("StorageHints can be read", "[block]")
+{
+    GIVEN("A test CBOR decoder and sample StorageHints data")
+    {
+        TestCborDecoder tcbd;
+        StorageHints sh1;
+        sh1.query_response_hints = QueryResponseHintFlags(TIME_OFFSET | CLIENT_ADDRESS_INDEX | CLIENT_PORT | TRANSACTION_ID);
+        sh1.query_response_signature_hints = QueryResponseSignatureHintFlags(SERVER_ADDRESS | SERVER_PORT | QR_TRANSPORT_FLAGS | QR_SIG_FLAGS);
+        sh1.rr_hints = RRHintFlags(TTL);
+        sh1.other_data_hints = OtherDataHintFlags(SAMPLED_DATA);
+
+        WHEN("decoder is given encoded question data")
+        {
+            const std::vector<uint8_t> INPUT =
+                {
+                    (5 << 5) | 4,
+                    0, 0xf,
+                    1, 0x17,
+                    2, 1,
+                    3, 2,
+                };
+            tcbd.set_bytes(INPUT);
+
+            THEN("decoder input is correct")
+            {
+                StorageHints sh1_r;
+                block_cbor::FileVersionFields fields;
+                sh1_r.readCbor(tcbd, fields);
+
+                REQUIRE(sh1.query_response_hints == sh1_r.query_response_hints);
+                REQUIRE(sh1.query_response_signature_hints == sh1_r.query_response_signature_hints);
+                REQUIRE(sh1.rr_hints == sh1_r.rr_hints);
+                REQUIRE(sh1.other_data_hints == sh1_r.other_data_hints);
+            }
+        }
+    }
+}
+
 SCENARIO("IndexVectorItems can be compared and written", "[block]")
 {
     GIVEN("Some sample vectors")

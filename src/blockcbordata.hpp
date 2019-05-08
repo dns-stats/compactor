@@ -53,12 +53,125 @@ namespace block_cbor {
     };
 
     /**
+     * \brief QueryResponse hint flags values enum.
+     */
+    enum QueryResponseHintFlags
+    {
+        TIME_OFFSET = (1 << 0),
+        CLIENT_ADDRESS_INDEX = (1 << 1),
+        CLIENT_PORT = (1 << 2),
+        TRANSACTION_ID = (1 << 3),
+        QR_SIGNATURE_LIMIT = (1 << 4),
+        CLIENT_HOPLIMIT = (1 << 5),
+        RESPONSE_DELAY = (1 << 6),
+        QUERY_NAME_INDEX = (1 << 7),
+        QUERY_SIZE = (1 << 8),
+        RESPONSE_SIZE = (1 << 9),
+        RESPONSE_PROCESSING_DATA = (1 << 10),
+        QUERY_QUESTION_SECTIONS = (1 << 11),
+        QUERY_ANSWER_SECTIONS = (1 << 12),
+        QUERY_AUTHORITY_SECTIONS = (1 << 13),
+        QUERY_ADDITIONAL_SECTIONS = (1 << 14),
+        RESPONSE_ANSWER_SECTIONS = (1 << 15),
+        RESPONSE_AUTHORITY_SECTIONS = (1 << 16),
+        RESPONSE_ADDITIONAL_SECTIONS = (1 << 17)
+    };
+
+    /**
+     * \brief QueryResponse signature hint flags values enum.
+     */
+    enum QueryResponseSignatureHintFlags
+    {
+        SERVER_ADDRESS = (1 << 0),
+        SERVER_PORT = (1 << 1),
+        QR_TRANSPORT_FLAGS = (1 << 2),
+        QR_TYPE = (1 << 3),
+        QR_SIG_FLAGS = (1 << 4),
+        QUERY_OPCODE = (1 << 5),
+        DNS_FLAGS = (1 << 6),
+        QUERY_RCODE = (1 << 7),
+        QUERY_CLASS_TYPE = (1 << 8),
+        QUERY_QDCOUNT = (1 << 9),
+        QUERY_ANCOUNT = (1 << 10),
+        QUERY_ARCOUNT = (1 << 11),
+        QUERY_NSCOUNT = (1 << 12),
+        QUERY_EDNS_VERSION = (1 << 13),
+        QUERY_UDP_SIZE = (1 << 14),
+        QUERY_OPT_RDATA = (1 << 15),
+        RESPONSE_RCODE = (1 << 16)
+    };
+
+    /**
+     * \brief Resource Record hint flags values enum.
+     */
+    enum RRHintFlags
+    {
+        TTL = (1 << 0),
+        RDATA_INDEX = (1 << 1)
+    };
+
+    /**
+     * \brief Other data hint flags values enum.
+     */
+    enum OtherDataHintFlags
+    {
+        MALFORMED_MESSAGES = (1 << 0),
+        ADDRESS_EVENT_COUNTS = (1 << 1)
+    };
+
+    /**
      * \brief type for the index into a header.
      *
      * Note that the index is 1-based. Index 0 is reserved for
      * 'value not present'.
      */
     using index_t = std::size_t;
+
+    /**
+     * \struct StorageHints
+     * \brief Bitmap hints on what data was being collected, and so
+     * should appear in the block is present on the wire.
+     */
+    struct StorageHints
+    {
+        /**
+         * \brief Hints relating to Query/Response data.
+         */
+        QueryResponseHintFlags query_response_hints;
+
+        /**
+         * \brief Hints relating to Query/Response signature data.
+         */
+        QueryResponseSignatureHintFlags query_response_signature_hints;
+
+        /**
+         * \brief Hints relating to Resource Record data.
+         */
+        RRHintFlags rr_hints;
+
+        /**
+         * \brief Hints relating to other data.
+         */
+        OtherDataHintFlags other_data_hints;
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec    CBOR stream to read from.
+         * \param fields translate map keys to internal values.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc CBOR stream to write to.
+         */
+        void writeCbor(CborBaseEncoder& enc);
+    };
 
     /**
      * \struct IndexVectorItem
@@ -1108,7 +1221,7 @@ namespace block_cbor {
          * \param max_block_items number of query/response items to full.
          */
         explicit BlockData(unsigned max_block_items = DEFAULT_MAX_BLOCK_ITEMS)
-            : max_block_items_(max_block_items)
+            : max_block_items_(max_block_items), block_parameters_index(0)
         {
             init();
         }
