@@ -209,6 +209,82 @@ SCENARIO("StorageHints can be read", "[block]")
     }
 }
 
+SCENARIO("StorageParameters can be written", "[block]")
+{
+    GIVEN("A sample StorageParameters item")
+    {
+        StorageParameters sp1;
+        sp1.ticks_per_second = 1;
+        sp1.max_block_items = 2;
+
+        WHEN("values are encoded")
+        {
+            TestCborEncoder tcbe;
+            sp1.writeCbor(tcbe);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_storage_parameters_index(StorageParametersField::ticks_per_second), 1,
+                        find_storage_parameters_index(StorageParametersField::max_block_items), 2,
+                        find_storage_parameters_index(StorageParametersField::storage_hints), (5 << 5) | 4, 0, 0, 1, 0, 2, 0, 3, 0,
+                        find_storage_parameters_index(StorageParametersField::opcodes), (4 << 5) | 0,
+                        find_storage_parameters_index(StorageParametersField::rr_types), (4 << 5) | 0,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+    }
+}
+
+SCENARIO("StorageParameters can be read", "[block]")
+{
+    GIVEN("A test CBOR decoder and sample StorageParameters data")
+    {
+        TestCborDecoder tcbd;
+        StorageParameters sp1;
+
+        WHEN("decoder is given encoded question data")
+        {
+            const std::vector<uint8_t> INPUT =
+                {
+                    (5 << 5) | 4,
+                    0, 1,
+                    1, 2,
+                    3, (5 << 5) | 4, 0, 0, 1, 0, 2, 0, 3, 0,
+                    4, (4 << 5) | 0,
+                    5, (4 << 5) | 0
+                };
+            tcbd.set_bytes(INPUT);
+
+            THEN("decoder input is correct")
+            {
+                StorageParameters sp1_r;
+                block_cbor::FileVersionFields fields;
+                sp1_r.readCbor(tcbd, fields);
+
+                REQUIRE(sp1.ticks_per_second == sp1_r.ticks_per_second);
+                REQUIRE(sp1.max_block_items == sp1_r.max_block_items);
+                REQUIRE(sp1.storage_hints.query_response_hints == sp1_r.storage_hints.query_response_hints);
+                REQUIRE(sp1.opcodes == sp1_r.opcodes);
+                REQUIRE(sp1.rr_types == sp1_r.rr_types);
+                REQUIRE(sp1.storage_flags == sp1_r.storage_flags);
+                REQUIRE(sp1.client_address_prefix_ipv4 == sp1_r.client_address_prefix_ipv4);
+                REQUIRE(sp1.client_address_prefix_ipv6 == sp1_r.client_address_prefix_ipv6);
+                REQUIRE(sp1.server_address_prefix_ipv4 == sp1_r.server_address_prefix_ipv4);
+                REQUIRE(sp1.server_address_prefix_ipv6 == sp1_r.server_address_prefix_ipv6);
+                REQUIRE(sp1.sampling_method == sp1_r.sampling_method);
+                REQUIRE(sp1.anonymisation_method == sp1_r.anonymisation_method);
+            }
+        }
+    }
+}
+
 SCENARIO("IndexVectorItems can be compared and written", "[block]")
 {
     GIVEN("Some sample vectors")

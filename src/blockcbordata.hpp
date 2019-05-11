@@ -33,7 +33,10 @@
 namespace block_cbor {
 
     namespace {
+        const unsigned DEFAULT_TICKS_PER_SECOND = 1000000;
         const unsigned DEFAULT_MAX_BLOCK_ITEMS = 5000;
+        const unsigned DEFAULT_IPV4_PREFIX_LENGTH = 32;
+        const unsigned DEFAULT_IPV6_PREFIX_LENGTH = 128;
     }
 
     // Block header table types.
@@ -120,6 +123,16 @@ namespace block_cbor {
     };
 
     /**
+     * \brief Storage flags values enum.
+     */
+    enum StorageFlags
+    {
+        ANONYMISED_DATA = (1 << 0),
+        SAMPLED_DATA = (1 << 1),
+        NORMALIZED_NAMES = (1 << 2)
+    };
+
+    /**
      * \brief type for the index into a header.
      *
      * Note that the index is 1-based. Index 0 is reserved for
@@ -134,6 +147,16 @@ namespace block_cbor {
      */
     struct StorageHints
     {
+        /**
+         * \brief Default constructor.
+         */
+        StorageHints() :
+            query_response_hints(),
+            query_response_signature_hints(),
+            rr_hints(),
+            other_data_hints()
+        {}
+
         /**
          * \brief Hints relating to Query/Response data.
          */
@@ -153,6 +176,111 @@ namespace block_cbor {
          * \brief Hints relating to other data.
          */
         OtherDataHintFlags other_data_hints;
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec    CBOR stream to read from.
+         * \param fields translate map keys to internal values.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc CBOR stream to write to.
+         */
+        void writeCbor(CborBaseEncoder& enc);
+    };
+
+    /**
+     * \struct StorageParameters
+     * \brief Info on the data stored within a block.
+     */
+    struct StorageParameters
+    {
+        /**
+         * \brief Default constructor.
+         */
+        StorageParameters() :
+            ticks_per_second(DEFAULT_TICKS_PER_SECOND),
+            max_block_items(DEFAULT_MAX_BLOCK_ITEMS),
+            storage_hints(),
+            storage_flags(),
+            client_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
+            client_address_prefix_ipv6(DEFAULT_IPV6_PREFIX_LENGTH),
+            server_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
+            server_address_prefix_ipv6(DEFAULT_IPV6_PREFIX_LENGTH)
+        { }
+
+        /**
+         * \brief number of ticks per second.
+         */
+        uint64_t ticks_per_second;
+
+        /**
+         * \brief Max number of items (Q/R, AddressEventCounts, Malformed data)
+         * in the block.
+         */
+        unsigned max_block_items;
+
+        /**
+         * \brief Storage hints.
+         */
+        StorageHints storage_hints;
+
+        /**
+         * \brief Opcodes recorded by collector.
+         */
+        std::vector<unsigned> opcodes;
+
+        /**
+         * \brief Resource Record types recorded by collector.
+         */
+        std::vector<unsigned> rr_types;
+
+        /**
+         * \brief Storage flags (flags about the data content).
+         */
+        StorageFlags storage_flags;
+
+        /**
+         * \brief Client IPv4 address prefix length (number of bits
+         * of a client IPv4 address stored).
+         */
+        unsigned client_address_prefix_ipv4;
+
+        /**
+         * \brief Client IPv6 address prefix length (number of bits
+         * of a client IPv6 address stored).
+         */
+        unsigned client_address_prefix_ipv6;
+
+        /**
+         * \brief Server IPv4 address prefix length (number of bits
+         * of a server IPv4 address stored).
+         */
+        unsigned server_address_prefix_ipv4;
+
+        /**
+         * \brief Server IPv6 address prefix length (number of bits
+         * of a server IPv6 address stored).
+         */
+        unsigned server_address_prefix_ipv6;
+
+        /**
+         * \brief Text describing the sampling method, if sampling used.
+         */
+        std::string sampling_method;
+
+        /**
+         * \brief Text describing the anonymisation method, if
+         * anonymisation used.
+         */
+        std::string anonymisation_method;
 
         /**
          * \brief Read the object contents from CBOR.

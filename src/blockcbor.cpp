@@ -364,4 +364,12 @@ namespace block_cbor {
         else
             return StorageHintsField::unknown;
     }
+
+    StorageParametersField FileVersionFields::storage_parameters_field(int index) const
+    {
+        if ( index < storage_parameters_.size() )
+            return storage_parameters_[index];
+        else
+            return StorageParametersField::unknown;
+    }
 };

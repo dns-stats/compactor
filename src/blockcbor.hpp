@@ -1102,12 +1102,20 @@ namespace block_cbor {
         AddressEventCountField address_event_count_field(int index) const;
 
         /**
-         * \brief Return address event count field for given map index.
+         * \brief Return storage hints field for given map index.
          *
          * \param index the map index read from file.
          * \returns field identifier.
          */
         StorageHintsField storage_hints_field(int index) const;
+
+        /**
+         * \brief Return storage parameters field for given map index.
+         *
+         * \param index the map index read from file.
+         * \returns field identifier.
+         */
+        StorageParametersField storage_parameters_field(int index) const;
 
     private:
         /**
@@ -1179,6 +1187,11 @@ namespace block_cbor {
          * \brief storage hints index map.
          */
         std::vector<StorageHintsField> storage_hints_;
+
+        /**
+         * \brief storage parameters index map.
+         */
+        std::vector<StorageParametersField> storage_parameters_;
     };
 };
 

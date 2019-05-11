@@ -14,6 +14,33 @@
 
 namespace block_cbor {
 
+    template<typename T>
+    void read_vector_unsigned(std::vector<T>& vec, CborBaseDecoder& dec, const FileVersionFields&)
+    {
+        bool indef;
+        uint64_t n_elems = dec.readArrayHeader(indef);
+        if ( !indef )
+            vec.reserve(n_elems);
+        while ( indef || n_elems-- > 0 )
+        {
+            if ( indef && dec.type() == CborBaseDecoder::TYPE_BREAK )
+            {
+                dec.readBreak();
+                break;
+            }
+
+            vec.push_back(T(dec.read_unsigned()));
+        }
+    }
+
+    template<typename T>
+    void write_vector(const std::vector<T>& vec, CborBaseEncoder& enc)
+    {
+        enc.writeArrayHeader(vec.size());
+        for ( auto& i : vec )
+            enc.write(i);
+    }
+
     void StorageHints::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
         try
@@ -77,14 +104,12 @@ namespace block_cbor {
         enc.write(other_data_hints);
     }
 
-    void IndexVectorItem::readCbor(CborBaseDecoder& dec, const FileVersionFields&)
+    void StorageParameters::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
         try
         {
             bool indef;
-            uint64_t n_elems = dec.readArrayHeader(indef);
-            if ( !indef )
-                vec.reserve(n_elems);
+            uint64_t n_elems = dec.readMapHeader(indef);
             while ( indef || n_elems-- > 0 )
             {
                 if ( indef && dec.type() == CborBaseDecoder::TYPE_BREAK )
@@ -93,8 +118,138 @@ namespace block_cbor {
                     break;
                 }
 
-                vec.push_back(static_cast<index_t>(dec.read_unsigned()));
+                switch(fields.storage_parameters_field(dec.read_unsigned()))
+                {
+                case StorageParametersField::ticks_per_second:
+                    ticks_per_second = dec.read_unsigned();
+                    break;
+
+                case StorageParametersField::max_block_items:
+                    max_block_items = dec.read_unsigned();
+                    break;
+
+                case StorageParametersField::storage_hints:
+                    storage_hints.readCbor(dec, fields);
+                    break;
+
+                case StorageParametersField::opcodes:
+                    read_vector_unsigned(opcodes, dec, fields);
+                    break;
+
+                case StorageParametersField::rr_types:
+                    read_vector_unsigned(rr_types, dec, fields);
+                    break;
+
+                case StorageParametersField::storage_flags:
+                    storage_flags = StorageFlags(dec.read_unsigned());
+                    break;
+
+                case StorageParametersField::client_address_prefix_ipv4:
+                    client_address_prefix_ipv4 = dec.read_unsigned();
+                    break;
+
+                case StorageParametersField::client_address_prefix_ipv6:
+                    client_address_prefix_ipv6 = dec.read_unsigned();
+                    break;
+
+                case StorageParametersField::server_address_prefix_ipv4:
+                    server_address_prefix_ipv4 = dec.read_unsigned();
+                    break;
+
+                case StorageParametersField::server_address_prefix_ipv6:
+                    server_address_prefix_ipv6 = dec.read_unsigned();
+                    break;
+
+                case StorageParametersField::sampling_method:
+                    sampling_method = dec.read_string();
+                    break;
+
+                case StorageParametersField::anonymisation_method:
+                    anonymisation_method = dec.read_string();
+                    break;
+
+                default:
+                    // Unknown item, skip.
+                    dec.skip();
+                    break;
+                }
             }
+        }
+        catch (const std::logic_error& e)
+        {
+            throw cbor_file_format_error("Unexpected CBOR item reading storage parameters");
+        }
+    }
+
+    void StorageParameters::writeCbor(CborBaseEncoder& enc)
+    {
+        constexpr int ticks_per_second_index = find_storage_parameters_index(StorageParametersField::ticks_per_second);
+        constexpr int max_block_items_index = find_storage_parameters_index(StorageParametersField::max_block_items);
+        constexpr int storage_hints_index = find_storage_parameters_index(StorageParametersField::storage_hints);
+        constexpr int opcodes_index = find_storage_parameters_index(StorageParametersField::opcodes);
+        constexpr int rr_types_index = find_storage_parameters_index(StorageParametersField::rr_types);
+        constexpr int storage_flags_index = find_storage_parameters_index(StorageParametersField::storage_flags);
+        constexpr int client_address_prefix_ipv4_index = find_storage_parameters_index(StorageParametersField::client_address_prefix_ipv4);
+        constexpr int client_address_prefix_ipv6_index = find_storage_parameters_index(StorageParametersField::client_address_prefix_ipv6);
+        constexpr int server_address_prefix_ipv4_index = find_storage_parameters_index(StorageParametersField::server_address_prefix_ipv4);
+        constexpr int server_address_prefix_ipv6_index = find_storage_parameters_index(StorageParametersField::server_address_prefix_ipv6);
+        constexpr int sampling_method_index = find_storage_parameters_index(StorageParametersField::sampling_method);
+        constexpr int anonymisation_method_index = find_storage_parameters_index(StorageParametersField::anonymisation_method);
+
+        enc.writeMapHeader();
+        enc.write(ticks_per_second_index);
+        enc.write(ticks_per_second);
+        enc.write(max_block_items_index);
+        enc.write(max_block_items);
+        enc.write(storage_hints_index);
+        storage_hints.writeCbor(enc);
+        enc.write(opcodes_index);
+        write_vector(opcodes, enc);
+        enc.write(rr_types_index);
+        write_vector(rr_types, enc);
+        if ( storage_flags )
+        {
+            enc.write(storage_flags_index);
+            enc.write(storage_flags);
+        }
+        if ( client_address_prefix_ipv4 != DEFAULT_IPV4_PREFIX_LENGTH )
+        {
+            enc.write(client_address_prefix_ipv4_index);
+            enc.write(client_address_prefix_ipv4);
+        }
+        if ( client_address_prefix_ipv6 != DEFAULT_IPV6_PREFIX_LENGTH )
+        {
+            enc.write(client_address_prefix_ipv6_index);
+            enc.write(client_address_prefix_ipv6);
+        }
+        if ( server_address_prefix_ipv4 != DEFAULT_IPV4_PREFIX_LENGTH )
+        {
+            enc.write(server_address_prefix_ipv4_index);
+            enc.write(server_address_prefix_ipv4);
+        }
+        if ( server_address_prefix_ipv6 != DEFAULT_IPV6_PREFIX_LENGTH )
+        {
+            enc.write(server_address_prefix_ipv6_index);
+            enc.write(server_address_prefix_ipv6);
+        }
+        if ( !sampling_method.empty() )
+        {
+            enc.write(sampling_method_index);
+            enc.write(sampling_method);
+        }
+        if ( !anonymisation_method.empty() )
+        {
+            enc.write(anonymisation_method_index);
+            enc.write(anonymisation_method);
+        }
+        enc.writeBreak();
+    }
+
+    void IndexVectorItem::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    {
+        try
+        {
+            read_vector_unsigned(vec, dec, fields);
         }
         catch (const std::logic_error& e)
         {
@@ -104,9 +259,7 @@ namespace block_cbor {
 
     void IndexVectorItem::writeCbor(CborBaseEncoder& enc)
     {
-        enc.writeArrayHeader(vec.size());
-        for ( auto& i : vec )
-            enc.write(i);
+        write_vector(vec, enc);
     }
 
     void ByteStringItem::readCbor(CborBaseDecoder& dec, const FileVersionFields&)
