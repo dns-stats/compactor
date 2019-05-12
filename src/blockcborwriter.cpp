@@ -285,163 +285,82 @@ void BlockCborWriter::writeFileHeader()
 
 void BlockCborWriter::writeBlockParameters()
 {
-    constexpr int storage_parameters_index = block_cbor::find_block_parameters_index(block_cbor::BlockParametersField::storage_parameters);
-    constexpr int collection_parameters_index = block_cbor::find_block_parameters_index(block_cbor::BlockParametersField::collection_parameters);
+    block_cbor::BlockParameters block_parameters;
+    block_cbor::StorageParameters& sp = block_parameters.storage_parameters;
+    block_cbor::StorageHints& sh = sp.storage_hints;
+    block_cbor::CollectionParameters& cp = block_parameters.collection_parameters;
 
-    enc_->writeArrayHeader(1);
-    enc_->writeMapHeader(2);
-    enc_->write(storage_parameters_index);
-    writeStorageParameters();
-    enc_->write(collection_parameters_index);
-    writeCollectionParameters();
-}
-
-void BlockCborWriter::writeStorageParameters()
-{
-    constexpr int ticks_per_second_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::ticks_per_second);
-    constexpr int max_block_items_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::max_block_items);
-    constexpr int storage_hints_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::storage_hints);
-    constexpr int opcodes_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::opcodes);
-    constexpr int rr_types_index = block_cbor::find_storage_parameters_index(block_cbor::StorageParametersField::rr_types);
-
-    enc_->writeMapHeader();
-
-    enc_->write(ticks_per_second_index);
-    enc_->write(1000000);       // Compactor works in microseconds
-    enc_->write(max_block_items_index);
-    enc_->write(config_.max_block_items);
-    enc_->write(storage_hints_index);
-    writeStorageHints();
-
-    // List of opcodes recorded. Currently compactor doesn't
-    // filter on opcodes, so set this to all current opcodes.
-    enc_->write(opcodes_index);
-    enc_->writeArrayHeader();
-    for (const auto op : CaptureDNS::OPCODES)
-        enc_->write(op);
-    enc_->writeBreak(); // End of opcodes
-
-    // List of RR types recorded.
-    enc_->write(rr_types_index);
-    enc_->writeArrayHeader();
-    for ( const auto rr : CaptureDNS::QUERYTYPES )
-        if ( outputRRType(rr) )
-            enc_->write(rr);
-    enc_->writeBreak(); // End of RR types
-
-    // Compactor currently doesn't support anonymisation,
-    // sampling or name normalisation, so we don't give
-    // storage flags or sampling or anonymisation methods.
-
-    // Compactor currently doesn't support client or server address
-    // prefix length setting, so we don't give that parameter.
-
-    enc_->writeBreak(); // End of storage parameters
-}
-
-void BlockCborWriter::writeStorageHints()
-{
-    constexpr int query_response_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::query_response_hints);
-    constexpr int query_response_signature_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::query_response_signature_hints);
-    constexpr int rr_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::rr_hints);
-    constexpr int other_data_hints_index = block_cbor::find_storage_hints_index(block_cbor::StorageHintsField::other_data_hints);
-
-    enc_->writeMapHeader();
+    // Set storage parameter values from configuration.
+    sp.max_block_items = config_.max_block_items;
 
     // Query response hints. Compactor always gives time_offset to
     // response size inclusive. It does not currently give response
     // processing data.
-    uint32_t response_hints = 0x3ff |
+    sh.query_response_hints = block_cbor::QueryResponseHintFlags(
+        0x3ff |
         config_.output_options_queries << 11 |
-        (config_.output_options_responses & 0xe) << 14;
-    enc_->write(query_response_hints_index);
-    enc_->write(response_hints);
-
+        (config_.output_options_responses & 0xe) << 14);
     // Query response signature hints. Compactor always writes everything
     // except qr-type, where it has no data.
-    enc_->write(query_response_signature_hints_index);
-    enc_->write(0x1f7);
-
+    sh.query_response_signature_hints =
+        block_cbor::QueryResponseSignatureHintFlags(0x1f7);
     // RR hints. Compactor always writes everything.
-    enc_->write(rr_hints_index);
-    enc_->write(0x3);
-
+    sh.rr_hints = block_cbor::RRHintFlags(0x3);
     // Other data hints. Compactor always writes address event hints,
     // but does not currently write malformed messages.
-    enc_->write(other_data_hints_index);
-    enc_->write(0x2);
+    sh.other_data_hints = block_cbor::OtherDataHintFlags(0x2);
 
-    enc_->writeBreak(); // End of storage hints
-}
+    // List of opcodes recorded. Currently compactor doesn't
+    // filter on opcodes, so set this to all current opcodes.
+    for ( const auto op : CaptureDNS::OPCODES )
+        sp.opcodes.push_back(op);
 
-void BlockCborWriter::writeCollectionParameters()
-{
-    constexpr int query_timeout_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::query_timeout);
-    constexpr int skew_timeout_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::skew_timeout);
-    constexpr int snaplen_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::snaplen);
-    constexpr int promisc_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::promisc);
-    constexpr int interfaces_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::interfaces);
-    constexpr int server_addresses_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::server_addresses);
-    constexpr int vlan_ids_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::vlan_ids);
-    constexpr int filter_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::filter);
-    constexpr int generator_id_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::generator_id);
-    constexpr int host_id_index = block_cbor::find_collection_parameters_index(block_cbor::CollectionParametersField::host_id);
+    // List of RR types recorded.
+    for ( const auto rr : CaptureDNS::QUERYTYPES )
+        if ( outputRRType(rr) )
+            sp.rr_types.push_back(rr);
 
-    enc_->writeMapHeader();
+    // Compactor currently doesn't support anonymisation,
+    // sampling or name normalisation, so we don't give
+    // storage flags or sampling or anonymisation methods.
+    // Set collection parameter items from configuration.
 
-    enc_->write(query_timeout_index);
-    enc_->write(config_.query_timeout);
-    enc_->write(skew_timeout_index);
-    enc_->write(config_.skew_timeout);
-    enc_->write(snaplen_index);
-    enc_->write(config_.snaplen);
-    enc_->write(promisc_index);
-    enc_->write(config_.promisc_mode);
-    if ( config_.network_interfaces.size() > 0 )
-    {
-        enc_->write(interfaces_index);
-        enc_->writeArrayHeader();
-        for ( const auto& s : config_.network_interfaces )
-            enc_->write(s);
-        enc_->writeBreak();
-    }
-    if ( config_.server_addresses.size() > 0 )
-    {
-        enc_->write(server_addresses_index);
-        enc_->writeArrayHeader();
-        for ( const auto& s : config_.server_addresses )
-            enc_->write(s.asNetworkBinary());
-        enc_->writeBreak();
-    }
-    if ( config_.vlan_ids.size() > 0 )
-    {
-        enc_->write(vlan_ids_index);
-        enc_->writeArrayHeader();
-        for ( const auto& id : config_.vlan_ids )
-            enc_->write(id);
-        enc_->writeBreak();
-    }
-    if ( config_.filter.size() > 0 )
-    {
-        enc_->write(filter_index);
-        enc_->write(config_.filter);
-    }
+    // Compactor currently doesn't support client or server address
+    // prefix length setting, so we don't give that parameter.
+
+    // Set collection parameter items from configuration.
+    cp.query_timeout = config_.query_timeout;
+    cp.skew_timeout = config_.skew_timeout;
+    cp.snaplen = config_.snaplen;
+    cp.promisc = config_.promisc_mode;
+
+    for ( const auto& s : config_.network_interfaces )
+        cp.interfaces.push_back(s);
+
+    for ( const auto& a : config_.server_addresses )
+        cp.server_addresses.push_back(a);
+
+    for ( const auto& v : config_.vlan_ids )
+        cp.vlan_ids.push_back(v);
+
+    cp.filter = config_.filter;
+
     if ( !config_.omit_sysid )
     {
-        enc_->write(generator_id_index);
-        enc_->write(PACKAGE_STRING);
+        cp.generator_id = PACKAGE_STRING;
 
         if ( !config_.omit_hostid )
         {
             char buf[_POSIX_HOST_NAME_MAX];
             gethostname(buf, sizeof(buf));
             buf[_POSIX_HOST_NAME_MAX - 1] = '\0';
-            enc_->write(host_id_index);
-            enc_->write(std::string(buf));
+            cp.host_id = buf;
         }
     }
 
-    enc_->writeBreak(); // End of collection parameter info
+    // Currently we only write one block parameter item.
+    enc_->writeArrayHeader(1);
+    block_parameters.writeCbor(*enc_);
 }
 
 void BlockCborWriter::writeFileFooter()

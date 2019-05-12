@@ -176,21 +176,6 @@ protected:
      */
     void writeBlockParameters();
 
-    /**
-     * \brief Write storage parameters out to file.
-     */
-    void writeStorageParameters();
-
-    /**
-     * \brief Write storage hints out to file.
-     */
-    void writeStorageHints();
-
-    /**
-     * \brief Write collection parameters out to file.
-     */
-    void writeCollectionParameters();
-
 private:
     /**
      * \brief output file details.
