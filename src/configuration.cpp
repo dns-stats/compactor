@@ -594,3 +594,98 @@ void Configuration::dump_RR_types(std::ostream& os, bool accept) const
     }
     os << "\n";
 }
+
+bool Configuration::output_rr_type(CaptureDNS::QueryType rr_type) const
+{
+    if ( !accept_rr_types.empty() )
+    {
+        for ( auto i : accept_rr_types )
+            if ( i == rr_type )
+                return true;
+
+        return false;
+    }
+    else
+    {
+        for ( auto i : ignore_rr_types )
+            if ( i == rr_type )
+                return false;
+
+        return true;
+    }
+}
+
+void Configuration::populate_block_parameters(block_cbor::BlockParameters& bp) const
+{
+    block_cbor::StorageParameters& sp = bp.storage_parameters;
+    block_cbor::StorageHints& sh = sp.storage_hints;
+    block_cbor::CollectionParameters& cp = bp.collection_parameters;
+
+    // Set storage parameter values from configuration.
+    sp.max_block_items = max_block_items;
+
+    // Query response hints. Compactor always gives time_offset to
+    // response size inclusive. It does not currently give response
+    // processing data.
+    sh.query_response_hints = block_cbor::QueryResponseHintFlags(
+        0x3ff |
+        output_options_queries << 11 |
+        (output_options_responses & 0xe) << 14);
+    // Query response signature hints. Compactor always writes everything
+    // except qr-type, where it has no data.
+    sh.query_response_signature_hints =
+        block_cbor::QueryResponseSignatureHintFlags(0x1f7);
+    // RR hints. Compactor always writes everything.
+    sh.rr_hints = block_cbor::RRHintFlags(0x3);
+    // Other data hints. Compactor always writes address event hints,
+    // but does not currently write malformed messages.
+    sh.other_data_hints = block_cbor::OtherDataHintFlags(0x2);
+
+    // List of opcodes recorded. Currently compactor doesn't
+    // filter on opcodes, so set this to all current opcodes.
+    for ( const auto op : CaptureDNS::OPCODES )
+        sp.opcodes.push_back(op);
+
+    // List of RR types recorded.
+    for ( const auto rr : CaptureDNS::QUERYTYPES )
+        if ( output_rr_type(rr) )
+            sp.rr_types.push_back(rr);
+
+    // Compactor currently doesn't support anonymisation,
+    // sampling or name normalisation, so we don't give
+    // storage flags or sampling or anonymisation methods.
+    // Set collection parameter items from configuration.
+
+    // Compactor currently doesn't support client or server address
+    // prefix length setting, so we don't give that parameter.
+
+    // Set collection parameter items from configuration.
+    cp.query_timeout = query_timeout;
+    cp.skew_timeout = skew_timeout;
+    cp.snaplen = snaplen;
+    cp.promisc = promisc_mode;
+
+    for ( const auto& s : network_interfaces )
+        cp.interfaces.push_back(s);
+
+    for ( const auto& a : server_addresses )
+        cp.server_addresses.push_back(a);
+
+    for ( const auto& v : vlan_ids )
+        cp.vlan_ids.push_back(v);
+
+    cp.filter = filter;
+
+    if ( !omit_sysid )
+    {
+        cp.generator_id = PACKAGE_STRING;
+
+        if ( !omit_hostid )
+        {
+            char buf[_POSIX_HOST_NAME_MAX];
+            gethostname(buf, sizeof(buf));
+            buf[_POSIX_HOST_NAME_MAX - 1] = '\0';
+            cp.host_id = buf;
+        }
+    }
+}

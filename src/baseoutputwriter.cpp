@@ -60,7 +60,7 @@ void BaseOutputWriter::writeSections(const DNSMessage& dm, int options)
                 continue;
             }
 
-            if ( !outputRRType(q.query_type()) )
+            if ( !config_.output_rr_type(q.query_type()) )
                 continue;
 
             if ( !found_one )
@@ -80,7 +80,7 @@ void BaseOutputWriter::writeSections(const DNSMessage& dm, int options)
         bool found_one = false;
         for ( const auto& r : dm.dns.answers() )
         {
-            if ( !outputRRType(r.query_type()) )
+            if ( !config_.output_rr_type(r.query_type()) )
                 continue;
 
             if ( !found_one )
@@ -99,7 +99,7 @@ void BaseOutputWriter::writeSections(const DNSMessage& dm, int options)
         bool found_one = false;
         for ( const auto& r : dm.dns.authority() )
         {
-            if ( !outputRRType(r.query_type()) )
+            if ( !config_.output_rr_type(r.query_type()) )
                 continue;
 
             if ( !found_one )
@@ -122,7 +122,7 @@ void BaseOutputWriter::writeSections(const DNSMessage& dm, int options)
                  dm.dns.type() == CaptureDNS::QRType::QUERY )
                 continue;
 
-            if ( !outputRRType(r.query_type()) )
+            if ( !config_.output_rr_type(r.query_type()) )
                 continue;
 
             if ( !found_one )
@@ -240,24 +240,4 @@ uint8_t BaseOutputWriter::transportFlags(const std::shared_ptr<QueryResponse>& q
         res |= QUERY_TRAILINGDATA;
 
     return res;
-}
-
-bool BaseOutputWriter::outputRRType(CaptureDNS::QueryType rr_type)
-{
-    if ( !config_.accept_rr_types.empty() )
-    {
-        for ( auto i : config_.accept_rr_types )
-            if ( i == rr_type )
-                return true;
-
-        return false;
-    }
-    else
-    {
-        for ( auto i : config_.ignore_rr_types )
-            if ( i == rr_type )
-                return false;
-
-        return true;
-    }
 }

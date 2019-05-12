@@ -19,6 +19,7 @@
 
 #include <boost/program_options.hpp>
 
+#include "blockcbordata.hpp"
 #include "ipaddress.hpp"
 
 /**
@@ -316,6 +317,22 @@ public:
      * \param os output stream.
      */
     void dump_config(std::ostream& os) const;
+
+    /**
+     * \brief Determine whether a particular RR type should be output.
+     *
+     * Check the RR type against the list of configured accept and ignore
+     * RR types.
+     *
+     * \param rr_type the RR type.
+     * \returns `true` if it should be output.
+     */
+    bool output_rr_type(CaptureDNS::QueryType rr_type) const;
+
+    /**
+     * \brief Populate BlockParameters instance from config.
+     */
+    void populate_block_parameters(block_cbor::BlockParameters& bp) const;
 
 protected:
     /**
