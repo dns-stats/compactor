@@ -410,6 +410,41 @@ namespace block_cbor {
         void writeCbor(CborBaseEncoder& enc);
     };
 
+        /**
+     * \struct BlockParameters
+     * \brief Info on all parameters applicable to a block.
+     */
+    struct BlockParameters
+    {
+        /**
+         * \brief storage parameters for the block.
+         */
+        StorageParameters storage_parameters;
+
+        /**
+         * \brief collection parameters for the block.
+         */
+        CollectionParameters collection_parameters;
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec    CBOR stream to read from.
+         * \param fields translate map keys to internal values.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc CBOR stream to write to.
+         */
+        void writeCbor(CborBaseEncoder& enc);
+    };
+
     /**
      * \struct IndexVectorItem
      * \brief A header list item that's a vector of indexes to items.

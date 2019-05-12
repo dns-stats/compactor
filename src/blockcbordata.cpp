@@ -386,6 +386,55 @@ namespace block_cbor {
         enc.writeBreak();
     }
 
+    void BlockParameters::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    {
+        try
+        {
+            bool indef;
+            uint64_t n_elems = dec.readMapHeader(indef);
+            while ( indef || n_elems-- > 0 )
+            {
+                if ( indef && dec.type() == CborBaseDecoder::TYPE_BREAK )
+                {
+                    dec.readBreak();
+                    break;
+                }
+
+                switch(fields.block_parameters_field(dec.read_unsigned()))
+                {
+                case BlockParametersField::storage_parameters:
+                    storage_parameters.readCbor(dec, fields);
+                    break;
+
+                case BlockParametersField::collection_parameters:
+                    collection_parameters.readCbor(dec, fields);
+                    break;
+
+                default:
+                    // Unknown item, skip.
+                    dec.skip();
+                    break;
+                }
+            }
+        }
+        catch (const std::logic_error& e)
+        {
+            throw cbor_file_format_error("Unexpected CBOR item reading block parameters");
+        }
+    }
+
+    void BlockParameters::writeCbor(CborBaseEncoder& enc)
+    {
+        constexpr int storage_parameters_index = find_block_parameters_index(BlockParametersField::storage_parameters);
+        constexpr int collection_parameters_index = find_block_parameters_index(BlockParametersField::collection_parameters);
+
+        enc.writeMapHeader(2);
+        enc.write(storage_parameters_index);
+        storage_parameters.writeCbor(enc);
+        enc.write(collection_parameters_index);
+        collection_parameters.writeCbor(enc);
+    }
+
     void IndexVectorItem::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
         try

@@ -1125,6 +1125,14 @@ namespace block_cbor {
          */
         CollectionParametersField collection_parameters_field(int index) const;
 
+        /**
+         * \brief Return block parameters field for given map index.
+         *
+         * \param index the map index read from file.
+         * \returns field identifier.
+         */
+        BlockParametersField block_parameters_field(int index) const;
+
     private:
         /**
          * \brief configuration index map.
@@ -1205,6 +1213,11 @@ namespace block_cbor {
          * \brief collection parameters index map.
          */
         std::vector<CollectionParametersField> collection_parameters_;
+
+        /**
+         * \brief block parameters index map.
+         */
+        std::vector<BlockParametersField> block_parameters_;
     };
 };
 

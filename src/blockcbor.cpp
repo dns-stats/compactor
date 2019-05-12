@@ -380,4 +380,12 @@ namespace block_cbor {
         else
             return CollectionParametersField::unknown;
     }
+
+    BlockParametersField FileVersionFields::block_parameters_field(int index) const
+    {
+        if ( index < block_parameters_.size() )
+            return block_parameters_[index];
+        else
+            return BlockParametersField::unknown;
+    }
 };
