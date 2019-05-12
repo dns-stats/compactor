@@ -18,6 +18,7 @@
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 
 #include "bytestring.hpp"
 
@@ -101,6 +102,18 @@ public:
      * This does not change the current position.
      */
     type_t type();
+
+    /**
+     * \brief templated read.
+     *
+     * Read an item of given type. Pass to private implementation which
+     * can be overloaded and specialised.
+     */
+    template<typename T>
+    void read(T& item)
+    {
+        read_item(item);
+    }
 
     /**
      * \brief Read the value of the current CBOR unsigned item.
@@ -263,6 +276,41 @@ protected:
     virtual unsigned readBytes(uint8_t* p, std::ptrdiff_t n_bytes) = 0;
 
 private:
+    /**
+     * \brief General read - assume for integer type, so works for enums.
+     */
+    template<typename T>
+    void read_item(T& item, typename std::enable_if<std::is_signed<T>::value>::type* = 0)
+    {
+        item = read_signed();
+    }
+
+    template<typename T>
+    void read_item(T& item, typename std::enable_if<std::is_unsigned<T>::value>::type* = 0)
+    {
+        item = read_unsigned();
+    }
+
+    void read_item(bool& item)
+    {
+        item = read_bool();
+    }
+
+    void read_item(byte_string& item)
+    {
+        item = read_binary();
+    }
+
+    void read_item(std::string& item)
+    {
+        item = read_string();
+    }
+
+    void read_item(std::chrono::system_clock::time_point& item)
+    {
+        item = read_time();
+    }
+
     /**
      * \brief See whether more bytes need to be read.
      */
