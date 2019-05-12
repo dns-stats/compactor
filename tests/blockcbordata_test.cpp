@@ -285,6 +285,75 @@ SCENARIO("StorageParameters can be read", "[block]")
     }
 }
 
+SCENARIO("CollectionParameters can be written", "[block]")
+{
+    GIVEN("A sample CollectionParameters item")
+    {
+        CollectionParameters cp1;
+        cp1.query_timeout = 1;
+        cp1.skew_timeout = 2;
+        cp1.snaplen = 3;
+        cp1.promisc = true;
+
+        WHEN("values are encoded")
+        {
+            TestCborEncoder tcbe;
+            cp1.writeCbor(tcbe);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_collection_parameters_index(CollectionParametersField::query_timeout), 1,
+                        find_collection_parameters_index(CollectionParametersField::skew_timeout), 2,
+                        find_collection_parameters_index(CollectionParametersField::snaplen), 3,
+                        find_collection_parameters_index(CollectionParametersField::promisc), (7 << 5) | 21,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+    }
+}
+
+SCENARIO("CollectionParameters can be read", "[block]")
+{
+    GIVEN("A test CBOR decoder and sample CollectionParameters data")
+    {
+        TestCborDecoder tcbd;
+        CollectionParameters cp1;
+
+        WHEN("decoder is given encoded question data")
+        {
+            const std::vector<uint8_t> INPUT =
+                {
+                    (5 << 5) | 31,
+                    0, 1,
+                    1, 2,
+                    2, 3,
+                    4, (7 << 5) | 21,
+                    0xff
+                };
+            tcbd.set_bytes(INPUT);
+
+            THEN("decoder input is correct")
+            {
+                CollectionParameters cp1_r;
+                block_cbor::FileVersionFields fields;
+                cp1_r.readCbor(tcbd, fields);
+
+                REQUIRE(cp1.query_timeout == cp1_r.query_timeout);
+                REQUIRE(cp1.skew_timeout == cp1_r.skew_timeout);
+                REQUIRE(cp1.snaplen == cp1_r.snaplen);
+                REQUIRE(cp1.promisc == cp1_r.promisc);
+            }
+        }
+    }
+}
+
 SCENARIO("IndexVectorItems can be compared and written", "[block]")
 {
     GIVEN("Some sample vectors")

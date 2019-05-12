@@ -10,12 +10,26 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+#include <type_traits>
+
 #include "blockcbordata.hpp"
 
 namespace block_cbor {
 
-    template<typename T>
-    void read_vector_unsigned(std::vector<T>& vec, CborBaseDecoder& dec, const FileVersionFields&)
+    template<typename T, typename D>
+    void add_vector_item(std::vector<T>& vec, const D& item, typename std::enable_if<std::is_same<T, D>::value>::type* = 0)
+    {
+        vec.push_back(item);
+    }
+
+    template<typename T, typename D>
+    void add_vector_item(std::vector<T>& vec, const D& item, typename std::enable_if<!std::is_same<T, D>::value>::type* = 0)
+    {
+        vec.push_back(T(item));
+    }
+
+    template<typename T, typename D>
+    void read_vector(std::vector<T>& vec, CborBaseDecoder& dec, const FileVersionFields&)
     {
         bool indef;
         uint64_t n_elems = dec.readArrayHeader(indef);
@@ -28,8 +42,9 @@ namespace block_cbor {
                 dec.readBreak();
                 break;
             }
-
-            vec.push_back(T(dec.read_unsigned()));
+            D item;
+            dec.read(item);
+            add_vector_item<T, D>(vec, item);
         }
     }
 
@@ -133,11 +148,11 @@ namespace block_cbor {
                     break;
 
                 case StorageParametersField::opcodes:
-                    read_vector_unsigned(opcodes, dec, fields);
+                    read_vector<unsigned, unsigned>(opcodes, dec, fields);
                     break;
 
                 case StorageParametersField::rr_types:
-                    read_vector_unsigned(rr_types, dec, fields);
+                    read_vector<unsigned, unsigned>(rr_types, dec, fields);
                     break;
 
                 case StorageParametersField::storage_flags:
@@ -245,11 +260,137 @@ namespace block_cbor {
         enc.writeBreak();
     }
 
+    void CollectionParameters::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    {
+        try
+        {
+            bool indef;
+            uint64_t n_elems = dec.readMapHeader(indef);
+            while ( indef || n_elems-- > 0 )
+            {
+                if ( indef && dec.type() == CborBaseDecoder::TYPE_BREAK )
+                {
+                    dec.readBreak();
+                    break;
+                }
+
+                switch(fields.collection_parameters_field(dec.read_unsigned()))
+                {
+                case CollectionParametersField::query_timeout:
+                    query_timeout = dec.read_unsigned();
+                    break;
+
+                case CollectionParametersField::skew_timeout:
+                    skew_timeout = dec.read_unsigned();
+                    break;
+
+                case CollectionParametersField::snaplen:
+                    snaplen = dec.read_unsigned();
+                    break;
+
+                case CollectionParametersField::promisc:
+                    promisc = dec.read_bool();
+                    break;
+
+                case CollectionParametersField::interfaces:
+                    read_vector<std::string, std::string>(interfaces, dec, fields);
+                    break;
+
+                case CollectionParametersField::server_addresses:
+                    read_vector<IPAddress, byte_string>(server_addresses, dec, fields);
+                    break;
+
+                case CollectionParametersField::vlan_ids:
+                    read_vector<unsigned, unsigned>(vlan_ids, dec, fields);
+                    break;
+
+                case CollectionParametersField::filter:
+                    filter = dec.read_string();
+                    break;
+
+                case CollectionParametersField::generator_id:
+                    generator_id = dec.read_string();
+                    break;
+
+                case CollectionParametersField::host_id:
+                    host_id = dec.read_string();
+                    break;
+
+                default:
+                    // Unknown item, skip.
+                    dec.skip();
+                    break;
+                }
+            }
+        }
+        catch (const std::logic_error& e)
+        {
+            throw cbor_file_format_error("Unexpected CBOR item reading collection parameters");
+        }
+    }
+
+    void CollectionParameters::writeCbor(CborBaseEncoder& enc)
+    {
+        constexpr int query_timeout_index = find_collection_parameters_index(CollectionParametersField::query_timeout);
+        constexpr int skew_timeout_index = find_collection_parameters_index(CollectionParametersField::skew_timeout);
+        constexpr int snaplen_index = find_collection_parameters_index(CollectionParametersField::snaplen);
+        constexpr int promisc_index = find_collection_parameters_index(CollectionParametersField::promisc);
+        constexpr int interfaces_index = find_collection_parameters_index(CollectionParametersField::interfaces);
+        constexpr int server_addresses_index = find_collection_parameters_index(CollectionParametersField::server_addresses);
+        constexpr int vlan_ids_index = find_collection_parameters_index(CollectionParametersField::vlan_ids);
+        constexpr int filter_index = find_collection_parameters_index(CollectionParametersField::filter);
+        constexpr int generator_id_index = find_collection_parameters_index(CollectionParametersField::generator_id);
+        constexpr int host_id_index = find_collection_parameters_index(CollectionParametersField::host_id);
+
+        enc.writeMapHeader();
+        enc.write(query_timeout_index);
+        enc.write(query_timeout);
+        enc.write(skew_timeout_index);
+        enc.write(skew_timeout);
+        enc.write(snaplen_index);
+        enc.write(snaplen);
+        enc.write(promisc_index);
+        enc.write(promisc);
+        if ( !interfaces.empty() )
+        {
+            enc.write(interfaces_index);
+            write_vector(interfaces, enc);
+        }
+        if ( !server_addresses.empty() )
+        {
+            enc.write(server_addresses_index);
+            enc.writeArrayHeader(server_addresses.size());
+            for ( auto& i : server_addresses )
+                enc.write(i.asNetworkBinary());
+        }
+        if ( !vlan_ids.empty() )
+        {
+            enc.write(vlan_ids_index);
+            write_vector(vlan_ids, enc);
+        }
+        if ( !filter.empty() )
+        {
+            enc.write(filter_index);
+            enc.write(filter);
+        }
+        if ( !generator_id.empty() )
+        {
+            enc.write(generator_id_index);
+            enc.write(generator_id);
+        }
+        if ( !host_id.empty() )
+        {
+            enc.write(host_id_index);
+            enc.write(host_id);
+        }
+        enc.writeBreak();
+    }
+
     void IndexVectorItem::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
         try
         {
-            read_vector_unsigned(vec, dec, fields);
+            read_vector<index_t, index_t>(vec, dec, fields);
         }
         catch (const std::logic_error& e)
         {

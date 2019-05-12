@@ -33,10 +33,17 @@
 namespace block_cbor {
 
     namespace {
+        // Default for storage parameters.
         const unsigned DEFAULT_TICKS_PER_SECOND = 1000000;
         const unsigned DEFAULT_MAX_BLOCK_ITEMS = 5000;
         const unsigned DEFAULT_IPV4_PREFIX_LENGTH = 32;
         const unsigned DEFAULT_IPV6_PREFIX_LENGTH = 128;
+
+        // Defaults for collection parameters.
+        const unsigned DEFAULT_QUERY_TIMEOUT = 5;
+        const unsigned DEFAULT_SKEW_TIMEOUT = 10;
+        const unsigned DEFAULT_SNAPLEN = 65535;
+        const unsigned DEFAULT_PROMISC = false;
     }
 
     // Block header table types.
@@ -281,6 +288,108 @@ namespace block_cbor {
          * anonymisation used.
          */
         std::string anonymisation_method;
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec    CBOR stream to read from.
+         * \param fields translate map keys to internal values.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc CBOR stream to write to.
+         */
+        void writeCbor(CborBaseEncoder& enc);
+    };
+
+    /**
+     * \struct CollectionParameters
+     * \brief Info on the data collection settings for the data in a block.
+     */
+    struct CollectionParameters
+    {
+        /**
+         * \brief Default constructor.
+         */
+        CollectionParameters() :
+            query_timeout(DEFAULT_QUERY_TIMEOUT),
+            skew_timeout(DEFAULT_SKEW_TIMEOUT),
+            snaplen(DEFAULT_SNAPLEN),
+            promisc(DEFAULT_PROMISC)
+        { }
+
+        /**
+         * \brief period in seconds after which a query is deemed to
+         * not have received a response.
+         */
+        unsigned query_timeout;
+
+        /**
+         * \brief the maximum time in microseconds to allow for out of
+         * temporal order packet delivery. If a response arrives without a
+         * query, once a packet arrives with a timestamp this much later,
+         * give up hoping for a query to arrive.
+         */
+        unsigned skew_timeout;
+
+        /**
+         * \brief packet capture snap length. See `tcpdump` documentation for more.
+         */
+        unsigned snaplen;
+
+        /**
+         * \brief `true` if the interface should be put into promiscous mode.
+         * See `tcpdump` documentation for more.
+         */
+        bool promisc;
+
+        /**
+         * \brief the network interfaces to capture from.
+         *
+         * This will be operating system dependent. A Linux example is `eth0`.
+         */
+        std::vector<std::string> interfaces;
+
+        /**
+         * \brief the server network addresses.
+         *
+         * Optional addresses for the server interfaces. Stored in C-DNS but
+         * not otherwise used.
+         */
+        std::vector<IPAddress> server_addresses;
+
+        /**
+         * \brief which vlan IDs are to be accepted.
+         */
+        std::vector<unsigned> vlan_ids;
+
+        /**
+         * \brief packet filter
+         *
+         * `libpcap` packet filter expression. Packets not matching will be
+         * silently discarded.
+         */
+        std::string filter;
+
+        /**
+         * \brief generator ID
+         *
+         * String identifying application doing the collection.
+         */
+        std::string generator_id;
+
+        /**
+         * \brief host ID
+         *
+         * String identifying the hostname of the machine doing the collection.
+         */
+        std::string host_id;
 
         /**
          * \brief Read the object contents from CBOR.

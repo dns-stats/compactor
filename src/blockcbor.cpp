@@ -372,4 +372,12 @@ namespace block_cbor {
         else
             return StorageParametersField::unknown;
     }
+
+    CollectionParametersField FileVersionFields::collection_parameters_field(int index) const
+    {
+        if ( index < collection_parameters_.size() )
+            return collection_parameters_[index];
+        else
+            return CollectionParametersField::unknown;
+    }
 };
