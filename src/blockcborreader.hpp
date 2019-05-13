@@ -15,6 +15,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include <boost/optional.hpp>
 #include <boost/functional/hash.hpp>
@@ -115,7 +116,7 @@ protected:
     void readFilePreamble(Configuration& config, block_cbor::FileFormatVersion ver);
 
     /**
-     * \brief Read the configuration.
+     * \brief Read the configuration in pre-format 1.0 files.
      *
      * Read the configuration information.
      *
@@ -125,6 +126,19 @@ protected:
      * \throws cbor_file_format_error on unexpected CBOR content.
      */
     void readConfiguration(Configuration& config);
+
+    /**
+     * \brief Read the block parameters in format 1.0 files.
+     *
+     * Read the block parameter information vector. Set configuration
+     * information from parameters.
+     *
+     * \param config extracted configuration information.
+     * \throws cbor_decode_error if the CBOR is invalid.
+     * \throws std::logic_error on unexpected CBOR content.
+     * \throws cbor_file_format_error on unexpected CBOR content.
+     */
+    void readBlockParameters(Configuration& config);
 
     /**
      * \brief Add the message extra info into the message.
@@ -218,6 +232,11 @@ private:
      * \brief accumulated address events from the file.
      */
     std::unordered_map<AddressEvent, unsigned, boost::hash<AddressEvent>> address_events_read_;
+
+    /**
+     * \brief vector of block parameters.
+     */
+    std::vector<block_cbor::BlockParameters> block_parameters_;
 };
 
 #endif

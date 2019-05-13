@@ -52,7 +52,7 @@ void BlockCborReader::readFileHeader(Configuration& config)
 
             std::string file_type_id = dec_.read_string();
             if ( file_type_id == block_cbor::FILE_FORMAT_ID )
-                readFilePreamble(config, block_cbor::FileFormatVersion::format_05);
+                readFilePreamble(config, block_cbor::FileFormatVersion::format_10);
             else if ( file_type_id == block_cbor::FILE_FORMAT_02_ID )
                 readFilePreamble(config, block_cbor::FileFormatVersion::format_02);
             else
@@ -91,37 +91,38 @@ void BlockCborReader::readFilePreamble(Configuration& config, block_cbor::FileFo
 
         block_cbor::FilePreambleField key = block_cbor::file_preamble_field(dec_.read_unsigned(), ver);
 
-        if ( !fields_ && key >= block_cbor::FilePreambleField::configuration )
+        if ( !fields_ &&
+             (key == block_cbor::FilePreambleField::configuration ||
+              key == block_cbor::FilePreambleField::block_parameters) )
             fields_ = make_unique<block_cbor::FileVersionFields>(major_version, minor_version, private_version);
 
         switch(key)
         {
-        case block_cbor::FilePreambleField::format_version:
-            if ( ver != block_cbor::FileFormatVersion::format_02 )
-                throw cbor_file_format_error("Unexpected version item reading header");
-            minor_version = dec_.read_unsigned();
-            if ( minor_version != block_cbor::FILE_FORMAT_02_VERSION )
-                throw cbor_file_format_error("Wrong file format version");
-            break;
-
         case block_cbor::FilePreambleField::major_format_version:
-            if ( ver != block_cbor::FileFormatVersion::format_05 )
+            if ( ver != block_cbor::FileFormatVersion::format_10 )
                 throw cbor_file_format_error("Unexpected version item reading header");
             major_version = dec_.read_unsigned();
             break;
 
         case block_cbor::FilePreambleField::minor_format_version:
-            if ( ver != block_cbor::FileFormatVersion::format_05 )
+            if ( ver != block_cbor::FileFormatVersion::format_10 )
                 throw cbor_file_format_error("Unexpected version item reading header");
             minor_version = dec_.read_unsigned();
             break;
 
         case block_cbor::FilePreambleField::private_version:
-            if ( ver != block_cbor::FileFormatVersion::format_05 )
+            if ( ver != block_cbor::FileFormatVersion::format_10 )
                 throw cbor_file_format_error("Unexpected version item reading header");
             private_version = dec_.read_unsigned();
             break;
 
+        case block_cbor::FilePreambleField::block_parameters:
+            if ( ver != block_cbor::FileFormatVersion::format_10 )
+                throw cbor_file_format_error("Unexpected version item reading header");
+            readBlockParameters(config);
+            break;
+
+        // Obsolete items format 0.5
         case block_cbor::FilePreambleField::configuration:
             readConfiguration(config);
             break;
@@ -136,6 +137,15 @@ void BlockCborReader::readFilePreamble(Configuration& config, block_cbor::FileFo
             if ( pseudo_anon_ )
                 host_id_ = "";
 #endif
+            break;
+
+        // Obsolete items format 0.2
+        case block_cbor::FilePreambleField::format_version:
+            if ( ver != block_cbor::FileFormatVersion::format_02 )
+                throw cbor_file_format_error("Unexpected version item reading header");
+            minor_version = dec_.read_unsigned();
+            if ( minor_version != block_cbor::FILE_FORMAT_02_VERSION )
+                throw cbor_file_format_error("Wrong file format version");
             break;
 
         default:
@@ -287,6 +297,44 @@ void BlockCborReader::readConfiguration(Configuration& config)
             dec_.skip();
             break;
         }
+    }
+
+    // Generate a suitable instance of block parameters from this configuration.
+    block_cbor::BlockParameters block_parameters;
+
+    config.populate_block_parameters(block_parameters);
+    block_parameters_.push_back(block_parameters);
+}
+
+void BlockCborReader::readBlockParameters(Configuration& config)
+{
+    bool first_bp = true;
+    bool indef;
+    uint64_t n_elems = dec_.readArrayHeader(indef);
+    if ( !indef )
+        block_parameters_.reserve(n_elems);
+    while ( indef || n_elems-- > 0 )
+    {
+        if ( indef && dec_.type() == CborBaseDecoder::TYPE_BREAK )
+        {
+            dec_.readBreak();
+            break;
+        }
+        block_cbor::BlockParameters bp;
+        bp.readCbor(dec_, *fields_);
+        if ( first_bp )
+        {
+            config.set_from_block_parameters(bp);
+            generator_id_ = bp.collection_parameters.generator_id;
+            host_id_ = bp.collection_parameters.host_id;
+#if ENABLE_PSEUDOANONYMISATION
+            if ( pseudo_anon_ )
+                host_id_ = "";
+#endif
+
+            first_bp = false;
+        }
+        block_parameters_.push_back(bp);
     }
 }
 

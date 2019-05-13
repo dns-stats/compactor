@@ -331,8 +331,20 @@ public:
 
     /**
      * \brief Populate BlockParameters instance from config.
+     *
+     * Populate a BlockParameters instance using current configuration
+     * settings.
+     *
+     * \param bp        block parameters.
      */
     void populate_block_parameters(block_cbor::BlockParameters& bp) const;
+
+    /**
+     * \brief Populate config from BlockParameters instance.
+     *
+     * \param bp        block parameters.
+     */
+    void set_from_block_parameters(const block_cbor::BlockParameters& bp);
 
 protected:
     /**

@@ -676,6 +676,7 @@ void Configuration::populate_block_parameters(block_cbor::BlockParameters& bp) c
 
     cp.filter = filter;
 
+    // These don't come from configuration, but ensure they are set.
     if ( !omit_sysid )
     {
         cp.generator_id = PACKAGE_STRING;
@@ -688,4 +689,38 @@ void Configuration::populate_block_parameters(block_cbor::BlockParameters& bp) c
             cp.host_id = buf;
         }
     }
+}
+
+void Configuration::set_from_block_parameters(const block_cbor::BlockParameters& bp)
+{
+    const block_cbor::StorageParameters& sp = bp.storage_parameters;
+    const block_cbor::StorageHints& sh = sp.storage_hints;
+    const block_cbor::CollectionParameters& cp = bp.collection_parameters;
+
+    // Set configuration from storage parameter values.
+    max_block_items = sp.max_block_items;
+
+    output_options_queries = (sh.query_response_hints >> 11) & 0xf;
+    output_options_responses = ((sh.query_response_hints >> 14) & 0xe) | ((sh.query_response_hints >> 11) & 1);
+
+    // List of RR types recorded.
+    for ( const auto rr : sp.rr_types )
+        accept_rr_types.push_back(rr);
+
+    // Set collection parameter items from configuration.
+    query_timeout = cp.query_timeout;
+    skew_timeout = cp.skew_timeout;
+    snaplen = cp.snaplen;
+    promisc_mode = cp.promisc;
+
+    for ( const auto& s : cp.interfaces )
+        network_interfaces.push_back(s);
+
+    for ( const auto& a : cp.server_addresses )
+        server_addresses.push_back(a);
+
+    for ( const auto& v : cp.vlan_ids )
+        vlan_ids.push_back(v);
+
+    filter = cp.filter;
 }
