@@ -335,8 +335,48 @@ void BlockCborReader::readBlockParameters(Configuration& config)
 
             first_bp = false;
         }
+        if ( !verifyBlockParameters(bp) )
+            throw cbor_file_format_error("Hints show required C-DNS data not present.");
+
         block_parameters_.push_back(bp);
     }
+}
+
+bool BlockCborReader::verifyBlockParameters(const block_cbor::BlockParameters& bp)
+{
+    const block_cbor::StorageParameters& sp = bp.storage_parameters;
+    const block_cbor::StorageHints& sh = sp.storage_hints;
+
+    // Query/Response hints. For now, we need everything from time offset to
+    // response size. We can survive without the other fields.
+    if ( (sh.query_response_hints & 0x3ff) != 0x3ff )
+        return false;
+
+    // Query signature hints. For now, we need everything except q/r type.
+    if ( (sh.query_response_signature_hints & 0x1f7) != 0x1f7 )
+        return false;
+
+    // RR hints. Currently we need everything.
+    if ( (sh.rr_hints & 0x3) != 0x3 )
+        return false;
+
+    // Other data hints. Currently we don't handle malformed messages.
+    // We do handle address event counts; if we see none, we will report
+    // that. If they aren't present we should probably report that they
+    // are missing from the file.
+
+    // If collection parameters are missing, we will output the defaults.
+    // Again, we should probably report they are missing.
+
+    // At present we can't handle IPv4 or IPv6 addresses other than those
+    // stored as full addresses.
+    if ( sp.client_address_prefix_ipv4 != 32 ||
+         sp.client_address_prefix_ipv6 != 128 ||
+         sp.server_address_prefix_ipv4 != 32 ||
+         sp.server_address_prefix_ipv6 != 128 )
+        return false;
+
+    return true;
 }
 
 bool BlockCborReader::readBlock()

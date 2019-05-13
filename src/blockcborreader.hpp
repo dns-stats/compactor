@@ -141,6 +141,17 @@ protected:
     void readBlockParameters(Configuration& config);
 
     /**
+     * \brief Verify the block parameters in format 1.0 files
+     * contain sufficient fields for our purposes.
+     *
+     * Look through the supplied hints and make sure that the data
+     * we require should be present.
+     *
+     * \returns `false` if hints show data we can't do without is missing.
+     */
+    bool verifyBlockParameters(const block_cbor::BlockParameters& bp);
+
+    /**
      * \brief Add the message extra info into the message.
      *
      * \param dns   message to receive extra info.

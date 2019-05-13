@@ -637,7 +637,7 @@ void Configuration::populate_block_parameters(block_cbor::BlockParameters& bp) c
         block_cbor::QueryResponseSignatureHintFlags(0x1f7);
     // RR hints. Compactor always writes everything.
     sh.rr_hints = block_cbor::RRHintFlags(0x3);
-    // Other data hints. Compactor always writes address event hints,
+    // Other data hints. Compactor always writes address events,
     // but does not currently write malformed messages.
     sh.other_data_hints = block_cbor::OtherDataHintFlags(0x2);
 
