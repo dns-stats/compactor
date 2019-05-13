@@ -206,7 +206,7 @@ uticks = uint
 
 Timestamp = [
     timestamp-secs   : uint,
-    timestamp-uticks : uticks,
+    timestamp-ticks : uticks,
 ]
 
 ;
