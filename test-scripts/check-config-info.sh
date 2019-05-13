@@ -30,7 +30,7 @@ error()
 trap "cleanup 1" HUP INT TERM
 
 # Run the converter producing CBOR with non-default configs.
-$COMP -c /dev/null --query-timeout 2 --skew-timeout 5 --snaplen 200 --promiscuous-mode=true --filter "ip" --max-block-qr-items 2000 --include all --vlan-id 1234 --accept-rr-type AAAA --server-address-hint 1.2.3.4 -o $tmpdir/out.cbor $DATAFILE
+$COMP -c /dev/null --query-timeout 2 --skew-timeout 5 --snaplen 200 --promiscuous-mode=true --filter "ip" --max-block-items 2000 --include all --vlan-id 1234 --accept-rr-type AAAA --server-address-hint 1.2.3.4 -o $tmpdir/out.cbor $DATAFILE
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
