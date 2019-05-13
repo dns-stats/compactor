@@ -13,7 +13,6 @@
 #ifndef CBORDECODER_HPP
 #define CBORDECODER_HPP
 
-#include <chrono>
 #include <cstdint>
 #include <fstream>
 #include <stdexcept>
@@ -242,20 +241,6 @@ public:
      */
     void readBreak();
 
-
-    /**
-     * \brief Read the value of the current CBOR array item as time.
-     *
-     * A time point is written as a two item array.
-     *
-     * Reading moves on the next CBOR item.
-     *
-     * \return the time point of the CBOR item.
-     * \throws cbor_decode_error if the CBOR is invalid.
-     * \throws std::logic_error if the current CBOR item isn't a time.
-     */
-    std::chrono::system_clock::time_point read_time();
-
     /**
      * \brief Skip past the current CBOR item.
      *
@@ -304,11 +289,6 @@ private:
     void read_item(std::string& item)
     {
         item = read_string();
-    }
-
-    void read_item(std::chrono::system_clock::time_point& item)
-    {
-        item = read_time();
     }
 
     /**

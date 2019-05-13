@@ -71,7 +71,7 @@ public:
      * \param os output stream.
      */
     void dump_stats(std::ostream& os) {
-        block_.last_packet_statistics.dump_stats(os);
+        block_->last_packet_statistics.dump_stats(os);
     }
 
     /**
@@ -201,7 +201,7 @@ private:
     /**
      * \brief the current block.
      */
-    block_cbor::BlockData block_;
+    std::unique_ptr<block_cbor::BlockData> block_;
 
     /**
      * \brief the number of the current block

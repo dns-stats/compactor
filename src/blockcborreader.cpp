@@ -27,10 +27,11 @@
 BlockCborReader::BlockCborReader(CborBaseDecoder& dec, Configuration &config,
                                  boost::optional<PseudoAnonymise> pseudo_anon)
     : dec_(dec), next_item_(0), need_block_(true),
-      block_(config.max_block_items), current_block_num_(0),
+      current_block_num_(0),
       pseudo_anon_(pseudo_anon)
 {
     readFileHeader(config);
+    block_ = make_unique<block_cbor::BlockData>(block_parameters_);
 }
 
 void BlockCborReader::readFileHeader(Configuration& config)
@@ -351,19 +352,19 @@ bool BlockCborReader::readBlock()
     else if ( nblocks_-- == 0 )
         return false;
 
-    block_.clear();
-    block_.readCbor(dec_, *fields_);
+    block_->clear();
+    block_->readCbor(dec_, *fields_);
 
 #if ENABLE_PSEUDOANONYMISATION
     if ( pseudo_anon_ )
-        for ( auto& a : block_.ip_addresses )
+        for ( auto& a : block_->ip_addresses )
             a.addr = pseudo_anon_->address(a.addr);
 #endif
 
     // Accumulate address events counts.
-    for ( auto& aeci : block_.address_event_counts )
+    for ( auto& aeci : block_->address_event_counts )
     {
-        IPAddress addr = block_.ip_addresses[aeci.first.address].addr;
+        IPAddress addr = block_->ip_addresses[aeci.first.address].addr;
 
         AddressEvent ae(aeci.first.type, addr, aeci.first.code);
         if ( address_events_read_.find(ae) != address_events_read_.end() )
@@ -373,7 +374,7 @@ bool BlockCborReader::readBlock()
     }
 
     next_item_ = 0;
-    need_block_ = (block_.query_response_items.size() == next_item_);
+    need_block_ = (block_->query_response_items.size() == next_item_);
     current_block_num_++;
     return true;
 }
@@ -387,16 +388,16 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
         if ( !readBlock() )
             return res;
 
-    const block_cbor::QueryResponseItem& qri = block_.query_response_items[next_item_];
-    need_block_ = (block_.query_response_items.size() == ++next_item_);
+    const block_cbor::QueryResponseItem& qri = block_->query_response_items[next_item_];
+    need_block_ = (block_->query_response_items.size() == ++next_item_);
 
-    const block_cbor::QueryResponseSignature& sig = block_.query_response_signatures[qri.signature];
+    const block_cbor::QueryResponseSignature& sig = block_->query_response_signatures[qri.signature];
     if ( sig.qr_flags & block_cbor::QUERY_ONLY )
     {
         query = make_unique<DNSMessage>();
         query->timestamp = qri.tstamp;
-        query->clientIP = block_.ip_addresses[qri.client_address].addr;
-        query->serverIP = block_.ip_addresses[sig.server_address].addr;
+        query->clientIP = block_->ip_addresses[qri.client_address].addr;
+        query->serverIP = block_->ip_addresses[sig.server_address].addr;
         query->clientPort = qri.client_port;
         query->serverPort = sig.server_port;
         query->hoplimit = qri.hoplimit;
@@ -414,7 +415,7 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
 
         if ( sig.qr_flags & block_cbor::QUERY_HAS_OPT )
         {
-            byte_string opt_rdata = block_.names_rdatas[sig.query_opt_rdata].str;
+            byte_string opt_rdata = block_->names_rdatas[sig.query_opt_rdata].str;
 #if ENABLE_PSEUDOANONYMISATION
             if ( pseudo_anon_ )
             {
@@ -446,8 +447,8 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
     {
         response = make_unique<DNSMessage>();
         response->timestamp = qri.tstamp + qri.response_delay;
-        response->clientIP = block_.ip_addresses[qri.client_address].addr;
-        response->serverIP = block_.ip_addresses[sig.server_address].addr;
+        response->clientIP = block_->ip_addresses[qri.client_address].addr;
+        response->serverIP = block_->ip_addresses[sig.server_address].addr;
         response->clientPort = qri.client_port;
         response->serverPort = sig.server_port;
         response->tcp = sig.qr_transport_flags & BaseOutputWriter::TCP;
@@ -490,29 +491,29 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
 void BlockCborReader::readExtraInfo(DNSMessage& dns, const block_cbor::QueryResponseExtraInfo& extra) const
 {
     if ( extra.questions_list )
-        for ( auto& q_id : block_.questions_lists[extra.questions_list].vec )
+        for ( auto& q_id : block_->questions_lists[extra.questions_list].vec )
         {
-            const block_cbor::Question& q = block_.questions[q_id];
+            const block_cbor::Question& q = block_->questions[q_id];
             dns.dns.add_query(makeQuery(q.qname, q.classtype));
         }
 
     if ( extra.answers_list )
-        for ( auto& rr_id : block_.rrs_lists[extra.answers_list].vec )
-            dns.dns.add_answer(makeResource(block_.resource_records[rr_id]));
+        for ( auto& rr_id : block_->rrs_lists[extra.answers_list].vec )
+            dns.dns.add_answer(makeResource(block_->resource_records[rr_id]));
 
     if ( extra.authority_list )
-        for ( auto& rr_id : block_.rrs_lists[extra.authority_list].vec )
-            dns.dns.add_authority(makeResource(block_.resource_records[rr_id]));
+        for ( auto& rr_id : block_->rrs_lists[extra.authority_list].vec )
+            dns.dns.add_authority(makeResource(block_->resource_records[rr_id]));
 
     if ( extra.additional_list )
-        for ( auto& rr_id : block_.rrs_lists[extra.additional_list].vec )
-            dns.dns.add_additional(makeResource(block_.resource_records[rr_id]));
+        for ( auto& rr_id : block_->rrs_lists[extra.additional_list].vec )
+            dns.dns.add_additional(makeResource(block_->resource_records[rr_id]));
 }
 
 CaptureDNS::query BlockCborReader::makeQuery(block_cbor::index_t qname_id, block_cbor::index_t class_type_id) const
 {
-    byte_string qname = block_.names_rdatas[qname_id].str;
-    const block_cbor::ClassType& ct = block_.class_types[class_type_id];
+    byte_string qname = block_->names_rdatas[qname_id].str;
+    const block_cbor::ClassType& ct = block_->class_types[class_type_id];
     return CaptureDNS::query(qname,
                             static_cast<CaptureDNS::QueryType>(ct.qtype),
                             static_cast<CaptureDNS::QueryClass>(ct.qclass));
@@ -520,9 +521,9 @@ CaptureDNS::query BlockCborReader::makeQuery(block_cbor::index_t qname_id, block
 
 CaptureDNS::resource BlockCborReader::makeResource(const block_cbor::ResourceRecord& rr) const
 {
-    byte_string name = block_.names_rdatas[rr.name].str;
-    const block_cbor::ClassType& ct = block_.class_types[rr.classtype];
-    byte_string rdata = block_.names_rdatas[rr.rdata].str;
+    byte_string name = block_->names_rdatas[rr.name].str;
+    const block_cbor::ClassType& ct = block_->class_types[rr.classtype];
+    byte_string rdata = block_->names_rdatas[rr.rdata].str;
 
     CaptureDNS::resource res(name,
                              rdata,

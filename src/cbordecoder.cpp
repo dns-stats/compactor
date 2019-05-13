@@ -212,19 +212,6 @@ void CborBaseDecoder::readBreak()
     ++p_;
 }
 
-std::chrono::system_clock::time_point CborBaseDecoder::read_time()
-{
-    bool indefLen;
-    uint64_t nelems = readArrayHeader(indefLen);
-
-    if ( indefLen || nelems != 2 )
-        throw std::logic_error("read_time() called on wrong type");
-
-    std::chrono::seconds s(read_unsigned());
-    std::chrono::microseconds us(read_unsigned());
-    return std::chrono::system_clock::time_point(s + us);
-}
-
 void CborBaseDecoder::skip()
 {
     unsigned major, minor;

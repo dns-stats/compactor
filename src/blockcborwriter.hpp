@@ -193,6 +193,11 @@ private:
     std::string filename_;
 
     /**
+     * \brief block parameters vector for writing.
+     */
+    std::vector<block_cbor::BlockParameters> block_parameters_;
+
+    /**
      * \brief the output CBOR encoder.
      */
     std::unique_ptr<CborBaseStreamFileEncoder> enc_;

@@ -142,20 +142,6 @@ void CborBaseEncoder::write(const byte_string& str)
         writeByte(c);
 }
 
-void CborBaseEncoder::write(const std::chrono::system_clock::time_point& t)
-{
-    writeArrayHeader(2);
-    std::chrono::seconds s(std::chrono::duration_cast<std::chrono::seconds>(t.time_since_epoch()));
-    std::chrono::microseconds us(std::chrono::duration_cast<std::chrono::microseconds>(t.time_since_epoch()));
-    write(s.count());
-    write(us.count() % 1000000);
-}
-
-void CborBaseEncoder::write(const std::chrono::microseconds& t)
-{
-    write(t.count());
-}
-
 void CborBaseEncoder::writeArrayHeader(unsigned int array_size)
 {
     writeTypeValue(4, array_size);

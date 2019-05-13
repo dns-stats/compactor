@@ -15,7 +15,6 @@
 
 #include <array>
 #include <atomic>
-#include <chrono>
 #include <condition_variable>
 #include <cstddef>
 #include <cstdint>
@@ -114,20 +113,6 @@ public:
      * \param str           the value to write.
      */
     void write(const byte_string& str);
-
-    /**
-     * \brief Write a time point.
-     *
-     * \param t the value to write.
-     */
-    void write(const std::chrono::system_clock::time_point& t);
-
-    /**
-     * \brief Write a microsecond duration.
-     *
-     * \param t the value to write.
-     */
-    void write(const std::chrono::microseconds& t);
 
     /**
      * \brief Write the start of an array with a fixed number of elements.

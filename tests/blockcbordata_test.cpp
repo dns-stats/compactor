@@ -171,6 +171,73 @@ SCENARIO("StorageHints can be written", "[block]")
     }
 }
 
+SCENARIO("Timestamp can be read", "[block]")
+{
+    GIVEN("A test CBOR decoder and sample Timestamp data")
+    {
+        TestCborDecoder tcbd;
+
+        WHEN("decoder is given encoded question data")
+        {
+            const std::vector<uint8_t> INPUT =
+                {
+                    (4 << 5) | 2, 0, 1,
+                    (4 << 5) | 2, 1, 0,
+                };
+            tcbd.set_bytes(INPUT);
+
+            THEN("decoder input is correct")
+            {
+                Timestamp ts1_r;
+                std::chrono::system_clock::time_point t;
+                ts1_r.readCbor(tcbd);
+                REQUIRE(ts1_r.secs == 0);
+                REQUIRE(ts1_r.ticks == 1);
+                ts1_r.readCbor(tcbd);
+                REQUIRE(ts1_r.secs == 1);
+                REQUIRE(ts1_r.ticks == 0);
+            }
+
+            AND_THEN("time conversion is correct")
+            {
+                Timestamp ts1_r;
+                std::chrono::system_clock::time_point t;
+                ts1_r.readCbor(tcbd);
+                t = ts1_r.getTimePoint(1000000);
+                REQUIRE(std::chrono::duration_cast<std::chrono::seconds>(t.time_since_epoch()).count() == 0);
+                REQUIRE(std::chrono::duration_cast<std::chrono::microseconds>(t.time_since_epoch()).count() == 1);
+            }
+        }
+    }
+}
+
+SCENARIO("Timestamp can be written", "[block]")
+{
+    GIVEN("A sample Timestamp item")
+    {
+        std::chrono::system_clock::time_point t;
+        t = std::chrono::system_clock::time_point(std::chrono::seconds(0) + std::chrono::microseconds(1));
+        Timestamp ts1(t, 1000000);
+
+        WHEN("values are encoded")
+        {
+            TestCborEncoder tcbe;
+            ts1.writeCbor(tcbe);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (4 << 5) | 2, 0, 1,
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+    }
+}
+
 SCENARIO("StorageHints can be read", "[block]")
 {
     GIVEN("A test CBOR decoder and sample StorageHints data")
@@ -834,7 +901,7 @@ SCENARIO("QueryResponseItems can be written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)));
+            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), 1000000);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -914,7 +981,10 @@ SCENARIO("BlockData items can be written", "[block]")
 {
     GIVEN("A sample BlockData")
     {
-        BlockData cd;
+        BlockParameters bp;
+        std::vector<BlockParameters> bpv;
+        bpv.push_back(bp);
+        BlockData cd(bpv);
         cd.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1));
 
         WHEN("values are encoded")
@@ -963,8 +1033,14 @@ SCENARIO("BlockData max items works", "[block]")
     {
         QueryResponseItem qri1;
         QueryResponseItem qri2;
-        BlockData cd1(1);
-        BlockData cd2(2);
+        BlockParameters bp1, bp2;
+        bp1.storage_parameters.max_block_items = 1;
+        bp2.storage_parameters.max_block_items = 2;
+        std::vector<BlockParameters> bpv;
+        bpv.push_back(bp1);
+        bpv.push_back(bp2);
+        BlockData cd1(bpv);
+        BlockData cd2(bpv, 1);
         cd1.query_response_items.push_back(std::move(qri1));
         cd2.query_response_items.push_back(std::move(qri2));
 
@@ -1338,7 +1414,7 @@ SCENARIO("QueryResponseItems can be read", "[block]")
             {
                 QueryResponseItem qri1_r;
                 block_cbor::FileVersionFields fields;
-                qri1_r.readCbor(tcbd, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), fields);
+                qri1_r.readCbor(tcbd, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), 1000000, fields);
 
                 REQUIRE(qri1.qr_flags == qri1_r.qr_flags);
                 REQUIRE(qri1.client_address == qri1_r.client_address);
@@ -1438,7 +1514,10 @@ SCENARIO("BlockData items can be read", "[block]")
     GIVEN("A test CBOR decoder and sample header list item data")
     {
         TestCborDecoder tcbd;
-        BlockData cd;
+        BlockParameters bp;
+        std::vector<BlockParameters> bpv;
+        bpv.push_back(bp);
+        BlockData cd(bpv);
         cd.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1));
 
         WHEN("decoder is given encoded block data")
@@ -1488,7 +1567,10 @@ SCENARIO("BlockData items can be read", "[block]")
 
             THEN("decoder input is correct")
             {
-                BlockData cd_r;
+                BlockParameters bp;
+                std::vector<BlockParameters> bpv;
+                bpv.push_back(bp);
+                BlockData cd_r(bpv);
                 block_cbor::FileVersionFields fields;
                 cd_r.readCbor(tcbd, fields);
 

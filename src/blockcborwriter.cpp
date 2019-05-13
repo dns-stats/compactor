@@ -31,10 +31,15 @@ BlockCborWriter::BlockCborWriter(const Configuration& config,
     : BaseOutputWriter(config),
       output_pattern_(config.output_pattern + enc->suggested_extension(),
                       std::chrono::seconds(config.rotation_period)),
-      enc_(std::move(enc)), data_(make_unique<block_cbor::BlockData>(config.max_block_items)),
+      enc_(std::move(enc)),
       query_response_(), ext_rr_(nullptr), ext_group_(nullptr),
       last_end_block_statistics_()
 {
+    block_cbor::BlockParameters bp;
+    config.populate_block_parameters(bp);
+    block_parameters_.push_back(bp);
+
+    data_ = make_unique<block_cbor::BlockData>(block_parameters_);
 }
 
 BlockCborWriter::~BlockCborWriter()

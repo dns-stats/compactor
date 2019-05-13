@@ -148,6 +148,77 @@ namespace block_cbor {
     using index_t = std::size_t;
 
     /**
+     * \struct Timestamp
+     * \brief A timestamp as POSIX time in seconds since the epoch
+     * and subsecond ticks.
+     */
+    struct Timestamp
+    {
+        /**
+         * \brief Constructor.
+         *
+         * \param t     the time point.
+         * \param ticks_per_second the number of ticks in a second.
+         */
+        Timestamp(const std::chrono::system_clock::time_point& t,
+                  uint64_t ticks_per_second)
+        {
+            setFromTimePoint(t, ticks_per_second);
+        }
+
+        /**
+         * \brief Constructor.
+         */
+        Timestamp() : secs(0), ticks(0) {}
+
+        /**
+         * \brief POSIX seconds since the epoch.
+         */
+        uint64_t secs;
+
+        /**
+         * \brief subsecond ticks.
+         *
+         * The number of ticks per second is a block parameter.
+         */
+        uint64_t ticks;
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec    CBOR stream to read from.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc CBOR stream to write to.
+         */
+        void writeCbor(CborBaseEncoder& enc);
+
+        /**
+         * \brief Set timestamp from time point.
+         *
+         * \param t     the time point.
+         * \param ticks_per_second the number of ticks in a second.
+         */
+        void setFromTimePoint(const std::chrono::system_clock::time_point& t,
+                              uint64_t ticks_per_second);
+
+        /**
+         * \brief Get the time point represented by this timestamp.
+         *
+         * \param ticks_per_second the number of ticks in a second.
+         * \returns the time point.
+         */
+        std::chrono::system_clock::time_point getTimePoint(uint64_t ticks_per_second);
+    };
+
+    /**
      * \struct StorageHints
      * \brief Bitmap hints on what data was being collected, and so
      * should appear in the block is present on the wire.
@@ -1048,7 +1119,7 @@ namespace block_cbor {
         /**
          * \brief the response delay.
          */
-        std::chrono::microseconds response_delay;
+        std::chrono::nanoseconds response_delay;
 
         /**
          * \brief the first query QNAME.
@@ -1098,6 +1169,7 @@ namespace block_cbor {
          *
          * \param dec           CBOR stream to read from.
          * \param earliest_time earliest time in block.
+         * \param ticks_per_second ticks per second for this block.
          * \param fields        translate map keys to internal values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
@@ -1105,6 +1177,7 @@ namespace block_cbor {
          */
         void readCbor(CborBaseDecoder& dec,
                       const std::chrono::system_clock::time_point& earliest_time,
+                      uint64_t ticks_per_second,
                       const FileVersionFields& fields);
 
         /**
@@ -1112,9 +1185,11 @@ namespace block_cbor {
          *
          * \param enc           CBOR stream to write to.
          * \param earliest_time earliest time in block.
+         * \param ticks_per_second ticks per second for this block.
          */
         void writeCbor(CborBaseEncoder& enc,
-                       const std::chrono::system_clock::time_point& earliest_time);
+                       const std::chrono::system_clock::time_point& earliest_time,
+                       uint64_t ticks_per_second);
     };
 
     /**
@@ -1481,19 +1556,23 @@ namespace block_cbor {
     {
     private:
         /**
-         * \brief maximum number of query/response items
-         * or address event items in block.
+         * \brief the array of block parameters for this file.
+         *
+         * For writing we will always use entry 0.
          */
-        unsigned max_block_items_;
+        const std::vector<BlockParameters>& block_parameters_;
 
     public:
         /**
          * Constructor.
          *
-         * \param max_block_items number of query/response items to full.
+         * \param block_parameters vector of block parameters for this file.
+         * \param bp_index         default index of vector item to use.
          */
-        explicit BlockData(unsigned max_block_items = DEFAULT_MAX_BLOCK_ITEMS)
-            : max_block_items_(max_block_items), block_parameters_index(0)
+        explicit BlockData(const std::vector<BlockParameters>& block_parameters,
+                           unsigned bp_index = 0)
+            : block_parameters_(block_parameters),
+              block_parameters_index(bp_index)
         {
             init();
         }
@@ -1604,9 +1683,10 @@ namespace block_cbor {
          */
         bool is_full()
         {
+            unsigned max_block_items = block_parameters_[block_parameters_index].storage_parameters.max_block_items;
             return
-                ( query_response_items.size() >= max_block_items_ ||
-                  address_event_counts.size() >= max_block_items_ );
+                ( query_response_items.size() >= max_block_items ||
+                  address_event_counts.size() >= max_block_items );
         }
 
         /**

@@ -159,24 +159,6 @@ SCENARIO("Check CBOR encoder encodes correct basic values", "[cbor]")
             }
         }
 
-        WHEN("time values are encoded")
-        {
-            tcbe.write(std::chrono::system_clock::time_point(std::chrono::microseconds(1)));
-            tcbe.write(std::chrono::system_clock::time_point(std::chrono::seconds(1)));
-            tcbe.flush();
-
-            THEN("encoder output is correct")
-            {
-                const uint8_t EXPECTED[] =
-                    {
-                        (4 << 5) | 2, 0, 1,
-                        (4 << 5) | 2, 1, 0
-                    };
-
-                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
-            }
-        }
-
         WHEN("other values are encoded")
         {
             tcbe.writeArrayHeader(12);

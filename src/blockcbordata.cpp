@@ -56,6 +56,67 @@ namespace block_cbor {
             enc.write(i);
     }
 
+    void Timestamp::readCbor(CborBaseDecoder& dec)
+    {
+        try
+        {
+            bool indef;
+            unsigned item = 0;
+            uint64_t n_elems = dec.readArrayHeader(indef);
+            while ( indef || n_elems-- > 0 )
+            {
+                if ( indef && dec.type() == CborBaseDecoder::TYPE_BREAK )
+                {
+                    dec.readBreak();
+                    break;
+                }
+
+                switch(item++)
+                {
+                case 0:
+                    secs = dec.read_unsigned();
+                    break;
+
+                case 1:
+                    ticks = dec.read_unsigned();
+                    break;
+
+                default:
+                    throw cbor_file_format_error("Unexpected CBOR item reading timestamp");
+                    break;
+                }
+            }
+        }
+        catch (const std::logic_error& e)
+        {
+            throw cbor_file_format_error("Unexpected CBOR item reading timestamp");
+        }
+    }
+
+    void Timestamp::writeCbor(CborBaseEncoder& enc)
+    {
+        enc.writeArrayHeader(2);
+        enc.write(secs);
+        enc.write(ticks);
+    }
+
+    void Timestamp::setFromTimePoint(const std::chrono::system_clock::time_point& t,
+                                     uint64_t ticks_per_second)
+    {
+        std::chrono::seconds s(std::chrono::duration_cast<std::chrono::seconds>(t.time_since_epoch()));
+        std::chrono::nanoseconds ns(std::chrono::duration_cast<std::chrono::nanoseconds>(t.time_since_epoch()));
+
+        secs = s.count();
+        ticks = (ns.count() % 1000000000) * ticks_per_second / 1000000000;
+    }
+
+    std::chrono::system_clock::time_point Timestamp::getTimePoint(uint64_t ticks_per_second)
+    {
+        std::chrono::seconds s(secs);
+        std::chrono::nanoseconds ns(ticks * 1000000000 / ticks_per_second);
+        return std::chrono::system_clock::time_point(s + ns);
+    }
+
     void StorageHints::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
         try
@@ -962,6 +1023,7 @@ namespace block_cbor {
 
     void QueryResponseItem::readCbor(CborBaseDecoder& dec,
                                      const std::chrono::system_clock::time_point& earliest_time,
+                                     uint64_t ticks_per_second,
                                      const FileVersionFields& fields)
     {
         try
@@ -981,7 +1043,7 @@ namespace block_cbor {
                 switch(fields.query_response_field(dec.read_unsigned()))
                 {
                 case QueryResponseField::time_offset:
-                    tstamp = earliest_time + std::chrono::microseconds(dec.read_signed());
+                    tstamp = earliest_time + std::chrono::microseconds(dec.read_signed() * 1000000 / ticks_per_second);
                     break;
 
                 case QueryResponseField::client_address_index:
@@ -1047,7 +1109,8 @@ namespace block_cbor {
     }
 
     void QueryResponseItem::writeCbor(CborBaseEncoder& enc,
-                                      const std::chrono::system_clock::time_point& earliest_time)
+                                      const std::chrono::system_clock::time_point& earliest_time,
+                                      uint64_t ticks_per_second)
     {
         constexpr int time_index = find_query_response_index(QueryResponseField::time_offset);
         constexpr int client_address_index = find_query_response_index(QueryResponseField::client_address_index);
@@ -1064,7 +1127,7 @@ namespace block_cbor {
 
         enc.writeMapHeader();
         enc.write(time_index);
-        enc.write(std::chrono::duration_cast<std::chrono::microseconds>(tstamp - earliest_time));
+        enc.write(std::chrono::duration_cast<std::chrono::nanoseconds>(tstamp - earliest_time).count() * ticks_per_second / 1000000000);
         enc.write(client_address_index);
         enc.write(client_address);
         enc.write(client_port_index);
@@ -1083,7 +1146,7 @@ namespace block_cbor {
         if ( ( qr_flags & QUERY_AND_RESPONSE ) == QUERY_AND_RESPONSE )
         {
             enc.write(delay_index);
-            enc.write(response_delay);
+            enc.write(response_delay.count() * ticks_per_second / 1000000000);
         }
 
         if ( qr_flags & QR_HAS_QUESTION )
@@ -1234,6 +1297,8 @@ namespace block_cbor {
 
     void BlockData::readBlockPreamble(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
+        uint64_t ticks_per_second = block_parameters_[block_parameters_index].storage_parameters.ticks_per_second;
+        Timestamp ts;
         bool indef;
         uint64_t n_elems = dec.readMapHeader(indef);
         block_parameters_index = 0; // Default value if not read.
@@ -1248,7 +1313,8 @@ namespace block_cbor {
             switch(fields.block_preamble_field(dec.read_unsigned()))
             {
             case BlockPreambleField::earliest_time:
-                earliest_time = dec.read_time();
+                ts.readCbor(dec);
+                earliest_time = ts.getTimePoint(ticks_per_second);
                 break;
 
             case BlockPreambleField::block_parameters_index:
@@ -1317,6 +1383,7 @@ namespace block_cbor {
 
     void BlockData::readItems(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
+        uint64_t ticks_per_second = block_parameters_[block_parameters_index].storage_parameters.ticks_per_second;
         bool indef;
         uint64_t n_elems = dec.readArrayHeader(indef);
         if ( !indef )
@@ -1330,7 +1397,7 @@ namespace block_cbor {
             }
 
             QueryResponseItem qri;
-            qri.readCbor(dec, earliest_time, fields);
+            qri.readCbor(dec, earliest_time, ticks_per_second, fields);
             query_response_items.push_back(std::move(qri));
         }
     }
@@ -1424,14 +1491,19 @@ namespace block_cbor {
         constexpr int earliest_time_index = find_block_preamble_index(BlockPreambleField::earliest_time);
         constexpr int block_parameters_index_index = find_block_preamble_index(BlockPreambleField::block_parameters_index);
 
+        uint64_t ticks_per_second = block_parameters_[block_parameters_index].storage_parameters.ticks_per_second;
+
         // Block header.
         enc.writeMapHeader();
 
         // Block preamble.
         enc.write(preamble_index);
         enc.writeMapHeader(1);
+
         enc.write(earliest_time_index);
-        enc.write(earliest_time);
+        Timestamp ts(earliest_time, ticks_per_second);
+        ts.writeCbor(enc);
+
         if ( block_parameters_index > 0 )
         {
             enc.write(block_parameters_index_index);
@@ -1514,13 +1586,14 @@ namespace block_cbor {
     void BlockData::writeItems(CborBaseEncoder& enc)
     {
         constexpr int queries_index = find_block_index(BlockField::queries);
+        uint64_t ticks_per_second = block_parameters_[block_parameters_index].storage_parameters.ticks_per_second;
 
         if ( query_response_items.size() > 0 )
         {
             enc.write(queries_index);
             enc.writeArrayHeader(query_response_items.size());
             for ( auto& qri : query_response_items )
-                qri.writeCbor(enc, earliest_time);
+                qri.writeCbor(enc, earliest_time, ticks_per_second);
         }
     }
 
