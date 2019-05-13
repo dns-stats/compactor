@@ -208,10 +208,10 @@ example, to set the snap length to 64, the configuration file entry must read
    (in upper case) will be included in any other question and in any Answer,
    Authority or Additional section. This argument can be given multiple times.
 
-*--max-block-qr-items* _arg_::
-   Set the maximum number of query/response items included in a single
-   output C-DNS block. _arg_ must be a positive integer. The default maximum
-   size is 5000.
+*--max-block-items* _arg_::
+   Set the maximum number of query/response items  or address event items
+   included in a single output C-DNS block. _arg_ must be a positive integer.
+   The default maximum size is 5000.
 
 *--max-output-size* _arg_::
    Sets a maximum size for the uncompressed output before an output file
