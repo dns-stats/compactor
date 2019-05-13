@@ -315,6 +315,8 @@ SCENARIO("StorageParameters can be read", "[block]")
     {
         TestCborDecoder tcbd;
         StorageParameters sp1;
+        sp1.ticks_per_second = 1;
+        sp1.max_block_items = 2;
 
         WHEN("decoder is given encoded question data")
         {
@@ -323,9 +325,9 @@ SCENARIO("StorageParameters can be read", "[block]")
                     (5 << 5) | 4,
                     0, 1,
                     1, 2,
-                    3, (5 << 5) | 4, 0, 0, 1, 0, 2, 0, 3, 0,
-                    4, (4 << 5) | 0,
-                    5, (4 << 5) | 0
+                    2, (5 << 5) | 4, 0, 0, 1, 0, 2, 0, 3, 0,
+                    3, (4 << 5) | 0,
+                    4, (4 << 5) | 0
                 };
             tcbd.set_bytes(INPUT);
 
@@ -392,6 +394,10 @@ SCENARIO("CollectionParameters can be read", "[block]")
     {
         TestCborDecoder tcbd;
         CollectionParameters cp1;
+        cp1.query_timeout = 1;
+        cp1.skew_timeout = 2;
+        cp1.snaplen = 3;
+        cp1.promisc = true;
 
         WHEN("decoder is given encoded question data")
         {
@@ -401,7 +407,7 @@ SCENARIO("CollectionParameters can be read", "[block]")
                     0, 1,
                     1, 2,
                     2, 3,
-                    4, (7 << 5) | 21,
+                    3, (7 << 5) | 21,
                     0xff
                 };
             tcbd.set_bytes(INPUT);

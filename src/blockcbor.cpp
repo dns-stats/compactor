@@ -222,7 +222,10 @@ namespace block_cbor {
           rr_(current_rr, current_rr + countof(current_rr)),
           query_response_extended_(current_query_response_extended, current_query_response_extended + countof(current_query_response_extended)),
           address_event_count_(current_address_event_count, current_address_event_count + countof(current_address_event_count)),
-          storage_hints_(format_10_storage_hints, format_10_storage_hints + countof(format_10_storage_hints))
+          storage_hints_(format_10_storage_hints, format_10_storage_hints + countof(format_10_storage_hints)),
+          storage_parameters_(format_10_storage_parameters, format_10_storage_parameters + countof(format_10_storage_parameters)),
+          collection_parameters_(format_10_collection_parameters, format_10_collection_parameters + countof(format_10_collection_parameters)),
+          block_parameters_(format_10_block_parameters, format_10_block_parameters + countof(format_10_block_parameters))
     {
     }
 
