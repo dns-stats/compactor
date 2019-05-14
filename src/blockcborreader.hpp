@@ -108,7 +108,7 @@ protected:
      * therein.
      *
      * \param config extracted configuration information.
-     * \param ver    the file format version.
+     * \param ver    the file format version. Either format 1.0 or format 0.2.
      * \throws cbor_decode_error if the CBOR is invalid.
      * \throws std::logic_error on unexpected CBOR content.
      * \throws cbor_file_format_error on unexpected CBOR content.

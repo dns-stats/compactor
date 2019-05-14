@@ -248,6 +248,7 @@ namespace block_cbor {
             block_statistics_ = format_05_block_statistics;
             query_response_signature_ = format_05_query_response_signature;
             query_response_ = format_05_query_response;
+            return;
         }
 
         if ( major_version == 0 && minor_version == FILE_FORMAT_02_VERSION )

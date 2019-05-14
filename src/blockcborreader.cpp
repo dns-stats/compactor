@@ -90,14 +90,7 @@ void BlockCborReader::readFilePreamble(Configuration& config, block_cbor::FileFo
             break;
         }
 
-        block_cbor::FilePreambleField key = block_cbor::file_preamble_field(dec_.read_unsigned(), ver);
-
-        if ( !fields_ &&
-             (key == block_cbor::FilePreambleField::configuration ||
-              key == block_cbor::FilePreambleField::block_parameters) )
-            fields_ = make_unique<block_cbor::FileVersionFields>(major_version, minor_version, private_version);
-
-        switch(key)
+        switch(block_cbor::file_preamble_field(dec_.read_unsigned(), ver))
         {
         case block_cbor::FilePreambleField::major_format_version:
             if ( ver != block_cbor::FileFormatVersion::format_10 )
@@ -117,17 +110,39 @@ void BlockCborReader::readFilePreamble(Configuration& config, block_cbor::FileFo
             private_version = dec_.read_unsigned();
             break;
 
+            // This may be either format 1.0 block parameters,
+            // format 0.5 configuration or format 0.2 configuration.
+            // Now we can distinguish format 1.0 and format 0.5, and
+            // at last set up the field mapper.
         case block_cbor::FilePreambleField::block_parameters:
-            if ( ver != block_cbor::FileFormatVersion::format_10 )
+        case block_cbor::FilePreambleField::configuration:
+            if ( ver == block_cbor::FileFormatVersion::format_10 &&
+                 major_version == block_cbor::FILE_FORMAT_05_MAJOR_VERSION &&
+                 minor_version == block_cbor::FILE_FORMAT_05_MINOR_VERSION )
+                ver = block_cbor::FileFormatVersion::format_05;
+
+            if ( fields_ )
+                throw cbor_file_format_error("Unexpected configuration reading header");
+            fields_ = make_unique<block_cbor::FileVersionFields>(major_version, minor_version, private_version);
+
+            switch(ver)
+            {
+            case block_cbor::FileFormatVersion::format_10:
+                readBlockParameters(config);
+                break;
+
+            case block_cbor::FileFormatVersion::format_05:
+            case block_cbor::FileFormatVersion::format_02:
+                readConfiguration(config);
+                break;
+
+            default:
                 throw cbor_file_format_error("Unexpected version item reading header");
-            readBlockParameters(config);
+                break;
+            }
             break;
 
         // Obsolete items format 0.5
-        case block_cbor::FilePreambleField::configuration:
-            readConfiguration(config);
-            break;
-
         case block_cbor::FilePreambleField::generator_id:
             generator_id_ = dec_.read_string();
             break;

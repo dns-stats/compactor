@@ -51,6 +51,7 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/same-tshark-output.sh \
                 test-scripts/same-live.sh \
                 test-scripts/verify-cbor02.sh \
+                test-scripts/verify-cbor05.sh \
                 test-scripts/verify-cddl.sh
 
 if ENABLE_PSEUDOANONYMISATION
@@ -71,6 +72,7 @@ dist_check_DATA = doc/c-dns-working.cddl \
                   test-scripts/gold.pcap.xz \
                   test-scripts/gold.cbor.xz \
                   test-scripts/gold.cbor02.xz \
+                  test-scripts/gold.cbor05.xz \
                   test-scripts/gold.pcap.info \
                   test-scripts/malformed.pcap.xz \
                   test-scripts/matching.pcap.xz \
@@ -102,6 +104,7 @@ check_DATA = GeoLite2-ASN.mmdb \
              gold.pcap \
              gold.cbor \
              gold.cbor02 \
+             gold.cbor05 \
              malformed.pcap \
              matching.pcap \
              testcontent.pcap \
