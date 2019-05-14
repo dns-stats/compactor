@@ -151,7 +151,7 @@ void BlockCborReader::readFilePreamble(Configuration& config, block_cbor::FileFo
             host_id_ = dec_.read_string();
 #if ENABLE_PSEUDOANONYMISATION
             if ( pseudo_anon_ )
-                host_id_ = "";
+                host_id_.clear();
 #endif
             break;
 
@@ -227,7 +227,7 @@ void BlockCborReader::readConfiguration(Configuration& config)
             config.filter = dec_.read_string();
 #if ENABLE_PSEUDOANONYMISATION
             if ( pseudo_anon_ )
-                config.filter = "";
+                config.filter.clear();
 #endif
             break;
 
@@ -338,15 +338,21 @@ void BlockCborReader::readBlockParameters(Configuration& config)
         }
         block_cbor::BlockParameters bp;
         bp.readCbor(dec_, *fields_);
+#if ENABLE_PSEUDOANONYMISATION
+        if ( pseudo_anon_ )
+        {
+            bp.collection_parameters.host_id.clear();
+            bp.collection_parameters.filter.clear();
+            for ( auto& a : bp.collection_parameters.server_addresses )
+                a = pseudo_anon_->address(a);
+        }
+#endif
+
         if ( first_bp )
         {
             config.set_from_block_parameters(bp);
             generator_id_ = bp.collection_parameters.generator_id;
             host_id_ = bp.collection_parameters.host_id;
-#if ENABLE_PSEUDOANONYMISATION
-            if ( pseudo_anon_ )
-                host_id_ = "";
-#endif
 
             first_bp = false;
         }
