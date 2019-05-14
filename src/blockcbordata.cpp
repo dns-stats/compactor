@@ -1498,7 +1498,7 @@ namespace block_cbor {
 
         // Block preamble.
         enc.write(preamble_index);
-        enc.writeMapHeader(1);
+        enc.writeMapHeader(1 + (block_parameters_index > 0));
 
         enc.write(earliest_time_index);
         Timestamp ts(earliest_time, ticks_per_second);

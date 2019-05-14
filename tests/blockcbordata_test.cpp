@@ -990,8 +990,10 @@ SCENARIO("BlockData items can be written", "[block]")
         BlockParameters bp;
         std::vector<BlockParameters> bpv;
         bpv.push_back(bp);
+        bp.storage_parameters.ticks_per_second = 10000000;
+        bpv.push_back(bp);
         BlockData cd(bpv);
-        cd.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1));
+        cd.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(1));
 
         WHEN("values are encoded")
         {
@@ -1004,7 +1006,47 @@ SCENARIO("BlockData items can be written", "[block]")
                 const uint8_t EXPECTED[] =
                     {
                         (5 << 5) | 31,
-                        0, (5 << 5) | 1, 0, (4 << 5) | 2, 1, 0,
+                        0, (5 << 5) | 1, 0, (4 << 5) | 2, 1, 1,
+
+                        1,
+                        (5 << 5) | 31,
+                        0, 0,
+                        1, 0,
+                        2, 0,
+                        3, 0,
+                        5, 0,
+                        (1 << 5) | 0, 0,
+                        (1 << 5) | 1, 0,
+                        (1 << 5) | 2, 0,
+                        (1 << 5) | 3, 0,
+                        (1 << 5) | 4, 0,
+                        0xff,
+
+                        2,
+                        (5 << 5) | 31,
+                        0xff,
+
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("ticks_per_second changes time value changes")
+        {
+            TestCborEncoder tcbe;
+            BlockData cd2(bpv, 1);
+            cd2.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(1));
+            cd2.writeCbor(tcbe);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                const uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        0, (5 << 5) | 2, 0, (4 << 5) | 2, 1, 10, 1, 1,
 
                         1,
                         (5 << 5) | 31,
@@ -1523,15 +1565,17 @@ SCENARIO("BlockData items can be read", "[block]")
         BlockParameters bp;
         std::vector<BlockParameters> bpv;
         bpv.push_back(bp);
+        bp.storage_parameters.ticks_per_second = 10000000;
+        bpv.push_back(bp);
         BlockData cd(bpv);
-        cd.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1));
+        cd.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(1));
 
         WHEN("decoder is given encoded block data")
         {
             const std::vector<uint8_t> INPUT =
                 {
                     (5 << 5) | 31,
-                    0, (5 << 5) | 1, 0, (4 << 5) | 2, 1, 0,
+                    0, (5 << 5) | 1, 0, (4 << 5) | 2, 1, 1,
 
                     1,
                     (5 << 5) | 31,
@@ -1573,10 +1617,62 @@ SCENARIO("BlockData items can be read", "[block]")
 
             THEN("decoder input is correct")
             {
-                BlockParameters bp;
-                std::vector<BlockParameters> bpv;
-                bpv.push_back(bp);
                 BlockData cd_r(bpv);
+                block_cbor::FileVersionFields fields;
+                cd_r.readCbor(tcbd, fields);
+
+                REQUIRE(cd_r.earliest_time == cd.earliest_time);
+            }
+        }
+
+        WHEN("decoder is given encoded block data with different ticks_per_second")
+        {
+            const std::vector<uint8_t> INPUT =
+                {
+                    (5 << 5) | 31,
+                    0, (5 << 5) | 2, 0, (4 << 5) | 2, 1, 10, 1, 1,
+
+                    1,
+                    (5 << 5) | 31,
+                    0, 0,
+                    1, 0,
+                    2, 0,
+                    3, 0,
+                    5, 0,
+                    (1 << 5) | 0, 0,
+                    (1 << 5) | 1, 0,
+                    (1 << 5) | 2, 0,
+                    (1 << 5) | 3, 0,
+                    (1 << 5) | 4, 0,
+                    0xff,
+
+                    2,
+                    (5 << 5) | 31,
+                    0, (4 << 5) | 31, 0xff,
+                    1, (4 << 5) | 31, 0xff,
+                    2, (4 << 5) | 31, 0xff,
+                    3, (4 << 5) | 31, 0xff,
+                    4, (4 << 5) | 31, 0xff,
+                    5, (4 << 5) | 31, 0xff,
+                    6, (4 << 5) | 31, 0xff,
+                    7, (4 << 5) | 31, 0xff,
+                    0xff,
+
+                    3,
+                    (4 << 5) | 31,
+                    0xff,
+
+                    4,
+                    (4 << 5) | 31,
+                    0xff,
+
+                    0xff
+                };
+            tcbd.set_bytes(INPUT);
+
+            THEN("decoder input is correct")
+            {
+                BlockData cd_r(bpv, 1);
                 block_cbor::FileVersionFields fields;
                 cd_r.readCbor(tcbd, fields);
 
