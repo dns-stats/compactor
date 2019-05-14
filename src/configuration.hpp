@@ -218,9 +218,24 @@ public:
     std::vector<unsigned> vlan_ids;
 
     /**
+     * \brief which opcodes are to be ignored on output.
+     */
+    std::vector<unsigned> ignore_opcodes;
+
+    /**
+     * \brief which opcodes are to be included on output.
+     */
+    std::vector<unsigned> accept_opcodes;
+
+    /**
      * \brief which RR types are to be ignored on output.
      */
     std::vector<unsigned> ignore_rr_types;
+
+    /**
+     * \brief which RR types are to be included on output.
+     */
+    std::vector<unsigned> accept_rr_types;
 
     /**
      * \brief set the maximum number of query/response items
@@ -232,11 +247,6 @@ public:
      * \brief set the maximum uncompressed output size. 0 = no limit.
      */
     Size max_output_size;
-
-    /**
-     * \brief which RR types are to be included on output.
-     */
-    std::vector<unsigned> accept_rr_types;
 
     /**
      * \brief report statistics on exit
@@ -319,6 +329,17 @@ public:
     void dump_config(std::ostream& os) const;
 
     /**
+     * \brief Determine whether a particular OPCODE should be output.
+     *
+     * Check the OPCODE against the list of configured accept and ignore
+     * OPCODEs.
+     *
+     * \param opcode the OPCODE.
+     * \returns `true` if it should be output.
+     */
+    bool output_opcode(CaptureDNS::Opcode opcode) const;
+
+    /**
      * \brief Determine whether a particular RR type should be output.
      *
      * Check the RR type against the list of configured accept and ignore
@@ -389,10 +410,14 @@ private:
     void dump_output_option(std::ostream& os, bool query) const;
 
     /**
+     * \brief Helper method to print OPCODEs
+     */
+    void dump_OPCODEs(std::ostream& os, bool accept) const;
+
+    /**
      * \brief Helper method to print RR types
      */
     void dump_RR_types(std::ostream& os, bool accept) const;
-
 };
 
 #endif

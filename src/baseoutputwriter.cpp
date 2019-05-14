@@ -22,6 +22,10 @@ BaseOutputWriter::BaseOutputWriter(const Configuration& config)
 void BaseOutputWriter::writeQR(const std::shared_ptr<QueryResponse>& qr,
                                const PacketStatistics& stats)
 {
+    const DNSMessage &d(qr->has_query() ? qr->query() : qr->response());
+    if ( !config_.output_opcode(d.dns.opcode()) )
+         return;
+
     checkForRotation(qr->timestamp());
     startRecord(qr);
 

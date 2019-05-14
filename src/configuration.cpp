@@ -25,6 +25,15 @@
 namespace po = boost::program_options;
 
 namespace {
+    const std::unordered_map<std::string, unsigned> OPCODES = {
+        { "QUERY", 0 },
+        { "IQUERY", 1 },
+        { "STATUS", 2 },
+        { "NOTIFY", 4 },
+        { "UPDATE", 5 },
+        { "DSO", 6 }
+    };
+
     const std::unordered_map<std::string, unsigned> RR_TYPES = {
         { "A", 1 },
         { "NS", 2 },
@@ -102,13 +111,25 @@ namespace {
         { "MAILA", 254 },
         { "TYPE_ANY", 255 },
         { "URI", 256 },
-        { "CAA", 256 },
+        { "CAA", 257 },
         { "TA", 32768  },
         { "DLV", 32769  },
 
         { "CERT", 37 },
         { "NSEC3PARAMS", 51 }
     };
+
+    void set_opcode_config(std::vector<unsigned>& config, const std::vector<std::string>& names)
+    {
+        for ( const auto& s : names )
+        {
+            auto item = OPCODES.find(s);
+            if ( item == OPCODES.end() )
+                throw po::error("unknown OPCODE " + s );
+            else
+                config.push_back(item->second);
+        }
+    }
 
     void set_rr_type_config(std::vector<unsigned>& config, const std::vector<std::string>& names)
     {
@@ -300,6 +321,12 @@ Configuration::Configuration()
         ("include,n",
          po::value<std::vector<std::string>>(),
          "specify optional sections for output, (query|response)-(questions|answers|authorities|all) or all. Default none.")
+        ("accept-opcode,E",
+         po::value<std::vector<std::string>>(),
+         "OPCODEs to be captured, if not all.")
+        ("ignore-opcode,G",
+         po::value<std::vector<std::string>>(),
+        "OPCODEs to be ignored.")
         ("accept-rr-type,e",
          po::value<std::vector<std::string>>(),
          "RR types to be captured, if not all.")
@@ -456,10 +483,20 @@ void Configuration::dump_config(std::ostream& os) const
     dump_output_option(os, true);
     os << "  Response options     : ";
     dump_output_option(os, false);
+    os << "  Accept OPCODEs       : ";
+    dump_OPCODEs(os, true);
+    if ( !ignore_opcodes.empty() )
+    {
+        os << "  Ignore OPCODEs       : ";
+        dump_OPCODEs(os, false);
+    }
     os << "  Accept RR types      : ";
     dump_RR_types(os, true);
-    os << "  Ignore RR types      : ";
-    dump_RR_types(os, false);
+    if ( !ignore_rr_types.empty() )
+    {
+        os << "  Ignore RR types      : ";
+        dump_RR_types(os, false);
+    }
 }
 
 void Configuration::set_config_items(const po::variables_map& vm)
@@ -517,8 +554,18 @@ void Configuration::set_config_items(const po::variables_map& vm)
     if ( gzip_pcap && xz_pcap )
         throw po::error("You cannot select more than one PCAP compression method.");
 
+    if ( vm.count("ignore-opcode") && vm.count("accept-opcode") )
+        throw po::error("You can specify only accept-opcode or ignore-opcode, not both.");
+
     if ( vm.count("ignore-rr-type") && vm.count("accept-rr-type") )
         throw po::error("You can specify only accept-rr-type or ignore-rr-type, not both.");
+
+    ignore_opcodes.clear();
+    if ( vm.count("ignore-opcode") )
+        set_opcode_config(ignore_opcodes, vm["ignore-opcode"].as<std::vector<std::string>>());
+    accept_opcodes.clear();
+    if ( vm.count("accept-opcode") )
+        set_opcode_config(accept_opcodes, vm["accept-opcode"].as<std::vector<std::string>>());
 
     ignore_rr_types.clear();
     if ( vm.count("ignore-rr-type") )
@@ -569,6 +616,36 @@ void Configuration::dump_output_option(std::ostream& os, bool query) const
     os << "\n";
 }
 
+void Configuration::dump_OPCODEs(std::ostream& os, bool accept) const
+{
+    const std::vector<unsigned>& opcodes = accept ? accept_opcodes : ignore_opcodes;
+    if ( !opcodes.empty() )
+    {
+        bool first = true;
+        for ( auto op_t : opcodes )
+        {
+            if ( first )
+                first = false;
+            else
+                os << ", ";
+            // For now a brute force linear search
+            bool found = false;
+            for ( auto op : OPCODES)
+            {
+                if (op.second == op_t)
+                {
+                    os << op.first;
+                    found = true;
+                    break;
+                }
+            }
+            if ( !found )
+                os << op_t;
+        }
+    }
+    os << "\n";
+}
+
 void Configuration::dump_RR_types(std::ostream& os, bool accept) const
 {
     const std::vector<unsigned>& rr_types = accept ? accept_rr_types : ignore_rr_types;
@@ -582,17 +659,41 @@ void Configuration::dump_RR_types(std::ostream& os, bool accept) const
             else
                 os << ", ";
             // For now a brute force linear search
+            bool found = false;
             for ( auto rr : RR_TYPES)
             {
                 if (rr.second == rr_t)
                 {
                     os << rr.first;
+                    found = true;
                     break;
                 }
             }
+            if ( !found )
+                os << rr_t;
         }
     }
     os << "\n";
+}
+
+bool Configuration::output_opcode(CaptureDNS::Opcode opcode) const
+{
+    if ( !accept_opcodes.empty() )
+    {
+        for ( auto i : accept_opcodes )
+            if ( i == opcode )
+                return true;
+
+        return false;
+    }
+    else
+    {
+        for ( auto i : ignore_opcodes )
+            if ( i == opcode )
+                return false;
+
+        return true;
+    }
 }
 
 bool Configuration::output_rr_type(CaptureDNS::QueryType rr_type) const
@@ -641,10 +742,10 @@ void Configuration::populate_block_parameters(block_cbor::BlockParameters& bp) c
     // but does not currently write malformed messages.
     sh.other_data_hints = block_cbor::OtherDataHintFlags(0x2);
 
-    // List of opcodes recorded. Currently compactor doesn't
-    // filter on opcodes, so set this to all current opcodes.
+    // List of opcodes recorded.
     for ( const auto op : CaptureDNS::OPCODES )
-        sp.opcodes.push_back(op);
+        if ( output_opcode(op) )
+            sp.opcodes.push_back(op);
 
     // List of RR types recorded.
     for ( const auto rr : CaptureDNS::QUERYTYPES )
@@ -702,6 +803,10 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
 
     output_options_queries = (sh.query_response_hints >> 11) & 0xf;
     output_options_responses = ((sh.query_response_hints >> 14) & 0xe) | ((sh.query_response_hints >> 11) & 1);
+
+    // List of OPCODEs recorded.
+    for ( const auto op : sp.opcodes )
+        accept_opcodes.push_back(op);
 
     // List of RR types recorded.
     for ( const auto rr : sp.rr_types )
