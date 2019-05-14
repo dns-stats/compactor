@@ -915,7 +915,7 @@ namespace block_cbor {
         /**
          * \brief query OPCODE.
          */
-        uint8_t query_opcode;
+        CaptureDNS::Opcode query_opcode;
 
         /**
          * \brief query EDNS version.

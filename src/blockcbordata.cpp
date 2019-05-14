@@ -780,7 +780,7 @@ namespace block_cbor {
                     break;
 
                 case QueryResponseSignatureField::query_opcode:
-                    query_opcode = dec.read_unsigned();
+                    query_opcode = CaptureDNS::Opcode(dec.read_unsigned());
                     break;
 
                 case QueryResponseSignatureField::query_an_count:

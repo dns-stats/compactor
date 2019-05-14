@@ -747,7 +747,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         qs1.qdcount = 1;
         qs1.query_rcode = 22;
         qs1.response_rcode = 23;
-        qs1.query_opcode = 2;
+        qs1.query_opcode = CaptureDNS::Opcode(2);
         qs1.query_edns_version = 0;
         qs1.query_edns_payload_size = 22;
         qs1.query_opt_rdata = 4;
@@ -768,7 +768,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
 
         WHEN("different items are compared")
         {
-            qs2.query_opcode = 4;
+            qs2.query_opcode = CaptureDNS::Opcode(4);
 
             THEN("they don't compare equal")
             {
@@ -1347,7 +1347,7 @@ SCENARIO("QueryResponseSignatures can be read", "[block]")
         qs1.qdcount = 1;
         qs1.query_rcode = 22;
         qs1.response_rcode = 23;
-        qs1.query_opcode = 2;
+        qs1.query_opcode = CaptureDNS::Opcode(2);
         qs1.query_edns_version = 0;
         qs1.query_edns_payload_size = 22;
         qs1.query_opt_rdata = 4;

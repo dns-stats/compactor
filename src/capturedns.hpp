@@ -739,10 +739,10 @@ public:
     /**
      * \brief Getter for the opcode field.
      *
-     * \return uint8_t containing the value of the opcode field.
+     * \return Opcode containing the value of the opcode field.
      */
-    uint8_t opcode() const {
-        return header_.opcode;
+    Opcode opcode() const {
+        return Opcode(header_.opcode);
     }
 
     /**
@@ -965,7 +965,7 @@ public:
      *
      * \param new_opcode The new opcode to be set.
      */
-    void opcode(uint8_t new_opcode) {
+    void opcode(Opcode new_opcode) {
         header_.opcode = new_opcode;
     }
 
