@@ -678,6 +678,22 @@ int main(int ac, char *av[])
             return 1;
         }
 
+        if ( configuration.client_address_prefix_ipv4 > 32 ||
+             configuration.server_address_prefix_ipv4 > 32 )
+        {
+            std::cerr
+                << "Error:\tIPv4 prefix length must be in range 0 to 32.\n";
+            return 1;
+        }
+
+        if ( configuration.client_address_prefix_ipv6 > 128 ||
+             configuration.server_address_prefix_ipv6 > 128 )
+        {
+            std::cerr
+                << "Error:\tIPv6 prefix length must be in range 0 to 128.\n";
+            return 1;
+        }
+
         // Disable collection stats logging and disable logging
         // the hostname if reading from file.
         if ( vm.count("capture-file") )

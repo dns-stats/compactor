@@ -613,12 +613,12 @@ IPAddress BlockCborReader::string_to_addr(const byte_string& str, bool is_ipv6)
 
     if ( is_ipv6 )
     {
-        if ( str.size() != 16 )
+        if ( str.size() < 16 )
             b.resize(16, 0);
     }
     else
     {
-        if ( str.size() != 4 )
+        if ( str.size() < 4 )
             b.resize(4, 0);
     }
 

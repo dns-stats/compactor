@@ -346,6 +346,18 @@ Configuration::Configuration()
         ("max-output-size",
          po::value<Size>(&max_output_size),
          "maximum size of output (uncompressed) before rotation.")
+        ("client-address-prefix-ipv4",
+         po::value<unsigned int>(&client_address_prefix_ipv4)->default_value(32),
+         "prefix length to store for client IPv4 addresses.")
+        ("client-address-prefix-ipv6",
+         po::value<unsigned int>(&client_address_prefix_ipv6)->default_value(128),
+         "prefix length to store for client IPv6 addresses.")
+        ("server-address-prefix-ipv4",
+         po::value<unsigned int>(&server_address_prefix_ipv4)->default_value(32),
+         "prefix length to store for server IPv4 addresses.")
+        ("server-address-prefix-ipv6",
+         po::value<unsigned int>(&server_address_prefix_ipv6)->default_value(128),
+         "prefix length to store for server IPv6 addresses.")
         ("output,o",
          po::value<std::string>(&output_pattern),
          "filename pattern for storing C-DNS output.")

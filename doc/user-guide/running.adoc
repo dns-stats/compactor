@@ -546,6 +546,31 @@ the original capture.
 * Surplus data at the end of a message is not recorded. A count is
   kept of the number of original packets with surplus data.
 
+=== Stored address prefix lengths
+
+_compactor_ C-DNS output may optionally store IP address prefixes rather
+than the full address when record address events or query/responses. Depending
+on the capture environment, this may serve to reduce the size of the C-DNS capture.
+
+Separate prefix lengths may be given for client and server addresses. Client
+addresses are sender addresses on queries and recipient addresses on
+responses. Server addresses are the reverse; recipient addresses on queries
+and sender addresses on responses.
+
+The prefix is the number of bits of the address to be stored. Seperate prefixes
+must be specified for IPv4 addresses and IPv6 addresses. Set prefix lengths using
+_compactor_ configurations `client-address-prefix-ipv4`,
+`client-address-prefix-ipv6`, `server-address-prefix-ipv4` and
+`server-address-prefix-ipv6`.
+
+When storing the addresses, _compactor_ sets all the address bits after the prefix
+length to 0, and does not store trailing 0 bytes in the address. So, for example,
+specifying an IPv6 prefix of 64 will store only the first 8 bytes of the address,
+rather than the full 16 bytes. Not only does this halve the storage requirement for
+the address, but it increases the chances of the address being re-used in
+subsequent records, as only the prefix bits of the address have to match an
+already-stored address.
+
 === _compactor_/_inspector_ `info` output
 
 A typical `info` file is as follows. The report begins with

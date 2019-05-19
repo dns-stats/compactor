@@ -39,6 +39,7 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/check-outputs.sh \
                 test-scripts/check-template.sh \
                 test-scripts/check-testcontent.sh \
+                test-scripts/check-addressprefix.sh \
                 test-scripts/inspector-outputs.sh \
                 test-scripts/output-size-limit.sh \
                 test-scripts/same-output.sh \
@@ -79,6 +80,8 @@ dist_check_DATA = doc/c-dns-working.cddl \
                   test-scripts/testcontent.pcap.xz \
                   test-scripts/testcontent.diag \
                   test-scripts/testcontent.debugqr \
+                  test-scripts/addressprefix.diag \
+                  test-scripts/addressprefix.debugqr \
                   test-scripts/unmatched.pcap.xz \
                   test-scripts/nsd-live.dump.xz \
                   test-scripts/nsd-live.raw.pcap.xz \

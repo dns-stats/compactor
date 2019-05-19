@@ -233,6 +233,30 @@ example, to set the snap length to 64, the configuration file entry must read
    This may be combined with a rotation period, in which case
    rotation happens when either condition is met.
 
+*--client-address-prefix-ipv4* _arg_::
+   Set the prefix size (number of address bits stored) for IPv4 client addresses.
+   The client address is the address of the sender of a query or the receipient
+   of a response.  _arg_ must be a positive integer less than or equal to 32.
+   The default is 32, so the entire IPv4 address is stored.
+
+*--client-address-prefix-ipv6* _arg_::
+   Set the prefix size (number of address bits stored) for IPv6 client addresses.
+   The client address is the address of the sender of a query or the receipient
+   of a response.  _arg_ must be a positive integer less than or equal to 128.
+   The default is 128, so the entire IPv6 address is stored.
+
+*--server-address-prefix-ipv4* _arg_::
+   Set the prefix size (number of address bits stored) for IPv4 server addresses.
+   The server address is the address of the recipient of a query or the sender
+   of a response.  _arg_ must be a positive integer less than or equal to 32.
+   The default is 32, so the entire IPv4 address is stored.
+
+*--server-address-prefix-ipv6* _arg_::
+   Set the prefix size (number of address bits stored) for IPv6 server addresses.
+   The server address is the address of the recipient of a query or the sender
+   of a response.  _arg_ must be a positive integer less than or equal to 128.
+   The default is 128, so the entire IPv6 address is stored.
+
 ==== Query/response matching
 
 *-q, --query-timeout* _SECONDS_::
