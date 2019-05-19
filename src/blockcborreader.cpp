@@ -417,12 +417,7 @@ bool BlockCborReader::readBlock()
     for ( auto& aeci : block_->address_event_counts )
     {
         bool ipv6 = (aeci.first.transport_flags & block_cbor::IPV6);
-        const byte_string& b = block_->ip_addresses[aeci.first.address].str;
-
-        if ( file_format_version_ < block_cbor::FileFormatVersion::format_10 )
-            ipv6 = (b.size() == 16);
-
-        IPAddress addr = string_to_addr(b, ipv6);
+        IPAddress addr = string_to_addr(block_->ip_addresses[aeci.first.address].str, ipv6);
         AddressEvent ae(aeci.first.type, addr, aeci.first.code);
         if ( address_events_read_.find(ae) != address_events_read_.end() )
             address_events_read_[ae] += aeci.second;
@@ -611,7 +606,10 @@ IPAddress BlockCborReader::string_to_addr(const byte_string& str, bool is_ipv6)
     IPAddress res;
     byte_string b = str;
 
-    if ( is_ipv6 )
+    // Storing transport flags is optional if full addresses are stored.
+    // If the address is more than 4 bytes long, it's definitely IPv6,
+    // whatever is_ipv6 may think.
+    if ( is_ipv6 || str.size() > 4 )
     {
         if ( str.size() < 16 )
             b.resize(16, 0);
