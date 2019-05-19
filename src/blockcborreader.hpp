@@ -210,6 +210,11 @@ private:
     uint64_t nblocks_;
 
     /**
+     * \brief the file format version.
+     */
+    block_cbor::FileFormatVersion file_format_version_;
+
+    /**
      * \brief the current block.
      */
     std::unique_ptr<block_cbor::BlockData> block_;

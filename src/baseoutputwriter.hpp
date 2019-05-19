@@ -36,42 +36,6 @@ class BaseOutputWriter
 {
 public:
     /**
-     * \brief DNS flags enum.
-     *
-     * Note that we always store response OPT RRs directly in the file,
-     * so there is no need for a response DO in the following.
-     */
-    enum DNSFlags
-    {
-        QUERY_CD = (1 << 0),
-        QUERY_AD = (1 << 1),
-        QUERY_Z = (1 << 2),
-        QUERY_RA = (1 << 3),
-        QUERY_RD = (1 << 4),
-        QUERY_TC = (1 << 5),
-        QUERY_AA = (1 << 6),
-        QUERY_DO = (1 << 7),
-        RESPONSE_CD = (1 << 8),
-        RESPONSE_AD = (1 << 9),
-        RESPONSE_Z = (1 << 10),
-        RESPONSE_RA = (1 << 11),
-        RESPONSE_RD = (1 << 12),
-        RESPONSE_TC = (1 << 13),
-        RESPONSE_AA = (1 << 14),
-    };
-
-    /**
-     * \brief Transport flags enum.
-     */
-    enum TransportFlags
-    {
-        TCP = (1 << 0),
-        IPV6 = (1 << 1),
-
-        QUERY_TRAILINGDATA = (1 << 2),
-    };
-
-    /**
      * \brief Construct the base class.
      *
      * \param config output configuration.
@@ -182,39 +146,6 @@ public:
      * \brief Start output of an Additional section.
      */
     virtual void startAdditionalSection() = 0;
-
-    // Utilities.
-
-    /**
-     * \brief Calculate the DNS flags for a Query/Response.
-     *
-     * The DNS flag value composed from the DNSFlag enum.
-     *
-     * \param qr    the Query/Response.
-     * \return DNS flags value.
-     */
-    uint16_t dnsFlags(const std::shared_ptr<QueryResponse>& qr);
-
-    /**
-     * \brief Calculate the Transport flags for a Query/Response.
-     *
-     * The Transport flag value is composed from the TransportFlags enum.
-     *
-     * \param qr    the Query/Response.
-     * \return DNS flags value.
-     */
-    uint8_t transportFlags(const std::shared_ptr<QueryResponse>& qr);
-
-    /**
-     * \brief Set the basic DNS flags in a query or response message.
-     *
-     * Note this does not set the query DO flag.
-     *
-     * \param msg   the message.
-     * \param flags DNS flags value.
-     * \param query `true` if the message is a query.
-     */
-    static void setDnsFlags(DNSMessage& msg, uint16_t flags, bool query);
 
 protected:
     /**

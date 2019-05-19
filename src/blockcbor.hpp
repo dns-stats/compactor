@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#include "queryresponse.hpp"
+
 /**
  * \exception cbor_file_format_error
  * \brief Signals a CBOR file format error.
@@ -82,6 +84,46 @@ namespace block_cbor {
      * with a major format version of 0.
      */
     extern const unsigned FILE_FORMAT_02_VERSION;
+
+    /**
+     * \brief DNS flags enum.
+     *
+     * Note that we always store response OPT RRs directly in the file,
+     * so there is no need for a response DO in the following.
+     */
+    enum DNSFlags
+    {
+        QUERY_CD = (1 << 0),
+        QUERY_AD = (1 << 1),
+        QUERY_Z = (1 << 2),
+        QUERY_RA = (1 << 3),
+        QUERY_RD = (1 << 4),
+        QUERY_TC = (1 << 5),
+        QUERY_AA = (1 << 6),
+        QUERY_DO = (1 << 7),
+        RESPONSE_CD = (1 << 8),
+        RESPONSE_AD = (1 << 9),
+        RESPONSE_Z = (1 << 10),
+        RESPONSE_RA = (1 << 11),
+        RESPONSE_RD = (1 << 12),
+        RESPONSE_TC = (1 << 13),
+        RESPONSE_AA = (1 << 14),
+    };
+
+    /**
+     * \brief Transport flags enum.
+     */
+    enum TransportFlags
+    {
+        IPV6 = (1 << 0),
+        UDP = (0 << 1),
+        TCP = (1 << 1),
+        TLS = (2 << 1),
+        DTLS = (3 << 1),
+        DOH = (4 << 1),
+
+        QUERY_TRAILINGDATA = (1 << 5),
+    };
 
     /**
      * \brief the known file formats.
@@ -976,6 +1018,53 @@ namespace block_cbor {
     {
         return find_index(current_address_event_count, index);
     }
+
+    /**
+     * \brief Calculate the DNS flags for a Query/Response.
+     *
+     * The DNS flag value composed from the DNSFlag enum.
+     *
+     * \param qr    the Query/Response.
+     * \return DNS flags value.
+     */
+    uint16_t dns_flags(const QueryResponse& qr);
+
+    /**
+     * \brief Set the basic DNS flags in a query or response message.
+     *
+     * Note this does not set the query DO flag.
+     *
+     * \param msg   the message.
+     * \param flags DNS flags value.
+     * \param query `true` if the message is a query.
+     */
+    void set_dns_flags(DNSMessage& msg, uint16_t flags, bool query);
+
+    /**
+     * \brief Convert possibly older format DNS flags to current.
+     *
+     * \param flags        DNS flags value.
+     * \param from_version the file format version.
+     */
+    uint16_t convert_dns_flags(uint16_t flags, FileFormatVersion version);
+
+    /**
+     * \brief Calculate the Transport flags for a Query/Response.
+     *
+     * The Transport flag value is composed from the TransportFlags enum.
+     *
+     * \param qr    the Query/Response.
+     * \return transport flags value.
+     */
+    uint8_t transport_flags(const QueryResponse& qr);
+
+    /**
+     * \brief Convert possibly older format transport flags to current.
+     *
+     * \param flags        transport flags value.
+     * \param from_version the file format version.
+     */
+    uint8_t convert_transport_flags(uint8_t flags, FileFormatVersion version);
 
     /**
      * \class FileVersionFields

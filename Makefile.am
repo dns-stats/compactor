@@ -245,6 +245,7 @@ compactor_tests_SOURCES = \
         tests/cbordecoder_test.cpp \
         tests/cborencoder_test.cpp \
         tests/channel_test.cpp \
+        tests/blockcbor_test.cpp \
         tests/blockcbordata_test.cpp \
         tests/dnsmessage_test.cpp \
         tests/ipaddress_test.cpp \

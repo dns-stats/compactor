@@ -170,6 +170,139 @@ namespace block_cbor {
         QueryResponseField::query_size,
     };
 
+    uint16_t dns_flags(const QueryResponse& qr)
+    {
+        uint16_t res = 0;
+
+        if ( qr.has_query() )
+        {
+            const DNSMessage &q(qr.query());
+            if ( q.dns.checking_disabled() )
+                res |= QUERY_CD;
+            if ( q.dns.authenticated_data() )
+                res |= QUERY_AD;
+            if ( q.dns.z() )
+                res |= QUERY_Z;
+            if ( q.dns.recursion_available() )
+                res |= QUERY_RA;
+            if ( q.dns.recursion_desired() )
+                res |= QUERY_RD;
+            if ( q.dns.truncated() )
+                res |= QUERY_TC;
+            if ( q.dns.authoritative_answer() )
+                res |= QUERY_AA;
+
+            auto edns0 = q.dns.edns0();
+
+            if ( edns0 && edns0->do_bit() )
+                res |= QUERY_DO;
+        }
+
+        if ( qr.has_response() )
+        {
+            const DNSMessage &r(qr.response());
+            if ( r.dns.checking_disabled() )
+                res |= RESPONSE_CD;
+            if ( r.dns.authenticated_data() )
+                res |= RESPONSE_AD;
+            if ( r.dns.z() )
+                res |= RESPONSE_Z;
+            if ( r.dns.recursion_available() )
+                res |= RESPONSE_RA;
+            if ( r.dns.recursion_desired() )
+                res |= RESPONSE_RD;
+            if ( r.dns.truncated() )
+                res |= RESPONSE_TC;
+            if ( r.dns.authoritative_answer() )
+                res |= RESPONSE_AA;
+        }
+
+        return res;
+    }
+
+    void set_dns_flags(DNSMessage& msg, uint16_t flags, bool query)
+    {
+        if ( query )
+        {
+            if ( flags & QUERY_CD )
+                msg.dns.checking_disabled(1);
+            if ( flags & QUERY_AD )
+                msg.dns.authenticated_data(1);
+            if ( flags & QUERY_Z )
+                msg.dns.z(1);
+            if ( flags & QUERY_RA )
+                msg.dns.recursion_available(1);
+            if ( flags & QUERY_RD )
+                msg.dns.recursion_desired(1);
+            if ( flags & QUERY_TC )
+                msg.dns.truncated(1);
+            if ( flags & QUERY_AA )
+                msg.dns.authoritative_answer(1);
+        }
+        else
+        {
+            if ( flags & RESPONSE_CD )
+                msg.dns.checking_disabled(1);
+            if ( flags & RESPONSE_AD )
+                msg.dns.authenticated_data(1);
+            if ( flags & RESPONSE_Z )
+                msg.dns.z(1);
+            if ( flags & RESPONSE_RA )
+                msg.dns.recursion_available(1);
+            if ( flags & RESPONSE_RD )
+                msg.dns.recursion_desired(1);
+            if ( flags & RESPONSE_TC )
+                msg.dns.truncated(1);
+            if ( flags & RESPONSE_AA )
+                msg.dns.authoritative_answer(1);
+        }
+    }
+
+    uint16_t convert_dns_flags(uint16_t flags, FileFormatVersion)
+    {
+        return flags;
+    }
+
+    uint8_t transport_flags(const QueryResponse& qr)
+    {
+        uint8_t res = 0;
+        const DNSMessage& d(qr.has_query() ? qr.query() : qr.response());
+
+        if ( d.tcp )
+            res |= TCP;
+        if ( d.clientIP.is_ipv6() )
+            res |= IPV6;
+
+        if ( qr.has_query() && qr.query().dns.trailing_data_size() > 0 )
+            res |= QUERY_TRAILINGDATA;
+
+        return res;
+    }
+
+    uint8_t convert_transport_flags(uint8_t flags, FileFormatVersion from_version)
+    {
+        enum TransportFlags05
+        {
+            FORMAT_05_TCP = (1 << 0),
+            FORMAT_05_IPV6 = (1 << 1),
+
+            FORMAT_05_QUERY_TRAILINGDATA = (1 << 2),
+        };
+
+        if ( from_version == FileFormatVersion::format_10 )
+            return flags;
+
+        uint8_t res = 0;
+
+        if ( flags & FORMAT_05_IPV6 )
+            res |= IPV6;
+        if ( flags & FORMAT_05_TCP )
+            res |= TCP;
+        if ( flags & FORMAT_05_QUERY_TRAILINGDATA )
+            res |= QUERY_TRAILINGDATA;
+        return res;
+    }
+
     /**
      * \brief get the number of elements in a C array.
      */

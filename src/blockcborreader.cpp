@@ -27,6 +27,7 @@
 BlockCborReader::BlockCborReader(CborBaseDecoder& dec, Configuration &config,
                                  boost::optional<PseudoAnonymise> pseudo_anon)
     : dec_(dec), next_item_(0), need_block_(true),
+      file_format_version_(block_cbor::FileFormatVersion::format_10),
       current_block_num_(0),
       pseudo_anon_(pseudo_anon)
 {
@@ -75,7 +76,7 @@ void BlockCborReader::readFileHeader(Configuration& config)
     }
 }
 
-void BlockCborReader::readFilePreamble(Configuration& config, block_cbor::FileFormatVersion ver)
+void BlockCborReader::readFilePreamble(Configuration& config, block_cbor::FileFormatVersion header_version)
 {
     unsigned major_version = 0;
     unsigned minor_version = 0;
@@ -90,22 +91,22 @@ void BlockCborReader::readFilePreamble(Configuration& config, block_cbor::FileFo
             break;
         }
 
-        switch(block_cbor::file_preamble_field(dec_.read_unsigned(), ver))
+        switch(block_cbor::file_preamble_field(dec_.read_unsigned(), header_version))
         {
         case block_cbor::FilePreambleField::major_format_version:
-            if ( ver != block_cbor::FileFormatVersion::format_10 )
+            if ( header_version != block_cbor::FileFormatVersion::format_10 )
                 throw cbor_file_format_error("Unexpected version item reading header");
             major_version = dec_.read_unsigned();
             break;
 
         case block_cbor::FilePreambleField::minor_format_version:
-            if ( ver != block_cbor::FileFormatVersion::format_10 )
+            if ( header_version != block_cbor::FileFormatVersion::format_10 )
                 throw cbor_file_format_error("Unexpected version item reading header");
             minor_version = dec_.read_unsigned();
             break;
 
         case block_cbor::FilePreambleField::private_version:
-            if ( ver != block_cbor::FileFormatVersion::format_10 )
+            if ( header_version != block_cbor::FileFormatVersion::format_10 )
                 throw cbor_file_format_error("Unexpected version item reading header");
             private_version = dec_.read_unsigned();
             break;
@@ -116,16 +117,19 @@ void BlockCborReader::readFilePreamble(Configuration& config, block_cbor::FileFo
             // at last set up the field mapper.
         case block_cbor::FilePreambleField::block_parameters:
         case block_cbor::FilePreambleField::configuration:
-            if ( ver == block_cbor::FileFormatVersion::format_10 &&
+            if ( header_version == block_cbor::FileFormatVersion::format_10 &&
                  major_version == block_cbor::FILE_FORMAT_05_MAJOR_VERSION &&
                  minor_version == block_cbor::FILE_FORMAT_05_MINOR_VERSION )
-                ver = block_cbor::FileFormatVersion::format_05;
+            {
+                header_version = block_cbor::FileFormatVersion::format_05;
+                file_format_version_ = header_version;
+            }
 
             if ( fields_ )
                 throw cbor_file_format_error("Unexpected configuration reading header");
             fields_ = make_unique<block_cbor::FileVersionFields>(major_version, minor_version, private_version);
 
-            switch(ver)
+            switch(header_version)
             {
             case block_cbor::FileFormatVersion::format_10:
                 readBlockParameters(config);
@@ -157,11 +161,12 @@ void BlockCborReader::readFilePreamble(Configuration& config, block_cbor::FileFo
 
         // Obsolete items format 0.2
         case block_cbor::FilePreambleField::format_version:
-            if ( ver != block_cbor::FileFormatVersion::format_02 )
+            if ( header_version != block_cbor::FileFormatVersion::format_02 )
                 throw cbor_file_format_error("Unexpected version item reading header");
             minor_version = dec_.read_unsigned();
             if ( minor_version != block_cbor::FILE_FORMAT_02_VERSION )
                 throw cbor_file_format_error("Wrong file format version");
+            file_format_version_ = header_version;
             break;
 
         default:
@@ -453,6 +458,9 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
     need_block_ = (block_->query_response_items.size() == ++next_item_);
 
     const block_cbor::QueryResponseSignature& sig = block_->query_response_signatures[qri.signature];
+    uint16_t dns_flags;
+    uint8_t transport_flags = block_cbor::convert_transport_flags(sig.qr_transport_flags, file_format_version_);
+
     if ( sig.qr_flags & block_cbor::QUERY_ONLY )
     {
         query = make_unique<DNSMessage>();
@@ -462,14 +470,15 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
         query->clientPort = qri.client_port;
         query->serverPort = sig.server_port;
         query->hoplimit = qri.hoplimit;
-        query->tcp = sig.qr_transport_flags & BaseOutputWriter::TCP;
+        query->tcp = transport_flags & block_cbor::TCP;
         query->dns.type(CaptureDNS::QRType::QUERY);
         query->dns.id(qri.id);
         query->dns.opcode(sig.query_opcode);
         query->dns.rcode(sig.query_rcode);
         query->wire_size = qri.query_size;
 
-        BaseOutputWriter::setDnsFlags(*query, sig.dns_flags, true);
+        dns_flags = block_cbor::convert_dns_flags(sig.dns_flags, file_format_version_);
+        block_cbor::set_dns_flags(*query, dns_flags, true);
 
         if ( qri.query_extra_info )
             readExtraInfo(*query, *(qri.query_extra_info));
@@ -492,7 +501,7 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
             ttl <<= 8;
             ttl |= (sig.query_edns_version & 0xff);
             ttl <<= 16;
-            if ( sig.dns_flags & BaseOutputWriter::QUERY_DO )
+            if ( sig.dns_flags & block_cbor::QUERY_DO )
                 ttl |= 0x8000;
             query->dns.add_additional(
                 CaptureDNS::resource(
@@ -512,14 +521,15 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
         response->serverIP = block_->ip_addresses[sig.server_address].addr;
         response->clientPort = qri.client_port;
         response->serverPort = sig.server_port;
-        response->tcp = sig.qr_transport_flags & BaseOutputWriter::TCP;
+        response->tcp = transport_flags & block_cbor::TCP;
         response->dns.type(CaptureDNS::QRType::RESPONSE);
         response->dns.id(qri.id);
         response->dns.opcode(sig.query_opcode);
         response->dns.rcode(sig.response_rcode);
         response->wire_size = qri.response_size;
 
-        BaseOutputWriter::setDnsFlags(*response, sig.dns_flags, false);
+        dns_flags = block_cbor::convert_dns_flags(sig.dns_flags, file_format_version_);
+        block_cbor::set_dns_flags(*response, sig.dns_flags, false);
 
         if ( qri.response_extra_info )
             readExtraInfo(*response, *(qri.response_extra_info));

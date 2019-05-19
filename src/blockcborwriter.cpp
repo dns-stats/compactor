@@ -113,8 +113,8 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     // Basic query signature info.
     qs.server_address = data_->add_address(d.serverIP);
     qs.server_port = d.serverPort;
-    qs.qr_transport_flags = transportFlags(qr);
-    qs.dns_flags = dnsFlags(qr);
+    qs.qr_transport_flags = block_cbor::transport_flags(*qr);
+    qs.dns_flags = block_cbor::dns_flags(*qr);
 
     // Basic query/response info.
     qri.tstamp = d.timestamp;
