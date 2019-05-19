@@ -25,6 +25,9 @@
 namespace po = boost::program_options;
 
 namespace {
+    const unsigned DEFAULT_IPV4_PREFIX_LENGTH = 32;
+    const unsigned DEFAULT_IPV6_PREFIX_LENGTH = 128;
+
     const std::unordered_map<std::string, unsigned> OPCODES = {
         { "QUERY", 0 },
         { "IQUERY", 1 },
@@ -256,7 +259,11 @@ Configuration::Configuration()
       cmdline_options_("Command options"),
       cmdline_hidden_options_("Hidden command options"),
       config_file_options_("Configuration"),
-      positional_options_()
+      positional_options_(),
+      client_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
+      client_address_prefix_ipv6(DEFAULT_IPV6_PREFIX_LENGTH),
+      server_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
+      server_address_prefix_ipv6(DEFAULT_IPV6_PREFIX_LENGTH)
 {
     cmdline_options_.add_options()
         ("help,h", "show this help message.")
@@ -725,6 +732,11 @@ void Configuration::populate_block_parameters(block_cbor::BlockParameters& bp) c
     // Set storage parameter values from configuration.
     sp.max_block_items = max_block_items;
 
+    sp.client_address_prefix_ipv4 = client_address_prefix_ipv4;
+    sp.client_address_prefix_ipv6 = client_address_prefix_ipv6;
+    sp.server_address_prefix_ipv4 = server_address_prefix_ipv4;
+    sp.server_address_prefix_ipv6 = server_address_prefix_ipv6;
+
     // Query response hints. Compactor always gives time_offset to
     // response size inclusive. It does not currently give response
     // processing data.
@@ -803,6 +815,11 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
 
     output_options_queries = (sh.query_response_hints >> 11) & 0xf;
     output_options_responses = ((sh.query_response_hints >> 14) & 0xe) | ((sh.query_response_hints >> 11) & 1);
+
+    client_address_prefix_ipv4 = sp.client_address_prefix_ipv4;
+    client_address_prefix_ipv6 = sp.client_address_prefix_ipv6;
+    server_address_prefix_ipv4 = sp.server_address_prefix_ipv4;
+    server_address_prefix_ipv6 = sp.server_address_prefix_ipv6;
 
     // List of OPCODEs recorded.
     for ( const auto op : sp.opcodes )

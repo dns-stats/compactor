@@ -176,6 +176,17 @@ protected:
      */
     CaptureDNS::resource makeResource(const block_cbor::ResourceRecord& rr) const;
 
+    /**
+     * \brief Convert byte string to address.
+     *
+     * Pseudo-anonymise the address if that's enabled.
+     *
+     * \param str       the byte string.
+     * \param is_ipv6   is the address IPv6?
+     * \returns the address.
+     */
+    IPAddress string_to_addr(const byte_string& str, bool is_ipv6);
+
 private:
     /**
      * \brief Read the info for the next block.

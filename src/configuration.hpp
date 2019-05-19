@@ -291,6 +291,38 @@ public:
     unsigned int max_channel_size;
 
     /**
+     * \brief size of address prefix stored for client IPv4 addresses.
+     *
+     * This is not an exposed option, but picked up from format 1.0
+     * block parameters.
+     */
+    unsigned int client_address_prefix_ipv4;
+
+    /**
+     * \brief size of address prefix stored for client IPv6 addresses.
+     *
+     * This is not an exposed option, but picked up from format 1.0
+     * block parameters.
+     */
+    unsigned int client_address_prefix_ipv6;
+
+    /**
+     * \brief size of address prefix stored for server IPv4 addresses.
+     *
+     * This is not an exposed option, but picked up from format 1.0
+     * block parameters.
+     */
+    unsigned int server_address_prefix_ipv4;
+
+    /**
+     * \brief size of address prefix stored for server IPv6 addresses.
+     *
+     * This is not an exposed option, but picked up from format 1.0
+     * block parameters.
+     */
+    unsigned int server_address_prefix_ipv6;
+
+    /**
      * \brief Default constructor.
      */
     Configuration();

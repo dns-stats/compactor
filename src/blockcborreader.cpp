@@ -394,14 +394,6 @@ bool BlockCborReader::verifyBlockParameters(const block_cbor::BlockParameters& b
     // If collection parameters are missing, we will output the defaults.
     // Again, we should probably report they are missing.
 
-    // At present we can't handle IPv4 or IPv6 addresses other than those
-    // stored as full addresses.
-    if ( sp.client_address_prefix_ipv4 != 32 ||
-         sp.client_address_prefix_ipv6 != 128 ||
-         sp.server_address_prefix_ipv4 != 32 ||
-         sp.server_address_prefix_ipv6 != 128 )
-        return false;
-
     return true;
 }
 
@@ -421,17 +413,16 @@ bool BlockCborReader::readBlock()
     block_->clear();
     block_->readCbor(dec_, *fields_);
 
-#if ENABLE_PSEUDOANONYMISATION
-    if ( pseudo_anon_ )
-        for ( auto& a : block_->ip_addresses )
-            a.addr = pseudo_anon_->address(a.addr);
-#endif
-
     // Accumulate address events counts.
     for ( auto& aeci : block_->address_event_counts )
     {
-        IPAddress addr = block_->ip_addresses[aeci.first.address].addr;
+        bool ipv6 = (aeci.first.transport_flags & block_cbor::IPV6);
+        const byte_string& b = block_->ip_addresses[aeci.first.address].str;
 
+        if ( file_format_version_ < block_cbor::FileFormatVersion::format_10 )
+            ipv6 = (b.size() == 16);
+
+        IPAddress addr = string_to_addr(b, ipv6);
         AddressEvent ae(aeci.first.type, addr, aeci.first.code);
         if ( address_events_read_.find(ae) != address_events_read_.end() )
             address_events_read_[ae] += aeci.second;
@@ -460,17 +451,18 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
     const block_cbor::QueryResponseSignature& sig = block_->query_response_signatures[qri.signature];
     uint16_t dns_flags;
     uint8_t transport_flags = block_cbor::convert_transport_flags(sig.qr_transport_flags, file_format_version_);
+    bool ipv6 = (transport_flags & block_cbor::IPV6);
 
     if ( sig.qr_flags & block_cbor::QUERY_ONLY )
     {
         query = make_unique<DNSMessage>();
         query->timestamp = qri.tstamp;
-        query->clientIP = block_->ip_addresses[qri.client_address].addr;
-        query->serverIP = block_->ip_addresses[sig.server_address].addr;
+        query->tcp = transport_flags & block_cbor::TCP;
+        query->clientIP = string_to_addr(block_->ip_addresses[qri.client_address].str, ipv6);
+        query->serverIP = string_to_addr(block_->ip_addresses[sig.server_address].str, ipv6);
         query->clientPort = qri.client_port;
         query->serverPort = sig.server_port;
         query->hoplimit = qri.hoplimit;
-        query->tcp = transport_flags & block_cbor::TCP;
         query->dns.type(CaptureDNS::QRType::QUERY);
         query->dns.id(qri.id);
         query->dns.opcode(sig.query_opcode);
@@ -517,8 +509,8 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
     {
         response = make_unique<DNSMessage>();
         response->timestamp = qri.tstamp + qri.response_delay;
-        response->clientIP = block_->ip_addresses[qri.client_address].addr;
-        response->serverIP = block_->ip_addresses[sig.server_address].addr;
+        response->clientIP = string_to_addr(block_->ip_addresses[qri.client_address].str, ipv6);
+        response->serverIP = string_to_addr(block_->ip_addresses[sig.server_address].str, ipv6);
         response->clientPort = qri.client_port;
         response->serverPort = sig.server_port;
         response->tcp = transport_flags & block_cbor::TCP;
@@ -609,6 +601,32 @@ CaptureDNS::resource BlockCborReader::makeResource(const block_cbor::ResourceRec
         edns0 = pseudo_anon_->edns0(edns0);
         res = edns0.rr();
     }
+#endif
+
+    return res;
+}
+
+IPAddress BlockCborReader::string_to_addr(const byte_string& str, bool is_ipv6)
+{
+    IPAddress res;
+    byte_string b = str;
+
+    if ( is_ipv6 )
+    {
+        if ( str.size() != 16 )
+            b.resize(16, 0);
+    }
+    else
+    {
+        if ( str.size() != 4 )
+            b.resize(4, 0);
+    }
+
+    res = IPAddress(b);
+
+#if ENABLE_PSEUDOANONYMISATION
+    if ( pseudo_anon_ )
+        res = pseudo_anon_->address(res);
 #endif
 
     return res;

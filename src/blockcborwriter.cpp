@@ -26,6 +26,21 @@
 #include "blockcbordata.hpp"
 #include "blockcborwriter.hpp"
 
+namespace {
+    byte_string addr_to_string(const IPAddress& addr, const Configuration& config, bool is_client = true)
+    {
+        unsigned prefix_len =
+            addr.is_ipv6()
+            ? ( is_client ) ? config.client_address_prefix_ipv6 : config.server_address_prefix_ipv6
+            : ( is_client ) ? config.client_address_prefix_ipv4 : config.server_address_prefix_ipv4;
+        unsigned prefix_nbytes = (prefix_len + 7) / 8;
+        byte_string res = addr.asNetworkBinary();
+        res.resize(prefix_nbytes);
+        res[prefix_nbytes - 1] &= 0xff << (prefix_nbytes * 8 - prefix_len);
+        return res;
+    }
+}
+
 BlockCborWriter::BlockCborWriter(const Configuration& config,
                                      std::unique_ptr<CborBaseStreamFileEncoder> enc)
     : BaseOutputWriter(config),
@@ -58,9 +73,12 @@ void BlockCborWriter::close()
 }
 
 void BlockCborWriter::writeAE(const std::shared_ptr<AddressEvent>& ae,
-                                const PacketStatistics& stats)
+                              const PacketStatistics& stats)
 {
-    data_->count_address_event(*ae);
+    data_->count_address_event(ae->type(),
+                               ae->code(),
+                               addr_to_string(ae->address(), config_),
+                               ae->address().is_ipv6());
     last_end_block_statistics_ = stats;
 }
 
@@ -111,14 +129,14 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     last_end_block_statistics_ = stats;
 
     // Basic query signature info.
-    qs.server_address = data_->add_address(d.serverIP);
+    qs.server_address = data_->add_address(addr_to_string(d.serverIP, config_, false));
     qs.server_port = d.serverPort;
     qs.qr_transport_flags = block_cbor::transport_flags(*qr);
     qs.dns_flags = block_cbor::dns_flags(*qr);
 
     // Basic query/response info.
     qri.tstamp = d.timestamp;
-    qri.client_address = data_->add_address(d.clientIP);
+    qri.client_address = data_->add_address(addr_to_string(d.clientIP, config_));
     qri.client_port = d.clientPort;
     qri.id = d.dns.id();
     qs.qdcount = d.dns.questions_count();

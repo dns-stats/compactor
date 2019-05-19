@@ -133,6 +133,16 @@ namespace block_cbor {
     };
 
     /**
+     * \brief 0.5 address event count
+     */
+    const std::vector<AddressEventCountField> format_05_address_event_count = {
+        AddressEventCountField::ae_type,
+        AddressEventCountField::ae_code,
+        AddressEventCountField::ae_address_index,
+        AddressEventCountField::ae_count,
+    };
+
+    /**
      ** Old formats tables - format 0.2.
      **/
 
@@ -354,7 +364,7 @@ namespace block_cbor {
           question_(current_question, current_question + countof(current_question)),
           rr_(current_rr, current_rr + countof(current_rr)),
           query_response_extended_(current_query_response_extended, current_query_response_extended + countof(current_query_response_extended)),
-          address_event_count_(current_address_event_count, current_address_event_count + countof(current_address_event_count)),
+          address_event_count_(format_10_address_event_count, format_10_address_event_count + countof(format_10_address_event_count)),
           storage_hints_(format_10_storage_hints, format_10_storage_hints + countof(format_10_storage_hints)),
           storage_parameters_(format_10_storage_parameters, format_10_storage_parameters + countof(format_10_storage_parameters)),
           collection_parameters_(format_10_collection_parameters, format_10_collection_parameters + countof(format_10_collection_parameters)),
@@ -381,6 +391,7 @@ namespace block_cbor {
             block_statistics_ = format_05_block_statistics;
             query_response_signature_ = format_05_query_response_signature;
             query_response_ = format_05_query_response;
+            address_event_count_ = format_05_address_event_count;
             return;
         }
 

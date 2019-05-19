@@ -530,23 +530,6 @@ namespace block_cbor {
         enc.write(str);
     }
 
-    void IPAddressItem::readCbor(CborBaseDecoder& dec, const FileVersionFields&)
-    {
-        try
-        {
-            addr = IPAddress(dec.read_binary());
-        }
-        catch (const std::logic_error& e)
-        {
-            throw cbor_file_format_error("Unexpected CBOR item reading IP address");
-        }
-    }
-
-    void IPAddressItem::writeCbor(CborBaseEncoder& enc)
-    {
-        enc.write(addr.asNetworkBinary());
-    }
-
     void ClassType::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
         try
@@ -1023,7 +1006,7 @@ namespace block_cbor {
 
     void QueryResponseItem::readCbor(CborBaseDecoder& dec,
                                      const std::chrono::system_clock::time_point& earliest_time,
-                                     uint64_t ticks_per_second,
+                                     const BlockParameters& block_parameters,
                                      const FileVersionFields& fields)
     {
         try
@@ -1043,7 +1026,7 @@ namespace block_cbor {
                 switch(fields.query_response_field(dec.read_unsigned()))
                 {
                 case QueryResponseField::time_offset:
-                    tstamp = earliest_time + std::chrono::microseconds(dec.read_signed() * 1000000 / ticks_per_second);
+                    tstamp = earliest_time + std::chrono::microseconds(dec.read_signed() * 1000000 / block_parameters.storage_parameters.ticks_per_second);
                     break;
 
                 case QueryResponseField::client_address_index:
@@ -1110,7 +1093,7 @@ namespace block_cbor {
 
     void QueryResponseItem::writeCbor(CborBaseEncoder& enc,
                                       const std::chrono::system_clock::time_point& earliest_time,
-                                      uint64_t ticks_per_second)
+                                      const BlockParameters& block_parameters)
     {
         constexpr int time_index = find_query_response_index(QueryResponseField::time_offset);
         constexpr int client_address_index = find_query_response_index(QueryResponseField::client_address_index);
@@ -1127,7 +1110,7 @@ namespace block_cbor {
 
         enc.writeMapHeader();
         enc.write(time_index);
-        enc.write(std::chrono::duration_cast<std::chrono::nanoseconds>(tstamp - earliest_time).count() * ticks_per_second / 1000000000);
+        enc.write(std::chrono::duration_cast<std::chrono::nanoseconds>(tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
         enc.write(client_address_index);
         enc.write(client_address);
         enc.write(client_port_index);
@@ -1146,7 +1129,7 @@ namespace block_cbor {
         if ( ( qr_flags & QUERY_AND_RESPONSE ) == QUERY_AND_RESPONSE )
         {
             enc.write(delay_index);
-            enc.write(response_delay.count() * ticks_per_second / 1000000000);
+            enc.write(response_delay.count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
         }
 
         if ( qr_flags & QR_HAS_QUESTION )
@@ -1181,6 +1164,7 @@ namespace block_cbor {
         std::size_t seed = boost::hash_value(aei.type);
         boost::hash_combine(seed, aei.code);
         boost::hash_combine(seed, aei.address);
+        boost::hash_combine(seed, aei.transport_flags);
         return seed;
     }
 
@@ -1188,8 +1172,9 @@ namespace block_cbor {
     {
         try
         {
-            // No necessarily present, default is 0.
+            // No necessarily present, default to 0.
             aei.code = 0;
+            aei.transport_flags = 0;
 
             bool indef;
             uint64_t n_elems = dec.readMapHeader(indef);
@@ -1215,6 +1200,10 @@ namespace block_cbor {
                     aei.address = dec.read_unsigned();
                     break;
 
+                case AddressEventCountField::ae_transport_flags:
+                    aei.transport_flags = dec.read_unsigned();
+                    break;
+
                 case AddressEventCountField::ae_count:
                     count = dec.read_unsigned();
                     break;
@@ -1237,6 +1226,7 @@ namespace block_cbor {
         constexpr int type_index = find_address_event_count_index(AddressEventCountField::ae_type);
         constexpr int code_index = find_address_event_count_index(AddressEventCountField::ae_code);
         constexpr int address_index = find_address_event_count_index(AddressEventCountField::ae_address_index);
+        constexpr int transport_flags_index = find_address_event_count_index(AddressEventCountField::ae_transport_flags);
         constexpr int count_index = find_address_event_count_index(AddressEventCountField::ae_count);
 
         enc.writeMapHeader();
@@ -1249,6 +1239,8 @@ namespace block_cbor {
         }
         enc.write(address_index);
         enc.write(aei.address);
+        enc.write(transport_flags_index);
+        enc.write(aei.transport_flags);
         enc.write(count_index);
         enc.write(count);
         enc.writeBreak();
@@ -1383,7 +1375,7 @@ namespace block_cbor {
 
     void BlockData::readItems(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
-        uint64_t ticks_per_second = block_parameters_[block_parameters_index].storage_parameters.ticks_per_second;
+        const BlockParameters& block_parameters = block_parameters_[block_parameters_index];
         bool indef;
         uint64_t n_elems = dec.readArrayHeader(indef);
         if ( !indef )
@@ -1397,7 +1389,7 @@ namespace block_cbor {
             }
 
             QueryResponseItem qri;
-            qri.readCbor(dec, earliest_time, ticks_per_second, fields);
+            qri.readCbor(dec, earliest_time, block_parameters, fields);
             query_response_items.push_back(std::move(qri));
         }
     }
@@ -1586,14 +1578,14 @@ namespace block_cbor {
     void BlockData::writeItems(CborBaseEncoder& enc)
     {
         constexpr int queries_index = find_block_index(BlockField::queries);
-        uint64_t ticks_per_second = block_parameters_[block_parameters_index].storage_parameters.ticks_per_second;
+        const BlockParameters& block_parameters = block_parameters_[block_parameters_index];
 
         if ( query_response_items.size() > 0 )
         {
             enc.write(queries_index);
             enc.writeArrayHeader(query_response_items.size());
             for ( auto& qri : query_response_items )
-                qri.writeCbor(enc, earliest_time, ticks_per_second);
+                qri.writeCbor(enc, earliest_time, block_parameters);
         }
     }
 

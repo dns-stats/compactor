@@ -593,44 +593,6 @@ namespace block_cbor {
     };
 
     /**
-     * \struct IPAddressItem
-     * \brief A header list item that's an IP address.
-     */
-    struct IPAddressItem
-    {
-        /**
-         * \brief the IP address.
-         */
-        IPAddress addr;
-
-        /**
-         * \brief return the key to be used for storing values.
-         */
-        const IPAddress& key() const
-        {
-            return addr;
-        }
-
-        /**
-         * \brief Read the object contents from CBOR.
-         *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values. Unused.
-         * \throws cbor_file_format_error on unexpected CBOR content.
-         * \throws cbor_decode_error on malformed CBOR items.
-         * \throws cbor_end_of_input on end of CBOR file.
-         */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
-
-        /**
-         * \brief Write the object contents to CBOR.
-         *
-         * \param enc CBOR stream to write to.
-         */
-        void writeCbor(CborBaseEncoder& enc);
-    };
-
-    /**
      * \struct ClassType
      * \brief A DNS Class and Type.
      */
@@ -1169,7 +1131,7 @@ namespace block_cbor {
          *
          * \param dec           CBOR stream to read from.
          * \param earliest_time earliest time in block.
-         * \param ticks_per_second ticks per second for this block.
+         * \param block_parameters parameters for this block.
          * \param fields        translate map keys to internal values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
@@ -1177,7 +1139,7 @@ namespace block_cbor {
          */
         void readCbor(CborBaseDecoder& dec,
                       const std::chrono::system_clock::time_point& earliest_time,
-                      uint64_t ticks_per_second,
+                      const BlockParameters& block_parameters,
                       const FileVersionFields& fields);
 
         /**
@@ -1185,11 +1147,11 @@ namespace block_cbor {
          *
          * \param enc           CBOR stream to write to.
          * \param earliest_time earliest time in block.
-         * \param ticks_per_second ticks per second for this block.
+         * \param block_parameters parameters for this block.
          */
         void writeCbor(CborBaseEncoder& enc,
                        const std::chrono::system_clock::time_point& earliest_time,
-                       uint64_t ticks_per_second);
+                       const BlockParameters& block_parameters);
     };
 
     /**
@@ -1219,6 +1181,11 @@ namespace block_cbor {
         index_t address;
 
         /**
+         * \brief address event transport flags.
+         */
+        uint8_t transport_flags;
+
+        /**
          * \brief return the key to be used for storing values.
          */
         const AddressEventItem& key() const
@@ -1233,7 +1200,7 @@ namespace block_cbor {
          * \returns `true` if the two are equal.
          */
         bool operator==(const AddressEventItem& rhs) const {
-            return ( type == rhs.type && code == rhs.code && address == rhs.address);
+            return ( type == rhs.type && code == rhs.code && address == rhs.address && transport_flags == rhs.transport_flags);
         }
 
         /**
@@ -1602,7 +1569,7 @@ namespace block_cbor {
         /**
          * \brief the header list of IP addresses.
          */
-        HeaderList<IPAddressItem, IPAddress> ip_addresses;
+        HeaderList<ByteStringItem, byte_string> ip_addresses;
 
         /**
          * \brief the header list of CLASS/TYPE pairs.
@@ -1695,13 +1662,13 @@ namespace block_cbor {
          * \param addr the address to add.
          * \returns the index of the address.
          */
-        index_t add_address(const IPAddress& addr)
+        index_t add_address(const byte_string& addr)
         {
             index_t res = ip_addresses.find(addr);
             if ( res == 0 )
             {
-                IPAddressItem item;
-                item.addr = addr;
+                ByteStringItem item;
+                item.str = addr;
                 res = ip_addresses.add_value(std::move(item));
             }
             return res;
@@ -1809,14 +1776,21 @@ namespace block_cbor {
          * \brief Count the AddressEvent.
          *
          * \param ae the AddressEvent.
+         * \param type       the type of address event.
+         * \param code       the event code.
+         * \param address    the address.
          */
-        void count_address_event(const AddressEvent& ae)
+        void count_address_event(const AddressEvent::EventType& type,
+                                 unsigned code,
+                                 const byte_string& address,
+                                 bool is_ipv6)
         {
             AddressEventItem aei;
 
-            aei.type = ae.type();
-            aei.code = ae.code();
-            aei.address = add_address(ae.address());
+            aei.type = type;
+            aei.code = code;
+            aei.address = add_address(address);
+            aei.transport_flags = is_ipv6 ? 1 : 0;
 
             auto search = address_event_counts.find(aei);
             if ( search != address_event_counts.end() )

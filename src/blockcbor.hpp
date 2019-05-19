@@ -473,6 +473,7 @@ namespace block_cbor {
         ae_type,
         ae_code,
         ae_address_index,
+        ae_transport_flags,
         ae_count,
 
         unknown = -1
@@ -1000,10 +1001,11 @@ namespace block_cbor {
      *
      * The index of a entry in the array is the file map value of that entry.
      */
-    constexpr AddressEventCountField current_address_event_count[] = {
+    constexpr AddressEventCountField format_10_address_event_count[] = {
         AddressEventCountField::ae_type,
         AddressEventCountField::ae_code,
         AddressEventCountField::ae_address_index,
+        AddressEventCountField::ae_transport_flags,
         AddressEventCountField::ae_count,
     };
 
@@ -1016,7 +1018,7 @@ namespace block_cbor {
      */
     constexpr int find_address_event_count_index(AddressEventCountField index)
     {
-        return find_index(current_address_event_count, index);
+        return find_index(format_10_address_event_count, index);
     }
 
     /**

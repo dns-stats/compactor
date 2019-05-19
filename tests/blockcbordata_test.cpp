@@ -526,58 +526,6 @@ SCENARIO("ByteStringItems can be compared and written", "[block]")
     }
 }
 
-SCENARIO("IPAddressItems can be compared and written", "[block]")
-{
-    GIVEN("Some sample IP addresses")
-    {
-        Tins::IPv4Address a4("193.0.29.226");
-        Tins::IPv6Address a6("2001:67c:64:42:bdcd:34ce:2801:9686");
-        IPAddressItem ai1, ai2, ai3;
-        ai1.addr = IPAddress(a4);
-        ai2.addr = IPAddress(a4);
-        ai3.addr = IPAddress(a6);
-
-
-        WHEN("idential items are compared")
-        {
-            THEN("they compare equal")
-            {
-                REQUIRE(ai1.addr == ai2.addr);
-            }
-        }
-
-        WHEN("different items are compared")
-        {
-            THEN("they don't compare equal")
-            {
-                REQUIRE(ai1.addr != ai3.addr);
-            }
-        }
-
-        WHEN("values are encoded")
-        {
-            TestCborEncoder tcbe;
-            ai1.writeCbor(tcbe);
-            ai3.writeCbor(tcbe);
-            tcbe.flush();
-
-            THEN("the encoding is as expected")
-            {
-                const uint8_t EXPECTED[] =
-                    {
-                        (2 << 5) | 4,
-                        193, 0, 29, 226,
-                        (2 << 5) | 16,
-                        0x20, 0x01, 0x06, 0x7c, 0x00, 0x64, 0x00, 0x42,
-                        0xbd, 0xcd, 0x34, 0xce, 0x28, 0x01, 0x96, 0x86,
-                    };
-
-                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
-            }
-        }
-    }
-}
-
 SCENARIO("ClassTypes can be compared and written", "[block]")
 {
     GIVEN("Some sample class/type items")
@@ -850,6 +798,7 @@ SCENARIO("AddressEventCounts can be written", "[block]")
         aec.aei.type = AddressEvent::EventType::TCP_RESET;
         aec.aei.code = 11;
         aec.aei.address = 10;
+        aec.aei.transport_flags = 0;
         aec.count = 22;
 
         WHEN("values are encoded")
@@ -866,7 +815,8 @@ SCENARIO("AddressEventCounts can be written", "[block]")
                         0, 0,
                         1, 11,
                         2, 10,
-                        3, 22,
+                        3, 0,
+                        4, 22,
                         0xff,
                     };
 
@@ -907,7 +857,9 @@ SCENARIO("QueryResponseItems can be written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), 1000000);
+            BlockParameters bp;
+            bp.storage_parameters.ticks_per_second = 1000000;
+            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1179,43 +1131,6 @@ SCENARIO("ByteStringItems can be read", "[block]")
     }
 }
 
-SCENARIO("IPAddressItems can be read", "[block]")
-{
-    GIVEN("A test CBOR decoder and sample IP addresses")
-    {
-        TestCborDecoder tcbd;
-        Tins::IPv4Address a4("193.0.29.226");
-        Tins::IPv6Address a6("2001:67c:64:42:bdcd:34ce:2801:9686");
-        IPAddressItem ai1, ai2;
-        ai1.addr = IPAddress(a4);
-        ai2.addr = IPAddress(a6);
-
-        WHEN("decoder is given encoded IP address data")
-        {
-            const std::vector<uint8_t> INPUT =
-                {
-                    (2 << 5) | 4,
-                    193, 0, 29, 226,
-                    (2 << 5) | 16,
-                    0x20, 0x01, 0x06, 0x7c, 0x00, 0x64, 0x00, 0x42,
-                    0xbd, 0xcd, 0x34, 0xce, 0x28, 0x01, 0x96, 0x86,
-                };
-            tcbd.set_bytes(INPUT);
-
-            THEN("decoder input is correct")
-            {
-                IPAddressItem ai1_r, ai2_r;
-                block_cbor::FileVersionFields fields;
-                ai1_r.readCbor(tcbd, fields);
-                ai2_r.readCbor(tcbd, fields);
-
-                REQUIRE(ai1.addr == ai1_r.addr);
-                REQUIRE(ai2.addr == ai2_r.addr);
-            }
-        }
-    }
-}
-
 SCENARIO("ClassTypes can be read", "[block]")
 {
     GIVEN("A test CBOR decoder and sample class type info")
@@ -1462,7 +1377,9 @@ SCENARIO("QueryResponseItems can be read", "[block]")
             {
                 QueryResponseItem qri1_r;
                 block_cbor::FileVersionFields fields;
-                qri1_r.readCbor(tcbd, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), 1000000, fields);
+                BlockParameters bp;
+                bp.storage_parameters.ticks_per_second = 1000000;
+                qri1_r.readCbor(tcbd, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, fields);
 
                 REQUIRE(qri1.qr_flags == qri1_r.qr_flags);
                 REQUIRE(qri1.client_address == qri1_r.client_address);
@@ -1497,9 +1414,34 @@ SCENARIO("AddressEventCounts can be read", "[block]")
         aec1.aei.type = AddressEvent::EventType::TCP_RESET;
         aec1.aei.code = 11;
         aec1.aei.address = 10;
+        aec1.aei.transport_flags = 0;
         aec1.count = 22;
 
         WHEN("decoder is given encoded question data")
+        {
+            const std::vector<uint8_t> INPUT =
+                {
+                    (5 << 5) | 5,
+                    0, 0,
+                    1, 11,
+                    2, 10,
+                    3, 0,
+                    4, 22,
+                };
+            tcbd.set_bytes(INPUT);
+
+            THEN("decoder input is correct")
+            {
+                AddressEventCount aec1_r;
+                block_cbor::FileVersionFields fields;
+                aec1_r.readCbor(tcbd, fields);
+
+                REQUIRE(aec1.aei == aec1_r.aei);
+                REQUIRE(aec1.count == aec1_r.count);
+            }
+        }
+
+        AND_WHEN("decoder is given format 0.5 encoded question data")
         {
             const std::vector<uint8_t> INPUT =
                 {
@@ -1514,7 +1456,7 @@ SCENARIO("AddressEventCounts can be read", "[block]")
             THEN("decoder input is correct")
             {
                 AddressEventCount aec1_r;
-                block_cbor::FileVersionFields fields;
+                block_cbor::FileVersionFields fields(0, 5, 0);
                 aec1_r.readCbor(tcbd, fields);
 
                 REQUIRE(aec1.aei == aec1_r.aei);

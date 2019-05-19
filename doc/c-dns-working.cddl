@@ -262,8 +262,8 @@ rrlist                 = 6
 rr                     = 7
 malformed-message-data = 8
 
-IPv4Address = bstr .size 4
-IPv6Address = bstr .size 16
+IPv4Address = bstr .size (1..4)
+IPv6Address = bstr .size (1..16)
 IPAddress = IPv4Address / IPv6Address
 
 ClassType = {
@@ -476,15 +476,17 @@ additional-index = 3
 ; Address event data.
 ;
 AddressEventCount = {
-    ae-type          => &AddressEventType,
-    ? ae-code        => uint,
-    ae-address-index => uint,
-    ae-count         => uint,
+    ae-type            => &AddressEventType,
+    ? ae-code          => uint,
+    ae-address-index   => uint,
+    ae-transport-flags => TransportFlags,
+    ae-count           => uint,
 }
-ae-type          = 0
-ae-code          = 1
-ae-address-index = 2
-ae-count         = 3
+ae-type            = 0
+ae-code            = 1
+ae-address-index   = 2
+ae-transport-flags = 3
+ae-count           = 4
 
 AddressEventType = (
     tcp-reset              : 0,
