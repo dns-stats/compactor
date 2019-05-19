@@ -34,8 +34,8 @@ BlockParameters = {
 storage-parameters    = 0
 collection-parameters = 1
 
-  IPv6PrefixLength = 1..128
-  IPv4PrefixLength = 1..32
+  IPv6PrefixLength = 0..128
+  IPv4PrefixLength = 0..32
   OpcodeRange = 0..15
   RRTypeRange = 0..65535
 
@@ -262,8 +262,8 @@ rrlist                 = 6
 rr                     = 7
 malformed-message-data = 8
 
-IPv4Address = bstr .size (1..4)
-IPv6Address = bstr .size (1..16)
+IPv4Address = bstr .size (0..4)
+IPv6Address = bstr .size (0..16)
 IPAddress = IPv4Address / IPv6Address
 
 ClassType = {

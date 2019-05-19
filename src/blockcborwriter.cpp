@@ -36,7 +36,8 @@ namespace {
         unsigned prefix_nbytes = (prefix_len + 7) / 8;
         byte_string res = addr.asNetworkBinary();
         res.resize(prefix_nbytes);
-        res[prefix_nbytes - 1] &= 0xff << (prefix_nbytes * 8 - prefix_len);
+        if ( prefix_nbytes > 0 )
+            res[prefix_nbytes - 1] &= 0xff << (prefix_nbytes * 8 - prefix_len);
         return res;
     }
 }
