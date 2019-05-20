@@ -826,6 +826,58 @@ SCENARIO("AddressEventCounts can be written", "[block]")
     }
 }
 
+SCENARIO("MalformedMessageData can be compared and written", "[block]")
+{
+    GIVEN("Some sample MalformedMessageData items")
+    {
+        MalformedMessageData mmd1, mmd2;
+        mmd1.server_address = 1;
+        mmd1.server_port = 2;
+        mmd1.mm_transport_flags = 3;
+        mmd1.mm_payload = "Hello"_b;
+        mmd2 = mmd1;
+
+        WHEN("idential items are compared")
+        {
+            THEN("they compare equal")
+            {
+                REQUIRE(mmd1 == mmd2);
+            }
+        }
+
+        WHEN("different items are compared")
+        {
+            mmd2.server_port = 3;
+
+            THEN("they don't compare equal")
+            {
+                REQUIRE(mmd1 != mmd2);
+            }
+        }
+
+        WHEN("values are encoded")
+        {
+            TestCborEncoder tcbe;
+            mmd1.writeCbor(tcbe);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 4,
+                        find_malformed_message_data_index(MalformedMessageDataField::server_address_index), 1,
+                        find_malformed_message_data_index(MalformedMessageDataField::server_port), 2,
+                        find_malformed_message_data_index(MalformedMessageDataField::mm_transport_flags), 3,
+                        find_malformed_message_data_index(MalformedMessageDataField::mm_payload), (2 << 5) | 5, 'H', 'e', 'l', 'l', 'o',
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+    }
+}
+
 SCENARIO("QueryResponseItems can be written", "[block]")
 {
     GIVEN("A sample QueryResponseItem item")
@@ -892,6 +944,41 @@ SCENARIO("QueryResponseItems can be written", "[block]")
                         3, 19,
                         0xff,
                         0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+    }
+}
+
+SCENARIO("MalformedMessageItem can be written", "[block]")
+{
+    GIVEN("A sample MalformedMessageItem item")
+    {
+        MalformedMessageItem mm1;
+        mm1.tstamp = std::chrono::system_clock::time_point(std::chrono::microseconds(5));
+        mm1.client_address = 1;
+        mm1.client_port = 2;
+        mm1.message_data = 3;
+
+        WHEN("values are encoded")
+        {
+            TestCborEncoder tcbe;
+            BlockParameters bp;
+            bp.storage_parameters.ticks_per_second = 1000000;
+            mm1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 4,
+                        find_malformed_message_index(MalformedMessageField::time_offset), 5,
+                        find_malformed_message_index(MalformedMessageField::client_address_index), 1,
+                        find_malformed_message_index(MalformedMessageField::client_port), 2,
+                        find_malformed_message_index(MalformedMessageField::message_data_index), 3,
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -1466,6 +1553,82 @@ SCENARIO("AddressEventCounts can be read", "[block]")
     }
 }
 
+SCENARIO("MalformedMessageData can be read", "[block]")
+{
+    GIVEN("A test CBOR decoder and sample malformed message data")
+    {
+        TestCborDecoder tcbd;
+        MalformedMessageData mmd1;
+        mmd1.server_address = 1;
+        mmd1.server_port = 2;
+        mmd1.mm_transport_flags = 3;
+        mmd1.mm_payload = "Hello"_b;
+
+        WHEN("decoder is given encoded malformed message data item data")
+        {
+            constexpr uint8_t INPUT[] =
+                {
+                    (5 << 5) | 4,
+                    find_malformed_message_data_index(MalformedMessageDataField::server_address_index), 1,
+                    find_malformed_message_data_index(MalformedMessageDataField::server_port), 2,
+                    find_malformed_message_data_index(MalformedMessageDataField::mm_transport_flags), 3,
+                    find_malformed_message_data_index(MalformedMessageDataField::mm_payload), (2 << 5) | 5, 'H', 'e', 'l', 'l', 'o'
+                };
+            std::vector<uint8_t> bytes(INPUT, INPUT + sizeof(INPUT));
+            tcbd.set_bytes(bytes);
+
+            THEN("decoder input is correct")
+            {
+                MalformedMessageData mmd1_r;
+                block_cbor::FileVersionFields fields;
+                mmd1_r.readCbor(tcbd, fields);
+
+                REQUIRE(mmd1 == mmd1_r);
+            }
+        }
+    }
+}
+
+SCENARIO("MalformedMessageItem item can be read", "[block]")
+{
+    GIVEN("A test CBOR decoder and sample malformed message item data")
+    {
+        TestCborDecoder tcbd;
+        MalformedMessageItem mm1;
+        mm1.tstamp = std::chrono::system_clock::time_point(std::chrono::microseconds(5));
+        mm1.client_address = 1;
+        mm1.client_port = 2;
+        mm1.message_data = 3;
+
+        WHEN("decoder is given encoded malformed message item data")
+        {
+            constexpr uint8_t INPUT[] =
+                {
+                    (5 << 5) | 4,
+                    find_malformed_message_index(MalformedMessageField::time_offset), 5,
+                    find_malformed_message_index(MalformedMessageField::client_address_index), 1,
+                    find_malformed_message_index(MalformedMessageField::client_port), 2,
+                    find_malformed_message_index(MalformedMessageField::message_data_index), 3,
+                };
+            std::vector<uint8_t> bytes(INPUT, INPUT + sizeof(INPUT));
+            tcbd.set_bytes(bytes);
+
+            THEN("decoder input is correct")
+            {
+                MalformedMessageItem mm1_r;
+                block_cbor::FileVersionFields fields;
+                BlockParameters bp;
+                bp.storage_parameters.ticks_per_second = 1000000;
+                mm1_r.readCbor(tcbd, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, fields);
+
+                REQUIRE(mm1.tstamp == mm1_r.tstamp);
+                REQUIRE(mm1.client_address == mm1_r.client_address);
+                REQUIRE(mm1.client_port == mm1_r.client_port);
+                REQUIRE(mm1.message_data == mm1_r.message_data);
+            }
+        }
+    }
+}
 SCENARIO("HeaderList items can be read", "[block]")
 {
     GIVEN("A test CBOR decoder and sample header list item data")

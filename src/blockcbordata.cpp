@@ -1246,6 +1246,157 @@ namespace block_cbor {
         enc.writeBreak();
     }
 
+    std::size_t hash_value(const MalformedMessageData& mmd)
+    {
+        std::size_t seed = boost::hash_value(mmd.server_address);
+        boost::hash_combine(seed, mmd.server_port);
+        boost::hash_combine(seed, mmd.mm_transport_flags);
+        boost::hash_combine(seed, mmd.mm_payload);
+        return seed;
+    }
+
+    void MalformedMessageData::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    {
+        try
+        {
+            // No necessarily present, default to 0 on repeated read.
+            mm_transport_flags = 0;
+
+            bool indef;
+            uint64_t n_elems = dec.readMapHeader(indef);
+            while ( indef || n_elems-- > 0 )
+            {
+                if ( indef && dec.type() == CborBaseDecoder::TYPE_BREAK )
+                {
+                    dec.readBreak();
+                    break;
+                }
+
+                switch(fields.malformed_message_data_field(dec.read_unsigned()))
+                {
+                case MalformedMessageDataField::server_address_index:
+                    server_address = dec.read_unsigned();
+                    break;
+
+                case MalformedMessageDataField::server_port:
+                    server_port = dec.read_unsigned();
+                    break;
+
+                case MalformedMessageDataField::mm_transport_flags:
+                    mm_transport_flags = dec.read_unsigned();
+                    break;
+
+                case MalformedMessageDataField::mm_payload:
+                    mm_payload = dec.read_binary();
+                    break;
+
+                default:
+                    // Unknown item, skip.
+                    dec.skip();
+                    break;
+                }
+            }
+        }
+        catch (const std::logic_error& e)
+        {
+            throw cbor_file_format_error("Unexpected CBOR item reading MalformedMessageData");
+        }
+    }
+
+    void MalformedMessageData::writeCbor(CborBaseEncoder& enc)
+    {
+        constexpr int server_address_index_index = find_malformed_message_data_index(MalformedMessageDataField::server_address_index);
+        constexpr int server_port_index = find_malformed_message_data_index(MalformedMessageDataField::server_port);
+        constexpr int mm_transport_flags_index = find_malformed_message_data_index(MalformedMessageDataField::mm_transport_flags);
+        constexpr int mm_payload_index = find_malformed_message_data_index(MalformedMessageDataField::mm_payload);
+
+        enc.writeMapHeader(4);
+        enc.write(server_address_index_index);
+        enc.write(server_address);
+        enc.write(server_port_index);
+        enc.write(server_port);
+        enc.write(mm_transport_flags_index);
+        enc.write(mm_transport_flags);
+        enc.write(mm_payload_index);
+        enc.write(mm_payload);
+    }
+
+    void MalformedMessageItem::clear()
+    {
+        tstamp = std::chrono::system_clock::time_point(std::chrono::microseconds(0));
+        client_address = message_data = 0;
+        client_port = 0;
+    }
+
+    void MalformedMessageItem::readCbor(CborBaseDecoder& dec,
+                                        const std::chrono::system_clock::time_point& earliest_time,
+                                        const BlockParameters& block_parameters,
+                                        const FileVersionFields& fields)
+    {
+        try
+        {
+            bool indef;
+            uint64_t n_elems = dec.readMapHeader(indef);
+            while ( indef || n_elems-- > 0 )
+            {
+                if ( indef && dec.type() == CborBaseDecoder::TYPE_BREAK )
+                {
+                    dec.readBreak();
+                    break;
+                }
+
+                switch(fields.malformed_message_field(dec.read_unsigned()))
+                {
+                case MalformedMessageField::time_offset:
+                    tstamp = earliest_time + std::chrono::microseconds(dec.read_signed() * 1000000 / block_parameters.storage_parameters.ticks_per_second);
+                    break;
+                    break;
+
+                case MalformedMessageField::client_address_index:
+                    client_address = dec.read_unsigned();
+                    break;
+
+                case MalformedMessageField::client_port:
+                    client_port = dec.read_unsigned();
+                    break;
+
+                case MalformedMessageField::message_data_index:
+                    message_data = dec.read_unsigned();
+                    break;
+
+                default:
+                    // Unknown item, skip.
+                    dec.skip();
+                    break;
+                }
+            }
+        }
+        catch (const std::logic_error& e)
+        {
+            throw cbor_file_format_error("Unexpected CBOR item reading MalformedMessage");
+        }
+    }
+
+    void MalformedMessageItem::writeCbor(CborBaseEncoder& enc,
+                                     const std::chrono::system_clock::time_point& earliest_time,
+                                     const BlockParameters& block_parameters)
+    {
+        constexpr int time_offset_index = find_malformed_message_index(MalformedMessageField::time_offset);
+        constexpr int client_address_index_index = find_malformed_message_index(MalformedMessageField::client_address_index);
+        constexpr int client_port_index = find_malformed_message_index(MalformedMessageField::client_port);
+        constexpr int message_data_index_index = find_malformed_message_index(MalformedMessageField::message_data_index);
+
+        enc.writeMapHeader(4);
+        enc.write(time_offset_index);
+        enc.write(std::chrono::duration_cast<std::chrono::nanoseconds>(tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
+        enc.write(client_address_index_index);
+        enc.write(client_address);
+        enc.write(client_port_index);
+        enc.write(client_port);
+        enc.write(message_data_index_index);
+        enc.write(message_data);
+    }
+
     void BlockData::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
         bool indef;
@@ -1366,6 +1517,10 @@ namespace block_cbor {
                 resource_records.readCbor(dec, fields);
                 break;
 
+            case BlockTablesField::malformed_message_data:
+                malformed_message_data.readCbor(dec, fields);
+                break;
+
             default:
                 dec.skip();
                 break;
@@ -1475,6 +1630,26 @@ namespace block_cbor {
         }
     }
 
+    void BlockData::readMalformedMessageItems(CborBaseDecoder& dec, const FileVersionFields& fields)
+    {
+        const BlockParameters& block_parameters = block_parameters_[block_parameters_index];
+        bool indef;
+        uint64_t n_elems = dec.readArrayHeader(indef);
+        if ( !indef )
+            malformed_messages.reserve(n_elems);
+        while ( indef || n_elems-- > 0 )
+        {
+            if ( indef && dec.type() == CborBaseDecoder::TYPE_BREAK )
+            {
+                dec.readBreak();
+                break;
+            }
+
+            MalformedMessageItem mm;
+            mm.readCbor(dec, earliest_time, block_parameters, fields);
+            malformed_messages.push_back(std::move(mm));
+        }
+    }
     void BlockData::writeCbor(CborBaseEncoder& enc)
     {
         constexpr int preamble_index = find_block_index(BlockField::preamble);
@@ -1644,4 +1819,17 @@ namespace block_cbor {
         }
     }
 
+    void BlockData::writeMalformedMessageItems(CborBaseEncoder& enc)
+    {
+        constexpr int malformed_messages_index = find_block_index(BlockField::malformed_messages);
+        const BlockParameters& block_parameters = block_parameters_[block_parameters_index];
+
+        if ( malformed_messages.size() > 0 )
+        {
+            enc.write(malformed_messages_index);
+            enc.writeArrayHeader(malformed_messages.size());
+            for ( auto& mm : malformed_messages )
+                mm.writeCbor(enc, earliest_time, block_parameters);
+        }
+    }
 }

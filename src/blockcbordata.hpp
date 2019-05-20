@@ -1257,6 +1257,164 @@ namespace block_cbor {
     };
 
     /**
+     * \struct MalformedMessageData
+     * \brief Table data for malformed messages
+     */
+    struct MalformedMessageData
+    {
+        /**
+         * \brief Default constructor.
+         */
+        MalformedMessageData()
+            : server_address(), server_port(),
+              mm_transport_flags(), mm_payload() { }
+
+        /**
+         * \brief index of address of the DNS server.
+         */
+        index_t server_address;
+
+        /**
+         * \brief port of DNS server.
+         */
+        uint16_t server_port;
+
+        /**
+         * \brief transport flags.
+         */
+        uint8_t mm_transport_flags;
+
+        /**
+         * \brief the message data.
+         */
+        byte_string mm_payload;
+
+        /**
+         * \brief return the key to be used for storing values.
+         */
+        const MalformedMessageData& key() const
+        {
+            return *this;
+        }
+
+        /**
+         * \brief Implement equality operator.
+         *
+         * \param rhs item to compare to.
+         * \returns `true` if the two are equal.
+         */
+        bool operator==(const MalformedMessageData& rhs) const {
+            return ( server_address == rhs.server_address &&
+                     server_port == rhs.server_port &&
+                     mm_transport_flags == rhs.mm_transport_flags &&
+                     mm_payload == rhs.mm_payload );
+        }
+
+        /**
+         * \brief Inequality operator.
+         *
+         * \param rhs the class/type to compare to.
+         * \returns `false` if the two are equal.
+         */
+        bool operator!=(const MalformedMessageData& rhs) const {
+            return !( *this == rhs );
+        }
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec    CBOR stream to read from.
+         * \param fields translate map keys to internal values.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc CBOR stream to write to.
+         */
+        void writeCbor(CborBaseEncoder& enc);
+    };
+
+    /**
+     * \brief Calculate a hash value for the item.
+     *
+     * \param mmd message data item.
+     * \returns hash value.
+     */
+    std::size_t hash_value(const MalformedMessageData& mmd);
+
+    /**
+     * \struct MalformedMessageItem
+     * \brief Individual malformed messages.
+     */
+    struct MalformedMessageItem
+    {
+        /**
+         * \brief Default constructor.
+         */
+        MalformedMessageItem()
+        {
+            clear();
+        }
+
+        /**
+         * \brief Clear the malformed message.
+         */
+        void clear();
+
+        /**
+         * \brief the timestamp.
+         */
+        std::chrono::system_clock::time_point tstamp;
+
+        /**
+         * \brief index of client address.
+         */
+        index_t client_address;
+
+        /**
+         * \brief client port.
+         */
+        uint16_t client_port;
+
+        /**
+         * \brief index of message data.
+         */
+        index_t message_data;
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec           CBOR stream to read from.
+         * \param earliest_time earliest time in block.
+         * \param block_parameters parameters for this block.
+         * \param fields        translate map keys to internal values.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec,
+                      const std::chrono::system_clock::time_point& earliest_time,
+                      const BlockParameters& block_parameters,
+                      const FileVersionFields& fields);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc           CBOR stream to write to.
+         * \param earliest_time earliest time in block.
+         * \param block_parameters parameters for this block.
+         */
+        void writeCbor(CborBaseEncoder& enc,
+                       const std::chrono::system_clock::time_point& earliest_time,
+                       const BlockParameters& block_parameters);
+    };
+
+    /**
      * \class KeyRef
      * \brief A class to let a reference act as a map key.
      */
@@ -1607,6 +1765,11 @@ namespace block_cbor {
         HeaderList<IndexVectorItem, std::vector<index_t>> rrs_lists;
 
         /**
+         * \brief the header list of malformed message data.
+         */
+        HeaderList<MalformedMessageData> malformed_message_data;
+
+        /**
          * \brief the block list of completed query responses.
          */
         std::vector<QueryResponseItem> query_response_items;
@@ -1615,6 +1778,11 @@ namespace block_cbor {
          * \brief the list of address event counts.
          */
         std::unordered_map<AddressEventItem, unsigned, boost::hash<AddressEventItem>> address_event_counts;
+
+        /**
+         * \brief the block list of malformed messages.
+         */
+        std::vector<MalformedMessageItem> malformed_messages;
 
         /**
          * \brief Clear all block data.
@@ -1631,6 +1799,8 @@ namespace block_cbor {
             questions_lists.clear();
             rrs_lists.clear();
             address_event_counts.clear();
+            malformed_message_data.clear();
+            malformed_messages.clear();
         }
 
         /**
@@ -1653,7 +1823,8 @@ namespace block_cbor {
             unsigned max_block_items = block_parameters_[block_parameters_index].storage_parameters.max_block_items;
             return
                 ( query_response_items.size() >= max_block_items ||
-                  address_event_counts.size() >= max_block_items );
+                  address_event_counts.size() >= max_block_items ||
+                  malformed_messages.size() >= max_block_items );
         }
 
         /**
@@ -1773,6 +1944,17 @@ namespace block_cbor {
         }
 
         /**
+         * brief Add a new malformed message data to the block headers.
+         *
+         * \param mmd the malformed message data to add.
+         * \returns the index of the malformed message data.
+         */
+        index_t add_malformed_message_data(const MalformedMessageData& mmd)
+        {
+            return malformed_message_data.add(mmd);
+        }
+
+        /**
          * \brief Count the AddressEvent.
          *
          * \param ae the AddressEvent.
@@ -1852,6 +2034,14 @@ namespace block_cbor {
         void readAddressEventCounts(CborBaseDecoder& dec, const FileVersionFields& fields);
 
         /**
+         * \brief Read block malformed message from CBOR.
+         *
+         * \param dec CBOR decoder.
+         * \param fields translate map keys to internal values.
+         */
+        void readMalformedMessageItems(CborBaseDecoder& dec, const FileVersionFields& fields);
+
+        /**
          * \brief Write the block out CBOR encoded.
          *
          * \param enc the CBOR encoder to use for the write.
@@ -1885,6 +2075,13 @@ namespace block_cbor {
          * \param enc the CBOR encoder to use for the write.
          */
         void writeAddressEventCounts(CborBaseEncoder& enc);
+
+        /**
+         * \brief Write malformed messages.
+         *
+         * \param enc the CBOR encoder to use for the write.
+         */
+        void writeMalformedMessageItems(CborBaseEncoder& enc);
     };
 }
 

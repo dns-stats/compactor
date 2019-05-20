@@ -368,7 +368,9 @@ namespace block_cbor {
           storage_hints_(format_10_storage_hints, format_10_storage_hints + countof(format_10_storage_hints)),
           storage_parameters_(format_10_storage_parameters, format_10_storage_parameters + countof(format_10_storage_parameters)),
           collection_parameters_(format_10_collection_parameters, format_10_collection_parameters + countof(format_10_collection_parameters)),
-          block_parameters_(format_10_block_parameters, format_10_block_parameters + countof(format_10_block_parameters))
+          block_parameters_(format_10_block_parameters, format_10_block_parameters + countof(format_10_block_parameters)),
+          malformed_message_data_(format_10_malformed_message_data, format_10_malformed_message_data + countof(format_10_malformed_message_data)),
+          malformed_message_(format_10_malformed_message, format_10_malformed_message + countof(format_10_malformed_message))
     {
     }
 
@@ -535,5 +537,21 @@ namespace block_cbor {
             return block_parameters_[index];
         else
             return BlockParametersField::unknown;
+    }
+
+    MalformedMessageDataField FileVersionFields::malformed_message_data_field(int index) const
+    {
+        if ( index < malformed_message_data_.size() )
+            return malformed_message_data_[index];
+        else
+            return MalformedMessageDataField::unknown;
+    }
+
+    MalformedMessageField FileVersionFields::malformed_message_field(int index) const
+    {
+        if ( index < malformed_message_.size() )
+            return malformed_message_[index];
+        else
+            return MalformedMessageField::unknown;
     }
 };

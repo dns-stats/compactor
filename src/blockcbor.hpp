@@ -299,6 +299,7 @@ namespace block_cbor {
         tables,
         queries,
         address_event_counts,
+        malformed_messages,
 
         unknown = -1
     };
@@ -354,6 +355,7 @@ namespace block_cbor {
         question_rr,
         rr_list,
         rr,
+        malformed_message_data,
 
         unknown = -1
     };
@@ -475,6 +477,34 @@ namespace block_cbor {
         ae_address_index,
         ae_transport_flags,
         ae_count,
+
+        unknown = -1
+    };
+
+    /**
+     * \enum MalformedMessageDataField
+     * \brief Fields in malformed message data map.
+     */
+    enum class MalformedMessageDataField
+    {
+        server_address_index,
+        server_port,
+        mm_transport_flags,
+        mm_payload,
+
+        unknown = -1
+    };
+
+    /**
+     * \enum MalformedMessageField
+     * \brief Fields in malformed message map.
+     */
+    enum class MalformedMessageField
+    {
+        time_offset,
+        client_address_index,
+        client_port,
+        message_data_index,
 
         unknown = -1
     };
@@ -728,6 +758,7 @@ namespace block_cbor {
         BlockField::tables,
         BlockField::queries,
         BlockField::address_event_counts,
+        BlockField::malformed_messages,
     };
 
     /**
@@ -819,6 +850,7 @@ namespace block_cbor {
         BlockTablesField::question_rr,
         BlockTablesField::rr_list,
         BlockTablesField::rr,
+        BlockTablesField::malformed_message_data,
     };
 
     /**
@@ -1019,6 +1051,54 @@ namespace block_cbor {
     constexpr int find_address_event_count_index(AddressEventCountField index)
     {
         return find_index(format_10_address_event_count, index);
+    }
+
+    /**
+     * \brief Map of current malformed message data indexes.
+     *
+     * The index of a entry in the array is the file map value of that entry.
+     */
+    constexpr MalformedMessageDataField format_10_malformed_message_data[] = {
+        MalformedMessageDataField::server_address_index,
+        MalformedMessageDataField::server_port,
+        MalformedMessageDataField::mm_transport_flags,
+        MalformedMessageDataField::mm_payload,
+    };
+
+    /**
+     * \brief find map index of malformed message data fields for current format.
+     *
+     * \param index the field identifier.
+     * \return the field index.
+     * \throws std::logic_error if the item isn't specified in the format.
+     */
+    constexpr int find_malformed_message_data_index(MalformedMessageDataField index)
+    {
+        return find_index(format_10_malformed_message_data, index);
+    }
+
+    /**
+     * \brief Map of current malformed message indexes.
+     *
+     * The index of a entry in the array is the file map value of that entry.
+     */
+    constexpr MalformedMessageField format_10_malformed_message[] = {
+        MalformedMessageField::time_offset,
+        MalformedMessageField::client_address_index,
+        MalformedMessageField::client_port,
+        MalformedMessageField::message_data_index,
+    };
+
+    /**
+     * \brief find map index of malformed message fields for current format.
+     *
+     * \param index the field identifier.
+     * \return the field index.
+     * \throws std::logic_error if the item isn't specified in the format.
+     */
+    constexpr int find_malformed_message_index(MalformedMessageField index)
+    {
+        return find_index(format_10_malformed_message, index);
     }
 
     /**
@@ -1224,6 +1304,22 @@ namespace block_cbor {
          */
         BlockParametersField block_parameters_field(int index) const;
 
+        /**
+         * \brief Return malformed message data field for given map index.
+         *
+         * \param index the map index read from file.
+         * \returns field identifier.
+         */
+        MalformedMessageDataField malformed_message_data_field(int index) const;
+
+        /**
+         * \brief Return malformed message field for given map index.
+         *
+         * \param index the map index read from file.
+         * \returns field identifier.
+         */
+        MalformedMessageField malformed_message_field(int index) const;
+
     private:
         /**
          * \brief configuration index map.
@@ -1309,6 +1405,16 @@ namespace block_cbor {
          * \brief block parameters index map.
          */
         std::vector<BlockParametersField> block_parameters_;
+
+        /**
+         * \brief malformed message data index map.
+         */
+        std::vector<MalformedMessageDataField> malformed_message_data_;
+
+        /**
+         * \brief malformed message index map.
+         */
+        std::vector<MalformedMessageField> malformed_message_;
     };
 };
 
