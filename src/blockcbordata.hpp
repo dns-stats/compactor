@@ -1499,16 +1499,20 @@ namespace block_cbor {
         /**
          * \brief Find if a key value is in the list.
          *
-         * \param key the key value to search for.
-         * \returns index of the value, or 0 if not found.
+         * \param key   the key value to search for.
+         * \param index the index of the item, if found.
+         * \returns `true` if the item is found.
          */
-        index_t find(const K& key)
+        bool find(const K& key, index_t& index)
         {
             auto find = map_.find(KeyRef<K>(key));
             if ( find != map_.end() )
-                return find->second;
+            {
+                index = find->second;
+                return true;
+            }
             else
-                return 0;
+                return false;
         }
 
         /**
@@ -1553,8 +1557,8 @@ namespace block_cbor {
         index_t add(const T& val)
         {
             const K& key = val.key();
-            index_t res = find(key);
-            if ( res == 0 )
+            index_t res;
+            if ( !find(key, res) )
                 res = add_value(val);
             return res;
         }
@@ -1835,8 +1839,8 @@ namespace block_cbor {
          */
         index_t add_address(const byte_string& addr)
         {
-            index_t res = ip_addresses.find(addr);
-            if ( res == 0 )
+            index_t res;
+            if ( !ip_addresses.find(addr, res) );
             {
                 ByteStringItem item;
                 item.str = addr;
@@ -1886,8 +1890,8 @@ namespace block_cbor {
          */
         index_t add_questions_list(const std::vector<index_t>& ql)
         {
-            index_t res = questions_lists.find(ql);
-            if ( res == 0 )
+            index_t res;
+            if ( !questions_lists.find(ql, res) )
             {
                 IndexVectorItem item;
                 item.vec = ql;
@@ -1904,8 +1908,8 @@ namespace block_cbor {
          */
         index_t add_name_rdata(const byte_string& rd)
         {
-            index_t res = names_rdatas.find(rd);
-            if ( res == 0 )
+            index_t res;
+            if ( !names_rdatas.find(rd, res) )
             {
                 ByteStringItem item;
                 item.str = rd;
@@ -1933,8 +1937,8 @@ namespace block_cbor {
          */
         index_t add_rrs_list(const std::vector<index_t>& rl)
         {
-            index_t res = rrs_lists.find(rl);
-            if ( res == 0 )
+            index_t res;
+            if ( !rrs_lists.find(rl, res) )
             {
                 IndexVectorItem item;
                 item.vec = rl;
