@@ -178,7 +178,7 @@ void CaptureDNS::EDNS0::extract_options(const byte_string& data)
 
 // cppcheck-suppress unusedFunction
 Tins::PDU::metadata CaptureDNS::extract_metadata(const uint8_t *, uint32_t total_sz) {
-    if (TINS_UNLIKELY(sizeof(dns_header))) {
+    if (TINS_UNLIKELY(total_sz < sizeof(dns_header))) {
         throw Tins::malformed_packet();
     }
     return metadata(total_sz, pdu_flag, Tins::PDU::UNKNOWN);
