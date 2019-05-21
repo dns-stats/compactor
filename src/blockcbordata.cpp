@@ -588,6 +588,8 @@ namespace block_cbor {
 
     void Question::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
+        qname = classtype = boost::none;
+
         try
         {
             bool indef;
@@ -644,6 +646,8 @@ namespace block_cbor {
 
     void ResourceRecord::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
+        name = classtype = rdata = boost::none;
+
         try
         {
             bool indef;
@@ -716,6 +720,8 @@ namespace block_cbor {
 
     void QueryResponseSignature::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
+        server_address = query_opt_rdata = query_classtype = boost::none;
+
         try
         {
             bool indef;
@@ -917,6 +923,9 @@ namespace block_cbor {
         std::unique_ptr<QueryResponseExtraInfo> readExtraInfo(CborBaseDecoder& dec, const FileVersionFields& fields)
         {
             std::unique_ptr<QueryResponseExtraInfo> res = make_unique<QueryResponseExtraInfo>();
+            res->questions_list = res->answers_list =
+                res->authority_list = res->additional_list = boost::none;
+
             bool indef;
             uint64_t n_elems = dec.readMapHeader(indef);
             while ( indef || n_elems-- > 0 )
@@ -970,22 +979,22 @@ namespace block_cbor {
 
             enc.write(id);
             enc.writeMapHeader();
-            if ( ei.questions_list != 0 )
+            if ( ei.questions_list )
             {
                 enc.write(questions_index);
                 enc.write(ei.questions_list);
             }
-            if ( ei.answers_list != 0 )
+            if ( ei.answers_list )
             {
                 enc.write(answer_index);
                 enc.write(ei.answers_list);
             }
-            if ( ei.authority_list != 0 )
+            if ( ei.authority_list )
             {
                 enc.write(authority_index);
                 enc.write(ei.authority_list);
             }
-            if ( ei.additional_list != 0 )
+            if ( ei.additional_list )
             {
                 enc.write(additional_index);
                 enc.write(ei.additional_list);
@@ -999,7 +1008,7 @@ namespace block_cbor {
         qr_flags = client_port = hoplimit = id = query_size = response_size = 0;
         tstamp = std::chrono::system_clock::time_point(std::chrono::microseconds(0));
         response_delay = std::chrono::microseconds(0);
-        client_address = qname = signature = 0;
+        client_address = qname = signature = boost::none;
         query_extra_info.release();
         response_extra_info.release();
     }
@@ -1012,6 +1021,7 @@ namespace block_cbor {
         try
         {
             qr_flags = 0;
+            client_address = qname = signature = boost::none;
 
             bool indef;
             uint64_t n_elems = dec.readMapHeader(indef);
@@ -1175,6 +1185,7 @@ namespace block_cbor {
             // No necessarily present, default to 0.
             aei.code = 0;
             aei.transport_flags = 0;
+            aei.address = boost::none;
 
             bool indef;
             uint64_t n_elems = dec.readMapHeader(indef);
@@ -1261,6 +1272,7 @@ namespace block_cbor {
         {
             // No necessarily present, default to 0 on repeated read.
             mm_transport_flags = 0;
+            server_address = boost::none;
 
             bool indef;
             uint64_t n_elems = dec.readMapHeader(indef);
@@ -1324,7 +1336,7 @@ namespace block_cbor {
     void MalformedMessageItem::clear()
     {
         tstamp = std::chrono::system_clock::time_point(std::chrono::microseconds(0));
-        client_address = message_data = 0;
+        client_address = message_data = boost::none;
         client_port = 0;
     }
 
@@ -1333,6 +1345,8 @@ namespace block_cbor {
                                         const BlockParameters& block_parameters,
                                         const FileVersionFields& fields)
     {
+        client_address = message_data = boost::none;
+
         try
         {
             bool indef;

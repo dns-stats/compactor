@@ -17,6 +17,7 @@
 #include <utility>
 
 #include <boost/functional/hash.hpp>
+#include <boost/optional/optional_io.hpp>
 
 #include "catch.hpp"
 
@@ -1075,7 +1076,7 @@ SCENARIO("BlockData items can be written", "[block]")
         WHEN("ticks_per_second changes time value changes")
         {
             TestCborEncoder tcbe;
-            BlockData cd2(bpv, 1);
+            BlockData cd2(bpv, FileFormatVersion::format_10, 1);
             cd2.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(1));
             cd2.writeCbor(tcbe);
             tcbe.flush();
@@ -1120,6 +1121,8 @@ SCENARIO("BlockData max items works", "[block]")
     {
         QueryResponseItem qri1;
         QueryResponseItem qri2;
+        qri1.client_address = qri1.qname = qri1.signature = 0;
+        qri2.client_address = qri2.qname = qri2.signature = 0;
         BlockParameters bp1, bp2;
         bp1.storage_parameters.max_block_items = 1;
         bp2.storage_parameters.max_block_items = 2;
@@ -1127,7 +1130,7 @@ SCENARIO("BlockData max items works", "[block]")
         bpv.push_back(bp1);
         bpv.push_back(bp2);
         BlockData cd1(bpv);
-        BlockData cd2(bpv, 1);
+        BlockData cd2(bpv, FileFormatVersion::format_10, 1);
         cd1.query_response_items.push_back(std::move(qri1));
         cd2.query_response_items.push_back(std::move(qri2));
 
@@ -1654,6 +1657,31 @@ SCENARIO("HeaderList items can be read", "[block]")
                 hl_r.readCbor(tcbd, fields);
 
                 REQUIRE(hl_r.size() == 3);
+                REQUIRE(hl_r[0].val == 1);
+                REQUIRE(hl_r[1].val == 2);
+                REQUIRE(hl_r[2].val == 3);
+            }
+        }
+
+        AND_WHEN("decoder is given one-based encoded header list item data")
+        {
+            const std::vector<uint8_t> INPUT =
+                {
+                    (4 << 5) | 31,
+                    1,
+                    2,
+                    3,
+                    0xff
+                };
+            tcbd.set_bytes(INPUT);
+
+            THEN("decoder input is correct")
+            {
+                HeaderList<IntItem> hl_r(true);
+                block_cbor::FileVersionFields fields;
+                hl_r.readCbor(tcbd, fields);
+
+                REQUIRE(hl_r.size() == 3);
                 REQUIRE(hl_r[1].val == 1);
                 REQUIRE(hl_r[2].val == 2);
                 REQUIRE(hl_r[3].val == 3);
@@ -1777,7 +1805,7 @@ SCENARIO("BlockData items can be read", "[block]")
 
             THEN("decoder input is correct")
             {
-                BlockData cd_r(bpv, 1);
+                BlockData cd_r(bpv, FileFormatVersion::format_10, 1);
                 block_cbor::FileVersionFields fields;
                 cd_r.readCbor(tcbd, fields);
 

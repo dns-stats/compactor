@@ -32,7 +32,7 @@ BlockCborReader::BlockCborReader(CborBaseDecoder& dec, Configuration &config,
       pseudo_anon_(pseudo_anon)
 {
     readFileHeader(config);
-    block_ = make_unique<block_cbor::BlockData>(block_parameters_);
+    block_ = make_unique<block_cbor::BlockData>(block_parameters_, file_format_version_);
 }
 
 void BlockCborReader::readFileHeader(Configuration& config)
@@ -549,23 +549,23 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
 void BlockCborReader::readExtraInfo(DNSMessage& dns, const block_cbor::QueryResponseExtraInfo& extra) const
 {
     if ( extra.questions_list )
-        for ( auto& q_id : block_->questions_lists[extra.questions_list].vec )
+        for ( auto& q_id : block_->questions_lists[*extra.questions_list].vec )
         {
-            const block_cbor::Question& q = block_->questions[q_id];
+            const block_cbor::Question& q = block_->questions[*q_id];
             dns.dns.add_query(makeQuery(q.qname, q.classtype));
         }
 
     if ( extra.answers_list )
-        for ( auto& rr_id : block_->rrs_lists[extra.answers_list].vec )
-            dns.dns.add_answer(makeResource(block_->resource_records[rr_id]));
+        for ( auto& rr_id : block_->rrs_lists[*extra.answers_list].vec )
+            dns.dns.add_answer(makeResource(block_->resource_records[*rr_id]));
 
     if ( extra.authority_list )
-        for ( auto& rr_id : block_->rrs_lists[extra.authority_list].vec )
-            dns.dns.add_authority(makeResource(block_->resource_records[rr_id]));
+        for ( auto& rr_id : block_->rrs_lists[*extra.authority_list].vec )
+            dns.dns.add_authority(makeResource(block_->resource_records[*rr_id]));
 
     if ( extra.additional_list )
-        for ( auto& rr_id : block_->rrs_lists[extra.additional_list].vec )
-            dns.dns.add_additional(makeResource(block_->resource_records[rr_id]));
+        for ( auto& rr_id : block_->rrs_lists[*extra.additional_list].vec )
+            dns.dns.add_additional(makeResource(block_->resource_records[*rr_id]));
 }
 
 CaptureDNS::query BlockCborReader::makeQuery(block_cbor::index_t qname_id, block_cbor::index_t class_type_id) const

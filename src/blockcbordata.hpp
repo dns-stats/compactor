@@ -19,6 +19,7 @@
 #include <vector>
 
 #include <boost/functional/hash.hpp>
+#include <boost/optional.hpp>
 
 #include "addressevent.hpp"
 #include "bytestring.hpp"
@@ -29,6 +30,26 @@
 #include "ipaddress.hpp"
 #include "makeunique.hpp"
 #include "packetstatistics.hpp"
+
+namespace boost {
+    /**
+     * \brief Calculate a hash value for a boost::optional<T>.
+     *
+     * std::optional is hashable, boost::optional isn't. Do something
+     * about that.
+     *
+     * \returns hash value.
+     */
+    template<typename T>
+    std::size_t hash_value(const boost::optional<T>& t)
+    {
+        bool there = t;
+        std::size_t seed = boost::hash_value(there);
+        if ( there )
+            boost::hash_combine(seed, *t);
+        return seed;
+    }
+}
 
 namespace block_cbor {
 
@@ -142,10 +163,12 @@ namespace block_cbor {
     /**
      * \brief type for the index into a header.
      *
-     * Note that the index is 1-based. Index 0 is reserved for
-     * 'value not present'.
+     * Note that the index may be either is 1-based or 0-based depending
+     * on the file format version. Formats before 1.0 are 1-based, from
+     * 1.0 on are 0-based. In pre-format 1.0 versions, index 0 was reserved
+     * for 'value not present'.
      */
-    using index_t = std::size_t;
+    using index_t = boost::optional<std::size_t>;
 
     /**
      * \struct Timestamp
@@ -1494,7 +1517,8 @@ namespace block_cbor {
         /**
          * \brief Default constructor.
          */
-        HeaderList() {}
+        HeaderList(bool one_based = false)
+            : one_based_(one_based) {}
 
         /**
          * \brief Find if a key value is in the list.
@@ -1512,7 +1536,10 @@ namespace block_cbor {
                 return true;
             }
             else
+            {
+                index = boost::none;
                 return false;
+            }
         }
 
         /**
@@ -1579,9 +1606,17 @@ namespace block_cbor {
          */
         const T& operator[](index_t pos) const
         {
-            if ( pos == 0 || pos > items_.size() )
-                throw cbor_file_format_error("Block index out of range");
-            return items_[pos - 1];
+            if ( one_based_ )
+            {
+                if ( *pos > 0 || *pos <= items_.size() )
+                    return items_[*pos - 1];
+            }
+            else
+            {
+                if ( *pos < items_.size() )
+                    return items_[*pos];
+            }
+            throw cbor_file_format_error("Block index out of range");
         }
 
         /**
@@ -1660,7 +1695,9 @@ namespace block_cbor {
         index_t record_last_key()
         {
             index_t res = items_.size();
-            map_[KeyRef<K>(items_.back().key())] = res;
+            if ( !one_based_ )
+                res = *res - 1;
+            map_[KeyRef<K>(items_.back().key())] = *res;
             return res;
         }
 
@@ -1673,6 +1710,13 @@ namespace block_cbor {
          * \brief map of values present.
          */
         std::unordered_map<KeyRef<K>, index_t, boost::hash<KeyRef<K>>> map_;
+
+        /**
+         * \brief are indexes 1-based?
+         *
+         * If not, they are 0-based.
+         */
+        bool one_based_;
     };
 
     /**
@@ -1696,12 +1740,23 @@ namespace block_cbor {
          * Constructor.
          *
          * \param block_parameters vector of block parameters for this file.
+         * \param file_version     the file format version.
          * \param bp_index         default index of vector item to use.
          */
         explicit BlockData(const std::vector<BlockParameters>& block_parameters,
+                           FileFormatVersion file_version = FileFormatVersion::format_10,
                            unsigned bp_index = 0)
             : block_parameters_(block_parameters),
-              block_parameters_index(bp_index)
+              block_parameters_index(bp_index),
+              ip_addresses(file_version < FileFormatVersion::format_10),
+              class_types(file_version < FileFormatVersion::format_10),
+              questions(file_version < FileFormatVersion::format_10),
+              resource_records(file_version < FileFormatVersion::format_10),
+              names_rdatas(file_version < FileFormatVersion::format_10),
+              query_response_signatures(file_version < FileFormatVersion::format_10),
+              questions_lists(file_version < FileFormatVersion::format_10),
+              rrs_lists(file_version < FileFormatVersion::format_10),
+              malformed_message_data(file_version < FileFormatVersion::format_10)
         {
             init();
         }
@@ -1840,7 +1895,7 @@ namespace block_cbor {
         index_t add_address(const byte_string& addr)
         {
             index_t res;
-            if ( !ip_addresses.find(addr, res) );
+            if ( !ip_addresses.find(addr, res) )
             {
                 ByteStringItem item;
                 item.str = addr;

@@ -19,6 +19,8 @@
 #include <string>
 #include <type_traits>
 
+#include <boost/optional.hpp>
+
 #include "bytestring.hpp"
 
 /**
@@ -112,6 +114,14 @@ public:
     void read(T& item)
     {
         read_item(item);
+    }
+
+    template<typename T>
+    void read(boost::optional<T>& item)
+    {
+        T val;
+        read_item(val);
+        item = val;
     }
 
     /**

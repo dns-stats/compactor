@@ -25,6 +25,8 @@
 #include <thread>
 #include <vector>
 
+#include <boost/optional.hpp>
+
 #include "bytestring.hpp"
 #include "log.hpp"
 #include "makeunique.hpp"
@@ -48,6 +50,19 @@ public:
      * \brief The default constructor.
      */
     CborBaseEncoder() : buf_(), p_(&buf_[0]) {}
+
+    /**
+     * \brief Write optional values.
+     *
+     * Throw if there is no value there.
+     *
+     * \param value the value to write.
+     */
+    template<typename T>
+    void write(const boost::optional<T>& value)
+    {
+        write(*value);
+    }
 
     /**
      * \brief Write a boolean value.
