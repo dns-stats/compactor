@@ -267,6 +267,25 @@ namespace
         GeoIPContext& ctx_;
     };
 
+    class IPAddrGeoASNetmaskModifier : public ctemplate::TemplateModifier
+    {
+    public:
+        explicit IPAddrGeoASNetmaskModifier(GeoIPContext& ctx) : ctx_(ctx) {}
+
+        virtual void Modify(const char* in, size_t inlen,
+                            const ctemplate::PerExpandData* per_expand_data,
+                            ctemplate::ExpandEmitter* out,
+                            const std::string& arg) const
+        {
+            byte_string b(reinterpret_cast<const unsigned char*>(in), inlen);
+            IPAddress addr(b);
+            out->Emit(ToString<uint16_t>(ctx_.as_netmask(addr)));
+        }
+
+    private:
+        GeoIPContext& ctx_;
+    };
+
     class NoGeoLocationModifier : public ctemplate::TemplateModifier
     {
     public:
@@ -325,6 +344,7 @@ namespace
     std::unique_ptr<GeoIPContext> geoip;
     std::unique_ptr<IPAddrGeoLocationModifier> ipaddr_geoloc;
     std::unique_ptr<IPAddrGeoASNModifier> ipaddr_geoasn;
+    std::unique_ptr<IPAddrGeoASNetmaskModifier> ipaddr_geoasnetmask;
     std::unique_ptr<NoGeoLocationModifier> no_geoloc;
 
     void load_modifiers(const std::string& db_dir)
@@ -343,8 +363,10 @@ namespace
             geoip = make_unique<GeoIPContext>(db_dir);
             ipaddr_geoloc = make_unique<IPAddrGeoLocationModifier>(*geoip);
             ipaddr_geoasn = make_unique<IPAddrGeoASNModifier>(*geoip);
+            ipaddr_geoasnetmask = make_unique<IPAddrGeoASNetmaskModifier>(*geoip);
             ctemplate::AddModifier("x-ipaddr-geo-location", ipaddr_geoloc.get());
             ctemplate::AddModifier("x-ipaddr-geo-asn", ipaddr_geoasn.get());
+            ctemplate::AddModifier("x-ipaddr-geo-as-netmask", ipaddr_geoasnetmask.get());
         }
         catch (const geoip_error& e)
         {
@@ -352,6 +374,7 @@ namespace
             no_geoloc = make_unique<NoGeoLocationModifier>();
             ctemplate::AddModifier("x-ipaddr-geo-location", no_geoloc.get());
             ctemplate::AddModifier("x-ipaddr-geo-asn", no_geoloc.get());
+            ctemplate::AddModifier("x-ipaddr-geo-as-netmask", no_geoloc.get());
         }
     }
 }
