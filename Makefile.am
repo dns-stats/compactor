@@ -133,62 +133,31 @@ user-guide : user-guide-html user-guide-pdf
 user-guide-html : doc/user-guide.html
 user-guide-pdf : doc/user-guide.pdf
 
-compactor_headers = \
+# To speed builds, build common files into a static library.
+noinst_LIBRARIES = libcdns.a
+
+libcdns_a_headers = \
         src/addressevent.hpp \
         src/baseoutputwriter.hpp \
         src/bytestring.hpp \
         src/capturedns.hpp \
+        src/cbordecoder.hpp \
         src/cborencoder.hpp \
-        src/channel.hpp \
         src/blockcbor.hpp \
         src/blockcbordata.hpp \
-        src/blockcborwriter.hpp \
         src/configuration.hpp \
         src/dnsmessage.hpp \
         src/ipaddress.hpp \
         src/log.hpp \
         src/makeunique.hpp \
-        src/matcher.hpp \
-        src/nocopypacket.hpp \
         src/no-register-warning.hpp \
-        src/packetstatistics.hpp \
-        src/packetstream.hpp \
-        src/pcapwriter.hpp \
         src/pseudoanonymise.hpp \
         src/queryresponse.hpp \
         src/rotatingfilename.hpp \
-        src/sniffers.hpp \
         src/streamwriter.hpp
 
-inspector_headers = \
-        src/addressevent.hpp \
-        src/capturedns.hpp \
-        src/cbordecoder.hpp \
-        src/backend.hpp \
-        src/blockcbor.hpp \
-        src/blockcbordata.hpp \
-        src/blockcborreader.hpp \
-        src/configuration.hpp \
-        src/dnsmessage.hpp \
-        src/geoip.hpp \
-        src/ipaddress.hpp \
-        src/log.hpp \
-        src/makeunique.hpp \
-        src/no-register-warning.hpp \
-        src/pcapwriter.hpp \
-        src/pseudoanonymise.hpp \
-        src/queryresponse.hpp \
-        src/streamwriter.hpp \
-        src/template-backend.hpp
-
-# _internal_test items work by #including the corresponding .cpp to get
-# access to its internals. You can't have the _internal_test.cpp and the .cpp
-# in the executable because you'll get duplicate definitions and linker
-# complaints.
-src_with_internal_tests = \
-        src/matcher.cpp
-
-src_without_internal_tests = \
+libcdns_a_SOURCES = \
+        $(libcdns_a_headers) \
         src/baseoutputwriter.cpp \
         src/bytestring.cpp \
         src/capturedns.cpp \
@@ -196,25 +165,55 @@ src_without_internal_tests = \
         src/cborencoder.cpp \
         src/blockcbor.cpp \
         src/blockcbordata.cpp \
-        src/blockcborwriter.cpp \
         src/configuration.cpp \
         src/dnsmessage.cpp \
         src/ipaddress.cpp \
         src/log.cpp \
-        src/packetstream.cpp \
         src/pseudoanonymise.cpp \
         src/rotatingfilename.cpp \
-        src/sniffers.cpp \
         src/streamwriter.cpp
+
+libcdns_a_CXXFLAGS = -DBOOST_LOG_DYN_LINK
+
+compactor_headers = \
+        src/blockcborwriter.hpp \
+        src/channel.hpp \
+        src/matcher.hpp \
+        src/nocopypacket.hpp \
+        src/packetstatistics.hpp \
+        src/packetstream.hpp \
+        src/pcapwriter.hpp \
+        src/sniffers.hpp
+
+inspector_headers = \
+        src/backend.hpp \
+        src/blockcborreader.hpp \
+        src/geoip.hpp \
+        src/pcapwriter.hpp \
+        src/template-backend.hpp
+
+# _internal_test items work by #including the corresponding .cpp to get
+# access to its internals. You can't have the _internal_test.cpp and the .cpp
+# in the executable because you'll get duplicate definitions and linker
+# complaints.
+compactor_src_with_internal_tests = \
+        src/matcher.cpp
+
+compactor_src_without_internal_tests = \
+        src/blockcborwriter.cpp \
+        src/packetstream.cpp \
+        src/sniffers.cpp
 
 compactor_SOURCES = \
         $(compactor_headers) \
-        $(src_without_internal_tests) \
-        $(src_with_internal_tests) \
+        $(compactor_src_without_internal_tests) \
+        $(compactor_src_with_internal_tests) \
         src/compactor.cpp
 
 compactor_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
+
 compactor_LDADD = \
+        libcdns.a \
         $(BOOST_FILESYSTEM_LIB) \
         $(BOOST_IOSTREAMS_LIB) \
         $(BOOST_LOG_LIB) \
@@ -236,10 +235,9 @@ compactor_LDFLAGS += \
 endif
 
 compactor_tests_SOURCES = \
-        $(compactor_headers) \
         tests/catch.hpp \
         tests/catch_main.cpp \
-        $(src_without_internal_tests) \
+        $(compactor_src_without_internal_tests) \
         tests/baseoutputwriter_test.cpp \
         tests/capturedns_test.cpp \
         tests/cbordecoder_test.cpp \
@@ -259,6 +257,7 @@ endif
 
 compactor_tests_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
 compactor_tests_LDADD = \
+        libcdns.a \
         $(BOOST_FILESYSTEM_LIB) \
         $(BOOST_IOSTREAMS_LIB) \
         $(BOOST_LOG_LIB) \
@@ -282,27 +281,14 @@ endif
 inspector_SOURCES = \
         $(inspector_headers) \
         src/backend.cpp \
-        src/baseoutputwriter.cpp \
-        src/rotatingfilename.cpp \
-        src/bytestring.cpp \
-        src/capturedns.cpp \
-        src/cbordecoder.cpp \
-        src/cborencoder.cpp \
-        src/blockcbor.cpp \
-        src/blockcbordata.cpp \
         src/blockcborreader.cpp \
-        src/configuration.cpp \
         src/geoip.cpp \
-        src/ipaddress.cpp \
-        src/dnsmessage.cpp \
         src/inspector.cpp \
-        src/log.cpp \
-        src/pseudoanonymise.cpp \
-        src/streamwriter.cpp \
         src/template-backend.cpp
 
 inspector_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
 inspector_LDADD = \
+        libcdns.a \
         $(BOOST_FILESYSTEM_LIB) \
         $(BOOST_IOSTREAMS_LIB) \
         $(BOOST_LOG_LIB) \

@@ -560,7 +560,7 @@ int main(int ac, char *av[])
     }
     catch (const std::runtime_error& err)
     {
-        std::cerr << PROGNAME << "Error: " << err.what() << std::endl;
+        std::cerr << PROGNAME << ": Error: " << err.what() << std::endl;
         return 1;
     }
 
