@@ -206,6 +206,14 @@ namespace {
     }
 }
 
+/**
+ * \brief Overload <code>validate()</code> for Size.
+ *
+ * @param v             holder for result.
+ * @param values        input values.
+ * @param val1          compiler workaround.
+ * @param val2          compiler workaround.
+ */
 // cppcheck-suppress unusedFunction
 void validate(boost::any& v, const std::vector<std::string>& values,
               Size* val1, int val2)
