@@ -1061,7 +1061,7 @@ namespace block_cbor {
                     break;
 
                 case QueryResponseField::response_delay:
-                    response_delay = std::chrono::microseconds(dec.read_signed());
+                    response_delay = std::chrono::microseconds(dec.read_signed() * 1000000 / block_parameters.storage_parameters.ticks_per_second);
                     qr_flags |= QUERY_AND_RESPONSE;
                     break;
 
