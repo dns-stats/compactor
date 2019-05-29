@@ -18,12 +18,7 @@ INPUT_FILES="matching.pcap unmatched.pcap"
 command -v tshark > /dev/null 2>&1 || { echo "No tshark, skipping test." >&2; exit 77; }
 command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
 
-if [ -z "$1" ] ; then
-    echo "Using default input"
-else
-    INPUT_FILES=$1
-fi
-USR_TMPDIR=$2
+tmpdir=`mktemp -d -t "same-tshark-output.XXXXXX"`
 
 rm_files()
 {
@@ -59,6 +54,7 @@ call_tshark()
               -e '/^.*\Acknowledgment number:/d' \
               -e '/^.*\Sequence number:/d' \
               -e '/^.*\[Stream index:/d' \
+              -e '/^.*\[.*(Source|Destination) GeoIP/d' \
               -e '/^.*Request In:/d' \
               $tmpdir/tshark$2.full  > $tmpdir/tshark$2.out
 }
@@ -68,20 +64,6 @@ trap "cleanup 1" HUP INT TERM
 SUCCESS=0
 for DATAFILE in $INPUT_FILES
 do
-
-    if [ -z $USR_TMPDIR ] ; then
-        tmpdir=`mktemp -d --tmpdir "same-bytes.XXXXXX"`
-        trap "cleanup 1" HUP INT TERM
-    else
-        mkdir -p $USR_TMPDIR/"same-bytes" &&
-        tmpdir=$USR_TMPDIR/"same-bytes"
-        rm  $USR_TMPDIR/"same-bytes"/*
-    fi
-    if [ -z "$tmpdir" ] ; then
-        echo "Couldn't create tmpdir"
-        exit $1
-    fi
-    echo "tmpdir is  " $tmpdir
     echo "Processing " $DATAFILE
 
     CBORFILE=$tmpdir/message1.cbor
@@ -126,9 +108,6 @@ do
     fi
     echo
     rm_files $j
-    if [ -z $USR_TMPDIR ] ; then
-        rm -rf $tmpdir
-    fi
 done
 
 cleanup $SUCCESS
