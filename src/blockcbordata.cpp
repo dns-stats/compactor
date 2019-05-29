@@ -82,14 +82,14 @@ namespace block_cbor {
                     break;
 
                 default:
-                    throw cbor_file_format_error("Unexpected CBOR item reading timestamp");
+                    throw cbor_file_format_unexpected_item_error("Timestamp");
                     break;
                 }
             }
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading timestamp");
+            throw cbor_file_format_unexpected_item_error("Timestamp");
         }
     }
 
@@ -158,7 +158,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading storage hints");
+            throw cbor_file_format_unexpected_item_error("StorageHints");
         }
     }
 
@@ -253,7 +253,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading storage parameters");
+            throw cbor_file_format_unexpected_item_error("StorageParameters");
         }
     }
 
@@ -386,7 +386,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading collection parameters");
+            throw cbor_file_format_unexpected_item_error("CollectionParameters");
         }
     }
 
@@ -480,7 +480,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading block parameters");
+            throw cbor_file_format_unexpected_item_error("BlockParameters");
         }
     }
 
@@ -504,7 +504,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading index");
+            throw cbor_file_format_unexpected_item_error("IndexVectorItem");
         }
     }
 
@@ -521,7 +521,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading string");
+            throw cbor_file_format_unexpected_item_error("binary string");
         }
     }
 
@@ -563,7 +563,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading ClassType");
+            throw cbor_file_format_unexpected_item_error("ClassType");
         }
     }
 
@@ -621,7 +621,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading Question");
+            throw cbor_file_format_unexpected_item_error("Question");
         }
     }
 
@@ -687,7 +687,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading ResourceRecord");
+            throw cbor_file_format_unexpected_item_error("ResourceRecord");
         }
     }
 
@@ -809,7 +809,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading QueryResponseSignature");
+            throw cbor_file_format_unexpected_item_error("QueryResponseSignature");
         }
     }
 
@@ -1097,7 +1097,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading QueryResponseItem");
+            throw cbor_file_format_unexpected_item_error("QueryResponseItem");
         }
     }
 
@@ -1228,7 +1228,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading AddressEvent");
+            throw cbor_file_format_unexpected_item_error("AddressEvent");
         }
     }
 
@@ -1311,7 +1311,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading MalformedMessageData");
+            throw cbor_file_format_unexpected_item_error("MalformedMessageData");
         }
     }
 
@@ -1387,7 +1387,7 @@ namespace block_cbor {
         }
         catch (const std::logic_error& e)
         {
-            throw cbor_file_format_error("Unexpected CBOR item reading MalformedMessage");
+            throw cbor_file_format_unexpected_item_error("MalformedMessage");
         }
     }
 

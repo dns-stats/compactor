@@ -41,6 +41,30 @@ public:
         : std::runtime_error(what) {}
 };
 
+/**
+ * \exception cbor_file_format_unexpected_item_error
+ * \brief Signals a CBOR file format 'unexpected CBOR item' error.
+ */
+class cbor_file_format_unexpected_item_error : public cbor_file_format_error
+{
+public:
+    /**
+     * \brief Constructor.
+     *
+     * \param map containing unexpected item.
+     */
+    explicit cbor_file_format_unexpected_item_error(const std::string& map)
+        : cbor_file_format_error("Unexpected CBOR item reading " + map) {}
+
+    /**
+     * \brief Constructor.
+     *
+     * \param map containing unexpected item.
+     */
+    explicit cbor_file_format_unexpected_item_error(const char*  map)
+        : cbor_file_format_unexpected_item_error(std::string(map)) {}
+};
+
 namespace block_cbor {
     /**
      * \brief Output format 05 onwards file format string.
