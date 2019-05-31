@@ -158,9 +158,9 @@ protected:
      * the first OPT section in a Question is skipped.
      *
      * \param dm       the query or response message.
-     * \param options  which sections to write. Values are combined from Configuration::OptionalOutputSections.
+     * \param is_query are we writing a query (<code>true</code>) or response?
      */
-    void writeSections(const DNSMessage& dm, int options);
+    void writeSections(const DNSMessage& dm, bool is_query);
 
     /**
      * \brief configuration options.

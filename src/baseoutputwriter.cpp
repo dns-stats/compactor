@@ -34,23 +34,24 @@ void BaseOutputWriter::writeQR(const std::shared_ptr<QueryResponse>& qr,
     if ( qr->has_query() && config_.output_options_queries != 0 )
     {
         startExtendedQueryGroup();
-        writeSections(qr->query(), config_.output_options_queries);
+        writeSections(qr->query(), true);
         endExtendedGroup();
     }
     if ( qr->has_response() && config_.output_options_responses != 0 )
     {
         startExtendedResponseGroup();
-        writeSections(qr->response(), config_.output_options_responses);
+        writeSections(qr->response(), false);
         endExtendedGroup();
     }
 
     endRecord(qr);
 }
 
-void BaseOutputWriter::writeSections(const DNSMessage& dm, int options)
+void BaseOutputWriter::writeSections(const DNSMessage& dm, bool is_query)
 {
-    if ( ( options & Configuration::EXTRA_QUESTIONS ) &&
-         dm.dns.questions_count() > 1 )
+    if ( dm.dns.questions_count() > 1 &&
+         is_query &&
+         !config_.exclude_hints.query_question_section )
     {
         bool found_one = false;
         bool skip = true;
@@ -78,8 +79,10 @@ void BaseOutputWriter::writeSections(const DNSMessage& dm, int options)
         endSection();
     }
 
-    if ( ( options & Configuration::ANSWERS ) &&
-         dm.dns.answers_count() > 0 )
+    if ( dm.dns.answers_count() > 0 &&
+         is_query
+         ? !config_.exclude_hints.query_answer_section
+         : !config_.exclude_hints.response_answer_section )
     {
         bool found_one = false;
         for ( const auto& r : dm.dns.answers() )
@@ -97,8 +100,10 @@ void BaseOutputWriter::writeSections(const DNSMessage& dm, int options)
         endSection();
     }
 
-    if ( ( options & Configuration::AUTHORITIES ) &&
-         dm.dns.authority_count() > 0 )
+    if ( dm.dns.authority_count() > 0 &&
+         is_query
+         ? !config_.exclude_hints.query_authority_section
+         : !config_.exclude_hints.response_authority_section )
     {
         bool found_one = false;
         for ( const auto& r : dm.dns.authority() )
@@ -116,8 +121,10 @@ void BaseOutputWriter::writeSections(const DNSMessage& dm, int options)
         endSection();
     }
 
-    if ( ( options & Configuration::ADDITIONALS ) &&
-         dm.dns.additional_count() > 0 )
+    if ( dm.dns.additional_count() > 0 &&
+         is_query
+         ? !config_.exclude_hints.query_additional_section
+         : !config_.exclude_hints.response_additional_section )
     {
         bool found_one = false;
         for ( const auto& r : dm.dns.additional() )

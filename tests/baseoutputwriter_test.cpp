@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -197,6 +197,7 @@ SCENARIO("Generating output", "[output]")
         AND_WHEN("base output plus extra query questions is required")
         {
             config.output_options_queries = Configuration::EXTRA_QUESTIONS;
+            config.exclude_hints.set_section_excludes(config.output_options_queries, 0);
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
 
@@ -214,6 +215,7 @@ SCENARIO("Generating output", "[output]")
         AND_WHEN("base output plus query additionals is required")
         {
             config.output_options_queries = Configuration::ADDITIONALS;
+            config.exclude_hints.set_section_excludes(config.output_options_queries, 0);
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
 
@@ -235,6 +237,7 @@ SCENARIO("Generating output", "[output]")
         AND_WHEN("base output plus response additionals is required")
         {
             config.output_options_responses = Configuration::ADDITIONALS;
+            config.exclude_hints.set_section_excludes(0, config.output_options_responses);
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
 
@@ -276,6 +279,7 @@ SCENARIO("Generating output", "[output]")
         WHEN("base output plus extra query questions is required")
         {
             config.output_options_queries = Configuration::EXTRA_QUESTIONS;
+            config.exclude_hints.set_section_excludes(config.output_options_queries, 0);
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
 
@@ -297,6 +301,7 @@ SCENARIO("Generating output", "[output]")
         AND_WHEN("base output plus extra query questions is required but one question is ignored")
         {
             config.output_options_queries = Configuration::EXTRA_QUESTIONS;
+            config.exclude_hints.set_section_excludes(config.output_options_queries, 0);
             config.ignore_rr_types = { 1 };
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
@@ -318,6 +323,7 @@ SCENARIO("Generating output", "[output]")
         AND_WHEN("base output plus extra query questions is required but one question is accepted")
         {
             config.output_options_queries = Configuration::EXTRA_QUESTIONS;
+            config.exclude_hints.set_section_excludes(config.output_options_queries, 0);
             config.accept_rr_types = { 1 };
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
@@ -367,6 +373,7 @@ SCENARIO("Generating output", "[output]")
         WHEN("base output plus response answer is required if answers requested")
         {
             config.output_options_responses = Configuration::ANSWERS;
+            config.exclude_hints.set_section_excludes(0, config.output_options_responses);
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
 
@@ -388,6 +395,7 @@ SCENARIO("Generating output", "[output]")
         AND_WHEN("base output plus response authority is required if authority requested")
         {
             config.output_options_responses = Configuration::AUTHORITIES;
+            config.exclude_hints.set_section_excludes(0, config.output_options_responses);
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
 
@@ -409,6 +417,7 @@ SCENARIO("Generating output", "[output]")
         AND_WHEN("base output plus response additional is required if additional requested")
         {
             config.output_options_responses = Configuration::ADDITIONALS;
+            config.exclude_hints.set_section_excludes(0, config.output_options_responses);
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
 
@@ -430,6 +439,7 @@ SCENARIO("Generating output", "[output]")
         AND_WHEN("response answer omits ignored RR type")
         {
             config.output_options_responses = Configuration::ANSWERS;
+            config.exclude_hints.set_section_excludes(0, config.output_options_responses);
             config.ignore_rr_types = { 1 };
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
@@ -451,6 +461,7 @@ SCENARIO("Generating output", "[output]")
         AND_WHEN("response answer only has accepted RR type")
         {
             config.output_options_responses = Configuration::ANSWERS;
+            config.exclude_hints.set_section_excludes(0, config.output_options_responses);
             config.accept_rr_types = { 1 };
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
@@ -472,6 +483,7 @@ SCENARIO("Generating output", "[output]")
         AND_WHEN("response authority omits ignored RR type")
         {
             config.output_options_responses = Configuration::AUTHORITIES;
+            config.exclude_hints.set_section_excludes(0, config.output_options_responses);
             config.ignore_rr_types = { 1 };
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
@@ -493,6 +505,7 @@ SCENARIO("Generating output", "[output]")
         AND_WHEN("response authority only has accepted RR type")
         {
             config.output_options_responses = Configuration::AUTHORITIES;
+            config.exclude_hints.set_section_excludes(0, config.output_options_responses);
             config.accept_rr_types = { 1 };
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
@@ -514,6 +527,7 @@ SCENARIO("Generating output", "[output]")
         AND_WHEN("response additional omits ignored RR type")
         {
             config.output_options_responses = Configuration::ADDITIONALS;
+            config.exclude_hints.set_section_excludes(0, config.output_options_responses);
             config.ignore_rr_types = { 1 };
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
@@ -535,6 +549,7 @@ SCENARIO("Generating output", "[output]")
         AND_WHEN("response authority only has accepted RR type")
         {
             config.output_options_responses = Configuration::ADDITIONALS;
+            config.exclude_hints.set_section_excludes(0, config.output_options_responses);
             config.accept_rr_types = { 1 };
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
