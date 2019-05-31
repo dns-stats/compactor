@@ -30,6 +30,8 @@ dsconfdir=$(sysconfdir)/$(PACKAGE)
 dsconf_DATA = compactor.conf
 dist_noinst_DATA = etc/compactor.conf.in doc/compactor.adoc doc/inspector.adoc $(user_guide_sources)
 conffile=$(dsconfdir)/compactor.conf
+excludesfile=$(dsconfdir)/excluded_fields.conf
+defaultsfile=$(dsconfdir)/default_values.conf
 
 %.conf :: etc/%.conf.in ; sed -e "s|@DSLOCALSTATEDIR@|$(dslocalstatedir)|g" $< > $@
 
@@ -124,7 +126,10 @@ CLEANFILES = $(check_DATA) $(dist_man_MANS)
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
-AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) -DCONFFILE=\"$(conffile)\" \
+AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
+	      -DCONFFILE=\"$(conffile)\" \
+	      -DEXCLUDESFILE=\"$(excludesfile)\" \
+	      -DDEFAULTSFILE=\"$(defaultsfile)\" \
               $(OPENSSL_INCLUDES) -DGEOIPDIR=\"$(geoipdir)\"
 
 %.1 :: %.adoc ; @ASCIIDOC@ -b manpage -d manpage -o $@ $<

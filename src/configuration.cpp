@@ -14,6 +14,7 @@
 #include <sstream>
 #include <unordered_map>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 
 #include <tins/network_interface.h>
@@ -264,6 +265,7 @@ Configuration::Configuration()
       omit_hostid(false), omit_sysid(false),
       max_channel_size(10000),
       config_file_(CONFFILE),
+      excludes_file_(EXCLUDESFILE),
       cmdline_options_("Command options"),
       cmdline_hidden_options_("Hidden command options"),
       config_file_options_("Configuration"),
@@ -279,6 +281,9 @@ Configuration::Configuration()
         ("configfile,c",
          po::value<std::string>(),
          "configuration file.")
+        ("excludesfile",
+         po::value<std::string>(),
+         "exclude hints file.")
         ("report-info,r",
          po::value<bool>(&report_info)->implicit_value(true),
          "report info (config and stats summary) on exit.")
@@ -424,6 +429,13 @@ po::variables_map Configuration::parse_command_line(int ac, char *av[])
         if ( !boost::filesystem::exists(config_file_) )
             throw po::error("Config file " + config_file_ + " not found.");
     }
+    // If you specify an excludes file, it must exist.
+    if ( cmdline_vars_.count("excludesfile") )
+    {
+        excludes_file_ = cmdline_vars_["excludesfile"].as<std::string>();
+        if ( !boost::filesystem::exists(excludes_file_) )
+            throw po::error("Exclude hints file " + excludes_file_ + " not found.");
+    }
 
     return reread_config_file();
 }
@@ -447,6 +459,8 @@ po::variables_map Configuration::reread_config_file()
 
     po::notify(res);
     set_config_items(res);
+    exclude_hints.read_excludes_file(excludes_file_);
+    exclude_hints.set_section_excludes(output_options_queries, output_options_responses);
 
     return res;
 }
@@ -865,4 +879,171 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
         vlan_ids.push_back(v);
 
     filter = cp.filter;
+}
+
+HintsExcluded::HintsExcluded()
+    : timestamp(false),
+      client_address(false), client_port(false), client_hoplimit(false),
+      server_address(false), server_port(false),
+      transport(false),
+      transaction_id(false),
+      qr_flags(false),
+      query_opcode(false),
+      dns_flags(false),
+      query_rcode(false),
+      query_name(false),
+      query_class_type(false),
+      query_qdcount(false), query_ancount(false), query_arcount(false), query_nscount(false),
+      query_size(false),
+      query_udp_size(false), query_edns_version(false), query_opt_rdata(false),
+      query_question_section(false), query_answer_section(false),
+      query_authority_section(false), query_additional_section(false),
+      response_delay(false),
+      response_rcode(false),
+      response_size(false),
+      response_answer_section(false),
+      response_authority_section(false), response_additional_section(false),
+      rr_ttl(false), rr_rdata(false),
+      address_events(false)
+
+{
+    excludes_file_options_.add_options()
+        ("ip-header.time-offset",
+         po::value<bool>(&timestamp)->implicit_value(true)->default_value(false),
+         "exclude timestamp data.")
+        ("ip-header.client-address",
+         po::value<bool>(&client_address)->implicit_value(true)->default_value(false),
+         "exclude client address data.")
+        ("ip-header.client-port",
+         po::value<bool>(&client_port)->implicit_value(true)->default_value(false),
+         "exclude client port data.")
+        ("ip-header.client-hoplimit",
+         po::value<bool>(&client_hoplimit)->implicit_value(true)->default_value(false),
+         "exclude client hoplimit data.")
+        ("ip-header.server-address",
+         po::value<bool>(&server_address)->implicit_value(true)->default_value(false),
+         "exclude server address data.")
+        ("ip-header.server-port",
+         po::value<bool>(&server_port)->implicit_value(true)->default_value(false),
+         "exclude server port data.")
+        ("ip-header.qr-transport-flags",
+         po::value<bool>(&transport)->implicit_value(true)->default_value(false),
+         "exclude transport data.")
+
+        ("dns-header.transaction-id",
+         po::value<bool>(&transaction_id)->implicit_value(true)->default_value(false),
+         "exclude transaction IDs.")
+        ("dns-header.query-opcode",
+         po::value<bool>(&query_opcode)->implicit_value(true)->default_value(false),
+         "exclude query OPCODEs.")
+        ("dns-header.query-rcode",
+         po::value<bool>(&query_rcode)->implicit_value(true)->default_value(false),
+         "exclude query RCODEs.")
+        ("dns-header.dns-flags",
+         po::value<bool>(&dns_flags)->implicit_value(true)->default_value(false),
+         "exclude DNS flags.")
+        ("dns-header.response-rcode",
+         po::value<bool>(&response_rcode)->implicit_value(true)->default_value(false),
+         "exclude response RCODEs.")
+        ("dns-header.query-qdcount",
+         po::value<bool>(&query_qdcount)->implicit_value(true)->default_value(false),
+         "exclude query QDCOUNTs.")
+        ("dns-header.query-ancount",
+         po::value<bool>(&query_ancount)->implicit_value(true)->default_value(false),
+         "exclude query ARCOUNTs.")
+        ("dns-header.query-arcount",
+         po::value<bool>(&query_arcount)->implicit_value(true)->default_value(false),
+         "exclude query ARCOUNTs.")
+        ("dns-header.query-nscount",
+         po::value<bool>(&query_nscount)->implicit_value(true)->default_value(false),
+         "exclude query NSCOUNTs.")
+
+        ("dns-payload.query-name",
+         po::value<bool>(&query_name)->implicit_value(true)->default_value(false),
+         "exclude query NAMEs.")
+        ("dns-payload.query-class-type",
+         po::value<bool>(&query_class_type)->implicit_value(true)->default_value(false),
+         "exclude query CLASS and TYPEs.")
+        ("dns-payload.rr-ttl",
+         po::value<bool>(&rr_ttl)->implicit_value(true)->default_value(false),
+         "exclude RR TTLs.")
+        ("dns-payload.rr-rdata",
+         po::value<bool>(&rr_rdata)->implicit_value(true)->default_value(false),
+         "exclude RR RDATA.")
+        ("dns-payload.query-udp-size",
+         po::value<bool>(&query_udp_size)->implicit_value(true)->default_value(false),
+         "exclude query UDP size.")
+        ("dns-payload.query-edns-version",
+         po::value<bool>(&query_edns_version)->implicit_value(true)->default_value(false),
+         "exclude query EDNS version.")
+        ("dns-payload.query-opt-data",
+         po::value<bool>(&query_opt_rdata)->implicit_value(true)->default_value(false),
+         "exclude query UDP size.")
+        ("dns-payload.query-question-sections",
+         po::value<bool>(&query_question_section)->implicit_value(true)->default_value(false),
+         "exclude query second or subsequent question sections.")
+        ("dns-payload.query-answer-sections",
+         po::value<bool>(&query_answer_section)->implicit_value(true)->default_value(false),
+         "exclude query answer sections.")
+        ("dns-payload.query-authority-sections",
+         po::value<bool>(&query_authority_section)->implicit_value(true)->default_value(false),
+         "exclude query authority sections.")
+        ("dns-payload.query-additional-sections",
+         po::value<bool>(&query_additional_section)->implicit_value(true)->default_value(false),
+         "exclude query additional sections.")
+        ("dns-payload.response-answer-sections",
+         po::value<bool>(&response_answer_section)->implicit_value(true)->default_value(false),
+         "exclude response answer sections.")
+        ("dns-payload.response-authority-sections",
+         po::value<bool>(&response_authority_section)->implicit_value(true)->default_value(false),
+         "exclude response authority sections.")
+        ("dns-payload.response-additional-sections",
+         po::value<bool>(&response_additional_section)->implicit_value(true)->default_value(false),
+         "exclude response additional sections.")
+
+        ("dns-meta-data.query-size",
+         po::value<bool>(&query_size)->implicit_value(true)->default_value(false),
+         "exclude query size.")
+        ("dns-meta-data.response-size",
+         po::value<bool>(&response_size)->implicit_value(true)->default_value(false),
+         "exclude response size.")
+
+        ("storage-meta-data.address_events",
+         po::value<bool>(&address_events)->implicit_value(true)->default_value(false),
+         "exclude address events.")
+        ;
+}
+
+void HintsExcluded::set_section_excludes(int output_options_queries, int output_options_responses)
+{
+    if ( !query_question_section )
+        query_question_section = !(output_options_queries & Configuration::EXTRA_QUESTIONS);
+    if ( !query_answer_section )
+        query_answer_section = !(output_options_queries & Configuration::ANSWERS);
+    if ( !query_additional_section )
+        query_additional_section = !(output_options_queries & Configuration::ADDITIONALS);
+    if ( !query_authority_section )
+        query_authority_section = !(output_options_queries & Configuration::AUTHORITIES);
+
+    if ( !response_answer_section )
+        response_answer_section = !(output_options_responses & Configuration::ANSWERS);
+    if ( !response_additional_section )
+        response_additional_section = !(output_options_responses & Configuration::ADDITIONALS);
+    if ( !response_authority_section )
+        response_authority_section = !(output_options_responses & Configuration::AUTHORITIES);
+}
+
+void HintsExcluded::read_excludes_file(const std::string& excludesfile)
+{
+    po::variables_map res;
+
+    if ( boost::filesystem::exists(excludesfile) )
+    {
+        std::ifstream excludes(excludesfile);
+        if ( excludes.fail() )
+            throw po::error("Can't open excludes file " + excludesfile);
+        po::store(po::parse_config_file(excludes, excludes_file_options_), res);
+    }
+
+    po::notify(res);
 }

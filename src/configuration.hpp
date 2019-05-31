@@ -13,10 +13,12 @@
 #ifndef CONFIGURATION_HPP
 #define CONFIGURATION_HPP
 
+#include <chrono>
 #include <cstdint>
 #include <string>
 #include <vector>
 
+#include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 
 #include "blockcbordata.hpp"
@@ -33,6 +35,221 @@ public:
     Size() : size(0) {}
     explicit Size(std::uintmax_t n) : size(n) {}
     std::uintmax_t size;
+};
+
+/**
+ * \class HintsExcluded
+ * \brief Configuration relating to the hints excluded file.
+ *
+ * A set of flags indicating whether an output hint is set or not.
+ * If a flag is <code>true</code>, the item is to be excluded from output.
+ */
+class HintsExcluded
+{
+public:
+    /**
+     * \brief output timestamp items?
+     */
+    bool timestamp;
+
+    /**
+     * \brief output client IP address?
+     */
+    bool client_address;
+
+    /**
+     * \brief output client port?
+     */
+    bool client_port;
+
+    /**
+     * \brief output client hoplimit?
+     */
+    bool client_hoplimit;
+
+    /**
+     * \brief output client IP address?
+     */
+    bool server_address;
+
+    /**
+     * \brief output server port?
+     */
+    bool server_port;
+
+    /**
+     * \brief output transport info?
+     */
+    bool transport;
+
+    /**
+     * \brief output transaction id?
+     */
+    bool transaction_id;
+
+    /**
+     * \brief output query response flags?
+     */
+    bool qr_flags;
+
+    /**
+     * \brief output query opcode?
+     */
+    bool query_opcode;
+
+    /**
+     * \brief output DNS flags?
+     */
+    bool dns_flags;
+
+    /**
+     * \brief output query rcode?
+     */
+    bool query_rcode;
+
+    /**
+     * \brief output query name?
+     */
+    bool query_name;
+
+    /**
+     * \brief output query class and type?
+     */
+    bool query_class_type;
+
+    /**
+     * \brief output QDCOUNT?
+     */
+    bool query_qdcount;
+
+    /**
+     * \brief output ANCOUNT?
+     */
+    bool query_ancount;
+
+    /**
+     * \brief output ARCOUNT?
+     */
+    bool query_arcount;
+
+    /**
+     * \brief output NSCOUNT?
+     */
+    bool query_nscount;
+
+    /**
+     * \brief output query size?
+     */
+    bool query_size;
+
+    /**
+     * \brief output query EDNS UDP size?
+     */
+    bool query_udp_size;
+
+    /**
+     * \brief output query EDNS version?
+     */
+    bool query_edns_version;
+
+    /**
+     * \brief output query OPT RDATA?
+     */
+    bool query_opt_rdata;
+
+    /**
+     * \brief output query question sections?
+     */
+    bool query_question_section;
+
+    /**
+     * \brief output query answer sections?
+     */
+    bool query_answer_section;
+
+    /**
+     * \brief output query authority sections?
+     */
+    bool query_authority_section;
+
+    /**
+     * \brief output query additional sections?
+     */
+    bool query_additional_section;
+
+    /**
+     * \brief output response delay items?
+     */
+    bool response_delay;
+
+    /**
+     * \brief output response rcode?
+     */
+    bool response_rcode;
+
+    /**
+     * \brief output response size?
+     */
+    bool response_size;
+
+    /**
+     * \brief output response answer sections?
+     */
+    bool response_answer_section;
+
+    /**
+     * \brief output response authority sections?
+     */
+    bool response_authority_section;
+
+    /**
+     * \brief output response additional sections?
+     */
+    bool response_additional_section;
+
+    /**
+     * \brief output RR TTLs?
+     */
+    bool rr_ttl;
+
+    /**
+     * \brief output RR RDATA?
+     */
+    bool rr_rdata;
+
+    /**
+     * \brief output address events?
+     */
+    bool address_events;
+
+    /**
+     * \brief Default Constructor.
+     */
+    HintsExcluded();
+
+    /**
+     * \brief Set the section excludes from main configuration.
+     *
+     * Any 'section include' hint that is not already disabled
+     * is set from the main configuration values passed in.
+     *
+     * \param output_options_queries    sections to be output for queries.
+     * \param output_options_responses  sections to be output for responses.
+     */
+    void set_section_excludes(int output_options_queries, int output_options_responses);
+
+    /**
+     * \brief Read config file and action it.
+     *
+     * \param excludesfile              location of excludes file.
+     */
+    void read_excludes_file(const std::string& excludesfile);
+
+private:
+    /**
+     * \brief Excludes file options.
+     */
+    boost::program_options::options_description excludes_file_options_;
 };
 
 /**
@@ -312,6 +529,11 @@ public:
     unsigned int server_address_prefix_ipv6;
 
     /**
+     * \brief output exclude hints.
+     */
+    HintsExcluded exclude_hints;
+
+    /**
      * \brief Default constructor.
      */
     Configuration();
@@ -399,6 +621,11 @@ private:
      * \brief the configuration file, if any.
      */
     std::string config_file_;
+
+    /**
+     * \brief the exclude hints file, if any.
+     */
+    std::string excludes_file_;
 
     /**
      * \brief variable map from command line only parse.
