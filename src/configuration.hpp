@@ -245,6 +245,34 @@ public:
      */
     void read_excludes_file(const std::string& excludesfile);
 
+    /**
+     * \brief Generate query response hint flags value for storage hints.
+     *
+     * \returns flags value.
+     */
+    block_cbor::QueryResponseHintFlags get_query_response_hints() const;
+
+    /**
+     * \brief Generate query response hint flags value for storage hints.
+     *
+     * \returns flags value.
+     */
+    block_cbor::QueryResponseSignatureHintFlags get_query_response_signature_hints() const;
+
+    /**
+     * \brief Generate RR hint flags value for storage hints.
+     *
+     * \returns flags value.
+     */
+    block_cbor::RRHintFlags get_rr_hints() const;
+
+    /**
+     * \brief Generate other data hint flags value for storage hints.
+     *
+     * \returns flags value.
+     */
+    block_cbor::OtherDataHintFlags get_other_data_hints() const;
+
 private:
     /**
      * \brief Excludes file options.

@@ -771,22 +771,11 @@ void Configuration::populate_block_parameters(block_cbor::BlockParameters& bp) c
     sp.server_address_prefix_ipv4 = server_address_prefix_ipv4;
     sp.server_address_prefix_ipv6 = server_address_prefix_ipv6;
 
-    // Query response hints. Compactor always gives time_offset to
-    // response size inclusive. It does not currently give response
-    // processing data.
-    sh.query_response_hints = block_cbor::QueryResponseHintFlags(
-        0x3ff |
-        output_options_queries << 11 |
-        (output_options_responses & 0xe) << 14);
-    // Query response signature hints. Compactor always writes everything
-    // except qr-type, where it has no data.
+    sh.query_response_hints = exclude_hints.get_query_response_hints();
     sh.query_response_signature_hints =
-        block_cbor::QueryResponseSignatureHintFlags(0x1f7);
-    // RR hints. Compactor always writes everything.
-    sh.rr_hints = block_cbor::RRHintFlags(0x3);
-    // Other data hints. Compactor always writes address events,
-    // but does not currently write malformed messages.
-    sh.other_data_hints = block_cbor::OtherDataHintFlags(0x2);
+        exclude_hints.get_query_response_signature_hints();
+    sh.rr_hints = exclude_hints.get_rr_hints();
+    sh.other_data_hints = exclude_hints.get_other_data_hints();
 
     // List of opcodes recorded.
     for ( const auto op : CaptureDNS::OPCODES )
@@ -1046,4 +1035,107 @@ void HintsExcluded::read_excludes_file(const std::string& excludesfile)
     }
 
     po::notify(res);
+}
+
+block_cbor::QueryResponseHintFlags HintsExcluded::get_query_response_hints() const
+{
+    unsigned res = 0;
+
+    if ( !timestamp )
+        res |= block_cbor::TIME_OFFSET;
+    if ( !client_address )
+        res |= block_cbor::CLIENT_ADDRESS_INDEX;
+    if ( !client_port )
+        res |= block_cbor::CLIENT_PORT;
+    if ( !transaction_id )
+        res |= block_cbor::TRANSACTION_ID;
+    res |= block_cbor::QR_SIGNATURE_INDEX;
+    if ( !client_hoplimit )
+        res |= block_cbor::CLIENT_HOPLIMIT;
+    if ( !response_delay )
+        res |= block_cbor::RESPONSE_DELAY;
+    if ( !query_name )
+        res |= block_cbor::QUERY_NAME_INDEX;
+    if ( !query_size )
+        res |= block_cbor::QUERY_SIZE;
+    if ( !response_size )
+        res |= block_cbor::RESPONSE_SIZE;
+    if ( !query_question_section )
+        res |= block_cbor::QUERY_QUESTION_SECTIONS;
+    if ( !query_answer_section )
+        res |= block_cbor::QUERY_ANSWER_SECTIONS;
+    if ( !query_authority_section )
+        res |= block_cbor::QUERY_AUTHORITY_SECTIONS;
+    if ( !query_additional_section )
+        res |= block_cbor::QUERY_ADDITIONAL_SECTIONS;
+    if ( !response_answer_section )
+        res |= block_cbor::RESPONSE_ANSWER_SECTIONS;
+    if ( !response_authority_section )
+        res |= block_cbor::RESPONSE_AUTHORITY_SECTIONS;
+    if ( !response_additional_section )
+        res |= block_cbor::RESPONSE_ADDITIONAL_SECTIONS;
+
+    return block_cbor::QueryResponseHintFlags(res);
+}
+
+block_cbor::QueryResponseSignatureHintFlags HintsExcluded::get_query_response_signature_hints() const
+{
+    unsigned res = 0;
+
+    if ( !server_address )
+        res |= block_cbor::SERVER_ADDRESS;
+    if ( !server_port )
+        res |= block_cbor::SERVER_PORT;
+    if ( !transport )
+        res |= block_cbor::QR_TRANSPORT_FLAGS;
+    res |= block_cbor::QR_SIG_FLAGS;
+    if ( !query_opcode )
+        res |= block_cbor::QUERY_OPCODE;
+    if ( !dns_flags )
+        res |= block_cbor::DNS_FLAGS;
+    if ( !query_rcode )
+        res |= block_cbor::QUERY_RCODE;
+    if ( !query_class_type )
+        res |= block_cbor::QUERY_CLASS_TYPE;
+    if ( !query_qdcount )
+        res |= block_cbor::QUERY_QDCOUNT;
+    if ( !query_ancount )
+        res |= block_cbor::QUERY_ANCOUNT;
+    if ( !query_arcount )
+        res |= block_cbor::QUERY_ARCOUNT;
+    if ( !query_nscount )
+        res |= block_cbor::QUERY_NSCOUNT;
+    if ( !query_edns_version )
+        res |= block_cbor::QUERY_EDNS_VERSION;
+    if ( !query_udp_size )
+        res |= block_cbor::QUERY_UDP_SIZE;
+    if ( !query_opt_rdata )
+        res |= block_cbor::QUERY_OPT_RDATA;
+    if ( !response_rcode )
+        res |= block_cbor::RESPONSE_RCODE;
+
+    return block_cbor::QueryResponseSignatureHintFlags(res);
+}
+
+block_cbor::RRHintFlags HintsExcluded::get_rr_hints() const
+{
+    unsigned res = 0;
+
+    if ( !rr_ttl )
+        res |= block_cbor::TTL;
+    if ( !rr_rdata )
+        res |= block_cbor::RDATA_INDEX;
+
+    return block_cbor::RRHintFlags(res);
+}
+
+block_cbor::OtherDataHintFlags HintsExcluded::get_other_data_hints() const
+{
+    unsigned res = 0;
+
+    // Malformed messages not currently supported.
+    if ( !address_events )
+        res |= block_cbor::ADDRESS_EVENT_COUNTS;
+
+    return block_cbor::OtherDataHintFlags(res);
 }
