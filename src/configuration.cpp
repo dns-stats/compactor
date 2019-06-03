@@ -836,8 +836,11 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
     // Set configuration from storage parameter values.
     max_block_items = sp.max_block_items;
 
-    output_options_queries = (sh.query_response_hints >> 11) & 0xf;
-    output_options_responses = ((sh.query_response_hints >> 14) & 0xe) | ((sh.query_response_hints >> 11) & 1);
+    exclude_hints.set_query_response_hints(sh.query_response_hints);
+    exclude_hints.get_section_excludes(output_options_queries, output_options_responses);
+    exclude_hints.set_query_response_signature_hints(sh.query_response_signature_hints);
+    exclude_hints.set_rr_hints(sh.rr_hints);
+    exclude_hints.set_other_data_hints(sh.other_data_hints);
 
     client_address_prefix_ipv4 = sp.client_address_prefix_ipv4;
     client_address_prefix_ipv6 = sp.client_address_prefix_ipv6;
@@ -893,7 +896,10 @@ HintsExcluded::HintsExcluded()
       response_answer_section(false),
       response_authority_section(false), response_additional_section(false),
       rr_ttl(false), rr_rdata(false),
-      address_events(false)
+      address_events(false),
+      query_type(true),
+      response_processing(true),
+      malformed_messages(true)
 
 {
     excludes_file_options_.add_options()
@@ -1022,6 +1028,31 @@ void HintsExcluded::set_section_excludes(int output_options_queries, int output_
         response_authority_section = !(output_options_responses & Configuration::AUTHORITIES);
 }
 
+void HintsExcluded::get_section_excludes(int& output_options_queries, int& output_options_responses) const
+{
+    output_options_queries = output_options_responses = 0;
+
+    if ( !query_question_section )
+    {
+        output_options_queries |= Configuration::EXTRA_QUESTIONS;
+        // Backwards compatible setting.
+        output_options_responses |= Configuration::EXTRA_QUESTIONS;
+    }
+    if ( !query_answer_section )
+        output_options_queries |= Configuration::ANSWERS;
+    if ( !query_authority_section )
+        output_options_queries |= Configuration::AUTHORITIES;
+    if ( !query_additional_section )
+        output_options_queries |= Configuration::ADDITIONALS;
+
+    if ( !response_answer_section )
+        output_options_responses |= Configuration::ANSWERS;
+    if ( !response_authority_section )
+        output_options_responses |= Configuration::AUTHORITIES;
+    if ( !response_additional_section )
+        output_options_responses |= Configuration::ADDITIONALS;
+}
+
 void HintsExcluded::read_excludes_file(const std::string& excludesfile)
 {
     po::variables_map res;
@@ -1078,6 +1109,27 @@ block_cbor::QueryResponseHintFlags HintsExcluded::get_query_response_hints() con
     return block_cbor::QueryResponseHintFlags(res);
 }
 
+void HintsExcluded::set_query_response_hints(block_cbor::QueryResponseHintFlags hints)
+{
+    timestamp = !( hints & block_cbor::TIME_OFFSET );
+    client_address = !( hints & block_cbor::CLIENT_ADDRESS_INDEX );
+    client_port = !( hints & block_cbor::CLIENT_PORT );
+    transaction_id = !( hints & block_cbor::TRANSACTION_ID );
+    client_hoplimit = !( hints & block_cbor::CLIENT_HOPLIMIT );
+    response_delay = !( hints & block_cbor::RESPONSE_DELAY );
+    query_name = !( hints & block_cbor::QUERY_NAME_INDEX );
+    query_size = !( hints & block_cbor::QUERY_SIZE );
+    response_size = !( hints & block_cbor::RESPONSE_SIZE );
+    response_processing = !( hints & block_cbor::RESPONSE_PROCESSING_DATA );
+    query_question_section = !( hints & block_cbor::QUERY_QUESTION_SECTIONS );
+    query_answer_section = !( hints & block_cbor::QUERY_ANSWER_SECTIONS );
+    query_authority_section = !( hints & block_cbor::QUERY_AUTHORITY_SECTIONS );
+    query_additional_section = !( hints & block_cbor::QUERY_ADDITIONAL_SECTIONS );
+    response_answer_section = !( hints & block_cbor::RESPONSE_ANSWER_SECTIONS );
+    response_authority_section = !( hints & block_cbor::RESPONSE_AUTHORITY_SECTIONS );
+    response_additional_section = !( hints & block_cbor::RESPONSE_ADDITIONAL_SECTIONS );
+}
+
 block_cbor::QueryResponseSignatureHintFlags HintsExcluded::get_query_response_signature_hints() const
 {
     unsigned res = 0;
@@ -1117,6 +1169,26 @@ block_cbor::QueryResponseSignatureHintFlags HintsExcluded::get_query_response_si
     return block_cbor::QueryResponseSignatureHintFlags(res);
 }
 
+void HintsExcluded::set_query_response_signature_hints(block_cbor::QueryResponseSignatureHintFlags hints)
+{
+    server_address = !( hints & block_cbor::SERVER_ADDRESS );
+    server_port = !( hints & block_cbor::SERVER_PORT );
+    transport = !( hints & block_cbor::QR_TRANSPORT_FLAGS );
+    query_type = !( hints & block_cbor::QR_TYPE );
+    query_opcode = !( hints & block_cbor::QUERY_OPCODE );
+    dns_flags = !( hints & block_cbor::DNS_FLAGS );
+    query_rcode = !( hints & block_cbor::QUERY_RCODE );
+    query_class_type = !( hints & block_cbor::QUERY_CLASS_TYPE );
+    query_qdcount = !( hints & block_cbor::QUERY_QDCOUNT );
+    query_ancount = !( hints & block_cbor::QUERY_ANCOUNT );
+    query_arcount = !( hints & block_cbor::QUERY_ARCOUNT );
+    query_nscount = !( hints & block_cbor::QUERY_NSCOUNT );
+    query_edns_version = !( hints & block_cbor::QUERY_EDNS_VERSION );
+    query_udp_size = !( hints & block_cbor::QUERY_UDP_SIZE );
+    query_opt_rdata = !( hints & block_cbor::QUERY_OPT_RDATA );
+    response_rcode = !( hints & block_cbor::RESPONSE_RCODE );
+}
+
 block_cbor::RRHintFlags HintsExcluded::get_rr_hints() const
 {
     unsigned res = 0;
@@ -1129,6 +1201,12 @@ block_cbor::RRHintFlags HintsExcluded::get_rr_hints() const
     return block_cbor::RRHintFlags(res);
 }
 
+void HintsExcluded::set_rr_hints(block_cbor::RRHintFlags hints)
+{
+    rr_ttl = !( hints & block_cbor::TTL );
+    rr_rdata = !( hints & block_cbor::RDATA_INDEX );
+}
+
 block_cbor::OtherDataHintFlags HintsExcluded::get_other_data_hints() const
 {
     unsigned res = 0;
@@ -1138,4 +1216,9 @@ block_cbor::OtherDataHintFlags HintsExcluded::get_other_data_hints() const
         res |= block_cbor::ADDRESS_EVENT_COUNTS;
 
     return block_cbor::OtherDataHintFlags(res);
+}
+
+void HintsExcluded::set_other_data_hints(block_cbor::OtherDataHintFlags hints)
+{
+    address_events = !( hints & block_cbor::ADDRESS_EVENT_COUNTS );
 }

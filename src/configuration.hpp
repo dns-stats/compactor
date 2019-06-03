@@ -223,6 +223,27 @@ public:
     bool address_events;
 
     /**
+     * \brief query type?
+     *
+     * NOT IMPLEMENTED.
+     */
+    bool query_type;
+
+    /**
+     * \brief response processing info
+     *
+     * NOT IMPLEMENTED.
+     */
+    bool response_processing;
+
+    /**
+     * \brief malformed messages?
+     *
+     * NOT IMPLEMENTED.
+     */
+    bool malformed_messages;
+
+    /**
      * \brief Default Constructor.
      */
     HintsExcluded();
@@ -239,6 +260,14 @@ public:
     void set_section_excludes(int output_options_queries, int output_options_responses);
 
     /**
+     * \brief Get the query and response options for main configuration.
+     *
+     * \param output_options_queries    sections to be output for queries.
+     * \param output_options_responses  sections to be output for responses.
+     */
+    void get_section_excludes(int& output_options_queries, int& output_options_responses) const;
+
+    /**
      * \brief Read config file and action it.
      *
      * \param excludesfile              location of excludes file.
@@ -253,11 +282,25 @@ public:
     block_cbor::QueryResponseHintFlags get_query_response_hints() const;
 
     /**
+     * \brief Set query response hint flags value from storage hints.
+     *
+     * \params hints hints value.
+     */
+    void set_query_response_hints(block_cbor::QueryResponseHintFlags hints);
+
+    /**
      * \brief Generate query response hint flags value for storage hints.
      *
      * \returns flags value.
      */
     block_cbor::QueryResponseSignatureHintFlags get_query_response_signature_hints() const;
+
+    /**
+     * \brief Set query response signature hint flags value from storage hints.
+     *
+     * \params hints hints value.
+     */
+    void set_query_response_signature_hints(block_cbor::QueryResponseSignatureHintFlags hints);
 
     /**
      * \brief Generate RR hint flags value for storage hints.
@@ -267,11 +310,25 @@ public:
     block_cbor::RRHintFlags get_rr_hints() const;
 
     /**
+     * \brief Set RR hint flags value from storage hints.
+     *
+     * \params hints hints value.
+     */
+     void set_rr_hints(block_cbor::RRHintFlags hints);
+
+    /**
      * \brief Generate other data hint flags value for storage hints.
      *
      * \returns flags value.
      */
     block_cbor::OtherDataHintFlags get_other_data_hints() const;
+
+    /**
+     * \brief Set other data hint flags value from storage hints.
+     *
+     * \params hints hints value.
+     */
+    void set_other_data_hints(block_cbor::OtherDataHintFlags hints);
 
 private:
     /**
