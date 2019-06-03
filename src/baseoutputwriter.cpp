@@ -31,13 +31,20 @@ void BaseOutputWriter::writeQR(const std::shared_ptr<QueryResponse>& qr,
 
     writeBasic(qr, stats);
 
-    if ( qr->has_query() && config_.output_options_queries != 0 )
+    if ( qr->has_query() &&
+         ( !config_.exclude_hints.query_question_section ||
+           !config_.exclude_hints.query_answer_section ||
+           !config_.exclude_hints.query_authority_section ||
+           !config_.exclude_hints.query_additional_section ) )
     {
         startExtendedQueryGroup();
         writeSections(qr->query(), true);
         endExtendedGroup();
     }
-    if ( qr->has_response() && config_.output_options_responses != 0 )
+    if ( qr->has_response() &&
+         ( !config_.exclude_hints.response_answer_section ||
+           !config_.exclude_hints.response_authority_section ||
+           !config_.exclude_hints.response_additional_section ) )
     {
         startExtendedResponseGroup();
         writeSections(qr->response(), false);
