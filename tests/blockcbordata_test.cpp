@@ -126,7 +126,7 @@ namespace {
         {
             val = dec.read_unsigned();
         }
-        void writeCbor(CborBaseEncoder& enc)
+        void writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
         {
             enc.write(val);
         }
@@ -459,8 +459,9 @@ SCENARIO("IndexVectorItems can be compared and written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            iv1.writeCbor(tcbe);
-            iv3.writeCbor(tcbe);
+            HintsExcluded exclude;
+            iv1.writeCbor(tcbe, exclude);
+            iv3.writeCbor(tcbe, exclude);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -507,8 +508,9 @@ SCENARIO("ByteStringItems can be compared and written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            si1.writeCbor(tcbe);
-            si3.writeCbor(tcbe);
+            HintsExcluded exclude;
+            si1.writeCbor(tcbe, exclude);
+            si3.writeCbor(tcbe, exclude);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -555,8 +557,9 @@ SCENARIO("ClassTypes can be compared and written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            ct1.writeCbor(tcbe);
-            ct3.writeCbor(tcbe);
+            HintsExcluded exclude;
+            ct1.writeCbor(tcbe, exclude);
+            ct3.writeCbor(tcbe, exclude);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -606,8 +609,9 @@ SCENARIO("Questions can be compared and written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            q1.writeCbor(tcbe);
-            q3.writeCbor(tcbe);
+            HintsExcluded exclude;
+            q1.writeCbor(tcbe, exclude);
+            q3.writeCbor(tcbe, exclude);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -620,6 +624,56 @@ SCENARIO("Questions can be compared and written", "[block]")
                         (5 << 5) | 2,
                         0, 2,
                         1, 19,
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, name excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.query_name = true;
+            q1.writeCbor(tcbe, exclude);
+            q3.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                const uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        1, 20,
+                        0xff,
+                        (5 << 5) | 31,
+                        1, 19,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, class type excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.query_class_type = true;
+            q1.writeCbor(tcbe, exclude);
+            q3.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                const uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        0, 1,
+                        0xff,
+                        (5 << 5) | 31,
+                        0, 2,
+                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -658,8 +712,9 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            rr1.writeCbor(tcbe);
-            rr3.writeCbor(tcbe);
+            HintsExcluded exclude;
+            rr1.writeCbor(tcbe, exclude);
+            rr3.writeCbor(tcbe, exclude);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -676,6 +731,98 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
                         1, 13,
                         2, 10,
                         3, 11,
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, name excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.query_name = true;
+            rr1.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                const uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        1, 12,
+                        2, 10,
+                        3, 11,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, class type excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.query_class_type = true;
+            rr1.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                const uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        0, 1,
+                        2, 10,
+                        3, 11,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, TTL excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.rr_ttl = true;
+            rr1.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                const uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        0, 1,
+                        1, 12,
+                        3, 11,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, RDATA excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.rr_rdata = true;
+            rr1.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                const uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        0, 1,
+                        1, 12,
+                        2, 10,
+                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -728,7 +875,8 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            qs1.writeCbor(tcbe);
+            HintsExcluded exclude;
+            qs1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -752,6 +900,281 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
                         find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
                         find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, server address excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.server_address = true;
+            qs1.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_rcode), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_opcode), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_an_count), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ar_count), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ns_count), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::edns_version), 0,
+                        find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, server port excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.server_port = true;
+            qs1.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_rcode), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_opcode), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_an_count), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ar_count), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ns_count), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::edns_version), 0,
+                        find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, transport flags excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.transport = true;
+            qs1.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_rcode), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_opcode), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_an_count), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ar_count), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ns_count), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::edns_version), 0,
+                        find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, DNS and Q/R flags excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.dns_flags = true;
+            exclude.qr_flags = true;
+            qs1.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_rcode), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_opcode), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_an_count), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ar_count), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ns_count), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::edns_version), 0,
+                        find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, query counts omitted")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.query_qdcount = exclude.query_ancount =
+                exclude.query_arcount = exclude.query_nscount = true;
+            qs1.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_rcode), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_opcode), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::edns_version), 0,
+                        find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, OPCODE and RCODE omitted")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.query_opcode = exclude.query_rcode = true;
+            qs1.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_an_count), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ar_count), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ns_count), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::edns_version), 0,
+                        find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, OPT items omitted")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.query_edns_version = exclude.query_udp_size =
+                exclude.query_opt_rdata = true;
+            qs1.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_rcode), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_opcode), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_an_count), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ar_count), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ns_count), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, class type and response RCODE excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.query_class_type = exclude.response_rcode = true;
+            qs1.writeCbor(tcbe, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_rcode), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_opcode), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_an_count), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ar_count), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ns_count), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::edns_version), 0,
+                        find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
                         0xff
                     };
 
@@ -910,9 +1333,10 @@ SCENARIO("QueryResponseItems can be written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
+            HintsExcluded exclude;
             BlockParameters bp;
             bp.storage_parameters.ticks_per_second = 1000000;
-            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp);
+            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -929,6 +1353,181 @@ SCENARIO("QueryResponseItems can be written", "[block]")
                         find_query_response_index(QueryResponseField::response_delay), 10,
                         find_query_response_index(QueryResponseField::query_name_index), 5,
                         find_query_response_index(QueryResponseField::query_size), 10,
+                        find_query_response_index(QueryResponseField::response_size), 20,
+                        find_query_response_index(QueryResponseField::query_extended),
+                        (5 << 5) | 31,
+                        0, 12,
+                        1, 13,
+                        2, 14,
+                        3, 15,
+                        0xff,
+                        find_query_response_index(QueryResponseField::response_extended),
+                        (5 << 5) | 31,
+                        0, 16,
+                        1, 17,
+                        2, 18,
+                        3, 19,
+                        0xff,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, client address and port excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.client_address = exclude.client_port = true;
+            BlockParameters bp;
+            bp.storage_parameters.ticks_per_second = 1000000;
+            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_query_response_index(QueryResponseField::time_offset), 5,
+                        find_query_response_index(QueryResponseField::transaction_id), 21,
+                        find_query_response_index(QueryResponseField::qr_signature_index), 6,
+                        find_query_response_index(QueryResponseField::client_hoplimit), 20,
+                        find_query_response_index(QueryResponseField::response_delay), 10,
+                        find_query_response_index(QueryResponseField::query_name_index), 5,
+                        find_query_response_index(QueryResponseField::query_size), 10,
+                        find_query_response_index(QueryResponseField::response_size), 20,
+                        find_query_response_index(QueryResponseField::query_extended),
+                        (5 << 5) | 31,
+                        0, 12,
+                        1, 13,
+                        2, 14,
+                        3, 15,
+                        0xff,
+                        find_query_response_index(QueryResponseField::response_extended),
+                        (5 << 5) | 31,
+                        0, 16,
+                        1, 17,
+                        2, 18,
+                        3, 19,
+                        0xff,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+        WHEN("values are encoded, timestamp and transaction ID excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.timestamp = exclude.transaction_id = true;
+            BlockParameters bp;
+            bp.storage_parameters.ticks_per_second = 1000000;
+            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_query_response_index(QueryResponseField::client_address_index), 1,
+                        find_query_response_index(QueryResponseField::client_port), 2,
+                        find_query_response_index(QueryResponseField::qr_signature_index), 6,
+                        find_query_response_index(QueryResponseField::client_hoplimit), 20,
+                        find_query_response_index(QueryResponseField::response_delay), 10,
+                        find_query_response_index(QueryResponseField::query_name_index), 5,
+                        find_query_response_index(QueryResponseField::query_size), 10,
+                        find_query_response_index(QueryResponseField::response_size), 20,
+                        find_query_response_index(QueryResponseField::query_extended),
+                        (5 << 5) | 31,
+                        0, 12,
+                        1, 13,
+                        2, 14,
+                        3, 15,
+                        0xff,
+                        find_query_response_index(QueryResponseField::response_extended),
+                        (5 << 5) | 31,
+                        0, 16,
+                        1, 17,
+                        2, 18,
+                        3, 19,
+                        0xff,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, client hoplimit, response delay and response size excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.client_hoplimit = exclude.response_delay =
+                exclude.response_size = true;
+            BlockParameters bp;
+            bp.storage_parameters.ticks_per_second = 1000000;
+            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_query_response_index(QueryResponseField::time_offset), 5,
+                        find_query_response_index(QueryResponseField::client_address_index), 1,
+                        find_query_response_index(QueryResponseField::client_port), 2,
+                        find_query_response_index(QueryResponseField::transaction_id), 21,
+                        find_query_response_index(QueryResponseField::qr_signature_index), 6,
+                        find_query_response_index(QueryResponseField::query_name_index), 5,
+                        find_query_response_index(QueryResponseField::query_size), 10,
+                        find_query_response_index(QueryResponseField::query_extended),
+                        (5 << 5) | 31,
+                        0, 12,
+                        1, 13,
+                        2, 14,
+                        3, 15,
+                        0xff,
+                        find_query_response_index(QueryResponseField::response_extended),
+                        (5 << 5) | 31,
+                        0, 16,
+                        1, 17,
+                        2, 18,
+                        3, 19,
+                        0xff,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, query name and size excluded")
+        {
+            TestCborEncoder tcbe;
+            HintsExcluded exclude;
+            exclude.query_name = exclude.query_size = true;
+            BlockParameters bp;
+            bp.storage_parameters.ticks_per_second = 1000000;
+            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_query_response_index(QueryResponseField::time_offset), 5,
+                        find_query_response_index(QueryResponseField::client_address_index), 1,
+                        find_query_response_index(QueryResponseField::client_port), 2,
+                        find_query_response_index(QueryResponseField::transaction_id), 21,
+                        find_query_response_index(QueryResponseField::qr_signature_index), 6,
+                        find_query_response_index(QueryResponseField::client_hoplimit), 20,
+                        find_query_response_index(QueryResponseField::response_delay), 10,
                         find_query_response_index(QueryResponseField::response_size), 20,
                         find_query_response_index(QueryResponseField::query_extended),
                         (5 << 5) | 31,
@@ -1004,7 +1603,8 @@ SCENARIO("HeaderList items can be written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            hl.writeCbor(tcbe);
+            HintsExcluded exclude;
+            hl.writeCbor(tcbe, exclude);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1038,7 +1638,8 @@ SCENARIO("BlockData items can be written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            cd.writeCbor(tcbe);
+            HintsExcluded exclude;
+            cd.writeCbor(tcbe, exclude);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1076,9 +1677,10 @@ SCENARIO("BlockData items can be written", "[block]")
         WHEN("ticks_per_second changes time value changes")
         {
             TestCborEncoder tcbe;
+            HintsExcluded exclude;
             BlockData cd2(bpv, FileFormatVersion::format_10, 1);
             cd2.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(1));
-            cd2.writeCbor(tcbe);
+            cd2.writeCbor(tcbe, exclude);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1137,8 +1739,9 @@ SCENARIO("BlockData max items works", "[block]")
         WHEN("a value is encoded")
         {
             TestCborEncoder tcbe;
-            cd1.writeCbor(tcbe);
-            cd2.writeCbor(tcbe);
+            HintsExcluded exclude;
+            cd1.writeCbor(tcbe, exclude);
+            cd2.writeCbor(tcbe, exclude);
 
             THEN("full report is as expected")
             {

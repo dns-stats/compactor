@@ -130,14 +130,16 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     last_end_block_statistics_ = stats;
 
     // Basic query signature info.
-    qs.server_address = data_->add_address(addr_to_string(d.serverIP, config_, false));
+    if ( !config_.exclude_hints.server_address )
+        qs.server_address = data_->add_address(addr_to_string(d.serverIP, config_, false));
     qs.server_port = d.serverPort;
     qs.qr_transport_flags = block_cbor::transport_flags(*qr);
     qs.dns_flags = block_cbor::dns_flags(*qr);
 
     // Basic query/response info.
     qri.tstamp = d.timestamp;
-    qri.client_address = data_->add_address(addr_to_string(d.clientIP, config_));
+    if ( !config_.exclude_hints.client_address )
+        qri.client_address = data_->add_address(addr_to_string(d.clientIP, config_));
     qri.client_port = d.clientPort;
     qri.id = d.dns.id();
     qs.qdcount = d.dns.questions_count();
@@ -149,7 +151,8 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         ct.qtype = query.query_type();
         ct.qclass = query.query_class();
         qs.query_classtype = data_->add_classtype(ct);
-        qri.qname = data_->add_name_rdata(query.dname());
+        if ( !config_.exclude_hints.query_name )
+            qri.qname = data_->add_name_rdata(query.dname());
         qri.qr_flags |= block_cbor::QR_HAS_QUESTION;
         break;
     }
@@ -174,7 +177,8 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
             qri.qr_flags |= block_cbor::QUERY_HAS_OPT;
             qs.query_edns_payload_size = edns0->udp_payload_size();
             qs.query_edns_version = edns0->edns_version();
-            qs.query_opt_rdata = data_->add_name_rdata(edns0->rr().data());
+            if ( !config_.exclude_hints.query_opt_rdata )
+                qs.query_opt_rdata = data_->add_name_rdata(edns0->rr().data());
         }
     }
 
@@ -241,10 +245,12 @@ void BlockCborWriter::writeQuestionRecord(const CaptureDNS::query& question)
     block_cbor::ClassType ct;
     block_cbor::Question q;
 
-    q.qname = data_->add_name_rdata(question.dname());
+    if ( !config_.exclude_hints.query_name )
+        q.qname = data_->add_name_rdata(question.dname());
     ct.qtype = question.query_type();
     ct.qclass = question.query_class();
-    q.classtype = data_->add_classtype(ct);
+    if ( !config_.exclude_hints.query_class_type )
+        q.classtype = data_->add_classtype(ct);
     extra_questions_.push_back(data_->add_question(q));
 }
 
@@ -262,12 +268,15 @@ void BlockCborWriter::writeResourceRecord(const CaptureDNS::resource& resource)
     block_cbor::ClassType ct;
     block_cbor::ResourceRecord rr;
 
-    rr.name = data_->add_name_rdata(resource.dname());
+    if ( !config_.exclude_hints.query_name )
+        rr.name = data_->add_name_rdata(resource.dname());
     ct.qtype = resource.query_type();
     ct.qclass = resource.query_class();
-    rr.classtype = data_->add_classtype(ct);
+    if ( !config_.exclude_hints.query_class_type )
+        rr.classtype = data_->add_classtype(ct);
     rr.ttl = resource.ttl();
-    rr.rdata = data_->add_name_rdata(resource.data());
+    if ( !config_.exclude_hints.rr_rdata )
+        rr.rdata = data_->add_name_rdata(resource.data());
     ext_rr_->push_back(data_->add_resource_record(rr));
 }
 
@@ -326,6 +335,6 @@ void BlockCborWriter::writeFileFooter()
 void BlockCborWriter::writeBlock()
 {
     data_->last_packet_statistics = last_end_block_statistics_;
-    data_->writeCbor(*enc_);
+    data_->writeCbor(*enc_, config_.exclude_hints);
     data_->clear();
 }

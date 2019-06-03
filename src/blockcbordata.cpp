@@ -12,6 +12,7 @@
 
 #include <type_traits>
 
+#include "configuration.hpp"
 #include "blockcbordata.hpp"
 
 namespace block_cbor {
@@ -508,7 +509,7 @@ namespace block_cbor {
         }
     }
 
-    void IndexVectorItem::writeCbor(CborBaseEncoder& enc)
+    void IndexVectorItem::writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
     {
         write_vector(vec, enc);
     }
@@ -525,7 +526,7 @@ namespace block_cbor {
         }
     }
 
-    void ByteStringItem::writeCbor(CborBaseEncoder& enc)
+    void ByteStringItem::writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
     {
         enc.write(str);
     }
@@ -567,7 +568,7 @@ namespace block_cbor {
         }
     }
 
-    void ClassType::writeCbor(CborBaseEncoder& enc)
+    void ClassType::writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
     {
         constexpr int type_index = find_class_type_index(ClassTypeField::type_id);
         constexpr int class_index = find_class_type_index(ClassTypeField::class_id);
@@ -625,16 +626,29 @@ namespace block_cbor {
         }
     }
 
-    void Question::writeCbor(CborBaseEncoder& enc)
+    void Question::writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude)
     {
         constexpr int qname_index = find_question_index(QuestionField::name_index);
         constexpr int classtype_index = find_question_index(QuestionField::classtype_index);
 
-        enc.writeMapHeader(2);
-        enc.write(qname_index);
-        enc.write(qname);
-        enc.write(classtype_index);
-        enc.write(classtype);
+        bool write_all = ( !exclude.query_name && !exclude.query_class_type );
+
+        if ( write_all )
+            enc.writeMapHeader(2);
+        else
+            enc.writeMapHeader();
+        if ( !exclude.query_name )
+        {
+            enc.write(qname_index);
+            enc.write(qname);
+        }
+        if ( !exclude.query_class_type )
+        {
+            enc.write(classtype_index);
+            enc.write(classtype);
+        }
+        if ( !write_all )
+            enc.writeBreak();
     }
 
     std::size_t hash_value(const Question& q)
@@ -691,22 +705,42 @@ namespace block_cbor {
         }
     }
 
-    void ResourceRecord::writeCbor(CborBaseEncoder& enc)
+    void ResourceRecord::writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude)
     {
         constexpr int name_index = find_rr_index(RRField::name_index);
         constexpr int classtype_index = find_rr_index(RRField::classtype_index);
         constexpr int ttl_index = find_rr_index(RRField::ttl);
         constexpr int rdata_index = find_rr_index(RRField::rdata_index);
 
-        enc.writeMapHeader(4);
-        enc.write(name_index);
-        enc.write(name);
-        enc.write(classtype_index);
-        enc.write(classtype);
-        enc.write(ttl_index);
-        enc.write(ttl);
-        enc.write(rdata_index);
-        enc.write(rdata);
+        bool write_all = ( !exclude.query_name && !exclude.query_class_type &&
+                           !exclude.rr_ttl && !exclude.rr_rdata );
+
+        if ( write_all )
+            enc.writeMapHeader(4);
+        else
+            enc.writeMapHeader();
+        if ( !exclude.query_name )
+        {
+            enc.write(name_index);
+            enc.write(name);
+        }
+        if ( !exclude.query_class_type )
+        {
+            enc.write(classtype_index);
+            enc.write(classtype);
+        }
+        if ( !exclude.rr_ttl )
+        {
+            enc.write(ttl_index);
+            enc.write(ttl);
+        }
+        if ( !exclude.rr_rdata )
+        {
+            enc.write(rdata_index);
+            enc.write(rdata);
+        }
+        if ( !write_all )
+            enc.writeBreak();
     }
 
     std::size_t hash_value(const ResourceRecord& rr)
@@ -813,7 +847,7 @@ namespace block_cbor {
         }
     }
 
-    void QueryResponseSignature::writeCbor(CborBaseEncoder& enc)
+    void QueryResponseSignature::writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude)
     {
         constexpr int server_address_index = find_query_response_signature_index(QueryResponseSignatureField::server_address_index);
         constexpr int server_port_index = find_query_response_signature_index(QueryResponseSignatureField::server_port);
@@ -833,47 +867,89 @@ namespace block_cbor {
         constexpr int response_rcode_index = find_query_response_signature_index(QueryResponseSignatureField::response_rcode);
 
         enc.writeMapHeader();
-        enc.write(server_address_index);
-        enc.write(server_address);
-        enc.write(server_port_index);
-        enc.write(server_port);
-        enc.write(qr_transport_flags_index);
-        enc.write(qr_transport_flags);
-        enc.write(qr_dns_flags_index);
-        enc.write(dns_flags);
-        enc.write(qr_sig_flags_index);
-        enc.write(qr_flags);
-        enc.write(query_qd_index);
-        enc.write(qdcount);
-        if ( qr_flags & QR_HAS_QUESTION )
+        if ( !exclude.server_address )
+        {
+            enc.write(server_address_index);
+            enc.write(*server_address);
+        }
+        if ( !exclude.server_port )
+        {
+            enc.write(server_port_index);
+            enc.write(server_port);
+        }
+        if ( !exclude.transport )
+        {
+            enc.write(qr_transport_flags_index);
+            enc.write(qr_transport_flags);
+        }
+        if ( !exclude.dns_flags )
+        {
+            enc.write(qr_dns_flags_index);
+            enc.write(dns_flags);
+        }
+        if ( !exclude.qr_flags )
+        {
+            enc.write(qr_sig_flags_index);
+            enc.write(qr_flags);
+        }
+        if ( !exclude.query_qdcount )
+        {
+            enc.write(query_qd_index);
+            enc.write(qdcount);
+        }
+        if ( ( qr_flags & QR_HAS_QUESTION ) && !exclude.query_class_type )
         {
             enc.write(query_classtype_index);
-            enc.write(query_classtype);
+            enc.write(*query_classtype);
         }
         if ( qr_flags & QUERY_ONLY )
         {
-            enc.write(query_rcode_index);
-            enc.write(query_rcode);
-            enc.write(query_opcode_index);
-            enc.write(query_opcode);
-            enc.write(query_an_index);
-            enc.write(query_ancount);
-            enc.write(query_ar_index);
-            enc.write(query_arcount);
-            enc.write(query_ns_index);
-            enc.write(query_nscount);
+            if ( !exclude.query_rcode )
+            {
+                enc.write(query_rcode_index);
+                enc.write(query_rcode);
+            }
+            if ( !exclude.query_opcode )
+            {
+                enc.write(query_opcode_index);
+                enc.write(query_opcode);
+            }
+            if ( !exclude.query_ancount )
+            {
+                enc.write(query_an_index);
+                enc.write(query_ancount);
+            }
+            if ( !exclude.query_arcount )
+            {
+                enc.write(query_ar_index);
+                enc.write(query_arcount);
+            }
+            if ( !exclude.query_nscount )
+            {
+                enc.write(query_ns_index);
+                enc.write(query_nscount);
+            }
 
             if ( qr_flags & QUERY_HAS_OPT )
             {
-                enc.write(edns_version_index);
-                enc.write(query_edns_version);
-                enc.write(udp_buf_size_index);
-                enc.write(query_edns_payload_size);
-                enc.write(opt_rdata_index);
-                enc.write(query_opt_rdata);
+                if ( !exclude.query_edns_version )
+                {
+                    enc.write(edns_version_index);
+                    enc.write(query_edns_version);
+                }
+                if ( !exclude.query_udp_size )
+                {
+                    enc.write(udp_buf_size_index);
+                    enc.write(query_edns_payload_size);
+                }
+                if ( !exclude.query_opt_rdata )
+                {
+                    enc.write(opt_rdata_index);
+                    enc.write(*query_opt_rdata);
+                }
             }
         }
-        if ( qr_flags & RESPONSE_ONLY )
+        if ( ( qr_flags & RESPONSE_ONLY ) && !exclude.response_rcode )
         {
             enc.write(response_rcode_index);
             enc.write(response_rcode);
@@ -1103,7 +1179,8 @@ namespace block_cbor {
 
     void QueryResponseItem::writeCbor(CborBaseEncoder& enc,
                                       const std::chrono::system_clock::time_point& earliest_time,
-                                      const BlockParameters& block_parameters)
+                                      const BlockParameters& block_parameters,
+                                      const HintsExcluded& exclude)
     {
         constexpr int time_index = find_query_response_index(QueryResponseField::time_offset);
         constexpr int client_address_index = find_query_response_index(QueryResponseField::client_address_index);
@@ -1119,42 +1196,55 @@ namespace block_cbor {
         constexpr int response_extended_index = find_query_response_index(QueryResponseField::response_extended);
 
         enc.writeMapHeader();
-        enc.write(time_index);
-        enc.write(std::chrono::duration_cast<std::chrono::nanoseconds>(tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
-        enc.write(client_address_index);
-        enc.write(client_address);
-        enc.write(client_port_index);
-        enc.write(client_port);
-        enc.write(transaction_id_index);
-        enc.write(id);
+        if ( !exclude.timestamp )
+        {
+            enc.write(time_index);
+            enc.write(std::chrono::duration_cast<std::chrono::nanoseconds>(tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
+        }
+        if ( !exclude.client_address )
+        {
+            enc.write(client_address_index);
+            enc.write(client_address);
+        }
+        if ( !exclude.client_port )
+        {
+            enc.write(client_port_index);
+            enc.write(client_port);
+        }
+        if ( !exclude.transaction_id )
+        {
+            enc.write(transaction_id_index);
+            enc.write(id);
+        }
         enc.write(qr_signature_index);
         enc.write(signature);
 
-        if ( qr_flags & QUERY_ONLY )
+        if ( ( qr_flags & QUERY_ONLY ) && !exclude.client_hoplimit )
         {
             enc.write(client_hoplimit_index);
             enc.write(hoplimit);
         }
 
-        if ( ( qr_flags & QUERY_AND_RESPONSE ) == QUERY_AND_RESPONSE )
+        if ( ( ( qr_flags & QUERY_AND_RESPONSE ) == QUERY_AND_RESPONSE ) &&
+             !exclude.response_delay )
         {
             enc.write(delay_index);
             enc.write(response_delay.count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
         }
 
-        if ( qr_flags & QR_HAS_QUESTION )
+        if ( ( qr_flags & QR_HAS_QUESTION ) && !exclude.query_name )
         {
             enc.write(query_name_index);
             enc.write(qname);
         }
 
-        if ( qr_flags & QUERY_ONLY )
+        if ( ( qr_flags & QUERY_ONLY ) && !exclude.query_size )
         {
             enc.write(query_size_index);
             enc.write(query_size);
         }
 
-        if ( qr_flags & RESPONSE_ONLY )
+        if ( ( qr_flags & RESPONSE_ONLY ) && !exclude.response_size )
         {
             enc.write(response_size_index);
             enc.write(response_size);
@@ -1664,7 +1754,8 @@ namespace block_cbor {
             malformed_messages.push_back(std::move(mm));
         }
     }
-    void BlockData::writeCbor(CborBaseEncoder& enc)
+
+    void BlockData::writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude)
     {
         constexpr int preamble_index = find_block_index(BlockField::preamble);
         constexpr int statistics_index = find_block_index(BlockField::statistics);
@@ -1697,19 +1788,20 @@ namespace block_cbor {
 
         // Header tables.
         enc.write(tables_index);
-        writeHeaders(enc);
+        writeHeaders(enc, exclude);
 
         // Block items.
-        writeItems(enc);
+        writeItems(enc, exclude);
 
         // Address event items.
-        writeAddressEventCounts(enc);
+        if ( !exclude.address_events )
+            writeAddressEventCounts(enc);
 
         // Block terminator.
         enc.writeBreak();
     }
 
-    void BlockData::writeHeaders(CborBaseEncoder& enc)
+    void BlockData::writeHeaders(CborBaseEncoder& enc, const HintsExcluded& exclude)
     {
         constexpr int ipaddress_index = find_block_tables_index(BlockTablesField::ip_address);
         constexpr int classtype_index = find_block_tables_index(BlockTablesField::classtype);
@@ -1724,47 +1816,47 @@ namespace block_cbor {
         if ( ip_addresses.size() > 0 )
         {
             enc.write(ipaddress_index);
-            ip_addresses.writeCbor(enc);
+            ip_addresses.writeCbor(enc, exclude);
         }
         if ( class_types.size() > 0 )
         {
             enc.write(classtype_index);
-            class_types.writeCbor(enc);
+            class_types.writeCbor(enc, exclude);
         }
         if ( names_rdatas.size() > 0 )
         {
             enc.write(name_rdata_index);
-            names_rdatas.writeCbor(enc);
+            names_rdatas.writeCbor(enc, exclude);
         }
         if ( query_response_signatures.size() > 0 )
         {
             enc.write(query_response_signature_index);
-            query_response_signatures.writeCbor(enc);
+            query_response_signatures.writeCbor(enc, exclude);
         }
         if ( questions_lists.size() > 0 )
         {
             enc.write(question_list_index);
-            questions_lists.writeCbor(enc);
+            questions_lists.writeCbor(enc, exclude);
         }
         if ( questions.size() > 0 )
         {
             enc.write(question_rr_index);
-            questions.writeCbor(enc);
+            questions.writeCbor(enc, exclude);
         }
         if ( rrs_lists.size() > 0 )
         {
             enc.write(rr_list_index);
-            rrs_lists.writeCbor(enc);
+            rrs_lists.writeCbor(enc, exclude);
         }
         if ( resource_records.size() > 0 )
         {
             enc.write(rr_index);
-            resource_records.writeCbor(enc);
+            resource_records.writeCbor(enc, exclude);
         }
         enc.writeBreak();
     }
 
-    void BlockData::writeItems(CborBaseEncoder& enc)
+    void BlockData::writeItems(CborBaseEncoder& enc, const HintsExcluded& exclude)
     {
         constexpr int queries_index = find_block_index(BlockField::queries);
         const BlockParameters& block_parameters = block_parameters_[block_parameters_index];
@@ -1774,7 +1866,7 @@ namespace block_cbor {
             enc.write(queries_index);
             enc.writeArrayHeader(query_response_items.size());
             for ( auto& qri : query_response_items )
-                qri.writeCbor(enc, earliest_time, block_parameters);
+                qri.writeCbor(enc, earliest_time, block_parameters, exclude);
         }
     }
 

@@ -24,12 +24,15 @@
 #include "addressevent.hpp"
 #include "bytestring.hpp"
 #include "blockcbor.hpp"
+#include "capturedns.hpp"
 #include "cbordecoder.hpp"
 #include "cborencoder.hpp"
-#include "capturedns.hpp"
 #include "ipaddress.hpp"
 #include "makeunique.hpp"
 #include "packetstatistics.hpp"
+
+// Defined in configuration.hpp, which in turn pulls in this file.
+class HintsExcluded;
 
 namespace boost {
     /**
@@ -92,7 +95,7 @@ namespace block_cbor {
         CLIENT_ADDRESS_INDEX = (1 << 1),
         CLIENT_PORT = (1 << 2),
         TRANSACTION_ID = (1 << 3),
-        QR_SIGNATURE_LIMIT = (1 << 4),
+        QR_SIGNATURE_INDEX = (1 << 4),
         CLIENT_HOPLIMIT = (1 << 5),
         RESPONSE_DELAY = (1 << 6),
         QUERY_NAME_INDEX = (1 << 7),
@@ -572,9 +575,10 @@ namespace block_cbor {
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
+         * \param exclude exclude hints.
          */
-        void writeCbor(CborBaseEncoder& enc);
+        void writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude);
     };
 
     /**
@@ -610,9 +614,10 @@ namespace block_cbor {
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
+         * \param exclude exclude hints.
          */
-        void writeCbor(CborBaseEncoder& enc);
+        void writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude);
     };
 
     /**
@@ -678,9 +683,10 @@ namespace block_cbor {
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
+         * \param exclude exclude hints.
          */
-        void writeCbor(CborBaseEncoder& enc);
+        void writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude);
     };
 
     /**
@@ -753,9 +759,10 @@ namespace block_cbor {
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
+         * \param exclude exclude hints.
          */
-        void writeCbor(CborBaseEncoder& enc);
+        void writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude);
     };
 
     /**
@@ -839,9 +846,10 @@ namespace block_cbor {
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
+         * \param exclude exclude hints.
          */
-        void writeCbor(CborBaseEncoder& enc);
+        void writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude);
     };
 
     /**
@@ -1019,9 +1027,10 @@ namespace block_cbor {
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
+         * \param exclude exclude hints.
          */
-        void writeCbor(CborBaseEncoder& enc);
+        void writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude);
     };
 
     /**
@@ -1168,13 +1177,15 @@ namespace block_cbor {
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc           CBOR stream to write to.
-         * \param earliest_time earliest time in block.
+         * \param enc              CBOR stream to write to.
+         * \param earliest_time    earliest time in block.
          * \param block_parameters parameters for this block.
+         * \param exclude          exclude hints.
          */
         void writeCbor(CborBaseEncoder& enc,
                        const std::chrono::system_clock::time_point& earliest_time,
-                       const BlockParameters& block_parameters);
+                       const BlockParameters& block_parameters,
+                       const HintsExcluded& exclude);
     };
 
     /**
@@ -1657,13 +1668,14 @@ namespace block_cbor {
         /**
          * \brief Write the list to CBOR.
          *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
+         * \param exclude exclude hints.
          */
-        void writeCbor(CborBaseEncoder& enc)
+        void writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude)
         {
             enc.writeArrayHeader(items_.size());
             for ( auto& i : items_ )
-                i.writeCbor(enc);
+                i.writeCbor(enc, exclude);
         }
 
         /**
@@ -2103,23 +2115,26 @@ namespace block_cbor {
         /**
          * \brief Write the block out CBOR encoded.
          *
-         * \param enc the CBOR encoder to use for the write.
+         * \param enc     the CBOR encoder to use for the write.
+         * \param exclude the current exclude hints.
          */
-        void writeCbor(CborBaseEncoder& enc);
+        void writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude);
 
         /**
          * \brief Write block headers.
          *
-         * \param enc the CBOR encoder to use for the write.
+         * \param enc     the CBOR encoder to use for the write.
+         * \param exclude the current exclude hints.
          */
-        void writeHeaders(CborBaseEncoder& enc);
+        void writeHeaders(CborBaseEncoder& enc, const HintsExcluded& exclude);
 
         /**
          * \brief Write items.
          *
-         * \param enc the CBOR encoder to use for the write.
+         * \param enc     the CBOR encoder to use for the write.
+         * \param exclude the current exclude hints.
          */
-        void writeItems(CborBaseEncoder& enc);
+        void writeItems(CborBaseEncoder& enc, const HintsExcluded& exclude);
 
         /**
          * \brief Write block stats.

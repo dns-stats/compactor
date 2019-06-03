@@ -182,6 +182,7 @@ SCENARIO("Generating output", "[output]")
 
         WHEN("base output is required")
         {
+            config.exclude_hints.set_section_excludes(0, 0);
             TestBaseOutputWriter tbow(config);
             tbow.writeQR(qr, stats);
 
