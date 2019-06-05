@@ -41,6 +41,7 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/check-outputs.sh \
                 test-scripts/check-template.sh \
                 test-scripts/check-testcontent.sh \
+                test-scripts/check-testcontent-exclude.sh \
                 test-scripts/check-addressprefix.sh \
                 test-scripts/inspector-outputs.sh \
                 test-scripts/output-size-limit.sh \
@@ -81,6 +82,8 @@ dist_check_DATA = doc/c-dns-working.cddl \
                   test-scripts/matching.pcap.xz \
                   test-scripts/testcontent.pcap.xz \
                   test-scripts/testcontent.diag \
+                  test-scripts/testcontent-exclude.conf \
+                  test-scripts/testcontent-exclude.diag \
                   test-scripts/testcontent.debugqr \
                   test-scripts/addressprefix.diag \
                   test-scripts/addressprefix.debugqr \
