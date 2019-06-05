@@ -1062,7 +1062,25 @@ void HintsExcluded::read_excludes_file(const std::string& excludesfile)
         std::ifstream excludes(excludesfile);
         if ( excludes.fail() )
             throw po::error("Can't open excludes file " + excludesfile);
-        po::store(po::parse_config_file(excludes, excludes_file_options_), res);
+
+        // Program Options requires a non-section line has a '='.
+        // So pre-process input and add one if required.
+        std::string config;
+        for ( std::string line; getline(excludes, line); )
+        {
+            std::string::size_type n;
+
+            if ( ( n = line.find('#')) != std::string::npos )
+                line = line.substr(0, n);
+            boost::algorithm::trim(line);
+            if ( *line.begin() != '[' && line.find('=') == std::string::npos )
+                line.append(1, '=');
+            config.append(line);
+            config.append(1, '\n');
+        }
+
+        std::istringstream is(config);
+        po::store(po::parse_config_file(is, excludes_file_options_), res);
     }
 
     po::notify(res);
