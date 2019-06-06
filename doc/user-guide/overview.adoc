@@ -12,8 +12,8 @@ https://datatracker.ietf.org/doc/draft-ietf-dnsop-dns-capture-format[draft-ietf-
 ====
 The C-DNS draft is a work in progress, and the format subject to
 change. At the time of writing, the version of the draft implemented is
-https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-04[version
-04].
+https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-10[version
+10].
 ====
 
 The project was initially developed for for
@@ -82,15 +82,13 @@ November 2016.
 ====
 
 _compactor_ writes C-DNS as described in
-https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-04[version
-04] of the draft,  with the following changes:
+https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-10[version
+10] of the draft,  with the following changes:
 
-* The format major version is set to 0.
-* The format minor version is set to 5.
-* A private version ID of 1000 is present.
+* A private version ID of 1 is present.
 
-_inspector_ reads C-DNS as described in version 04 of
-the draft, and is intended to be backwards compatible over
+_inspector_ reads C-DNS as described in version 10 of
+the draft, and is intended to remain backwards compatible in any
 future format changes.
 ====
 
@@ -98,7 +96,6 @@ future format changes.
 ====
 The current release does not support the following facilities defined in the draft:
 
-* Picosecond timestamps. Only microsecond resolution is supported.
 * Malformed packet data recorded directly into C-DNS.
 ====
 

@@ -15,7 +15,7 @@ can be used to control _inspector_ .
 
 On startup, _compactor_ attempts to read a configuration file. By
 default this is named `compactor.conf`, and is located in a
-`dns-stats-compactor` sytem configuration directory.
+`dns-stats-compactor` system configuration directory.
 
 If installed from a binary package on Linux, the configuration file
 will be at `/etc/dns-stats-compactor/compactor.conf`.
@@ -374,6 +374,22 @@ max-compression-threads=2
 ----
 include=all
 ----
+=== _compactor_ excluded fields file
+
+You can control what fields are included in the C-DNS output via entries in the `excluded_fields.conf` file
+
+==== Excluded fields file location
+
+On startup, _compactor_ looks for a excluded fields file. By default this is named `excluded_fields.conf`, and is located in a `dns-stats-compactor` system configuration directory.
+
+If installed from a binary package on Linux, the configuration file will be at `/etc/dns-stats-compactor/excluded_fields.conf`
+
+==== Default configuration
+
+Both installing via binary packages and installing using the source distribution will install a sample
+`excluded_fields.conf` file. This file lists fields to be excluded from the C-DNS output.
+By default this file contains all the field names commented out so all fields are collected in the C-DNS.
+The fields are specified in logical groups.
 
 === Configuring _compactor_ daemon startup
 

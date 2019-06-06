@@ -14,7 +14,7 @@ _compactor_ and  _inspector_  are supplied in separate packages named
 `dns-stats-compactor` and `dns-stats-inspector`.
 
 ===== Pre-requisites
-
+[[libtins]]
 Both _compactor_ and _inspector_ use
 https://libtins.github.io/[libtins] for various network related
 functions. There is no suitable pre-packaged version for Ubuntu Xenial, so
@@ -83,7 +83,7 @@ source, see the documentation for those items.
   with the 2011 ISO standard, otherwise {cpp}11.
 
 | `boost-log`
-.4+| Several libraries from http://www.boost.org[Boost
+.5+| Several libraries from http://www.boost.org[Boost
   {cpp}] are required. Depending on your system, it may be possible to
   install just the build requirements for individual libraries, or it
   may be more convenient to install all the Boost libraries.
@@ -94,6 +94,8 @@ source, see the documentation for those items.
 | `boost-system`
 
 | `boost-thread`
+
+| `boost-iostreams`
 
 | `liblzma`| The compression library from http://tukaani.org/xz/[XZ utils].
 
@@ -107,6 +109,7 @@ source, see the documentation for those items.
   system `malloc`.
 
 | `libtins` | Networking functions library. http://libtins.github.io/.
+See  <<libtins>> if there is no package for your OS.
 
 | `openssl` | Cryptography library, used in pseudo-anonymisation.
 http://www.openssl.org/.
