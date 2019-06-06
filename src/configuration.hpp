@@ -254,7 +254,7 @@ public:
     bool client_hoplimit;
 
     /**
-     * \brief output client IP address?
+     * \brief output server IP address?
      */
     bool server_address;
 
