@@ -906,6 +906,9 @@ HintsExcluded::HintsExcluded()
         ("ip-header.time-offset",
          po::value<bool>(&timestamp)->implicit_value(true)->default_value(false),
          "exclude timestamp data.")
+        ("ip-header.response-delay",
+         po::value<bool>(&response_delay)->implicit_value(true)->default_value(false),
+         "exclude response delay data.")
         ("ip-header.client-address",
          po::value<bool>(&client_address)->implicit_value(true)->default_value(false),
          "exclude client address data.")
@@ -1003,7 +1006,7 @@ HintsExcluded::HintsExcluded()
          po::value<bool>(&response_size)->implicit_value(true)->default_value(false),
          "exclude response size.")
 
-        ("storage-meta-data.address_events",
+        ("storage-meta-data.address-events",
          po::value<bool>(&address_events)->implicit_value(true)->default_value(false),
          "exclude address events.")
         ;
