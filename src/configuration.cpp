@@ -1073,7 +1073,9 @@ void HintsExcluded::read_excludes_file(const std::string& excludesfile)
             if ( ( n = line.find('#')) != std::string::npos )
                 line = line.substr(0, n);
             boost::algorithm::trim(line);
-            if ( *line.begin() != '[' && line.find('=') == std::string::npos )
+            if ( !line.empty() &&
+                 *line.begin() != '[' &&
+                 line.find('=') == std::string::npos )
                 line.append(1, '=');
             config.append(line);
             config.append(1, '\n');
