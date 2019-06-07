@@ -386,12 +386,12 @@ The excluded fields file replaces the deprecated *include* functionality current
 IMPORTANT: Users must use either the deprecated *include* configuration options or the new excluded fields file.
 
 If the excluded fields file exists and there are *include* lines in the configuration file or provided on the command
-line an error will be logged and the _compactor_ will exit. 
+line an error will be logged and _compactor_ will exit. 
 
-If the excluded fields file exists then the _compactor_ will act as if *include=all* was present. The excluded fields
+If the excluded fields file exists then _compactor_ will act as if *include=all* was present. The excluded fields
 file then controls what fields are *excluded* from the C-DNS output.
 
-The excluded fields are stored in the C-DNS file as hints for the _inspector_ to use when processing C-DNS files.
+The excluded fields are stored in the C-DNS file as hints for _inspector_ to use when processing C-DNS files.
 
 ==== Excluded fields file location
 

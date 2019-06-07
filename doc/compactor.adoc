@@ -64,7 +64,11 @@ Command options are given on the command line.
 
 *-c, --configfile*::
   The configuration file to read. If not specified, the default configuration file
- `/etc/dns-stats-compactor/compactor.conf` is read if present.
+  `/etc/dns-stats-compactor/compactor.conf` is read if present.
+
+*--excludesfile*::
+  The excludes file to read. If not specified, the default configuration file
+  `/etc/dns-stats-compactor/excluded_fields.conf` is read if present.
 
 *--debug-dns*::
    Print a summary of each DNS packet to standard output after decoding.
@@ -85,6 +89,8 @@ character introduces a comment that spans until the end of the line.
 In a configuration file, the long form of the option name must be used. So, for
 example, to set the snap length to 64, the configuration file entry must read
 `snaplen=64`. `s=64` will not be accepted.
+
+The --excludesfile option can not be specified in the configuration file.
 
 ==== Capture from network
 
@@ -194,6 +200,8 @@ example, to set the snap length to 64, the configuration file entry must read
 *-n, --include* _SECTIONS_::
   Indicate which optional sections should be included in the main output. This argument
   can be given multiple times. By default none of these optional sections are included.
+  This option is deprecated. and will be removed in a future release. It is replaced by
+  the excluded_fields file. See the user guide for more information.
 
 *-G, --ignore-opcode* _OPCODE_::
    Indicate an opcode _OPCODE_ that should not be included in the main output.
@@ -295,7 +303,9 @@ substitutes the second VLAN ID if configured, and so on.
 == OUTPUT FILE SECTIONS
 
 The main output of DNS Query/Response pair information can optionally include
-full details on sections of the DNS messages.
+full details on sections of the DNS messages. Using the -n, --include option.
+This option is deprecated. and will be removed in a future release. It is replaced by
+the excluded_fields file. See the user guide for more information. 
 
 *query-questions*::
   Include second and subsequent QUESTION sections from queries. The first
