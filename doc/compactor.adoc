@@ -56,7 +56,7 @@ Command options are given on the command line.
 
 *-r. --report-info* [_arg_]::
   Report info (config and statistics summary) on exit. _arg_ may be
-  `true` or `1` to enable promiscucous mode, `false` or `0` to disable
+  `true` or `1` to enable promiscuous mode, `false` or `0` to disable
   promiscuous mode. If _arg_ is omitted, it defaults to `true`.
 
 *-l, --list-interfaces*::
@@ -109,7 +109,7 @@ example, to set the snap length to 64, the configuration file entry must read
   Capture up to _arg_ bytes per packet. The default is 65535.
 
 *-p, --promiscuous-mode* [_arg_]:: Put the interface into promiscuous
-  mode. _arg_ may be `true` or `1` to enable promiscucous mode,
+  mode. _arg_ may be `true` or `1` to enable promiscuous mode,
   `false` or `0` to disable promiscuous mode. If _arg_ is omitted, it
   defaults to `true`. Promiscuous mode is disabled by default.
 
