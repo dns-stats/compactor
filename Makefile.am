@@ -27,7 +27,7 @@ user_guide_sources = \
 
 dslocalstatedir=$(localstatedir)/lib/$(PACKAGE)
 dsconfdir=$(sysconfdir)/$(PACKAGE)
-dsconf_DATA = compactor.conf
+dsconf_DATA = compactor.conf etc/excluded_fields.conf.sample
 dist_noinst_DATA = etc/compactor.conf.in doc/compactor.adoc doc/inspector.adoc $(user_guide_sources)
 conffile=$(dsconfdir)/compactor.conf
 excludesfile=$(dsconfdir)/excluded_fields.conf.sample
