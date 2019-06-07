@@ -74,12 +74,12 @@ public:
     boost::optional<unsigned> client_hoplimit;
 
     /**
-     * \brief default client address.
+     * \brief default server address.
      */
     boost::optional<IPAddress> server_address;
 
     /**
-     * \brief default client port.
+     * \brief default server port.
      */
     boost::optional<uint16_t> server_port;
 
