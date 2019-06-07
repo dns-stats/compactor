@@ -13,8 +13,9 @@ https://launchpad.net[Launchpad] PPA (Personal Package Archive)
 _compactor_ and  _inspector_  are supplied in separate packages named
 `dns-stats-compactor` and `dns-stats-inspector`.
 
-===== Pre-requisites
 [[libtins]]
+===== Pre-requisites
+
 Both _compactor_ and _inspector_ use
 https://libtins.github.io/[libtins] for various network related
 functions. There is no suitable pre-packaged version for Ubuntu Xenial, so

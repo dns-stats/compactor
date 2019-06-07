@@ -64,16 +64,17 @@ raw-pcap=@DSLOCALSTATEDIR@/pcap/raw/%Y%m%d-%H%M%S_%{rotate-period}_%{interface}.
 # ignored-pcap=
 ignored-pcap=@DSLOCALSTATEDIR@/pcap/ignored/%Y%m%d-%H%M%S_%{rotate-period}_%{interface}.ignored.pcap
 
-# Level of data to capture. Value may be one of:
+# The use of include lines is deprecated, See the user_guide for more information
+# Specify which optional sections to capture. Value may be one of:
 # query-questions, query-answers, query-authority, query-additional,
 # response-questions, response-answers, response-authority, response-additional,
 # query-all, response-all, all.
 #
-# The line may be repeated to request additional sections, for example:
+# The line may be repeated to request multiple optional sections, for example:
 # include=query-questions
 # include=response-answers
 #
-# Default is no additional sections.
+# If no include is specified then no optional sections are captured. 
 include=all
 
 # Compress C-DNS using gzip?

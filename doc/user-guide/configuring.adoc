@@ -23,7 +23,7 @@ will be at `/etc/dns-stats-compactor/compactor.conf`.
 ===== Default configuration
 
 Both installing via binary packages and installing using the source distribution
-will install a sample `compactor.conf` configuration
+will install a `compactor.conf` configuration
 file. This needs to be edited to specify an interface to collect from,
 but is otherwise configured to collect traffic:
 
@@ -326,7 +326,10 @@ max-compression-threads=2
 
 *include*=_SECTIONS_:: Indicate which optional sections should be
   included in the C-DNS output. This argument can be given multiple
-  times. By default none of these optional sections are included.
+  times. If no include is specified then none of these optional sections are included.
+
+IMPORTANT: The use of *include* lines is deprecated and will be removed in a future major release.
+This functionality will move to the new excluded fields file. See <<excludes>>.
 
 [cols="2*",options="header"]
 |===
@@ -374,22 +377,38 @@ max-compression-threads=2
 ----
 include=all
 ----
+
+[[excludes]]
 === _compactor_ excluded fields file
 
-You can control what fields are included in the C-DNS output via entries in the `excluded_fields.conf` file
+The excluded fields file replaces the deprecated *include* functionality currently found in the configuration file.
+
+IMPORTANT: Users must use either the deprecated *include* configuration options or the new excluded fields file.
+
+If the excluded fields file exists and there are *include* lines in the configuration file an error will be
+logged and the _compactor_ will exit. 
+
+If the excluded fields file exists then the _compactor_ will act as if *include=all* was present. The excluded fields
+file then controls what fields are *excluded* from the C-DNS output.
+
+The excluded fields are stored in the C-DNS file as hints for the _inspector_ to use when processing C-DNS files.
 
 ==== Excluded fields file location
 
-On startup, _compactor_ looks for a excluded fields file. By default this is named `excluded_fields.conf`, and is located in a `dns-stats-compactor` system configuration directory.
+On startup, _compactor_ looks for a excluded fields file. By default this is named `excluded_fields.conf`, and is
+located in a `dns-stats-compactor` system configuration directory. A different location can specified on the command
+line by using the _compactor --excludesfile_ option.
 
-If installed from a binary package on Linux, the configuration file will be at `/etc/dns-stats-compactor/excluded_fields.conf`
+If installed from a binary package on Linux, a sample excluded fields file will be at 
+`/etc/dns-stats-compactor/excluded_fields.conf.sample`
 
 ==== Default configuration
 
 Both installing via binary packages and installing using the source distribution will install a sample
-`excluded_fields.conf` file. This file lists fields to be excluded from the C-DNS output.
-By default this file contains all the field names commented out so all fields are collected in the C-DNS.
-The fields are specified in logical groups.
+`excluded_fields.conf.sample` file. This file (with the .sample ending removed) can be used to specify
+which fields to be excluded from the C-DNS output. In the sample all the fields are commented out so all 
+fields would be collected in the C-DNS.
+The fields are specified in logical groups. 
 
 === Configuring _compactor_ daemon startup
 
