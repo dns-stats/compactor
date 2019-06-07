@@ -38,6 +38,41 @@ namespace {
         { "DSO", 6 }
     };
 
+    const std::unordered_map<std::string, unsigned> RCODES = {
+        { "NOERROR", 0 },
+        { "FORMERR", 1 },
+        { "SERVFAIL", 2 },
+        { "NXDOMAIN", 3 },
+        { "NOTIMP", 4 },
+        { "REFUSED", 5 },
+        { "YXDOMAIN", 6 },
+        { "YXRRSET", 7 },
+        { "NXRRSET", 8 },
+        { "NOTAUTH", 9 },
+        { "NOTZONE", 10 },
+        { "DSOTYPENO", 11 },
+        { "BADVERS", 16 },
+        { "BADSIG", 16 },
+        { "BADKEY", 17 },
+        { "BADTIME", 18 },
+        { "BADMODE", 19 },
+        { "BADNAME", 20 },
+        { "BADALG", 21 },
+        { "BADTRUNC", 22 },
+        { "BADCOOKIE", 23 },
+    };
+
+    const std::unordered_map<std::string, unsigned> RR_CLASSES = {
+        { "INTERNET", 1 },
+        { "IN", 1 },
+        { "CHAOS", 2 },
+        { "CH", 2 },
+        { "HESIOD", 4 },
+        { "HS", 4 },
+        { "NONE", 254 },
+        { "ANY", 255 },
+    };
+
     const std::unordered_map<std::string, unsigned> RR_TYPES = {
         { "A", 1 },
         { "NS", 2 },
@@ -435,6 +470,13 @@ po::variables_map Configuration::parse_command_line(int ac, char *av[])
         excludes_file_ = cmdline_vars_["excludesfile"].as<std::string>();
         if ( !boost::filesystem::exists(excludes_file_) )
             throw po::error("Exclude hints file " + excludes_file_ + " not found.");
+    }
+    // If you specify a defaults file, it must exist.
+    if ( cmdline_vars_.count("defaultsfile") )
+    {
+        defaults_file_ = cmdline_vars_["defaultsfile"].as<std::string>();
+        if ( !boost::filesystem::exists(defaults_file_) )
+            throw po::error("Defaults file " + defaults_file_ + " not found.");
     }
 
     return reread_config_file();
@@ -871,6 +913,595 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
         vlan_ids.push_back(v);
 
     filter = cp.filter;
+}
+
+/**
+ * \brief Overload <code>validate()</code> for IPAddress.
+ *
+ * @param v             holder for result.
+ * @param values        input values.
+ * @param val1          compiler workaround.
+ * @param val2          compiler workaround.
+ */
+// cppcheck-suppress unusedFunction
+void validate(boost::any& v, const std::vector<std::string>& values,
+              IPAddress* val1, int val2)
+{
+    po::validators::check_first_occurrence(v);
+    std::string s = po::validators::get_single_string(values);
+
+    try
+    {
+        v = IPAddress(s);
+    }
+    catch (Tins::invalid_address&)
+    {
+        throw po::validation_error(po::validation_error::invalid_option_value);
+    }
+}
+
+/**
+ * \brief Overload <code>validate()</code> for CaptureDNS::Opcode.
+ *
+ * @param v             holder for result.
+ * @param values        input values.
+ * @param val1          compiler workaround.
+ * @param val2          compiler workaround.
+ */
+// cppcheck-suppress unusedFunction
+void validate(boost::any& v, const std::vector<std::string>& values,
+              CaptureDNS::Opcode* val1, int val2)
+{
+    po::validators::check_first_occurrence(v);
+    std::string s = po::validators::get_single_string(values);
+    boost::algorithm::to_upper(s);
+
+    auto item = OPCODES.find(s);
+    if ( item == OPCODES.end() )
+        throw po::validation_error(po::validation_error::invalid_option_value);
+    else
+        v = CaptureDNS::Opcode(item->second);
+}
+
+/**
+ * \brief Overload <code>validate()</code> for CaptureDNS:Rcode.
+ *
+ * @param v             holder for result.
+ * @param values        input values.
+ * @param val1          compiler workaround.
+ * @param val2          compiler workaround.
+ */
+// cppcheck-suppress unusedFunction
+void validate(boost::any& v, const std::vector<std::string>& values,
+              CaptureDNS::Rcode* val1, int val2)
+{
+    po::validators::check_first_occurrence(v);
+    std::string s = po::validators::get_single_string(values);
+    boost::algorithm::to_upper(s);
+
+    auto item = RCODES.find(s);
+    if ( item == RCODES.end() )
+        throw po::validation_error(po::validation_error::invalid_option_value);
+    else
+        v = CaptureDNS::Rcode(item->second);
+}
+
+/**
+ * \brief Overload <code>validate()</code> for CaptureDNS::QueryClass.
+ *
+ * @param v             holder for result.
+ * @param values        input values.
+ * @param val1          compiler workaround.
+ * @param val2          compiler workaround.
+ */
+// cppcheck-suppress unusedFunction
+void validate(boost::any& v, const std::vector<std::string>& values,
+              CaptureDNS::QueryClass* val1, int val2)
+{
+    po::validators::check_first_occurrence(v);
+    std::string s = po::validators::get_single_string(values);
+    boost::algorithm::to_upper(s);
+
+    auto item = RR_CLASSES.find(s);
+    if ( item == RR_CLASSES.end() )
+        throw po::validation_error(po::validation_error::invalid_option_value);
+    else
+        v = CaptureDNS::QueryClass(item->second);
+}
+
+/**
+ * \brief Overload <code>validate()</code> for CaptureDNS::QueryType.
+ *
+ * @param v             holder for result.
+ * @param values        input values.
+ * @param val1          compiler workaround.
+ * @param val2          compiler workaround.
+ */
+// cppcheck-suppress unusedFunction
+void validate(boost::any& v, const std::vector<std::string>& values,
+              CaptureDNS::QueryType* val1, int val2)
+{
+    po::validators::check_first_occurrence(v);
+    std::string s = po::validators::get_single_string(values);
+    boost::algorithm::to_upper(s);
+
+    auto item = RR_TYPES.find(s);
+    if ( item == RR_TYPES.end() )
+        throw po::validation_error(po::validation_error::invalid_option_value);
+    else
+        v = CaptureDNS::QueryType(item->second);
+}
+
+// For items declared in their own namespace, validators need to be
+// (a) declared in that namespace, and (b) explicitly for
+// boost::optional<type>.
+namespace block_cbor {
+
+    /**
+     * \brief Overload <code>validate()</code> for TransportFlags.
+     *
+     * @param v             holder for result.
+     * @param values        input values.
+     * @param val1          compiler workaround.
+     * @param val2          compiler workaround.
+     */
+    // cppcheck-suppress unusedFunction
+    void validate(boost::any& v, const std::vector<std::string>& values,
+                  TransportFlags* val1, int val2)
+    {
+        po::validators::check_first_occurrence(v);
+        std::string s = po::validators::get_single_string(values);
+        std::vector<std::string> tokens;
+        boost::algorithm::to_lower(s);
+        boost::split(tokens, s, boost::is_any_of("| "), boost::token_compress_on);
+        uint8_t tf = 0;
+        bool seen_ip = false, seen_proto = false, seen_trailing = false;
+
+        for ( const auto& tok : tokens )
+        {
+            if ( tok == "ipv4" || tok == "ipv6" )
+            {
+                if ( seen_ip )
+                    throw po::validation_error(po::validation_error::multiple_values_not_allowed);
+                seen_ip = true;
+                if ( tok == "ipv6" )
+                    tf |= IPV6;
+            }
+            else if ( tok == "trailing-data" )
+            {
+                if ( seen_trailing )
+                    throw po::validation_error(po::validation_error::multiple_values_not_allowed);
+                seen_trailing = true;
+                tf |= QUERY_TRAILINGDATA;
+            }
+            else if ( tok == "udp" || tok == "tcp" || tok == "tls" ||
+                      tok == "dtls" || tok == "doh" )
+            {
+                if ( seen_proto )
+                    throw po::validation_error(po::validation_error::multiple_values_not_allowed);
+                seen_proto = true;
+                if ( tok == "tcp" )
+                    tf |= TCP;
+                else if ( tok == "tls" )
+                    tf |= TLS;
+                else if ( tok == "dtls" )
+                    tf |= DTLS;
+                else if ( tok == "doh" )
+                    tf |= DOH;
+            }
+            else
+                throw po::validation_error(po::validation_error::invalid_option_value);
+        }
+
+        v = TransportFlags(tf);
+    }
+
+    /**
+     * \brief Overload <code>validate()</code> for QueryResponseFlags.
+     *
+     * @param v             holder for result.
+     * @param values        input values.
+     * @param val1          compiler workaround.
+     * @param val2          compiler workaround.
+     */
+    // cppcheck-suppress unusedFunction
+    void validate(boost::any& v, const std::vector<std::string>& values,
+                  QueryResponseFlags* val1, int val2)
+    {
+        po::validators::check_first_occurrence(v);
+        std::string s = po::validators::get_single_string(values);
+        std::vector<std::string> tokens;
+        boost::algorithm::to_lower(s);
+        boost::split(tokens, s, boost::is_any_of("| "), boost::token_compress_on);
+        uint8_t qrf = QR_HAS_QUESTION;
+
+        for ( const auto& tok : tokens )
+        {
+            if ( tok == "has-query" )
+                qrf |= QUERY_ONLY;
+            else if ( tok == "has-response" )
+                qrf |= RESPONSE_ONLY;
+            else if ( tok == "query-has-opt" )
+                qrf |= QUERY_HAS_OPT;
+            else if ( tok == "response-has-opt" )
+                qrf |= RESPONSE_HAS_OPT;
+            else if ( tok == "query-has-no-question" )
+                qrf &= ~QR_HAS_QUESTION;
+            else if ( tok == "response-has-no-question" )
+                qrf |= RESPONSE_HAS_NO_QUESTION;
+            else
+                throw po::validation_error(po::validation_error::invalid_option_value);
+        }
+
+        v = QueryResponseFlags(qrf);
+    }
+
+    /**
+     * \brief Overload <code>validate()</code> for QueryResponseType.
+     *
+     * @param v             holder for result.
+     * @param values        input values.
+     * @param val1          compiler workaround.
+     * @param val2          compiler workaround.
+     */
+    // cppcheck-suppress unusedFunction
+    void validate(boost::any& v, const std::vector<std::string>& values,
+                  QueryResponseType* val1, int val2)
+    {
+        po::validators::check_first_occurrence(v);
+        std::string s = po::validators::get_single_string(values);
+        boost::algorithm::trim(s);
+        boost::algorithm::to_lower(s);
+        QueryResponseType qrt;
+
+        if ( s == "query" )
+            qrt = QueryResponseType::stub;
+        else if ( s == "client" )
+            qrt = QueryResponseType::client;
+        else if ( s == "resolver" )
+            qrt = QueryResponseType::resolver;
+        else if ( s == "auth" )
+            qrt = QueryResponseType::auth;
+        else if ( s == "forwarder" )
+            qrt = QueryResponseType::forwarder;
+        else if ( s == "tool" )
+            qrt = QueryResponseType::tool;
+        else
+            throw po::validation_error(po::validation_error::invalid_option_value);
+
+        v = qrt;
+    }
+
+    /**
+     * \brief Overload <code>validate()</code> for DNSFlags.
+     *
+     * @param v             holder for result.
+     * @param values        input values.
+     * @param val1          compiler workaround.
+     * @param val2          compiler workaround.
+     */
+    // cppcheck-suppress unusedFunction
+    void validate(boost::any& v, const std::vector<std::string>& values,
+                  DNSFlags* val1, int val2)
+    {
+        po::validators::check_first_occurrence(v);
+        std::string s = po::validators::get_single_string(values);
+        std::vector<std::string> tokens;
+        boost::algorithm::to_lower(s);
+        boost::split(tokens, s, boost::is_any_of("| "), boost::token_compress_on);
+        uint16_t dnsf = 0;
+
+        for ( const auto& tok : tokens )
+        {
+            if ( tok == "query-cd" )
+                dnsf |= QUERY_CD;
+            else if ( tok == "response-cd" )
+                dnsf |= RESPONSE_CD;
+            else if ( tok == "query-ad" )
+                dnsf |= QUERY_AD;
+            else if ( tok == "response-ad" )
+                dnsf |= RESPONSE_AD;
+            else if ( tok == "query-z" )
+                dnsf |= QUERY_Z;
+            else if ( tok == "response-z" )
+                dnsf |= RESPONSE_Z;
+            else if ( tok == "query-ra" )
+                dnsf |= QUERY_RA;
+            else if ( tok == "response-ra" )
+                dnsf |= RESPONSE_RA;
+            else if ( tok == "query-rd" )
+                dnsf |= QUERY_RD;
+            else if ( tok == "response-rd" )
+                dnsf |= RESPONSE_RD;
+            else if ( tok == "query-tc" )
+                dnsf |= QUERY_TC;
+            else if ( tok == "response-tc" )
+                dnsf |= RESPONSE_TC;
+            else if ( tok == "query-aa" )
+                dnsf |= QUERY_AA;
+            else if ( tok == "response-aa" )
+                dnsf |= RESPONSE_AA;
+            else if ( tok == "query-do" )
+                dnsf |= QUERY_DO;
+            else
+                throw po::validation_error(po::validation_error::invalid_option_value);
+        }
+
+        v = DNSFlags(dnsf);
+    }
+
+}
+
+// For items declared in their own namespace, validators need to be
+// (a) declared in that namespace, and (b) explicitly for
+// boost::optional<type>.
+namespace std {
+    namespace chrono {
+
+        /**
+         * \brief Overload <code>validate()</code> for std::chrono::microseconds.
+         *
+         * @param v             holder for result.
+         * @param values        input values.
+         * @param val1          compiler workaround.
+         * @param val2          compiler workaround.
+         */
+        // cppcheck-suppress unusedFunction
+        void validate(boost::any& v, const std::vector<std::string>& values,
+                      microseconds* val1, int val2)
+        {
+            po::validators::check_first_occurrence(v);
+            std::string s = po::validators::get_single_string(values);
+            boost::algorithm::trim(s);
+            std::stringstream ss(s);
+            uint64_t val;
+            std::string suffix;
+
+            ss >> val;
+            if ( !ss )
+                throw po::validation_error(po::validation_error::invalid_option_value);
+            ss >> suffix;
+            if ( !ss )
+                throw po::validation_error(po::validation_error::invalid_option_value);
+
+            if ( suffix == "ns" )
+            {
+                nanoseconds ns(val);
+                v = duration_cast<microseconds>(ns);
+            }
+            else if ( suffix == "us" )
+                v = microseconds(val);
+            else if ( suffix == "ms" )
+            {
+                milliseconds ms(val);
+                v = duration_cast<microseconds>(ms);
+            }
+            else if ( suffix == "s" )
+            {
+                seconds s(val);
+                v = duration_cast<microseconds>(s);
+            }
+            else
+                throw po::validation_error(po::validation_error::invalid_option_value);
+        }
+
+    }
+}
+
+Defaults::Defaults()
+{
+}
+
+void Defaults::read_defaults_file(const std::string& defaultsfile)
+{
+    po::variables_map res;
+    boost::program_options::options_description opt;
+
+    // Although theoretically one should be able to use the program options
+    // magic with boost::optional, in practice I've found that I can't
+    // get it working. So instead I'm going the simple way, setting local
+    // values and copying into the default optionals if the corresponding
+    // argument was actually set.
+    std::chrono::microseconds time_offset;
+    std::chrono::microseconds response_delay;
+    IPAddress client_address;
+    uint16_t client_port;
+    unsigned client_hoplimit;
+    IPAddress server_address;
+    uint16_t server_port;
+    block_cbor::TransportFlags transport;
+    uint16_t transaction_id;
+    CaptureDNS::Opcode query_opcode;
+    CaptureDNS::Rcode query_rcode;
+    block_cbor::DNSFlags dns_flags;
+    CaptureDNS::Rcode response_rcode;
+    uint16_t query_qdcount;
+    uint16_t query_ancount;
+    uint16_t query_arcount;
+    uint16_t query_nscount;
+    byte_string query_name;
+    CaptureDNS::QueryClass query_class;
+    CaptureDNS::QueryType query_type;
+    uint32_t rr_ttl;
+    byte_string rr_rdata;
+    uint16_t query_udp_size;
+    byte_string query_opt_rdata;
+    uint8_t query_edns_version;
+    block_cbor::QueryResponseType qr_type;
+    std::string response_processing_bailiwick;
+    bool response_processing_from_cache;
+    uint16_t query_size;
+    uint16_t response_size;
+
+    opt.add_options()
+        ("ip-header.time-offset",
+         po::value(&time_offset),
+         "time offset default.")
+        ("ip-header.response-delay",
+         po::value(&response_delay),
+         "response delay default.")
+        ("ip-header.client-address",
+         po::value(&client_address),
+         "client address default.")
+        ("ip-header.client-port",
+         po::value(&client_port),
+         "client port default.")
+        ("ip-header.client-hoplimit",
+         po::value(&client_hoplimit),
+         "client hoplimit default.")
+        ("ip-header.server-address",
+         po::value(&server_address),
+         "server address default.")
+        ("ip-header.server-port",
+         po::value(&server_port),
+         "server port default.")
+        ("ip-header.qr-transport-flags",
+         po::value(&transport),
+         "transport flags default.")
+
+        ("dns-header.transaction-id",
+         po::value(&transaction_id),
+         "transaction id default.")
+        ("dns-header.query-opcode",
+         po::value(&query_opcode),
+         "query opcode default.")
+        ("dns-header.query-rcode",
+         po::value(&query_rcode),
+         "query rcode default.")
+        ("dns-header.dns-flags",
+         po::value(&dns_flags),
+         "DNS flags default.")
+        ("dns-header.response-rcode",
+         po::value(&response_rcode),
+         "response rcode default.")
+        ("dns-header.query-qdcount",
+         po::value(&query_qdcount),
+         "query QDCOUNT default.")
+        ("dns-header.query-ancount",
+         po::value(&query_ancount),
+         "query ANCOUNT default.")
+        ("dns-header.query-arcount",
+         po::value(&query_arcount),
+         "query ARCOUNT default.")
+        ("dns-header.query-nscount",
+         po::value(&query_nscount),
+         "query NSCOUNT default.")
+
+        ("dns-payload.query-name",
+         po::value<std::string>(),
+         "query name default.")
+        ("dns-payload.query-class",
+         po::value(&query_class),
+         "query class default.")
+        ("dns-payload.query-type",
+         po::value(&query_type),
+         "query type default.")
+        ("dns-payload.rr-ttl",
+         po::value(&rr_ttl),
+         "RR TTL default.")
+        ("dns-payload.rr-rdata",
+         po::value<std::string>(),
+         "RR RDATA default.")
+        ("dns-payload.query-udp-size",
+         po::value(&query_udp_size),
+         "query UDP size default.")
+        ("dns-payload.query-opt-data",
+         po::value<std::string>(),
+         "query OPT RDATA default.")
+        ("dns-payload.query-edns-version",
+         po::value(&query_edns_version),
+         "query EDNS version default.")
+
+        ("dns-meta-data.qr-type",
+         po::value(&qr_type),
+         "query/response type default.")
+        ("dns-meta-data.response-processing-bailiwick",
+         po::value(&response_processing_bailiwick),
+         "response processing bailiwick default.")
+        ("dns-meta-data.response-processing-from-cache",
+         po::value(&response_processing_from_cache),
+         "response processing from cache default.")
+        ("dns-meta-data.query-size",
+         po::value(&query_size),
+         "query size default.")
+        ("dns-meta-data.response-size",
+         po::value(&response_size),
+         "response size default.")
+        ;
+
+    if ( boost::filesystem::exists(defaultsfile) )
+    {
+        std::ifstream defaults(defaultsfile);
+        if ( defaults.fail() )
+            throw po::error("Can't open defaults file " + defaultsfile);
+        po::store(po::parse_config_file(defaults, opt), res);
+    }
+
+    po::notify(res);
+
+    if ( res.count("ip-header.time-offset") )
+        this->time_offset = time_offset;
+    if ( res.count("ip-header.response-delay") )
+        this->response_delay = response_delay;
+    if ( res.count("ip-header.client-address") )
+        this->client_address = client_address;
+    if ( res.count("ip-header.client-port") )
+        this->client_port = client_port;
+    if ( res.count("ip-header.client-hoplimit") )
+        this->client_hoplimit = client_hoplimit;
+    if ( res.count("ip-header.server-address") )
+        this->server_address = server_address;
+    if ( res.count("ip-header.server-port") )
+        this->server_port = server_port;
+    if ( res.count("ip-header.qr-transport-flags") )
+        this->transport = transport;
+
+    if ( res.count("dns-header.transaction-id") )
+        this->transaction_id = transaction_id;
+    if ( res.count("dns-header.query-opcode") )
+        this->query_opcode = query_opcode;
+    if ( res.count("dns-header.query-rcode") )
+        this->query_rcode = query_rcode;
+    if ( res.count("dns-header.dns-flags") )
+        this->dns_flags = dns_flags;
+    if ( res.count("dns-header.response-rcode") )
+        this->response_rcode = response_rcode;
+    if ( res.count("dns-header.query-qdcount") )
+        this->query_qdcount = query_qdcount;
+    if ( res.count("dns-header.query-ancount") )
+        this->query_ancount = query_ancount;
+    if ( res.count("dns-header.query-arcount") )
+        this->query_arcount = query_arcount;
+    if ( res.count("dns-header.query-nscount") )
+        this->query_nscount = query_nscount;
+
+    if ( res.count("dns-payload.query-name") )
+        this->query_name = CaptureDNS::encode_domain_name(res["dns-payload.query-name"].as<std::string>());
+    if ( res.count("dns-payload.query-class") )
+        this->query_class = query_class;
+    if ( res.count("dns-payload.query-type") )
+        this->query_type = query_type;
+    if ( res.count("dns-payload.rr-ttl") )
+        this->rr_ttl = rr_ttl;
+    if ( res.count("dns-payload.rr-rdata") )
+        this->rr_rdata = to_byte_string(res["dns-payload.rr-rdata"].as<std::string>());
+    if ( res.count("dns-payload.query_udp_size") )
+        this->query_udp_size = query_udp_size;
+    if ( res.count("dns-payload.query-opt-data") )
+        this->query_opt_rdata = to_byte_string(res["dns-payload.query-opt-data"].as<std::string>());
+    if ( res.count("dns-payload.query-edns-version") )
+        this->query_edns_version = query_edns_version;
+
+    if ( res.count("dns-meta-data.qr-type") )
+        this->qr_type = qr_type;
+    if ( res.count("dns-meta-data.response-processing-bailiwick") )
+        this->response_processing_bailiwick = response_processing_bailiwick;
+    if ( res.count("dns-meta-data.response-processing-from-cache") )
+        this->response_processing_from_cache = response_processing_from_cache;
+    if ( res.count("dns-meta-data.query-size") )
+        this->query_size = query_size;
+    if ( res.count("dns-meta-data.response-size") )
+        this->response_size = response_size;
 }
 
 HintsExcluded::HintsExcluded()

@@ -38,6 +38,192 @@ public:
 };
 
 /**
+ * \class Defaults
+ * \brief Default values (if supplied) for items that may be omitted by hints.
+ */
+class Defaults
+{
+public:
+    /*
+     * ip-header items
+     */
+
+    /**
+     * \brief default time offset.
+     */
+    boost::optional<std::chrono::microseconds> time_offset;
+
+    /**
+     * \brief default response delay.
+     */
+    boost::optional<std::chrono::microseconds> response_delay;
+
+    /**
+     * \brief default client address.
+     */
+    boost::optional<IPAddress> client_address;
+
+    /**
+     * \brief default client port.
+     */
+    boost::optional<uint16_t> client_port;
+
+    /**
+     * \brief default client hoplimit.
+     */
+    boost::optional<unsigned> client_hoplimit;
+
+    /**
+     * \brief default client address.
+     */
+    boost::optional<IPAddress> server_address;
+
+    /**
+     * \brief default client port.
+     */
+    boost::optional<uint16_t> server_port;
+
+    /**
+     * \brief default transport flags.
+     */
+    boost::optional<block_cbor::TransportFlags> transport;
+
+    /*
+     * dns-header items
+     */
+
+    /**
+     * \brief default transaction id.
+     */
+    boost::optional<uint16_t> transaction_id;
+
+    /**
+     * \brief default query opcode.
+     */
+    boost::optional<CaptureDNS::Opcode> query_opcode;
+
+    /**
+     * \brief default query rcode.
+     */
+    boost::optional<CaptureDNS::Rcode> query_rcode;
+
+    /**
+     * \brief default DNS flags.
+     */
+    boost::optional<block_cbor::DNSFlags> dns_flags;
+
+    /**
+     * \brief default response rcode.
+     */
+    boost::optional<CaptureDNS::Rcode> response_rcode;
+
+    /**
+     * \brief default query QDCOUNT.
+     */
+    boost::optional<uint16_t> query_qdcount;
+
+    /**
+     * \brief default query ANCOUNT.
+     */
+    boost::optional<uint16_t> query_ancount;
+
+    /**
+     * \brief default query ARCOUNT.
+     */
+    boost::optional<uint16_t> query_arcount;
+
+    /**
+     * \brief default query NSCOUNT.
+     */
+    boost::optional<uint16_t> query_nscount;
+
+    /*
+     * dns-payload items
+     */
+
+    /**
+     * \brief default query name.
+     */
+    boost::optional<byte_string> query_name;
+
+    /**
+     * \brief default query class.
+     */
+    boost::optional<CaptureDNS::QueryClass> query_class;
+
+    /**
+     * \brief default query type.
+     */
+    boost::optional<CaptureDNS::QueryType> query_type;
+
+    /**
+     * \brief default RR TTL.
+     */
+    boost::optional<uint32_t> rr_ttl;
+
+    /**
+     * \brief default RR RDATA.
+     */
+    boost::optional<byte_string> rr_rdata;
+
+    /**
+     * \brief default query OPT UDP size.
+     */
+    boost::optional<uint16_t> query_udp_size;
+
+    /**
+     * \brief default query OPT RDATA.
+     */
+    boost::optional<byte_string> query_opt_rdata;
+
+    /**
+     * \brief default query EDNS version.
+     */
+    boost::optional<uint8_t> query_edns_version;
+
+    /*
+     * dns-meta-data items
+     */
+
+    /**
+     * \brief default query response type.
+     */
+    boost::optional<block_cbor::QueryResponseType> qr_type;
+
+    /**
+     * \brief default response processing bailiwick.
+     */
+    boost::optional<std::string> response_processing_bailiwick;
+
+    /**
+     * \brief default response processing from cache.
+     */
+    boost::optional<bool> response_processing_from_cache;
+
+    /**
+     * \brief default query size.
+     */
+    boost::optional<uint16_t> query_size;
+
+    /**
+     * \brief default response size.
+     */
+    boost::optional<uint16_t> response_size;
+
+    /**
+     * \brief Default Constructor.
+     */
+    Defaults();
+
+    /**
+     * \brief Read config file and action it.
+     *
+     * \param defaultsfile              location of defaults file.
+     */
+    void read_defaults_file(const std::string& defaultsfile);
+};
+
+/**
  * \class HintsExcluded
  * \brief Configuration relating to the hints excluded file.
  *
@@ -713,6 +899,11 @@ private:
     std::string excludes_file_;
 
     /**
+     * \brief the defaults hints file, if any.
+     */
+    std::string defaults_file_;
+
+    /**
      * \brief variable map from command line only parse.
      */
     boost::program_options::variables_map cmdline_vars_;
@@ -736,7 +927,7 @@ private:
      * \brief Positional options.
      */
     boost::program_options::positional_options_description positional_options_;
-    
+
     /**
      * \brief Helper method to print output options
      */

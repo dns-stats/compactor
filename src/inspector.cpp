@@ -80,6 +80,11 @@ struct Options
      * \brief pseudo-anonymisation, if to use.
      */
     boost::optional<PseudoAnonymise> pseudo_anon;
+
+    /**
+     * \brief output defaults.
+     */
+    Defaults defaults;
 };
 
 static void report(std::ostream& os,
@@ -203,6 +208,7 @@ int main(int ac, char *av[])
 
     init_logging();
 
+    std::string defaults_file_name;
     std::string output_file_name;
     std::string compression_type;
 #if ENABLE_PSEUDOANONYMISATION
@@ -220,6 +226,9 @@ int main(int ac, char *av[])
     visible.add_options()
         ("help,h", "show this help message.")
         ("version,v", "show version information.")
+        ("defaultsfile",
+         po::value<std::string>(&defaults_file_name)->default_value(DEFAULTSFILE),
+         "default values file.")
         ("output,o",
          po::value<std::string>(&output_file_name),
          "output file name.")
@@ -386,6 +395,7 @@ int main(int ac, char *av[])
         pcap_options.query_only = ( vm.count("query-only") != 0 );
         options.debug_qr = ( vm.count("debug-qr") != 0 );
         options.generate_stats = ( vm.count("stats") != 0 );
+        options.defaults.read_defaults_file(defaults_file_name);
 
         options.generate_output = true;
         options.generate_info = true;

@@ -160,6 +160,19 @@ namespace block_cbor {
     };
 
     /**
+     * \brief Query/Response type.
+     */
+    enum class QueryResponseType
+    {
+        stub,
+        client,
+        resolver,
+        auth,
+        forwarder,
+        tool,
+    };
+
+    /**
      * \enum Maps
      * \brief The map types in C-DNS.
      */

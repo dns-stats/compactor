@@ -107,6 +107,33 @@ public:
     static const std::vector<Opcode> OPCODES;
 
     /**
+     * \brief DNS rcodes.
+     */
+    enum Rcode
+    {
+        NOERROR = 0,
+        FORMERR,
+        SERVFAIL,
+        NXDOMAIN,
+        NOTIMP,
+        REFUSED,
+        YXDOMAIN,
+        YXRRSET,
+        NOTAUTH,
+        NOTZONE,
+        DSOTYPENI,
+        BADVERS = 16,
+        BADSIG,
+        BADKEY,
+        BADTIME,
+        BADMODE,
+        BADNAME,
+        BADALG,
+        BADTRUNC,
+        BADCOOKIE
+    };
+
+    /**
      * \brief Query types enum.
      */
     enum QueryType
@@ -213,6 +240,7 @@ public:
         /**
          * \endcond
          */
+        CLASS_NONE = 254,
         CLASS_ANY = 255
     };
 
