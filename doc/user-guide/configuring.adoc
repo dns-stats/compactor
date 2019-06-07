@@ -385,8 +385,8 @@ The excluded fields file replaces the deprecated *include* functionality current
 
 IMPORTANT: Users must use either the deprecated *include* configuration options or the new excluded fields file.
 
-If the excluded fields file exists and there are *include* lines in the configuration file an error will be
-logged and the _compactor_ will exit. 
+If the excluded fields file exists and there are *include* lines in the configuration file or provided on the command
+line an error will be logged and the _compactor_ will exit. 
 
 If the excluded fields file exists then the _compactor_ will act as if *include=all* was present. The excluded fields
 file then controls what fields are *excluded* from the C-DNS output.
@@ -406,7 +406,7 @@ If installed from a binary package on Linux, a sample excluded fields file will 
 
 Both installing via binary packages and installing using the source distribution will install a sample
 `excluded_fields.conf.sample` file. This file (with the .sample ending removed) can be used to specify
-which fields to be excluded from the C-DNS output. In the sample all the fields are commented out so all 
+which fields are to be excluded from the C-DNS output. In the sample all the fields are commented out so all 
 fields would be collected in the C-DNS.
 The fields are specified in logical groups. 
 
