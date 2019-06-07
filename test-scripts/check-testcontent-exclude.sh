@@ -24,15 +24,20 @@ tmpdir=`mktemp -d -t "check-testcontent-exclude.XXXXXX"`
 
 cleanup()
 {
-    #rm -rf $tmpdir
+    rm -rf $tmpdir
     exit $1
 }
 
 trap "cleanup 1" HUP INT TERM
 
 
+# Check compactor fails when given excludes AND include.
+$COMP -c /dev/null --excludesfile $EXCLUDE -n all --omit-system-id -o $tmpdir/out.cbor $DATAFILE
+if [ $? -eq 0 ]; then
+    cleanup 1
+fi
 
-$COMP -c /dev/null --excludesfile $EXCLUDE --omit-system-id -n all -o $tmpdir/out.cbor $DATAFILE
+$COMP -c /dev/null --excludesfile $EXCLUDE --omit-system-id -o $tmpdir/out.cbor $DATAFILE
 if [ $? -ne 0 ]; then
     cleanup 1
 fi

@@ -457,8 +457,9 @@ public:
      * \brief Read config file and action it.
      *
      * \param excludesfile              location of excludes file.
+     * \result <code>true</code> if a file exists.
      */
-    void read_excludes_file(const std::string& excludesfile);
+    bool read_excludes_file(const std::string& excludesfile);
 
     /**
      * \brief Generate query response hint flags value for storage hints.

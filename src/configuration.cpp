@@ -501,8 +501,13 @@ po::variables_map Configuration::reread_config_file()
 
     po::notify(res);
     set_config_items(res);
-    exclude_hints.read_excludes_file(excludes_file_);
-    exclude_hints.set_section_excludes(output_options_queries, output_options_responses);
+    if ( exclude_hints.read_excludes_file(excludes_file_) )
+    {
+        if ( output_options_queries != 0 || output_options_responses != 0 )
+            throw po::error("Can't specify 'include' when using excludes file.");
+    }
+    else
+        exclude_hints.set_section_excludes(output_options_queries, output_options_responses);
 
     return res;
 }
@@ -1645,21 +1650,14 @@ HintsExcluded::HintsExcluded()
 
 void HintsExcluded::set_section_excludes(int output_options_queries, int output_options_responses)
 {
-    if ( !query_question_section )
-        query_question_section = !(output_options_queries & Configuration::EXTRA_QUESTIONS);
-    if ( !query_answer_section )
-        query_answer_section = !(output_options_queries & Configuration::ANSWERS);
-    if ( !query_additional_section )
-        query_additional_section = !(output_options_queries & Configuration::ADDITIONALS);
-    if ( !query_authority_section )
-        query_authority_section = !(output_options_queries & Configuration::AUTHORITIES);
+    query_question_section = !(output_options_queries & Configuration::EXTRA_QUESTIONS);
+    query_answer_section = !(output_options_queries & Configuration::ANSWERS);
+    query_additional_section = !(output_options_queries & Configuration::ADDITIONALS);
+    query_authority_section = !(output_options_queries & Configuration::AUTHORITIES);
 
-    if ( !response_answer_section )
-        response_answer_section = !(output_options_responses & Configuration::ANSWERS);
-    if ( !response_additional_section )
-        response_additional_section = !(output_options_responses & Configuration::ADDITIONALS);
-    if ( !response_authority_section )
-        response_authority_section = !(output_options_responses & Configuration::AUTHORITIES);
+    response_answer_section = !(output_options_responses & Configuration::ANSWERS);
+    response_additional_section = !(output_options_responses & Configuration::ADDITIONALS);
+    response_authority_section = !(output_options_responses & Configuration::AUTHORITIES);
 }
 
 void HintsExcluded::get_section_excludes(int& output_options_queries, int& output_options_responses) const
@@ -1687,9 +1685,10 @@ void HintsExcluded::get_section_excludes(int& output_options_queries, int& outpu
         output_options_responses |= Configuration::ADDITIONALS;
 }
 
-void HintsExcluded::read_excludes_file(const std::string& excludesfile)
+bool HintsExcluded::read_excludes_file(const std::string& excludesfile)
 {
     po::variables_map res;
+    bool exists = false;
 
     if ( boost::filesystem::exists(excludesfile) )
     {
@@ -1717,9 +1716,11 @@ void HintsExcluded::read_excludes_file(const std::string& excludesfile)
 
         std::istringstream is(config);
         po::store(po::parse_config_file(is, excludes_file_options_), res);
+        exists = true;
     }
 
     po::notify(res);
+    return exists;
 }
 
 block_cbor::QueryResponseHintFlags HintsExcluded::get_query_response_hints() const
