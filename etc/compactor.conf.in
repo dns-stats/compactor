@@ -64,7 +64,7 @@ raw-pcap=@DSLOCALSTATEDIR@/pcap/raw/%Y%m%d-%H%M%S_%{rotate-period}_%{interface}.
 # ignored-pcap=
 ignored-pcap=@DSLOCALSTATEDIR@/pcap/ignored/%Y%m%d-%H%M%S_%{rotate-period}_%{interface}.ignored.pcap
 
-# The use of include lines is deprecated, See the user_guide for more information.
+# The use of include lines is deprecated. See the user_guide for more information.
 # Specify which optional sections to capture. Value may be one of:
 # query-questions, query-answers, query-authority, query-additional,
 # response-questions, response-answers, response-authority, response-additional,

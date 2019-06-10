@@ -62,12 +62,12 @@ Command options are given on the command line.
 *-l, --list-interfaces*::
   List all network interfaces from which DNS traffic may be captured.
 
-*-c, --configfile*::
-  The configuration file to read. If not specified, the default configuration file
+*-c, --configfile* [_arg_]::
+  Read configuration from file _arg_. If not specified, the default configuration file
   `/etc/dns-stats-compactor/compactor.conf` is read if present.
 
-*--excludesfile*::
-  The excludes file to read. If not specified, the default configuration file
+*--excludesfile* [_arg_]::
+  Read excludes from file _arg_. If not specified, the default configuration file
   `/etc/dns-stats-compactor/excluded_fields.conf` is read if present.
 
 *--debug-dns*::
