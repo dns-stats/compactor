@@ -22,6 +22,7 @@
 #include "catch.hpp"
 
 #include "baseoutputwriter.hpp"
+#include "configuration.hpp"
 #include "cborencoder.hpp"
 #include "dnsmessage.hpp"
 #include "queryresponse.hpp"
@@ -122,7 +123,7 @@ namespace {
         {
             return !( *this == rhs );
         }
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields&)
+        void readCbor(CborBaseDecoder& dec, const FileVersionFields&, const Defaults&)
         {
             val = dec.read_unsigned();
         }
@@ -1722,9 +1723,61 @@ SCENARIO("BlockData max items works", "[block]")
     GIVEN("A sample BlockData")
     {
         QueryResponseItem qri1;
-        QueryResponseItem qri2;
+        qri1.qr_flags = 0x1f;
+        qri1.client_address = 1;
+        qri1.client_port = 2;
+        qri1.hoplimit = 20;
+        qri1.id = 21;
+        qri1.tstamp = std::chrono::system_clock::time_point(std::chrono::microseconds(5));
+        qri1.response_delay = std::chrono::microseconds(10);
+        qri1.qname = 5;
+        qri1.signature = 6;
+        qri1.query_size = 10;
+        qri1.response_size = 20;
+        qri1.query_extra_info = make_unique<QueryResponseExtraInfo>();
+        qri1.query_extra_info->questions_list = 12;
+        qri1.query_extra_info->answers_list = 13;
+        qri1.query_extra_info->authority_list = 14;
+        qri1.query_extra_info->additional_list = 15;
+
+        qri1.response_extra_info = make_unique<QueryResponseExtraInfo>();
+        qri1.response_extra_info->questions_list = 16;
+        qri1.response_extra_info->answers_list = 17;
+        qri1.response_extra_info->authority_list = 18;
+        qri1.response_extra_info->additional_list = 19;
+
         qri1.client_address = qri1.qname = qri1.signature = 0;
+        qri1.tstamp = std::chrono::system_clock::time_point(std::chrono::microseconds(5));
+        qri1.response_delay = std::chrono::microseconds(10);
+
+        QueryResponseItem qri2;
+        qri2.qr_flags = 0x1f;
+        qri2.client_address = 1;
+        qri2.client_port = 2;
+        qri2.hoplimit = 20;
+        qri2.id = 21;
+        qri2.tstamp = std::chrono::system_clock::time_point(std::chrono::microseconds(5));
+        qri2.response_delay = std::chrono::microseconds(10);
+        qri2.qname = 5;
+        qri2.signature = 6;
+        qri2.query_size = 10;
+        qri2.response_size = 20;
+        qri2.query_extra_info = make_unique<QueryResponseExtraInfo>();
+        qri2.query_extra_info->questions_list = 12;
+        qri2.query_extra_info->answers_list = 13;
+        qri2.query_extra_info->authority_list = 14;
+        qri2.query_extra_info->additional_list = 15;
+
+        qri2.response_extra_info = make_unique<QueryResponseExtraInfo>();
+        qri2.response_extra_info->questions_list = 16;
+        qri2.response_extra_info->answers_list = 17;
+        qri2.response_extra_info->authority_list = 18;
+        qri2.response_extra_info->additional_list = 19;
+
         qri2.client_address = qri2.qname = qri2.signature = 0;
+        qri2.tstamp = std::chrono::system_clock::time_point(std::chrono::microseconds(5));
+        qri2.response_delay = std::chrono::microseconds(10);
+
         BlockParameters bp1, bp2;
         bp1.storage_parameters.max_block_items = 1;
         bp2.storage_parameters.max_block_items = 2;
@@ -1780,8 +1833,9 @@ SCENARIO("IndexVectorItems can be read", "[block]")
             {
                 IndexVectorItem iv1_r, iv2_r;
                 block_cbor::FileVersionFields fields;
-                iv1_r.readCbor(tcbd, fields);
-                iv2_r.readCbor(tcbd, fields);
+                Defaults defaults;
+                iv1_r.readCbor(tcbd, fields, defaults);
+                iv2_r.readCbor(tcbd, fields, defaults);
 
                 REQUIRE(iv1.vec == iv1_r.vec);
                 REQUIRE(iv2.vec == iv2_r.vec);
@@ -1814,8 +1868,9 @@ SCENARIO("ByteStringItems can be read", "[block]")
             {
                 ByteStringItem s1_r, s2_r;
                 block_cbor::FileVersionFields fields;
-                s1_r.readCbor(tcbd, fields);
-                s2_r.readCbor(tcbd, fields);
+                Defaults defaults;
+                s1_r.readCbor(tcbd, fields, defaults);
+                s2_r.readCbor(tcbd, fields, defaults);
 
                 REQUIRE(si1.str == s1_r.str);
                 REQUIRE(si2.str == s2_r.str);
@@ -1851,8 +1906,9 @@ SCENARIO("ClassTypes can be read", "[block]")
             {
                 ClassType ct1_r, ct2_r;
                 block_cbor::FileVersionFields fields;
-                ct1_r.readCbor(tcbd, fields);
-                ct2_r.readCbor(tcbd, fields);
+                Defaults defaults;
+                ct1_r.readCbor(tcbd, fields, defaults);
+                ct2_r.readCbor(tcbd, fields, defaults);
 
                 REQUIRE(ct1 == ct1_r);
                 REQUIRE(ct2 == ct2_r);
@@ -1889,8 +1945,9 @@ SCENARIO("Questions can be read", "[block]")
             {
                 Question q1_r, q2_r;
                 block_cbor::FileVersionFields fields;
-                q1_r.readCbor(tcbd, fields);
-                q2_r.readCbor(tcbd, fields);
+                Defaults defaults;
+                q1_r.readCbor(tcbd, fields, defaults);
+                q2_r.readCbor(tcbd, fields, defaults);
 
                 REQUIRE(q1 == q1_r);
                 REQUIRE(q2 == q2_r);
@@ -1932,8 +1989,9 @@ SCENARIO("ResourceRecords can be read", "[block]")
             {
                 ResourceRecord rr1_r, rr2_r;
                 block_cbor::FileVersionFields fields;
-                rr1_r.readCbor(tcbd, fields);
-                rr2_r.readCbor(tcbd, fields);
+                Defaults defaults;
+                rr1_r.readCbor(tcbd, fields, defaults);
+                rr2_r.readCbor(tcbd, fields, defaults);
 
                 REQUIRE(rr1 == rr1_r);
                 REQUIRE(rr2 == rr2_r);
@@ -1995,7 +2053,8 @@ SCENARIO("QueryResponseSignatures can be read", "[block]")
             {
                 QueryResponseSignature qs1_r;
                 block_cbor::FileVersionFields fields;
-                qs1_r.readCbor(tcbd, fields);
+                Defaults defaults;
+                qs1_r.readCbor(tcbd, fields, defaults);
 
                 REQUIRE(qs1 == qs1_r);
             }
@@ -2071,16 +2130,17 @@ SCENARIO("QueryResponseItems can be read", "[block]")
                 QueryResponseItem qri1_r;
                 block_cbor::FileVersionFields fields;
                 BlockParameters bp;
+                Defaults defaults;
                 bp.storage_parameters.ticks_per_second = 1000000;
-                qri1_r.readCbor(tcbd, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, fields);
+                qri1_r.readCbor(tcbd, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, fields, defaults);
 
                 REQUIRE(qri1.qr_flags == qri1_r.qr_flags);
                 REQUIRE(qri1.client_address == qri1_r.client_address);
                 REQUIRE(qri1.client_port == qri1_r.client_port);
                 REQUIRE(qri1.hoplimit == qri1_r.hoplimit);
                 REQUIRE(qri1.id == qri1_r.id);
-                REQUIRE(qri1.tstamp == qri1_r.tstamp);
-                REQUIRE(qri1.response_delay == qri1_r.response_delay);
+                REQUIRE(*qri1.tstamp == *qri1_r.tstamp);
+                REQUIRE(*qri1.response_delay == *qri1_r.response_delay);
                 REQUIRE(qri1.qname == qri1_r.qname);
                 REQUIRE(qri1.signature == qri1_r.signature);
                 REQUIRE(qri1.query_size == qri1_r.query_size);
@@ -2187,7 +2247,8 @@ SCENARIO("MalformedMessageData can be read", "[block]")
             {
                 MalformedMessageData mmd1_r;
                 block_cbor::FileVersionFields fields;
-                mmd1_r.readCbor(tcbd, fields);
+                Defaults defaults;
+                mmd1_r.readCbor(tcbd, fields, defaults);
 
                 REQUIRE(mmd1 == mmd1_r);
             }
@@ -2227,7 +2288,7 @@ SCENARIO("MalformedMessageItem item can be read", "[block]")
                 bp.storage_parameters.ticks_per_second = 1000000;
                 mm1_r.readCbor(tcbd, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, fields);
 
-                REQUIRE(mm1.tstamp == mm1_r.tstamp);
+                REQUIRE(*mm1.tstamp == *mm1_r.tstamp);
                 REQUIRE(mm1.client_address == mm1_r.client_address);
                 REQUIRE(mm1.client_port == mm1_r.client_port);
                 REQUIRE(mm1.message_data == mm1_r.message_data);
@@ -2257,7 +2318,8 @@ SCENARIO("HeaderList items can be read", "[block]")
             {
                 HeaderList<IntItem> hl_r;
                 block_cbor::FileVersionFields fields;
-                hl_r.readCbor(tcbd, fields);
+                Defaults defaults;
+                hl_r.readCbor(tcbd, fields, defaults);
 
                 REQUIRE(hl_r.size() == 3);
                 REQUIRE(hl_r[0].val == 1);
@@ -2282,7 +2344,8 @@ SCENARIO("HeaderList items can be read", "[block]")
             {
                 HeaderList<IntItem> hl_r(true);
                 block_cbor::FileVersionFields fields;
-                hl_r.readCbor(tcbd, fields);
+                Defaults defaults;
+                hl_r.readCbor(tcbd, fields, defaults);
 
                 REQUIRE(hl_r.size() == 3);
                 REQUIRE(hl_r[1].val == 1);
@@ -2355,7 +2418,8 @@ SCENARIO("BlockData items can be read", "[block]")
             {
                 BlockData cd_r(bpv);
                 block_cbor::FileVersionFields fields;
-                cd_r.readCbor(tcbd, fields);
+                Defaults defaults;
+                cd_r.readCbor(tcbd, fields, defaults);
 
                 REQUIRE(cd_r.earliest_time == cd.earliest_time);
             }
@@ -2410,7 +2474,8 @@ SCENARIO("BlockData items can be read", "[block]")
             {
                 BlockData cd_r(bpv, FileFormatVersion::format_10, 1);
                 block_cbor::FileVersionFields fields;
-                cd_r.readCbor(tcbd, fields);
+                Defaults defaults;
+                cd_r.readCbor(tcbd, fields, defaults);
 
                 REQUIRE(cd_r.earliest_time == cd.earliest_time);
             }

@@ -32,6 +32,7 @@
 #include "packetstatistics.hpp"
 
 // Defined in configuration.hpp, which in turn pulls in this file.
+class Defaults;
 class HintsExcluded;
 
 namespace boost {
@@ -564,13 +565,16 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values. Unused.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values. Unused.
+         * \param defaults default values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields,
+                      const Defaults& defaults);
 
         /**
          * \brief Write the object contents to CBOR.
@@ -603,13 +607,16 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values. Unused.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values. Unused.
+         * \param defaults default values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields,
+                      const Defaults& defaults);
 
         /**
          * \brief Write the object contents to CBOR.
@@ -634,12 +641,12 @@ namespace block_cbor {
         /**
          * \brief the DNS Class.
          */
-        CaptureDNS::QueryClass qclass;
+        boost::optional<CaptureDNS::QueryClass> qclass;
 
         /**
          * \brief the DNS Type.
          */
-        CaptureDNS::QueryType qtype;
+        boost::optional<CaptureDNS::QueryType> qtype;
 
         /**
          * \brief return the key to be used for storing values.
@@ -672,13 +679,16 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
+         * \param defaults default values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields,
+                      const Defaults& defaults);
 
         /**
          * \brief Write the object contents to CBOR.
@@ -748,13 +758,16 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
+         * \param defaults default values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields,
+                      const Defaults& defaults);
 
         /**
          * \brief Write the object contents to CBOR.
@@ -796,7 +809,7 @@ namespace block_cbor {
         /**
          * \brief RR TTL.
          */
-        uint32_t ttl;
+        boost::optional<uint32_t> ttl;
 
         /**
          * \brief index of RR RDATA.
@@ -835,13 +848,16 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
+         * \param defaults default values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields,
+                      const Defaults& defaults);
 
         /**
          * \brief Write the object contents to CBOR.
@@ -888,37 +904,37 @@ namespace block_cbor {
         /**
          * \brief port of DNS server.
          */
-        uint16_t server_port;
+        boost::optional<uint16_t> server_port;
 
         /**
          * \brief transport flags.
          */
-        uint8_t qr_transport_flags;
+        boost::optional<uint8_t> qr_transport_flags;
 
         /**
          * \brief query RCODE, incorporating extended RCODE.
          */
-        uint16_t query_rcode;
+        boost::optional<uint16_t> query_rcode;
 
         /**
          * \brief response RCODE, incorporating extended RCODE.
          */
-        uint16_t response_rcode;
+        boost::optional<uint16_t> response_rcode;
 
         /**
          * \brief query OPCODE.
          */
-        CaptureDNS::Opcode query_opcode;
+        boost::optional<CaptureDNS::Opcode> query_opcode;
 
         /**
          * \brief query EDNS version.
          */
-        uint8_t query_edns_version;
+        boost::optional<uint8_t> query_edns_version;
 
         /**
          * \brief query EDNS UDP size
          */
-        uint16_t query_edns_payload_size;
+        boost::optional<uint16_t> query_edns_payload_size;
 
         /**
          * \brief query OPT RDATA.
@@ -928,7 +944,7 @@ namespace block_cbor {
         /**
          * \brief DNS flags.
          */
-        uint16_t dns_flags;
+        boost::optional<uint16_t> dns_flags;
 
         /**
          * \brief query class/type.
@@ -938,22 +954,22 @@ namespace block_cbor {
         /**
          * \brief query or response QDCOUNT.
          */
-        uint16_t qdcount;
+        boost::optional<uint16_t> qdcount;
 
         /**
          * \brief query ANCOUNT.
          */
-        uint16_t query_ancount;
+        boost::optional<uint16_t> query_ancount;
 
         /**
          * \brief query NSCOUNT.
          */
-        uint16_t query_nscount;
+        boost::optional<uint16_t> query_nscount;
 
         /**
          * \brief query ARCOUNT.
          */
-        uint16_t query_arcount;
+        boost::optional<uint16_t> query_arcount;
 
         /**
          * \brief return the key to be used for storing values.
@@ -1016,13 +1032,16 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
+         * \param defaults default values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields,
+                      const Defaults& defaults);
 
         /**
          * \brief Write the object contents to CBOR.
@@ -1093,27 +1112,27 @@ namespace block_cbor {
         /**
          * \brief client port.
          */
-        uint16_t client_port;
+        boost::optional<uint16_t> client_port;
 
         /**
          * \brief client hop limit.
          */
-        uint8_t hoplimit;
+        boost::optional<uint8_t> hoplimit;
 
         /**
          * \brief the transaction ID.
          */
-        uint16_t id;
+        boost::optional<uint16_t> id;
 
         /**
          * \brief the timestamp.
          */
-        std::chrono::system_clock::time_point tstamp;
+        boost::optional<std::chrono::system_clock::time_point> tstamp;
 
         /**
          * \brief the response delay.
          */
-        std::chrono::nanoseconds response_delay;
+        boost::optional<std::chrono::nanoseconds> response_delay;
 
         /**
          * \brief the first query QNAME.
@@ -1128,12 +1147,12 @@ namespace block_cbor {
         /**
          * \brief the size of the DNS query message.
          */
-        uint32_t query_size;
+        boost::optional<uint32_t> query_size;
 
         /**
          * \brief the size of the DNS response message.
          */
-        uint32_t response_size;
+        boost::optional<uint32_t> response_size;
 
         /**
          * \brief Optional extra query info.
@@ -1161,10 +1180,11 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec           CBOR stream to read from.
-         * \param earliest_time earliest time in block.
+         * \param dec              CBOR stream to read from.
+         * \param earliest_time    earliest time in block.
          * \param block_parameters parameters for this block.
-         * \param fields        translate map keys to internal values.
+         * \param fields           translate map keys to internal values.
+         * \param defaults         default values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
@@ -1172,7 +1192,8 @@ namespace block_cbor {
         void readCbor(CborBaseDecoder& dec,
                       const std::chrono::system_clock::time_point& earliest_time,
                       const BlockParameters& block_parameters,
-                      const FileVersionFields& fields);
+                      const FileVersionFields& fields,
+                      const Defaults& defaults);
 
         /**
          * \brief Write the object contents to CBOR.
@@ -1311,17 +1332,17 @@ namespace block_cbor {
         /**
          * \brief port of DNS server.
          */
-        uint16_t server_port;
+        boost::optional<uint16_t> server_port;
 
         /**
          * \brief transport flags.
          */
-        uint8_t mm_transport_flags;
+        boost::optional<uint8_t> mm_transport_flags;
 
         /**
          * \brief the message data.
          */
-        byte_string mm_payload;
+        boost::optional<byte_string> mm_payload;
 
         /**
          * \brief return the key to be used for storing values.
@@ -1357,13 +1378,16 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
+         * \param defaults default values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields,
+                      const Defaults& defaults);
 
         /**
          * \brief Write the object contents to CBOR.
@@ -1403,7 +1427,7 @@ namespace block_cbor {
         /**
          * \brief the timestamp.
          */
-        std::chrono::system_clock::time_point tstamp;
+        boost::optional<std::chrono::system_clock::time_point> tstamp;
 
         /**
          * \brief index of client address.
@@ -1413,7 +1437,7 @@ namespace block_cbor {
         /**
          * \brief client port.
          */
-        uint16_t client_port;
+        boost::optional<uint16_t> client_port;
 
         /**
          * \brief index of message data.
@@ -1641,13 +1665,16 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
+         * \param defaults default values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields,
+                      const Defaults& defaults)
         {
             bool indef;
             uint64_t n_elems = dec.readArrayHeader(indef);
@@ -1660,7 +1687,7 @@ namespace block_cbor {
                 }
 
                 T item;
-                item.readCbor(dec, fields);
+                item.readCbor(dec, fields, defaults);
                 add(item);
             }
         }
@@ -2055,13 +2082,16 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
+         * \param defaults default values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields,
+                      const Defaults& defaults);
 
         /**
          * \brief Read the block preamble.
@@ -2074,18 +2104,24 @@ namespace block_cbor {
         /**
          * \brief Read header tables from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
+         * \param defaults default values.
          */
-        void readHeaders(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readHeaders(CborBaseDecoder& dec,
+                         const FileVersionFields& fields,
+                         const Defaults& defaults);
 
         /**
          * \brief Read block query/response items from CBOR.
          *
-         * \param dec    CBOR decoder.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR decoder.
+         * \param fields   translate map keys to internal values.
+         * \param defaults default values.
          */
-        void readItems(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readItems(CborBaseDecoder& dec,
+                       const FileVersionFields& fields,
+                         const Defaults& defaults);
 
         /**
          * \brief Read block statistics from CBOR. Accumulate the stats over

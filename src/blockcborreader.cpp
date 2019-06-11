@@ -24,11 +24,14 @@
 
 #include "blockcborreader.hpp"
 
-BlockCborReader::BlockCborReader(CborBaseDecoder& dec, Configuration &config,
+BlockCborReader::BlockCborReader(CborBaseDecoder& dec,
+                                 Configuration& config,
+                                 const Defaults& defaults,
                                  boost::optional<PseudoAnonymise> pseudo_anon)
     : dec_(dec), next_item_(0), need_block_(true),
       file_format_version_(block_cbor::FileFormatVersion::format_10),
       current_block_num_(0),
+      defaults_(defaults),
       pseudo_anon_(pseudo_anon)
 {
     readFileHeader(config);
@@ -411,7 +414,7 @@ bool BlockCborReader::readBlock()
         return false;
 
     block_->clear();
-    block_->readCbor(dec_, *fields_);
+    block_->readCbor(dec_, *fields_, defaults_);
 
     // Accumulate address events counts.
     for ( auto& aeci : block_->address_event_counts )
@@ -445,26 +448,26 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
 
     const block_cbor::QueryResponseSignature& sig = block_->query_response_signatures[qri.signature];
     uint16_t dns_flags;
-    uint8_t transport_flags = block_cbor::convert_transport_flags(sig.qr_transport_flags, file_format_version_);
+    uint8_t transport_flags = block_cbor::convert_transport_flags(*sig.qr_transport_flags, file_format_version_);
     bool ipv6 = (transport_flags & block_cbor::IPV6);
 
     if ( sig.qr_flags & block_cbor::QUERY_ONLY )
     {
         query = make_unique<DNSMessage>();
-        query->timestamp = qri.tstamp;
+        query->timestamp = *qri.tstamp;
         query->tcp = transport_flags & block_cbor::TCP;
-        query->clientIP = string_to_addr(block_->ip_addresses[qri.client_address].str, ipv6);
-        query->serverIP = string_to_addr(block_->ip_addresses[sig.server_address].str, ipv6);
-        query->clientPort = qri.client_port;
-        query->serverPort = sig.server_port;
-        query->hoplimit = qri.hoplimit;
+        query->clientIP = string_to_addr(block_->ip_addresses[*qri.client_address].str, ipv6);
+        query->serverIP = string_to_addr(block_->ip_addresses[*sig.server_address].str, ipv6);
+        query->clientPort = *qri.client_port;
+        query->serverPort = *sig.server_port;
+        query->hoplimit = *qri.hoplimit;
         query->dns.type(CaptureDNS::QRType::QUERY);
-        query->dns.id(qri.id);
-        query->dns.opcode(sig.query_opcode);
-        query->dns.rcode(sig.query_rcode);
-        query->wire_size = qri.query_size;
+        query->dns.id(*qri.id);
+        query->dns.opcode(*sig.query_opcode);
+        query->dns.rcode(*sig.query_rcode);
+        query->wire_size = *qri.query_size;
 
-        dns_flags = block_cbor::convert_dns_flags(sig.dns_flags, file_format_version_);
+        dns_flags = block_cbor::convert_dns_flags(*sig.dns_flags, file_format_version_);
         block_cbor::set_dns_flags(*query, dns_flags, true);
 
         if ( qri.query_extra_info )
@@ -472,7 +475,7 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
 
         if ( sig.qr_flags & block_cbor::QUERY_HAS_OPT )
         {
-            byte_string opt_rdata = block_->names_rdatas[sig.query_opt_rdata].str;
+            byte_string opt_rdata = block_->names_rdatas[*sig.query_opt_rdata].str;
 #if ENABLE_PSEUDOANONYMISATION
             if ( pseudo_anon_ )
             {
@@ -484,18 +487,18 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
             }
 #endif
 
-            uint32_t ttl = ((sig.query_rcode >> 4) &0xff);
+            uint32_t ttl = ((*sig.query_rcode >> 4) &0xff);
             ttl <<= 8;
-            ttl |= (sig.query_edns_version & 0xff);
+            ttl |= (*sig.query_edns_version & 0xff);
             ttl <<= 16;
-            if ( sig.dns_flags & block_cbor::QUERY_DO )
+            if ( *sig.dns_flags & block_cbor::QUERY_DO )
                 ttl |= 0x8000;
             query->dns.add_additional(
                 CaptureDNS::resource(
                     "",
                     opt_rdata,
                     CaptureDNS::OPT,
-                    static_cast<CaptureDNS::QueryClass>(sig.query_edns_payload_size),
+                    static_cast<CaptureDNS::QueryClass>(*sig.query_edns_payload_size),
                     ttl));
         }
     }
@@ -503,20 +506,20 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
     if ( sig.qr_flags & block_cbor::RESPONSE_ONLY )
     {
         response = make_unique<DNSMessage>();
-        response->timestamp = qri.tstamp + qri.response_delay;
-        response->clientIP = string_to_addr(block_->ip_addresses[qri.client_address].str, ipv6);
-        response->serverIP = string_to_addr(block_->ip_addresses[sig.server_address].str, ipv6);
-        response->clientPort = qri.client_port;
-        response->serverPort = sig.server_port;
+        response->timestamp = *qri.tstamp + *qri.response_delay;
+        response->clientIP = string_to_addr(block_->ip_addresses[*qri.client_address].str, ipv6);
+        response->serverIP = string_to_addr(block_->ip_addresses[*sig.server_address].str, ipv6);
+        response->clientPort = *qri.client_port;
+        response->serverPort = *sig.server_port;
         response->tcp = transport_flags & block_cbor::TCP;
         response->dns.type(CaptureDNS::QRType::RESPONSE);
-        response->dns.id(qri.id);
-        response->dns.opcode(sig.query_opcode);
-        response->dns.rcode(sig.response_rcode);
-        response->wire_size = qri.response_size;
+        response->dns.id(*qri.id);
+        response->dns.opcode(*sig.query_opcode);
+        response->dns.rcode(*sig.response_rcode);
+        response->wire_size = *qri.response_size;
 
-        dns_flags = block_cbor::convert_dns_flags(sig.dns_flags, file_format_version_);
-        block_cbor::set_dns_flags(*response, sig.dns_flags, false);
+        dns_flags = block_cbor::convert_dns_flags(*sig.dns_flags, file_format_version_);
+        block_cbor::set_dns_flags(*response, *sig.dns_flags, false);
 
         if ( qri.response_extra_info )
             readExtraInfo(*response, *(qri.response_extra_info));
@@ -524,7 +527,7 @@ std::shared_ptr<QueryResponse> BlockCborReader::readQR()
 
     if ( sig.qr_flags & block_cbor::QR_HAS_QUESTION )
     {
-        CaptureDNS::query q = makeQuery(qri.qname, sig.query_classtype);
+        CaptureDNS::query q = makeQuery(*qri.qname, *sig.query_classtype);
         if ( query )
             query->dns.add_query(q);
         if ( response && !( sig.qr_flags & block_cbor::RESPONSE_HAS_NO_QUESTION ) ) {
@@ -570,24 +573,24 @@ void BlockCborReader::readExtraInfo(DNSMessage& dns, const block_cbor::QueryResp
 
 CaptureDNS::query BlockCborReader::makeQuery(block_cbor::index_t qname_id, block_cbor::index_t class_type_id) const
 {
-    byte_string qname = block_->names_rdatas[qname_id].str;
-    const block_cbor::ClassType& ct = block_->class_types[class_type_id];
+    byte_string qname = block_->names_rdatas[*qname_id].str;
+    const block_cbor::ClassType& ct = block_->class_types[*class_type_id];
     return CaptureDNS::query(qname,
-                            static_cast<CaptureDNS::QueryType>(ct.qtype),
-                            static_cast<CaptureDNS::QueryClass>(ct.qclass));
+                            static_cast<CaptureDNS::QueryType>(*ct.qtype),
+                            static_cast<CaptureDNS::QueryClass>(*ct.qclass));
 }
 
 CaptureDNS::resource BlockCborReader::makeResource(const block_cbor::ResourceRecord& rr) const
 {
-    byte_string name = block_->names_rdatas[rr.name].str;
-    const block_cbor::ClassType& ct = block_->class_types[rr.classtype];
-    byte_string rdata = block_->names_rdatas[rr.rdata].str;
+    byte_string name = block_->names_rdatas[*rr.name].str;
+    const block_cbor::ClassType& ct = block_->class_types[*rr.classtype];
+    byte_string rdata = block_->names_rdatas[*rr.rdata].str;
 
     CaptureDNS::resource res(name,
                              rdata,
-                             static_cast<CaptureDNS::QueryType>(ct.qtype),
-                             static_cast<CaptureDNS::QueryClass>(ct.qclass),
-                             rr.ttl);
+                             static_cast<CaptureDNS::QueryType>(*ct.qtype),
+                             static_cast<CaptureDNS::QueryClass>(*ct.qclass),
+                             *rr.ttl);
 
 #if ENABLE_PSEUDOANONYMISATION
     if ( ct.qtype == CaptureDNS::OPT && pseudo_anon_ )

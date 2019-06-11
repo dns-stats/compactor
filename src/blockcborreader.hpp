@@ -49,9 +49,12 @@ public:
      *
      * \param dec               the decoder to use.
      * \param config            the configuration.
+     * \param defaults          default values.
      * \param pseudo_anon       pseudo-anonymisation, if to use.
      */
-    BlockCborReader(CborBaseDecoder& dec, Configuration& config,
+    BlockCborReader(CborBaseDecoder& dec,
+                    Configuration& config,
+                    const Defaults& defaults,
                     boost::optional<PseudoAnonymise> pseudo_anon ={});
 
     /**
@@ -199,6 +202,11 @@ private:
      * \brief the decoder to read from.
      */
     CborBaseDecoder& dec_;
+
+    /**
+     * \brief the default values to use when reading.
+     */
+    const Defaults& defaults_;
 
     /**
      * \brief index of the next item to read from the current block.

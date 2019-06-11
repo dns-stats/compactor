@@ -173,7 +173,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         auto edns0 = q.dns.edns0();
         if ( edns0 )
         {
-            qs.query_rcode += edns0->extended_rcode() << 4;
+            qs.query_rcode = *qs.query_rcode + (edns0->extended_rcode() << 4);
             qri.qr_flags |= block_cbor::QUERY_HAS_OPT;
             qs.query_edns_payload_size = edns0->udp_payload_size();
             qs.query_edns_version = edns0->edns_version();
@@ -193,7 +193,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         auto edns0 = r.dns.edns0();
         if ( edns0 )
         {
-            qs.response_rcode += edns0->extended_rcode() << 4;
+            qs.response_rcode = *qs.response_rcode + (edns0->extended_rcode() << 4);
             qri.qr_flags |= block_cbor::RESPONSE_HAS_OPT;
         }
 

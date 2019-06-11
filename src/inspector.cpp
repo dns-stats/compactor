@@ -103,7 +103,7 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
 {
     Configuration config;
     CborStreamDecoder dec(is);
-    BlockCborReader cbr(dec, config, options.pseudo_anon);
+    BlockCborReader cbr(dec, config, options.defaults, options.pseudo_anon);
     std::chrono::system_clock::time_point earliest_time, latest_time;
 
     try

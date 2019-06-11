@@ -497,7 +497,9 @@ namespace block_cbor {
         collection_parameters.writeCbor(enc);
     }
 
-    void IndexVectorItem::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    void IndexVectorItem::readCbor(CborBaseDecoder& dec,
+                                   const FileVersionFields& fields,
+                                   const Defaults& defaults)
     {
         try
         {
@@ -514,7 +516,9 @@ namespace block_cbor {
         write_vector(vec, enc);
     }
 
-    void ByteStringItem::readCbor(CborBaseDecoder& dec, const FileVersionFields&)
+    void ByteStringItem::readCbor(CborBaseDecoder& dec,
+                                  const FileVersionFields&,
+                                  const Defaults&)
     {
         try
         {
@@ -531,8 +535,13 @@ namespace block_cbor {
         enc.write(str);
     }
 
-    void ClassType::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    void ClassType::readCbor(CborBaseDecoder& dec,
+                             const FileVersionFields& fields,
+                             const Defaults& defaults)
     {
+        qtype = defaults.query_type;
+        qclass = defaults.query_class;
+
         try
         {
             bool indef;
@@ -587,7 +596,9 @@ namespace block_cbor {
         return seed;
     }
 
-    void Question::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    void Question::readCbor(CborBaseDecoder& dec,
+                            const FileVersionFields& fields,
+                            const Defaults& defaults)
     {
         qname = classtype = boost::none;
 
@@ -658,9 +669,12 @@ namespace block_cbor {
         return seed;
     }
 
-    void ResourceRecord::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    void ResourceRecord::readCbor(CborBaseDecoder& dec,
+                                  const FileVersionFields& fields,
+                                  const Defaults& defaults)
     {
         name = classtype = rdata = boost::none;
+        ttl = defaults.rr_ttl;
 
         try
         {
@@ -752,9 +766,25 @@ namespace block_cbor {
         return seed;
     }
 
-    void QueryResponseSignature::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    void QueryResponseSignature::readCbor(CborBaseDecoder& dec,
+                                          const FileVersionFields& fields,
+                                          const Defaults& defaults)
     {
+        bool got_qr_sig_flags = false;
+
         server_address = query_opt_rdata = query_classtype = boost::none;
+        server_port = defaults.server_port;
+        qr_transport_flags = defaults.transport;
+        query_rcode = defaults.query_rcode;
+        response_rcode = defaults.response_rcode;
+        query_opcode = defaults.query_opcode;
+        query_edns_version = defaults.query_edns_version;
+        query_edns_payload_size = defaults.query_udp_size;
+        dns_flags = defaults.dns_flags;
+        qdcount = defaults.query_qdcount;
+        query_ancount = defaults.query_ancount;
+        query_arcount = defaults.query_arcount;
+        query_nscount = defaults.query_nscount;
 
         try
         {
@@ -788,6 +818,7 @@ namespace block_cbor {
 
                 case QueryResponseSignatureField::qr_sig_flags:
                     qr_flags = dec.read_unsigned();
+                    got_qr_sig_flags = true;
                     break;
 
                 case QueryResponseSignatureField::query_qd_count:
@@ -845,6 +876,9 @@ namespace block_cbor {
         {
             throw cbor_file_format_unexpected_item_error("QueryResponseSignature");
         }
+
+        if ( !got_qr_sig_flags )
+            throw cbor_file_format_error("QueryResponseSignature missing qr-sig_flags");
     }
 
     void QueryResponseSignature::writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude)
@@ -870,7 +904,7 @@ namespace block_cbor {
         if ( !exclude.server_address )
         {
             enc.write(server_address_index);
-            enc.write(*server_address);
+            enc.write(server_address);
         }
         if ( !exclude.server_port )
         {
@@ -945,7 +979,7 @@ namespace block_cbor {
                 if ( !exclude.query_opt_rdata )
                 {
                     enc.write(opt_rdata_index);
-                    enc.write(*query_opt_rdata);
+                    enc.write(query_opt_rdata);
                 }
             }
         }
@@ -1058,22 +1092,22 @@ namespace block_cbor {
             if ( ei.questions_list )
             {
                 enc.write(questions_index);
-                enc.write(ei.questions_list);
+                enc.write(*ei.questions_list);
             }
             if ( ei.answers_list )
             {
                 enc.write(answer_index);
-                enc.write(ei.answers_list);
+                enc.write(*ei.answers_list);
             }
             if ( ei.authority_list )
             {
                 enc.write(authority_index);
-                enc.write(ei.authority_list);
+                enc.write(*ei.authority_list);
             }
             if ( ei.additional_list )
             {
                 enc.write(additional_index);
-                enc.write(ei.additional_list);
+                enc.write(*ei.additional_list);
             }
             enc.writeBreak();
         }
@@ -1081,10 +1115,13 @@ namespace block_cbor {
 
     void QueryResponseItem::clear()
     {
-        qr_flags = client_port = hoplimit = id = query_size = response_size = 0;
-        tstamp = std::chrono::system_clock::time_point(std::chrono::microseconds(0));
-        response_delay = std::chrono::microseconds(0);
+        qr_flags = 0;
         client_address = qname = signature = boost::none;
+        client_port = id = boost::none;
+        hoplimit = boost::none;
+        tstamp = boost::none;
+        response_delay = boost::none;
+        query_size = response_size = boost::none;
         query_extra_info.release();
         response_extra_info.release();
     }
@@ -1092,12 +1129,21 @@ namespace block_cbor {
     void QueryResponseItem::readCbor(CborBaseDecoder& dec,
                                      const std::chrono::system_clock::time_point& earliest_time,
                                      const BlockParameters& block_parameters,
-                                     const FileVersionFields& fields)
+                                     const FileVersionFields& fields,
+                                     const Defaults& defaults)
     {
         try
         {
             qr_flags = 0;
             client_address = qname = signature = boost::none;
+            client_port = defaults.client_port;
+            hoplimit = defaults.client_hoplimit;
+            id = defaults.transaction_id;
+            if ( defaults.time_offset )
+                tstamp = earliest_time + *defaults.time_offset;
+            response_delay = defaults.response_delay;
+            query_size = defaults.query_size;
+            response_size = defaults.response_size;
 
             bool indef;
             uint64_t n_elems = dec.readMapHeader(indef);
@@ -1199,7 +1245,7 @@ namespace block_cbor {
         if ( !exclude.timestamp )
         {
             enc.write(time_index);
-            enc.write(std::chrono::duration_cast<std::chrono::nanoseconds>(tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
+            enc.write(std::chrono::duration_cast<std::chrono::nanoseconds>(*tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
         }
         if ( !exclude.client_address )
         {
@@ -1229,7 +1275,7 @@ namespace block_cbor {
              !exclude.response_delay )
         {
             enc.write(delay_index);
-            enc.write(response_delay.count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
+            enc.write((*response_delay).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
         }
 
         if ( ( qr_flags & QR_HAS_QUESTION ) && !exclude.query_name )
@@ -1356,13 +1402,17 @@ namespace block_cbor {
         return seed;
     }
 
-    void MalformedMessageData::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    void MalformedMessageData::readCbor(CborBaseDecoder& dec,
+                                        const FileVersionFields& fields,
+                                        const Defaults& defaults)
     {
         try
         {
             // No necessarily present, default to 0 on repeated read.
-            mm_transport_flags = 0;
+            mm_transport_flags = boost::none;
             server_address = boost::none;
+            server_port = boost::none;
+            mm_payload = boost::none;
 
             bool indef;
             uint64_t n_elems = dec.readMapHeader(indef);
@@ -1425,9 +1475,9 @@ namespace block_cbor {
 
     void MalformedMessageItem::clear()
     {
-        tstamp = std::chrono::system_clock::time_point(std::chrono::microseconds(0));
+        tstamp = boost::none;
         client_address = message_data = boost::none;
-        client_port = 0;
+        client_port = boost::none;
     }
 
     void MalformedMessageItem::readCbor(CborBaseDecoder& dec,
@@ -1435,7 +1485,9 @@ namespace block_cbor {
                                         const BlockParameters& block_parameters,
                                         const FileVersionFields& fields)
     {
+        tstamp = boost::none;
         client_address = message_data = boost::none;
+        client_port = boost::none;
 
         try
         {
@@ -1492,7 +1544,7 @@ namespace block_cbor {
 
         enc.writeMapHeader(4);
         enc.write(time_offset_index);
-        enc.write(std::chrono::duration_cast<std::chrono::nanoseconds>(tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
+        enc.write(std::chrono::duration_cast<std::chrono::nanoseconds>(*tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
         enc.write(client_address_index_index);
         enc.write(client_address);
         enc.write(client_port_index);
@@ -1501,7 +1553,9 @@ namespace block_cbor {
         enc.write(message_data);
     }
 
-    void BlockData::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    void BlockData::readCbor(CborBaseDecoder& dec,
+                             const FileVersionFields& fields,
+                             const Defaults& defaults)
     {
         bool indef;
         uint64_t n_elems = dec.readMapHeader(indef);
@@ -1520,7 +1574,7 @@ namespace block_cbor {
                 break;
 
             case BlockField::tables:
-                readHeaders(dec, fields);
+                readHeaders(dec, fields, defaults);
                 break;
 
             case BlockField::statistics:
@@ -1528,7 +1582,7 @@ namespace block_cbor {
                 break;
 
             case BlockField::queries:
-                readItems(dec, fields);
+                readItems(dec, fields, defaults);
                 break;
 
             case BlockField::address_event_counts:
@@ -1575,7 +1629,9 @@ namespace block_cbor {
         }
     }
 
-    void BlockData::readHeaders(CborBaseDecoder& dec, const FileVersionFields& fields)
+    void BlockData::readHeaders(CborBaseDecoder& dec,
+                                const FileVersionFields& fields,
+                                const Defaults& defaults)
     {
         bool indef;
         uint64_t n_elems = dec.readMapHeader(indef);
@@ -1590,39 +1646,39 @@ namespace block_cbor {
             switch(fields.block_tables_field(dec.read_unsigned()))
             {
             case BlockTablesField::ip_address:
-                ip_addresses.readCbor(dec, fields);
+                ip_addresses.readCbor(dec, fields, defaults);
                 break;
 
             case BlockTablesField::classtype:
-                class_types.readCbor(dec, fields);
+                class_types.readCbor(dec, fields, defaults);
                 break;
 
             case BlockTablesField::name_rdata:
-                names_rdatas.readCbor(dec, fields);
+                names_rdatas.readCbor(dec, fields, defaults);
                 break;
 
             case BlockTablesField::query_response_signature:
-                query_response_signatures.readCbor(dec, fields);
+                query_response_signatures.readCbor(dec, fields, defaults);
                 break;
 
             case BlockTablesField::question_list:
-                questions_lists.readCbor(dec, fields);
+                questions_lists.readCbor(dec, fields, defaults);
                 break;
 
             case BlockTablesField::question_rr:
-                questions.readCbor(dec, fields);
+                questions.readCbor(dec, fields, defaults);
                 break;
 
             case BlockTablesField::rr_list:
-                rrs_lists.readCbor(dec, fields);
+                rrs_lists.readCbor(dec, fields,  defaults);
                 break;
 
             case BlockTablesField::rr:
-                resource_records.readCbor(dec, fields);
+                resource_records.readCbor(dec, fields,  defaults);
                 break;
 
             case BlockTablesField::malformed_message_data:
-                malformed_message_data.readCbor(dec, fields);
+                malformed_message_data.readCbor(dec, fields,  defaults);
                 break;
 
             default:
@@ -1632,7 +1688,9 @@ namespace block_cbor {
         }
     }
 
-    void BlockData::readItems(CborBaseDecoder& dec, const FileVersionFields& fields)
+    void BlockData::readItems(CborBaseDecoder& dec,
+                              const FileVersionFields& fields,
+                              const Defaults& defaults)
     {
         const BlockParameters& block_parameters = block_parameters_[block_parameters_index];
         bool indef;
@@ -1648,7 +1706,7 @@ namespace block_cbor {
             }
 
             QueryResponseItem qri;
-            qri.readCbor(dec, earliest_time, block_parameters, fields);
+            qri.readCbor(dec, earliest_time, block_parameters, fields, defaults);
             query_response_items.push_back(std::move(qri));
         }
     }
