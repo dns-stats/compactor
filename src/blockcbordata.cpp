@@ -911,21 +911,15 @@ namespace block_cbor {
             enc.write(server_port_index);
             enc.write(server_port);
         }
-        if ( !exclude.transport )
-        {
-            enc.write(qr_transport_flags_index);
-            enc.write(qr_transport_flags);
-        }
+        enc.write(qr_transport_flags_index);
+        enc.write(qr_transport_flags);
         if ( !exclude.dns_flags )
         {
             enc.write(qr_dns_flags_index);
             enc.write(dns_flags);
         }
-        if ( !exclude.qr_flags )
-        {
-            enc.write(qr_sig_flags_index);
-            enc.write(qr_flags);
-        }
+        enc.write(qr_sig_flags_index);
+        enc.write(qr_flags);
         if ( !exclude.query_qdcount )
         {
             enc.write(query_qd_index);
