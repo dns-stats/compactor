@@ -364,40 +364,9 @@ void BlockCborReader::readBlockParameters(Configuration& config)
 
             first_bp = false;
         }
-        if ( !verifyBlockParameters(bp) )
-            throw cbor_file_format_error("Hints show required C-DNS data not present.");
 
         block_parameters_.push_back(bp);
     }
-}
-
-bool BlockCborReader::verifyBlockParameters(const block_cbor::BlockParameters& bp)
-{
-    const block_cbor::StorageParameters& sp = bp.storage_parameters;
-    const block_cbor::StorageHints& sh = sp.storage_hints;
-
-    // Query/Response hints. For now, we need everything from time offset to
-    // response size. We can survive without the other fields.
-    if ( (sh.query_response_hints & 0x3ff) != 0x3ff )
-        return false;
-
-    // Query signature hints. For now, we need everything except q/r type.
-    if ( (sh.query_response_signature_hints & 0x1f7) != 0x1f7 )
-        return false;
-
-    // RR hints. Currently we need everything.
-    if ( (sh.rr_hints & 0x3) != 0x3 )
-        return false;
-
-    // Other data hints. Currently we don't handle malformed messages.
-    // We do handle address event counts; if we see none, we will report
-    // that. If they aren't present we should probably report that they
-    // are missing from the file.
-
-    // If collection parameters are missing, we will output the defaults.
-    // Again, we should probably report they are missing.
-
-    return true;
 }
 
 bool BlockCborReader::readBlock()
@@ -437,6 +406,169 @@ bool BlockCborReader::readBlock()
     need_block_ = (block_->query_response_items.size() == next_item_);
     current_block_num_++;
     return true;
+}
+
+QueryResponseData BlockCborReader::readQRData(bool& eof)
+{
+    QueryResponseData res;
+
+    eof = true;
+    while ( need_block_ )
+        if ( !readBlock() )
+            return res;
+
+    const block_cbor::QueryResponseItem& qri = block_->query_response_items[next_item_];
+    need_block_ = (block_->query_response_items.size() == ++next_item_);
+
+    if ( !qri.signature )
+        throw cbor_file_format_error("QueryResponseItem missing signature");
+
+    const block_cbor::QueryResponseSignature& sig = block_->query_response_signatures[qri.signature];
+
+    res.timestamp = qri.tstamp;
+    if ( qri.client_address )
+        res.client_address = get_client_address(*qri.client_address, sig.qr_transport_flags);
+    else
+        res.client_address = defaults_.client_address;
+    res.client_port = qri.client_port;
+    if ( sig.server_address )
+        res.server_address = get_server_address(*sig.server_address, sig.qr_transport_flags);
+    else
+        res.server_address = defaults_.server_address;
+    res.server_port = sig.server_port;
+    res.id = qri.id;
+    if ( qri.qname )
+        res.qname = block_->names_rdatas[*qri.qname].str;
+    else
+        res.qname = defaults_.query_name;
+    res.qr_transport_flags = sig.qr_transport_flags;
+    res.dns_flags = sig.dns_flags;
+    if ( sig.query_classtype )
+    {
+        const block_cbor::ClassType& ct = block_->class_types[*sig.query_classtype];
+        res.query_class = ct.qclass;
+        res.query_type = ct.qtype;
+    }
+    else
+    {
+        res.query_class = defaults_.query_class;
+        res.query_type = defaults_.query_type;
+    }
+    res.query_qdcount = sig.qdcount;
+    res.query_ancount = sig.query_ancount;
+    res.query_arcount = sig.query_arcount;
+    res.query_nscount = sig.query_nscount;
+    res.query_opcode = sig.query_opcode;
+    res.query_edns_version = sig.query_edns_version;
+    res.query_edns_payload_size = sig.query_edns_payload_size;
+    if ( sig.query_opt_rdata )
+        res.query_opt_rdata = block_->names_rdatas[*sig.query_opt_rdata].str;
+    else
+        res.query_opt_rdata = defaults_.query_opt_rdata;
+    res.query_opcode = sig.query_opcode;
+    res.query_size = qri.query_size;
+
+    res.response_delay = qri.response_delay;
+    res.response_rcode = sig.response_rcode;
+    res.response_size = qri.response_size;
+
+    if ( qri.query_extra_info )
+    {
+    }
+
+    if ( qri.response_extra_info )
+    {
+    }
+
+    return res;
+}
+
+void BlockCborReader::read_extra_info(
+    std::unique_ptr<block_cbor::QueryResponseExtraInfo>& extra_info,
+    boost::optional<std::vector<QueryResponseData::Question>>& questions,
+    boost::optional<std::vector<QueryResponseData::RR>>& answers,
+    boost::optional<std::vector<QueryResponseData::RR>>& authorities,
+    boost::optional<std::vector<QueryResponseData::RR>>& additionals
+    )
+{
+    if ( !extra_info )
+        return;
+
+    if ( extra_info->questions_list )
+    {
+        std::vector<QueryResponseData::Question> qvec;
+        for ( auto& qid : block_->questions_lists[*extra_info->questions_list].vec )
+        {
+            const block_cbor::Question& q = block_->questions[*qid];
+            QueryResponseData::Question newq;
+
+            if ( q.qname )
+                newq.qname = block_->names_rdatas[*q.qname].str;
+            else
+                newq.qname = defaults_.query_name;
+
+            if ( q.classtype )
+            {
+                const block_cbor::ClassType& ct = block_->class_types[*q.classtype];
+                newq.qclass = ct.qclass;
+                newq.qtype = ct.qtype;
+            }
+            else
+            {
+                newq.qclass = defaults_.query_class;
+                newq.qtype = defaults_.query_type;
+            }
+            qvec.push_back(newq);
+        }
+        questions = qvec;
+    }
+
+    if ( extra_info->answers_list )
+        read_rr(extra_info->answers_list, answers);
+    if ( extra_info->authority_list )
+        read_rr(extra_info->authority_list, authorities);
+    if ( extra_info->additional_list )
+        read_rr(extra_info->additional_list, additionals);
+}
+
+void BlockCborReader::read_rr(block_cbor::index_t index, boost::optional<std::vector<QueryResponseData::RR>>& res)
+{
+    if ( index )
+    {
+        std::vector<QueryResponseData::RR> rrvec;
+        for ( auto& rrid : block_->rrs_lists[*index].vec )
+        {
+            const block_cbor::ResourceRecord& rr = block_->resource_records[*rrid];
+            QueryResponseData::RR newrr;
+
+            if ( rr.name )
+                newrr.name = block_->names_rdatas[*rr.name].str;
+            else
+                newrr.name = defaults_.query_name;
+
+            if ( rr.classtype )
+            {
+                const block_cbor::ClassType& ct = block_->class_types[*rr.classtype];
+                newrr.rclass = ct.qclass;
+                newrr.rtype = ct.qtype;
+            }
+            else
+            {
+                newrr.rclass = defaults_.query_class;
+                newrr.rtype = defaults_.query_type;
+            }
+
+            newrr.ttl = rr.ttl;
+
+            if ( rr.rdata )
+                newrr.rdata = block_->names_rdatas[*rr.rdata].str;
+            else
+                newrr.rdata = defaults_.rr_rdata;
+
+            rrvec.push_back(newrr);
+        }
+        res = rrvec;
+    }
 }
 
 std::shared_ptr<QueryResponse> BlockCborReader::readQR()
@@ -662,6 +794,37 @@ IPAddress BlockCborReader::get_client_address(std::size_t index, boost::optional
     if ( is_ipv4_client_full_address(addr_b) )
         ipv6 = false;
     else if ( is_ipv6_client_full_address(addr_b) )
+        ipv6 = true;
+    else
+        ipv6 = (*transport_flags & block_cbor::IPV6);
+
+    return string_to_addr(addr_b, ipv6);
+}
+
+bool BlockCborReader::is_ipv4_server_full_address(const byte_string& b) const
+{
+    const block_cbor::BlockParameters& bp = block_parameters_[block_->block_parameters_index];
+    const block_cbor::StorageParameters& sp = bp.storage_parameters;
+
+    return ( sp.server_address_prefix_ipv4 == 32 && b.length() == 4 );
+}
+
+bool BlockCborReader::is_ipv6_server_full_address(const byte_string& b) const
+{
+    const block_cbor::BlockParameters& bp = block_parameters_[block_->block_parameters_index];
+    const block_cbor::StorageParameters& sp = bp.storage_parameters;
+
+    return ( sp.server_address_prefix_ipv4 == 128 && b.length() == 16 );
+}
+
+IPAddress BlockCborReader::get_server_address(std::size_t index, boost::optional<uint8_t> transport_flags)
+{
+    bool ipv6;
+    const byte_string& addr_b = block_->ip_addresses[index].str;
+
+    if ( is_ipv4_server_full_address(addr_b) )
+        ipv6 = false;
+    else if ( is_ipv6_server_full_address(addr_b) )
         ipv6 = true;
     else
         ipv6 = (*transport_flags & block_cbor::IPV6);

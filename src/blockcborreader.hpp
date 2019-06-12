@@ -29,6 +29,249 @@
 #include "queryresponse.hpp"
 
 /**
+ * \class QueryResponseData
+ * \brief Data describing on a single query/response.
+ *
+ * Collect all the underlying information about a single query/reponse
+ * into a single structure suitable for passing to an output
+ * backend for further processing.
+ *
+ * Most items may or may not be present. If not present in the C-DNS file,
+ * and a default is present, the value here will be the default.
+ */
+class QueryResponseData
+{
+public:
+    /**
+     * \struct Question
+     * \brief Info on a single Question.
+     */
+    struct Question
+    {
+        /**
+         * \brief the query name in the Question.
+         */
+        boost::optional<byte_string> qname;
+
+        /**
+         * \brief Question class.
+         */
+        boost::optional<CaptureDNS::QueryClass> qclass;
+
+        /**
+         * \brief Question type.
+         */
+        boost::optional<CaptureDNS::QueryType> qtype;
+    };
+
+    /**
+     * \struct RR
+     * \brief Info on a single RR.
+     */
+    struct RR
+    {
+        /**
+         * \brief the name in the RR.
+         */
+        boost::optional<byte_string> name;
+
+        /**
+         * \brief RR class.
+         */
+        boost::optional<CaptureDNS::QueryClass> rclass;
+
+        /**
+         * \brief RR type.
+         */
+        boost::optional<CaptureDNS::QueryType> rtype;
+
+        /**
+         * \brief RR TTL.
+         */
+        boost::optional<uint32_t> ttl;
+
+        /**
+         * \brief RR RDATA.
+         */
+        boost::optional<byte_string> rdata;
+    };
+
+    /**
+     * \brief the timestamp.
+     */
+    boost::optional<std::chrono::system_clock::time_point> timestamp;
+
+    /**
+     * \brief the client address.
+     */
+    boost::optional<IPAddress> client_address;
+
+    /**
+     * \brief client port.
+     */
+    boost::optional<uint16_t> client_port;
+
+    /**
+     * \brief client hop limit.
+     */
+    boost::optional<uint8_t> hoplimit;
+
+    /**
+     * \brief the client address.
+     */
+    boost::optional<IPAddress> server_address;
+
+    /**
+     * \brief client port.
+     */
+    boost::optional<uint16_t> server_port;
+
+    /**
+     * \brief the transaction ID.
+     */
+    boost::optional<uint16_t> id;
+
+    /**
+     * \brief the query name in the first Question.
+     */
+    boost::optional<byte_string> qname;
+
+    /**
+     * \brief transport flags.
+     */
+    boost::optional<uint8_t> qr_transport_flags;
+
+    /*
+     * Query-specific items.
+     */
+
+    /**
+     * \brief DNS flags.
+     */
+    boost::optional<uint16_t> dns_flags;
+
+    /**
+     * \brief class of first Question.
+     */
+    boost::optional<CaptureDNS::QueryClass> query_class;
+
+    /**
+     * \brief type of first Question.
+     */
+    boost::optional<CaptureDNS::QueryType> query_type;
+
+    /**
+     * \brief Query second and subsequent Questions.
+     */
+    boost::optional<std::vector<Question>> query_questions;
+
+    /**
+     * \brief Query Answer sections.
+     */
+    boost::optional<std::vector<RR>> query_answers;
+
+    /**
+     * \brief Query Authority sections.
+     */
+    boost::optional<std::vector<RR>> query_authories;
+
+    /**
+     * \brief Query Additional sections.
+     */
+    boost::optional<std::vector<RR>> query_additionals;
+
+    /**
+     * \brief query or response QDCOUNT.
+     */
+    boost::optional<uint16_t> query_qdcount;
+
+    /**
+     * \brief query ANCOUNT.
+     */
+    boost::optional<uint16_t> query_ancount;
+
+    /**
+     * \brief query NSCOUNT.
+     */
+    boost::optional<uint16_t> query_nscount;
+
+    /**
+     * \brief query ARCOUNT.
+     */
+    boost::optional<uint16_t> query_arcount;
+
+    /**
+     * \brief query OPCODE.
+     */
+    boost::optional<CaptureDNS::Opcode> query_opcode;
+
+    /**
+     * \brief query EDNS version.
+     */
+    boost::optional<uint8_t> query_edns_version;
+
+    /**
+     * \brief query EDNS UDP size
+     */
+    boost::optional<uint16_t> query_edns_payload_size;
+
+    /**
+     * \brief query OPT RDATA.
+     */
+    boost::optional<byte_string> query_opt_rdata;
+
+    /**
+     * \brief query RCODE, incorporating extended RCODE.
+     */
+    boost::optional<uint16_t> query_rcode;
+
+    /**
+     * \brief the size of the DNS query message.
+     */
+    boost::optional<uint32_t> query_size;
+
+    /*
+     * Response-specific items.
+     */
+
+    /**
+     * \brief the response delay.
+     */
+    boost::optional<std::chrono::nanoseconds> response_delay;
+
+    /**
+     * \brief response RCODE, incorporating extended RCODE.
+     */
+    boost::optional<uint16_t> response_rcode;
+
+    /**
+     * \brief the size of the DNS response message.
+     */
+    boost::optional<uint32_t> response_size;
+
+    /**
+     * \brief Response second and subsequent Questions.
+     */
+    boost::optional<std::vector<Question>> response_questions;
+
+    /**
+     * \brief Response Answer sections.
+     */
+    boost::optional<std::vector<RR>> response_answers;
+
+    /**
+     * \brief Response Authority sections.
+     */
+    boost::optional<std::vector<RR>> response_authorities;
+
+    /**
+     * \brief Response Additional sections.
+     */
+    boost::optional<std::vector<RR>> response_additionals;
+
+};
+
+/**
  * \class BlockCborReader
  * \brief Read input in the block CBOR format.
  *
@@ -56,6 +299,18 @@ public:
                     Configuration& config,
                     const Defaults& defaults,
                     boost::optional<PseudoAnonymise> pseudo_anon ={});
+
+    /**
+     * \brief Return the data for the next Query/Response pair.
+     *
+     * Retrieving the Query/Response pairs should probably be done
+     * via an iterator. This fills in for now.
+     *
+     * \param eof <code>true</code> if data supplied, <code>false</code>
+     * on EOF.
+     * \returns data for the next Query/Response.
+     */
+    QueryResponseData readQRData(bool& eof);
 
     /**
      * \brief Return the next Query/Response pair.
@@ -144,17 +399,6 @@ protected:
     void readBlockParameters(Configuration& config);
 
     /**
-     * \brief Verify the block parameters in format 1.0 files
-     * contain sufficient fields for our purposes.
-     *
-     * Look through the supplied hints and make sure that the data
-     * we require should be present.
-     *
-     * \returns `false` if hints show data we can't do without is missing.
-     */
-    bool verifyBlockParameters(const block_cbor::BlockParameters& bp);
-
-    /**
      * \brief Add the message extra info into the message.
      *
      * \param dns   message to receive extra info.
@@ -212,6 +456,19 @@ private:
     IPAddress get_client_address(std::size_t index, boost::optional<uint8_t> transport_flags);
 
     /**
+     * \brief Get a server address from the address table.
+     *
+     * If the prefixes are such that we can infer whether the address is
+     * IPv4 or IPv6, we don't try to touch the transport flags. If not,
+     * we will try to dereference them.
+     *
+     * \param index           the table index.
+     * \param transport_flags the transport flags.
+     * \returns the address.
+     */
+    IPAddress get_server_address(std::size_t index, boost::optional<uint8_t> transport_flags);
+
+    /**
      * \brief Determine if client prefix means a full IPv4 address.
      *
      * \param b byte string with address.
@@ -226,6 +483,42 @@ private:
      * \returns <code>true</code> if full IPv6 address present.
      */
     bool is_ipv6_client_full_address(const byte_string& b) const;
+
+    /**
+     * \brief Determine if server prefix means a full IPv4 address.
+     *
+     * \param b byte string with address.
+     * \returns <code>true</code> if full IPv4 address present.
+     */
+    bool is_ipv4_server_full_address(const byte_string& b) const;
+
+    /**
+     * \brief Determine if server prefix means a full IPv6 address.
+     *
+     * \param b byte string with address.
+     * \returns <code>true</code> if full IPv6 address present.
+     */
+    bool is_ipv6_server_full_address(const byte_string& b) const;
+
+    /**
+     * \brief Decode block cbor extra info to our RRs.
+     *
+     * \param index index of the block RR.
+     * \param res   output RR vector.
+     */
+    void read_extra_info(std::unique_ptr<block_cbor::QueryResponseExtraInfo>& extra_info,
+                         boost::optional<std::vector<QueryResponseData::Question>>& questions,
+                         boost::optional<std::vector<QueryResponseData::RR>>& answers,
+                         boost::optional<std::vector<QueryResponseData::RR>>& authorities,
+                         boost::optional<std::vector<QueryResponseData::RR>>& additionals);
+
+    /**
+     * \brief Decode a block cbor RR to our RR.
+     *
+     * \param index index of the block RR.
+     * \param res   output RR vector.
+     */
+    void read_rr(block_cbor::index_t index, boost::optional<std::vector<QueryResponseData::RR>>& res);
 
     /**
      * \brief the decoder to read from.
