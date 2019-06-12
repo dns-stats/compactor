@@ -210,6 +210,25 @@ public:
      */
     boost::optional<uint16_t> response_size;
 
+    /*
+     * address-event items
+     */
+
+    /**
+     * \brief default address event type.
+     */
+    boost::optional<AddressEvent::EventType> ae_type;
+
+    /**
+     * \brief default address event code.
+     */
+    boost::optional<unsigned> ae_code;
+
+    /**
+     * \brief default address event code.
+     */
+    boost::optional<IPAddress> ae_address;
+
     /**
      * \brief Default Constructor.
      */

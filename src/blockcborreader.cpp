@@ -419,9 +419,14 @@ bool BlockCborReader::readBlock()
     // Accumulate address events counts.
     for ( auto& aeci : block_->address_event_counts )
     {
-        bool ipv6 = (aeci.first.transport_flags & block_cbor::IPV6);
-        IPAddress addr = string_to_addr(block_->ip_addresses[aeci.first.address].str, ipv6);
-        AddressEvent ae(aeci.first.type, addr, aeci.first.code);
+        IPAddress addr;
+
+        if ( !aeci.first.address )
+            addr = *defaults_.ae_address;
+        else
+            addr = get_client_address(*aeci.first.address, aeci.first.transport_flags);
+
+        AddressEvent ae(*aeci.first.type, addr, *aeci.first.code);
         if ( address_events_read_.find(ae) != address_events_read_.end() )
             address_events_read_[ae] += aeci.second;
         else
@@ -631,6 +636,37 @@ IPAddress BlockCborReader::string_to_addr(const byte_string& str, bool is_ipv6)
 #endif
 
     return res;
+}
+
+bool BlockCborReader::is_ipv4_client_full_address(const byte_string& b) const
+{
+    const block_cbor::BlockParameters& bp = block_parameters_[block_->block_parameters_index];
+    const block_cbor::StorageParameters& sp = bp.storage_parameters;
+
+    return ( sp.client_address_prefix_ipv4 == 32 && b.length() == 4 );
+}
+
+bool BlockCborReader::is_ipv6_client_full_address(const byte_string& b) const
+{
+    const block_cbor::BlockParameters& bp = block_parameters_[block_->block_parameters_index];
+    const block_cbor::StorageParameters& sp = bp.storage_parameters;
+
+    return ( sp.client_address_prefix_ipv4 == 128 && b.length() == 16 );
+}
+
+IPAddress BlockCborReader::get_client_address(std::size_t index, boost::optional<uint8_t> transport_flags)
+{
+    bool ipv6;
+    const byte_string& addr_b = block_->ip_addresses[index].str;
+
+    if ( is_ipv4_client_full_address(addr_b) )
+        ipv6 = false;
+    else if ( is_ipv6_client_full_address(addr_b) )
+        ipv6 = true;
+    else
+        ipv6 = (*transport_flags & block_cbor::IPV6);
+
+    return string_to_addr(addr_b, ipv6);
 }
 
 void BlockCborReader::dump_collector(std::ostream& os)

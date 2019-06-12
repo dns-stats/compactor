@@ -1223,12 +1223,12 @@ namespace block_cbor {
         /**
          * \brief AddressEvent type.
          */
-        AddressEvent::EventType type;
+        boost::optional<AddressEvent::EventType> type;
 
         /**
          * \brief AddressEvent code.
          */
-        unsigned code;
+        boost::optional<unsigned> code;
 
         /**
          * \brief index of event address.
@@ -1238,7 +1238,7 @@ namespace block_cbor {
         /**
          * \brief address event transport flags.
          */
-        uint8_t transport_flags;
+        boost::optional<uint8_t> transport_flags;
 
         /**
          * \brief return the key to be used for storing values.
@@ -1295,13 +1295,16 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
+         * \param defaults default values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields,
+                      const Defaults& defaults);
 
         /**
          * \brief Write the object contents to CBOR.
@@ -2121,7 +2124,7 @@ namespace block_cbor {
          */
         void readItems(CborBaseDecoder& dec,
                        const FileVersionFields& fields,
-                         const Defaults& defaults);
+                       const Defaults& defaults);
 
         /**
          * \brief Read block statistics from CBOR. Accumulate the stats over
@@ -2137,8 +2140,11 @@ namespace block_cbor {
          *
          * \param dec CBOR decoder.
          * \param fields translate map keys to internal values.
+         * \param defaults default values.
          */
-        void readAddressEventCounts(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readAddressEventCounts(CborBaseDecoder& dec,
+                                    const FileVersionFields& fields,
+                                    const Defaults& defaults);
 
         /**
          * \brief Read block malformed message from CBOR.

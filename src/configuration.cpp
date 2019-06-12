@@ -1037,6 +1037,43 @@ void validate(boost::any& v, const std::vector<std::string>& values,
         v = CaptureDNS::QueryType(item->second);
 }
 
+/**
+ * \brief Overload <code>validate()</code> for AddressEvent::EventTypes.
+ *
+ * @param v             holder for result.
+ * @param values        input values.
+ * @param val1          compiler workaround.
+ * @param val2          compiler workaround.
+ */
+// cppcheck-suppress unusedFunction
+void validate(boost::any& v, const std::vector<std::string>& values,
+              AddressEvent::EventType* val1, int val2)
+{
+    po::validators::check_first_occurrence(v);
+    std::string s = po::validators::get_single_string(values);
+
+    boost::algorithm::trim(s);
+    boost::algorithm::to_lower(s);
+    AddressEvent::EventType aet;
+
+    if ( s == "tcp-reset" )
+        aet = AddressEvent::TCP_RESET;
+    else if ( s == "icmp-time-exceeded" )
+        aet = AddressEvent::ICMP_TIME_EXCEEDED;
+    else if ( s == "icmp-dest-unreachable" )
+        aet = AddressEvent::ICMP_DEST_UNREACHABLE;
+    else if ( s == "icmpv6-time-exceeded" )
+        aet = AddressEvent::ICMPv6_TIME_EXCEEDED;
+    else if ( s == "icmpv6-dest-unreachable" )
+        aet = AddressEvent::ICMPv6_DEST_UNREACHABLE;
+    else if ( s == "icmpv6-packet-too-big" )
+        aet = AddressEvent::ICMPv6_PACKET_TOO_BIG;
+    else
+        throw po::validation_error(po::validation_error::invalid_option_value);
+
+    v = aet;
+}
+
 // For items declared in their own namespace, validators need to be
 // (a) declared in that namespace, and (b) explicitly for
 // boost::optional<type>.
@@ -1234,7 +1271,6 @@ namespace block_cbor {
 
         v = DNSFlags(dnsf);
     }
-
 }
 
 // For items declared in their own namespace, validators need to be
@@ -1337,6 +1373,9 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
     bool response_processing_from_cache;
     uint16_t query_size;
     uint16_t response_size;
+    AddressEvent::EventType ae_type;
+    unsigned ae_code;
+    IPAddress ae_address;
 
     opt.add_options()
         ("ip-header.time-offset",
@@ -1432,6 +1471,16 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         ("dns-meta-data.response-size",
          po::value(&response_size),
          "response size default.")
+
+        ("address-event.ae-address",
+         po::value(&ae_address),
+         "address event address default.")
+        ("address-event.ae-type",
+         po::value(&ae_type),
+         "address event type default.")
+        ("address-event.ae-code",
+         po::value(&ae_code),
+         "address event code default.")
         ;
 
     if ( boost::filesystem::exists(defaultsfile) )
@@ -1507,6 +1556,13 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         this->query_size = query_size;
     if ( res.count("dns-meta-data.response-size") )
         this->response_size = response_size;
+
+    if ( res.count("address-event.ae-address" ) )
+        this->ae_address = ae_address;
+    if ( res.count("address-event.ae-type" ) )
+        this->ae_type = ae_type;
+    if ( res.count("address-event.ae-code" ) )
+        this->ae_code = ae_code;
 }
 
 HintsExcluded::HintsExcluded()

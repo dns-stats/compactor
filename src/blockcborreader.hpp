@@ -199,6 +199,35 @@ private:
     bool readBlock();
 
     /**
+     * \brief Get a client address from the address table.
+     *
+     * If the prefixes are such that we can infer whether the address is
+     * IPv4 or IPv6, we don't try to touch the transport flags. If not,
+     * we will try to dereference them.
+     *
+     * \param index           the table index.
+     * \param transport_flags the transport flags.
+     * \returns the address.
+     */
+    IPAddress get_client_address(std::size_t index, boost::optional<uint8_t> transport_flags);
+
+    /**
+     * \brief Determine if client prefix means a full IPv4 address.
+     *
+     * \param b byte string with address.
+     * \returns <code>true</code> if full IPv4 address present.
+     */
+    bool is_ipv4_client_full_address(const byte_string& b) const;
+
+    /**
+     * \brief Determine if client prefix means a full IPv6 address.
+     *
+     * \param b byte string with address.
+     * \returns <code>true</code> if full IPv6 address present.
+     */
+    bool is_ipv6_client_full_address(const byte_string& b) const;
+
+    /**
      * \brief the decoder to read from.
      */
     CborBaseDecoder& dec_;

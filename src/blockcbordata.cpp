@@ -1314,15 +1314,19 @@ namespace block_cbor {
         return seed;
     }
 
-    void AddressEventCount::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+    void AddressEventCount::readCbor(CborBaseDecoder& dec,
+                                     const FileVersionFields& fields,
+                                     const Defaults& defaults)
     {
+        bool seen_count = false;
+
+        aei.code = defaults.ae_code;
+        aei.type = defaults.ae_type;
+        aei.address = boost::none;
+        aei.transport_flags = boost::none;
+
         try
         {
-            // No necessarily present, default to 0.
-            aei.code = 0;
-            aei.transport_flags = 0;
-            aei.address = boost::none;
-
             bool indef;
             uint64_t n_elems = dec.readMapHeader(indef);
             while ( indef || n_elems-- > 0 )
@@ -1353,6 +1357,7 @@ namespace block_cbor {
 
                 case AddressEventCountField::ae_count:
                     count = dec.read_unsigned();
+                    seen_count = true;
                     break;
 
                 default:
@@ -1366,6 +1371,9 @@ namespace block_cbor {
         {
             throw cbor_file_format_unexpected_item_error("AddressEvent");
         }
+
+        if ( !seen_count )
+            throw cbor_file_format_error("No count in AddressEventCount");
     }
 
     void AddressEventCount::writeCbor(CborBaseEncoder& enc)
@@ -1379,7 +1387,7 @@ namespace block_cbor {
         enc.writeMapHeader();
         enc.write(type_index);
         enc.write(aei.type);
-        if ( aei.code != 0 )
+        if ( aei.code )
         {
             enc.write(code_index);
             enc.write(aei.code);
@@ -1586,7 +1594,7 @@ namespace block_cbor {
                 break;
 
             case BlockField::address_event_counts:
-                readAddressEventCounts(dec, fields);
+                readAddressEventCounts(dec, fields, defaults);
                 break;
 
             default:
@@ -1774,7 +1782,9 @@ namespace block_cbor {
         }
     }
 
-    void BlockData::readAddressEventCounts(CborBaseDecoder& dec, const FileVersionFields& fields)
+    void BlockData::readAddressEventCounts(CborBaseDecoder& dec,
+                                           const FileVersionFields& fields,
+                                           const Defaults& defaults)
     {
         bool indef;
         uint64_t n_elems = dec.readArrayHeader(indef);
@@ -1787,7 +1797,7 @@ namespace block_cbor {
             }
 
             AddressEventCount aec = {};
-            aec.readCbor(dec, fields);
+            aec.readCbor(dec, fields, defaults);
             address_event_counts[aec.aei] = aec.count;
         }
     }
