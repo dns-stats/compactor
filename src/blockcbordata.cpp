@@ -1134,7 +1134,6 @@ namespace block_cbor {
     {
         try
         {
-            qr_flags = 0;
             client_address = qname = signature = boost::none;
             client_port = defaults.client_port;
             hoplimit = defaults.client_hoplimit;
@@ -1179,27 +1178,22 @@ namespace block_cbor {
 
                 case QueryResponseField::client_hoplimit:
                     hoplimit = dec.read_unsigned();
-                    qr_flags |= QUERY_ONLY;
                     break;
 
                 case QueryResponseField::response_delay:
                     response_delay = std::chrono::microseconds(dec.read_signed() * 1000000 / block_parameters.storage_parameters.ticks_per_second);
-                    qr_flags |= QUERY_AND_RESPONSE;
                     break;
 
                 case QueryResponseField::query_name_index:
                     qname = dec.read_unsigned();
-                    qr_flags |= QR_HAS_QUESTION;
                     break;
 
                 case QueryResponseField::query_size:
                     query_size = dec.read_unsigned();
-                    qr_flags |= QUERY_ONLY;
                     break;
 
                 case QueryResponseField::response_size:
                     response_size = dec.read_unsigned();
-                    qr_flags |= RESPONSE_ONLY;
                     break;
 
                 case QueryResponseField::query_extended:
