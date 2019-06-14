@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2018-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -60,11 +60,12 @@ IPAddress PseudoAnonymise::address(const IPAddress& addr) const
     return IPAddress(addr.is_ipv6() ? addr_out : addr_out.substr(0, 4));
 }
 
-CaptureDNS::EDNS0 PseudoAnonymise::edns0(const CaptureDNS::EDNS0& edns0) const
+byte_string PseudoAnonymise::edns0(const byte_string& edns0) const
 {
     bool client_subnet_found = false;
+    CaptureDNS::EDNS0 e0(CaptureDNS::INTERNET, 0, edns0);
 
-    for ( auto& opt : edns0.options() )
+    for ( auto& opt : e0.options() )
         if ( opt.code() == CaptureDNS::CLIENT_SUBNET )
         {
             client_subnet_found = true;
@@ -74,12 +75,9 @@ CaptureDNS::EDNS0 PseudoAnonymise::edns0(const CaptureDNS::EDNS0& edns0) const
     if ( !client_subnet_found )
         return edns0;
 
-    CaptureDNS::EDNS0 res(edns0.udp_payload_size(),
-                          edns0.do_bit(),
-                          edns0.extended_rcode(),
-                          edns0.edns_version());
+    CaptureDNS::EDNS0 res(CaptureDNS::INTERNET, 0, byte_string());
 
-    for ( auto& opt : edns0.options() )
+    for ( auto& opt : e0.options() )
     {
         if ( opt.code() == CaptureDNS::CLIENT_SUBNET )
         {
@@ -120,7 +118,7 @@ CaptureDNS::EDNS0 PseudoAnonymise::edns0(const CaptureDNS::EDNS0& edns0) const
         }
     }
 
-    return res;
+    return res.rr().data();
 }
 
 byte_string PseudoAnonymise::generate_key(const char *str, const char *salt)

@@ -465,7 +465,13 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     res.query_edns_version = sig.query_edns_version;
     res.query_edns_payload_size = sig.query_edns_payload_size;
     if ( sig.query_opt_rdata )
+    {
         res.query_opt_rdata = block_->names_rdatas[*sig.query_opt_rdata].str;
+#if ENABLE_PSEUDOANONYMISATION
+        if ( pseudo_anon_ )
+            res.query_opt_rdata = pseudo_anon_->edns0(block_->names_rdatas[*sig.query_opt_rdata].str);
+#endif
+    }
     else
         res.query_opt_rdata = defaults_.query_opt_rdata;
     res.query_opcode = sig.query_opcode;
