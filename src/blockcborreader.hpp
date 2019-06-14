@@ -137,9 +137,9 @@ public:
     boost::optional<byte_string> qname;
 
     /**
-     * \brief transport flags.
+     * \brief query/response flags.
      */
-    boost::optional<uint8_t> qr_flags;
+    uint8_t qr_flags;
 
     /**
      * \brief transport flags.
@@ -274,6 +274,14 @@ public:
      */
     boost::optional<std::vector<RR>> response_additionals;
 
+    /**
+     * \brief Write basic information on the query/response to the output stream.
+     *
+     * \param output the output stream.
+     * \param qr     the query/response.
+     * \return the output stream.
+     */
+    friend std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr);
 };
 
 /**
@@ -316,17 +324,6 @@ public:
      * \returns data for the next Query/Response.
      */
     QueryResponseData readQRData(bool& eof);
-
-    /**
-     * \brief Return the next Query/Response pair.
-     *
-     * Retrieving the Query/Response pairs should probably be done
-     * via an iterator. This fills in for now.
-     *
-     * \return Next unread Query/Response pair. The pointer value will be
-     * `nullptr`.
-     */
-    std::shared_ptr<QueryResponse> readQR();
 
     /**
      * \brief Dump the statistics for the block to the stream provided
@@ -402,31 +399,6 @@ protected:
      * \throws cbor_file_format_error on unexpected CBOR content.
      */
     void readBlockParameters(Configuration& config);
-
-    /**
-     * \brief Add the message extra info into the message.
-     *
-     * \param dns   message to receive extra info.
-     * \param extra the extra info to add.
-     */
-    void readExtraInfo(DNSMessage& dns, const block_cbor::QueryResponseExtraInfo& extra) const;
-
-    /**
-     * \brief Create a new message query section.
-     *
-     * \param qname_id      the ID for the QNAME.
-     * \param class_type_id the ID for the QCLASS, QTYPE.
-     * \return the new query section.
-     */
-    CaptureDNS::query makeQuery(block_cbor::index_t qname_id, block_cbor::index_t class_type_id) const;
-
-    /**
-     * \brief Create a new message resource section.
-     *
-     * \param rr the resource info.
-     * \return the new resource section.
-     */
-    CaptureDNS::resource makeResource(const block_cbor::ResourceRecord& rr) const;
 
     /**
      * \brief Convert byte string to address.

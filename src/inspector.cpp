@@ -104,41 +104,25 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
     Configuration config;
     CborStreamDecoder dec(is);
     BlockCborReader cbr(dec, config, options.defaults, options.pseudo_anon);
-    std::chrono::system_clock::time_point earliest_time, latest_time;
+    boost::optional<std::chrono::system_clock::time_point> earliest_time, latest_time;
 
     try
     {
         auto start = std::chrono::system_clock::now();
         unsigned long long nrecs = 0;
-        bool first_time = true;
+        bool eof = false;
 
-        for ( std::shared_ptr<QueryResponse> qr = cbr.readQR();
-              qr;
-              qr = cbr.readQR() )
+        for ( QueryResponseData qr = cbr.readQRData(eof);
+              !eof;
+              qr = cbr.readQRData(eof) )
         {
-            if ( qr->has_query() )
+            if ( qr.timestamp )
             {
-                std::chrono::system_clock::time_point t = qr->query().timestamp;
-
-                if ( first_time )
-                {
+                std::chrono::system_clock::time_point t = *qr.timestamp;
+                if ( qr.response_delay )
+                    t += *qr.response_delay;
+                if ( !earliest_time )
                     earliest_time = latest_time = t;
-                    first_time = false;
-                }
-                else if ( t < earliest_time )
-                    earliest_time = t;
-                else if ( t > latest_time )
-                    latest_time = t;
-            }
-            if ( qr->has_response() )
-            {
-                std::chrono::system_clock::time_point t = qr->response().timestamp;
-
-                if ( first_time )
-                {
-                    earliest_time = latest_time = t;
-                    first_time = false;
-                }
                 else if ( t < earliest_time )
                     earliest_time = t;
                 else if ( t > latest_time )
@@ -146,7 +130,7 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
             }
 
             if ( options.debug_qr )
-                std::cout << *qr;
+                std::cout << qr;
 
             backend->output(qr, config);
             nrecs++;
@@ -154,7 +138,8 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
 
         // Approximate the rotation period with the difference between the first
         // and last timestamps, rounded to the nearest second.
-        config.rotation_period = (std::chrono::duration_cast<std::chrono::milliseconds>(latest_time - earliest_time).count() + 500) / 1000;
+        if ( earliest_time )
+            config.rotation_period = (std::chrono::duration_cast<std::chrono::milliseconds>(*latest_time - *earliest_time).count() + 500) / 1000;
 
         if ( options.generate_info )
             report(info, config, cbr, backend);
@@ -396,6 +381,7 @@ int main(int ac, char *av[])
         options.debug_qr = ( vm.count("debug-qr") != 0 );
         options.generate_stats = ( vm.count("stats") != 0 );
         options.defaults.read_defaults_file(defaults_file_name);
+        pcap_options.defaults = options.defaults;
 
         options.generate_output = true;
         options.generate_info = true;

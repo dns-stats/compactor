@@ -76,8 +76,10 @@ PcapBackend::~PcapBackend()
 {
 }
 
-void PcapBackend::output(std::shared_ptr<QueryResponse>& qr, const Configuration& config)
+void PcapBackend::output(const QueryResponseData& qrd, const Configuration& config)
 {
+    std::unique_ptr<QueryResponse> qr{convert_to_wire(qrd)};
+
     if ( using_compression_ &&
          config.output_options_responses == Configuration::ALL &&
          qr->has_response() &&
@@ -126,7 +128,121 @@ std::string PcapBackend::output_file()
     return output_path_;
 }
 
-void PcapBackend::write_qr_tcp(std::shared_ptr<QueryResponse> qr)
+std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseData& qrd)
+{
+    std::unique_ptr<DNSMessage> query, response;
+
+    if ( qrd.qr_flags & block_cbor::QUERY_ONLY )
+    {
+        query = make_unique<DNSMessage>();
+        query->timestamp = *qrd.timestamp;
+        query->tcp = *qrd.qr_transport_flags & block_cbor::TCP;
+        query->clientIP = *qrd.client_address;
+        query->serverIP = *qrd.server_address;
+        query->clientPort = *qrd.client_port;
+        query->serverPort = *qrd.server_port;
+        query->hoplimit = *qrd.hoplimit;
+        query->dns.type(CaptureDNS::QRType::QUERY);
+        query->dns.id(*qrd.id);
+        query->dns.opcode(*qrd.query_opcode);
+        query->dns.rcode(*qrd.query_rcode);
+        query->wire_size = *qrd.query_size;
+        block_cbor::set_dns_flags(*query, *qrd.dns_flags, true);
+
+        if ( qrd.qr_flags & block_cbor::QR_HAS_QUESTION )
+            query->dns.add_query(CaptureDNS::query(*qrd.qname, *qrd.query_type, *qrd.query_class));
+
+        add_extra_sections(*query,
+                           qrd.query_questions,
+                           qrd.query_answers,
+                           qrd.query_authorities,
+                           qrd.query_additionals);
+
+        if ( qrd.qr_flags & block_cbor::QUERY_HAS_OPT )
+        {
+            uint32_t ttl = ((*qrd.query_rcode >> 4) &0xff);
+            ttl <<= 8;
+            ttl |= (*qrd.query_edns_version & 0xff);
+            ttl <<= 16;
+            if ( *qrd.dns_flags & block_cbor::QUERY_DO )
+                ttl |= 0x8000;
+            query->dns.add_additional(
+                CaptureDNS::resource(
+                    "",
+                    *qrd.query_opt_rdata,
+                    CaptureDNS::OPT,
+                    static_cast<CaptureDNS::QueryClass>(*qrd.query_edns_payload_size),
+                    ttl));
+        }
+    }
+
+    if ( qrd.qr_flags & block_cbor::RESPONSE_ONLY )
+    {
+        response = make_unique<DNSMessage>();
+        response->timestamp = *qrd.timestamp + *qrd.response_delay;
+        response->tcp = *qrd.qr_transport_flags & block_cbor::TCP;
+        response->clientIP = *qrd.client_address;
+        response->serverIP = *qrd.server_address;
+        response->clientPort = *qrd.client_port;
+        response->serverPort = *qrd.server_port;
+        response->hoplimit = *qrd.hoplimit;
+        response->dns.type(CaptureDNS::QRType::RESPONSE);
+        response->dns.id(*qrd.id);
+        response->dns.opcode(*qrd.query_opcode);
+        response->dns.rcode(*qrd.response_rcode);
+        response->wire_size = *qrd.response_size;
+        block_cbor::set_dns_flags(*response, *qrd.dns_flags, true);
+
+        if ( qrd.qr_flags & block_cbor::QR_HAS_QUESTION )
+            response->dns.add_query(CaptureDNS::query(*qrd.qname, *qrd.query_type, *qrd.query_class));
+
+        add_extra_sections(*response,
+                           qrd.response_questions,
+                           qrd.response_answers,
+                           qrd.response_authorities,
+                           qrd.response_additionals);
+    }
+
+    std::unique_ptr<QueryResponse> res;
+
+    if ( query )
+    {
+        res = make_unique<QueryResponse>(std::move(query));
+        if ( response )
+            res->set_response(std::move(response));
+    }
+    else
+    {
+        res = make_unique<QueryResponse>(std::move(response), false);
+    }
+
+    return res;
+}
+
+void PcapBackend::add_extra_sections(DNSMessage& dns,
+                                     const boost::optional<std::vector<QueryResponseData::Question>>& questions,
+                                     const boost::optional<std::vector<QueryResponseData::RR>>& answers,
+                                     const boost::optional<std::vector<QueryResponseData::RR>>& authorities,
+                                     const boost::optional<std::vector<QueryResponseData::RR>>& additionals)
+{
+    if ( questions )
+        for ( const auto& q: *questions )
+            dns.dns.add_query(CaptureDNS::query(*q.qname, *q.qtype, *q.qclass));
+
+    if ( answers )
+        for ( const auto& rr: *answers )
+            dns.dns.add_answer(CaptureDNS::resource(*rr.name, *rr.rdata, *rr.rtype, *rr.rclass, *rr.ttl));
+
+    if ( authorities )
+        for ( const auto& rr: *authorities )
+            dns.dns.add_authority(CaptureDNS::resource(*rr.name, *rr.rdata, *rr.rtype, *rr.rclass, *rr.ttl));
+
+    if ( additionals )
+        for ( const auto& rr: *additionals )
+            dns.dns.add_additional(CaptureDNS::resource(*rr.name, *rr.rdata, *rr.rtype, *rr.rclass, *rr.ttl));
+}
+
+void PcapBackend::write_qr_tcp(const std::unique_ptr<QueryResponse>& qr)
 {
     IPAddress client_address, server_address;
     uint16_t client_port, server_port;
@@ -247,7 +363,7 @@ void PcapBackend::write_qr_tcp(std::shared_ptr<QueryResponse> qr)
     write_packet(&ctcp, client_address, server_address, client_hoplimit, response_timestamp);
 }
 
-void PcapBackend::write_qr_udp(std::shared_ptr<QueryResponse> qr)
+void PcapBackend::write_qr_udp(const std::unique_ptr<QueryResponse>& qr)
 {
     if ( qr->has_query() )
         write_udp_packet(qr->query());

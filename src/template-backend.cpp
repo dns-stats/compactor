@@ -412,16 +412,8 @@ TemplateBackend::~TemplateBackend()
 {
 }
 
-void TemplateBackend::output(std::shared_ptr<QueryResponse>& qr, const Configuration& config)
+void TemplateBackend::output(const QueryResponseData& qr, const Configuration& config)
 {
-    IPAddress client_address, server_address;
-    uint16_t client_port, server_port;
-    std::chrono::system_clock::time_point query_timestamp, response_timestamp;
-    const CaptureDNS *dns;
-    unsigned transport_flags = 0;
-    unsigned query_response_flags = 0;
-    unsigned dns_flags = 0;
-
     ctemplate::TemplateDictionary dict("ONE_QUERY_RESPONSE");
 
     if ( first_line ) {
@@ -429,172 +421,145 @@ void TemplateBackend::output(std::shared_ptr<QueryResponse>& qr, const Configura
         first_line = false;
     }
 
-    dict.SetIntValue("query_response_has_query", qr->has_query());
-    dict.SetIntValue("query_response_has_response", qr->has_response());
+    dict.SetIntValue("query_response_has_query", !!(qr.qr_flags & block_cbor::QUERY_ONLY));
+    dict.SetIntValue("query_response_has_response", !!(qr.qr_flags & block_cbor::RESPONSE_ONLY));
 
-    if ( qr->has_query() )
+    dict.SetIntValue("query_response_query_has_opt", !!(qr.qr_flags & block_cbor::QUERY_HAS_OPT));
+    dict.SetIntValue("query_response_query_has_question", !!(qr.qr_flags & block_cbor::QR_HAS_QUESTION));
+
+    if ( qr.qr_transport_flags )
     {
-        query_response_flags |= (1 << 0);
-        auto edns0 = qr->query().dns.edns0();
-        if ( edns0 )
-            query_response_flags |= (1 << 3);
-        dict.SetIntValue("query_response_query_has_opt", edns0 ? 1 : 0);
-
-        client_address = qr->query().clientIP;
-        server_address = qr->query().serverIP;
-        client_port = qr->query().clientPort;
-        server_port = qr->query().serverPort;
-        query_timestamp = qr->query().timestamp;
-        if ( qr->has_response() )
-            response_timestamp = qr->response().timestamp;
-        else
-            response_timestamp = query_timestamp;
-
-        if ( qr->query().tcp )
-            transport_flags |= (1 << 0);
-        dict.SetIntValue("transport_tcp", qr->query().tcp);
-
-        dns = &qr->query().dns;
-
-        if ( dns->questions_count() > 0 )
-            query_response_flags |= (1 << 2);
-        dict.SetIntValue("query_response_query_has_question", dns->questions_count() > 0);
-
-        if ( dns->checking_disabled() )
-            dns_flags |= (1 << 0);
-        if ( dns->authenticated_data() )
-            dns_flags |= (1 << 1);
-        if ( dns->z() )
-            dns_flags |= (1 << 2);
-        if ( dns->recursion_available() )
-            dns_flags |= (1 << 3);
-        if ( dns->recursion_desired() )
-            dns_flags |= (1 << 4);
-        if ( dns->truncated() )
-            dns_flags |= (1 << 5);
-        if ( dns->authoritative_answer() )
-            dns_flags |= (1 << 6);
-
-        dict.SetIntValue("query_checking_disabled", dns->checking_disabled());
-        dict.SetIntValue("query_authenticated_data", dns->authenticated_data());
-        dict.SetIntValue("query_z", dns->z());
-        dict.SetIntValue("query_recursion_available", dns->recursion_available());
-        dict.SetIntValue("query_recursion_desired", dns->recursion_desired());
-        dict.SetIntValue("query_truncated", dns->truncated());
-        dict.SetIntValue("query_authoritative_answer", dns->authoritative_answer());
-
-        if ( edns0 )
-        {
-            if ( edns0->do_bit() )
-                dns_flags |= (1 << 7);
-            dict.SetIntValue("query_do", edns0->do_bit());
-            dict.SetIntValue("query_edns_version", edns0->edns_version());
-            dict.SetIntValue("query_edns_udp_payload_size", edns0->udp_payload_size());
-        }
-
-        dict.SetIntValue("client_hoplimit", qr->query().hoplimit);
-        dict.SetIntValue("query_len", qr->query().wire_size);
-
-        dict.SetIntValue("query_opcode", dns->opcode());
-        dict.SetIntValue("query_rcode", dns->rcode());
-        dict.SetIntValue("query_qdcount", dns->questions_count());
-        dict.SetIntValue("query_ancount", dns->answers_count());
-        dict.SetIntValue("query_nscount", dns->authority_count());
-        dict.SetIntValue("query_arcount", dns->additional_count());
-    }
-    else
-    {
-        if ( qr->response().tcp )
-            transport_flags |= (1 << 0);
-        dict.SetIntValue("transport_tcp", qr->response().tcp);
-
-        client_address = qr->response().clientIP;
-        server_address = qr->response().serverIP;
-        client_port = qr->response().clientPort;
-        server_port = qr->response().serverPort;
-        query_timestamp = qr->response().timestamp;
-        response_timestamp = query_timestamp;
-        dns = &qr->response().dns;
+        dict.SetIntValue("transport_tcp", !!(*qr.qr_transport_flags & block_cbor::TCP));
+        dict.SetIntValue("transport_ipv6", !!(*qr.qr_transport_flags & block_cbor::IPV6));
     }
 
-    if ( client_address.is_ipv6() )
-        transport_flags |= (1 << 1);
-    dict.SetIntValue("transport_ipv6", client_address.is_ipv6());
-
-    dict.SetValue("timestamp_secs", ToString(std::chrono::duration_cast<std::chrono::seconds>(query_timestamp.time_since_epoch()).count()));
-
-    dict.SetValue("timestamp_microsecs", ToString(std::chrono::duration_cast<std::chrono::microseconds>(query_timestamp.time_since_epoch()).count()));
-
-    dict.SetValue("timestamp_nanosecs", ToString(std::chrono::duration_cast<std::chrono::nanoseconds>(query_timestamp.time_since_epoch()).count()));
-
-    std::chrono::nanoseconds ns = response_timestamp - query_timestamp;
-    dict.SetIntValue("response_delay_nanosecs", ns.count());
-
-    dict.SetIntValue("id", dns->id());
-
-    dict.SetValue("client_address", ToString(client_address));
-    dict.SetValue("server_address", ToString(server_address));
-
-    dict.SetIntValue("client_port", client_port);
-    dict.SetIntValue("server_port", server_port);
-
-    if ( dns->questions_count() > 0 )
+    if ( ( qr.qr_flags & block_cbor::QUERY_ONLY ) && qr.dns_flags )
     {
-        dict.SetValue("query_name", ToString(CaptureDNS::decode_domain_name(dns->queries().front().dname())));
-        dict.SetIntValue("query_type", dns->queries().front().query_type());
-        dict.SetIntValue("query_class", dns->queries().front().query_class());
+        dict.SetIntValue("query_checking_disabled", !!(*qr.dns_flags & block_cbor::QUERY_CD));
+        dict.SetIntValue("query_authenticated_data", !!(*qr.dns_flags & block_cbor::QUERY_AD));
+        dict.SetIntValue("query_z", !!(*qr.dns_flags * block_cbor::QUERY_Z));
+        dict.SetIntValue("query_recursion_available", !!(*qr.dns_flags & block_cbor::QUERY_RA));
+        dict.SetIntValue("query_recursion_desired", !!(*qr.dns_flags & block_cbor::QUERY_RD));
+        dict.SetIntValue("query_truncated", !!(*qr.dns_flags & block_cbor::QUERY_TC));
+        dict.SetIntValue("query_authoritative_answer", !!(*qr.dns_flags & block_cbor::QUERY_AA));
+        dict.SetIntValue("query_do", !!(*qr.dns_flags & block_cbor::QUERY_DO));
     }
 
-    if ( qr->has_response() )
+    if ( qr.query_edns_version )
+        dict.SetIntValue("query_edns_version", *qr.query_edns_version);
+    if ( qr.query_edns_payload_size )
+        dict.SetIntValue("query_edns_udp_payload_size", *qr.query_edns_payload_size);
+
+    if ( qr.hoplimit )
+        dict.SetIntValue("client_hoplimit", *qr.hoplimit);
+    if ( qr.query_size )
+        dict.SetIntValue("query_len", *qr.query_size);
+    if ( qr.query_opcode )
+        dict.SetIntValue("query_opcode", *qr.query_opcode);
+    if ( qr.query_rcode )
+        dict.SetIntValue("query_rcode", *qr.query_rcode);
+
+    if ( qr.qr_flags & block_cbor::QUERY_ONLY )
     {
-        query_response_flags |= (1 << 1);
-        auto edns0 = qr->response().dns.edns0();
-        if ( edns0 )
-            query_response_flags |= (1 << 4);
-        dict.SetIntValue("query_response_response_has_opt", edns0 ? 1 : 0);
-        if ( qr->response().dns.questions_count() > 0 )
-            query_response_flags |= (1 << 5);
-
-        dns = &qr->response().dns;
-
-        dict.SetIntValue("query_response_response_has_question", dns->questions_count() > 0);
-
-        if ( dns->checking_disabled() )
-            dns_flags |= (1 << 8);
-        if ( dns->authenticated_data() )
-            dns_flags |= (1 << 9);
-        if ( dns->z() )
-            dns_flags |= (1 << 10);
-        if ( dns->recursion_available() )
-            dns_flags |= (1 << 11);
-        if ( dns->recursion_desired() )
-            dns_flags |= (1 << 12);
-        if ( dns->truncated() )
-            dns_flags |= (1 << 13);
-        if ( dns->authoritative_answer() )
-            dns_flags |= (1 << 14);
-
-        dict.SetIntValue("response_checking_disabled", dns->checking_disabled());
-        dict.SetIntValue("response_authenticated_data", dns->authenticated_data());
-        dict.SetIntValue("response_z", dns->z());
-        dict.SetIntValue("response_recursion_available", dns->recursion_available());
-        dict.SetIntValue("response_recursion_desired", dns->recursion_desired());
-        dict.SetIntValue("response_truncated", dns->truncated());
-        dict.SetIntValue("response_authoritative_answer", dns->authoritative_answer());
-
-        dict.SetIntValue("response_len", qr->response().wire_size);
-
-        dict.SetIntValue("response_rcode", dns->rcode());
-
-        dict.SetIntValue("response_qdcount", dns->questions_count());
-        dict.SetIntValue("response_ancount", dns->answers_count());
-        dict.SetIntValue("response_nscount", dns->authority_count());
-        dict.SetIntValue("response_arcount", dns->additional_count());
+        int qcount = !!(qr.qr_flags & block_cbor::QR_HAS_QUESTION);
+        if ( qr.query_questions )
+            qcount += (*qr.query_questions).size();
+        dict.SetIntValue("query_qdcount", qcount);
+        dict.SetIntValue("query_ancount",
+                         ( qr.query_answers )
+                         ? (*qr.query_answers).size()
+                         : 0);
+        dict.SetIntValue("query_nscount",
+                         ( qr.query_authorities )
+                         ? (*qr.query_authorities).size()
+                         : 0);
+        dict.SetIntValue("query_arcount",
+                         ( qr.query_additionals )
+                         ? (*qr.query_additionals).size()
+                         : 0);
     }
 
-    dict.SetIntValue("transport_flags", transport_flags);
-    dict.SetIntValue("query_response_flags", query_response_flags);
-    dict.SetIntValue("dns_flags", dns_flags);
+    if ( qr.timestamp )
+    {
+        dict.SetValue("timestamp_secs", ToString(std::chrono::duration_cast<std::chrono::seconds>((*qr.timestamp).time_since_epoch()).count()));
+        dict.SetValue("timestamp_microsecs", ToString(std::chrono::duration_cast<std::chrono::microseconds>((*qr.timestamp).time_since_epoch()).count()));
+        dict.SetValue("timestamp_nanosecs", ToString(std::chrono::duration_cast<std::chrono::nanoseconds>((*qr.timestamp).time_since_epoch()).count()));
+    }
+    if ( qr.response_delay )
+        dict.SetIntValue("response_delay_nanosecs", (*qr.response_delay).count());
+
+    if ( qr.id )
+        dict.SetIntValue("id", *qr.id);
+
+    if ( qr.client_address )
+        dict.SetValue("client_address", ToString(*qr.client_address));
+    if ( qr.server_address )
+        dict.SetValue("server_address", ToString(*qr.server_address));
+
+    if ( qr.client_port )
+        dict.SetIntValue("client_port", *qr.client_port);
+    if ( qr.server_port )
+        dict.SetIntValue("server_port", *qr.server_port);
+
+    if ( qr.qname )
+        dict.SetValue("query_name", ToString(CaptureDNS::decode_domain_name(*qr.qname)));
+    if ( qr.query_type )
+        dict.SetIntValue("query_type", *qr.query_type);
+    if ( qr.query_class )
+        dict.SetIntValue("query_class", *qr.query_class);
+
+    if ( ( qr.qr_flags & block_cbor::RESPONSE_ONLY ) && qr.dns_flags )
+    {
+        dict.SetIntValue("response_checking_disabled", !!(*qr.dns_flags & block_cbor::RESPONSE_CD));
+        dict.SetIntValue("response_authenticated_data", !!(*qr.dns_flags & block_cbor::RESPONSE_AD));
+        dict.SetIntValue("response_z", !!(*qr.dns_flags * block_cbor::RESPONSE_Z));
+        dict.SetIntValue("response_recursion_available", !!(*qr.dns_flags & block_cbor::RESPONSE_RA));
+        dict.SetIntValue("response_recursion_desired", !!(*qr.dns_flags & block_cbor::RESPONSE_RD));
+        dict.SetIntValue("response_truncated", !!(*qr.dns_flags & block_cbor::RESPONSE_TC));
+        dict.SetIntValue("response_authoritative_answer", !!(*qr.dns_flags & block_cbor::RESPONSE_AA));
+    }
+
+    dict.SetIntValue("query_response_response_has_question", !(qr.qr_flags & block_cbor::RESPONSE_HAS_NO_QUESTION));
+
+    if ( qr.qr_flags & block_cbor::RESPONSE_ONLY )
+    {
+        int qcount = !!(qr.qr_flags & block_cbor::QR_HAS_QUESTION);
+        if ( qr.response_questions )
+            qcount += (*qr.response_questions).size();
+        dict.SetIntValue("response_qdcount", qcount);
+        dict.SetIntValue("response_ancount",
+                         ( qr.response_answers )
+                         ? (*qr.response_answers).size()
+                         : 0);
+        dict.SetIntValue("response_nscount",
+                         ( qr.response_authorities )
+                         ? (*qr.response_authorities).size()
+                         : 0);
+        dict.SetIntValue("response_arcount",
+                         ( qr.response_additionals )
+                         ? (*qr.response_additionals).size()
+                         : 0);
+
+        bool response_opt = false;
+        if ( qr.response_additionals )
+            for ( const auto& r : *qr.response_additionals )
+                if ( r.rtype && *r.rtype == CaptureDNS::OPT )
+                {
+                    response_opt = true;
+                    break;
+                }
+        dict.SetIntValue("query_response_response_has_opt", response_opt);
+    }
+
+    if ( qr.response_size )
+        dict.SetIntValue("response_len", *qr.response_size);
+
+    if ( qr.response_rcode )
+        dict.SetIntValue("response_rcode", *qr.response_rcode);
+
+    dict.SetIntValue("query_response_flags", qr.qr_flags);
+    if ( qr.dns_flags )
+        dict.SetIntValue("dns_flags", *qr.dns_flags);
 
     for ( auto&& val : opts_.values )
         dict.SetValue(val.first, val.second);

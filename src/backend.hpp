@@ -13,10 +13,10 @@
 #include <ostream>
 #include <string>
 
+#include "blockcborreader.hpp"
 #include "configuration.hpp"
 #include "dnsmessage.hpp"
 #include "pcapwriter.hpp"
-#include "queryresponse.hpp"
 
 /**
  ** Inspector output backend interface.
@@ -52,6 +52,11 @@ struct OutputBackendOptions
      * \brief xz compression preset to use.
      */
     unsigned int xz_preset{6};
+
+    /**
+     * \brief pseudo-anonymise?
+     */
+    bool pseudo_anon{false};
 };
 
 /**
@@ -79,7 +84,7 @@ public:
      * \param qr        the QueryResponse.
      * \param config    the configuration applying when recording the QR.
      */
-    virtual void output(std::shared_ptr<QueryResponse>& qr, const Configuration& config) = 0;
+    virtual void output(const QueryResponseData& qr, const Configuration& config) = 0;
 
     /**
      * \brief Write backend-specific report.
@@ -131,6 +136,11 @@ struct PcapBackendOptions
      * \brief auto choose name compression.
      */
     bool auto_compression{true};
+
+    /**
+     * \brief available defaults.
+     */
+    Defaults defaults;
 };
 
 /**
@@ -156,10 +166,10 @@ public:
     /**
      * \brief Output a QueryResponse.
      *
-     * \param qr        the QueryResponse.
+     * \param qrd       the QueryResponse.
      * \param config    the configuration applying when recording the QR.
      */
-    virtual void output(std::shared_ptr<QueryResponse>& qr, const Configuration& config);
+    virtual void output(const QueryResponseData& qrd, const Configuration& config);
 
     /**
      * \brief Write backend-specific report.
@@ -177,18 +187,41 @@ public:
 
 private:
     /**
+     * \brief Convert QueryResponseData to wire format.
+     *
+     * \param qr        the Query/Response.
+     * \returns a QueryResponse.
+     */
+    std::unique_ptr<QueryResponse> convert_to_wire(const QueryResponseData& qrd);
+
+    /**
+     * \brief Add extra sections to DNS message.
+     *
+     * \param dns         the DNS message.
+     * \param questions   second and subsequent Question sections.
+     * \param answers     Answer sections.
+     * \param authorities Authorities sections.
+     * \param additionals Additional sections.
+     */
+    void add_extra_sections(DNSMessage& dns,
+                            const boost::optional<std::vector<QueryResponseData::Question>>& questions,
+                            const boost::optional<std::vector<QueryResponseData::RR>>& answers,
+                            const boost::optional<std::vector<QueryResponseData::RR>>& authorities,
+                            const boost::optional<std::vector<QueryResponseData::RR>>& additionals);
+
+    /**
      * \brief Write a TCP QR.
      *
      * \param qr        the Query/Response.
      */
-    void write_qr_tcp(std::shared_ptr<QueryResponse> qr);
+    void write_qr_tcp(const std::unique_ptr<QueryResponse>& qr);
 
     /**
      * \brief Write a UDP QR.
      *
      * \param qr        the Query/Response.
      */
-    void write_qr_udp(std::shared_ptr<QueryResponse> qr);
+    void write_qr_udp(const std::unique_ptr<QueryResponse>& qr);
 
     /**
      * \brief Write a single UDP DNS packet.
