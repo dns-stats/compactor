@@ -442,8 +442,10 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     else
         res.qname = defaults_.query_name;
     res.qr_flags = sig.qr_flags;
-    res.qr_transport_flags = sig.qr_transport_flags;
-    res.dns_flags = sig.dns_flags;
+    if ( sig.qr_transport_flags )
+        res.qr_transport_flags = block_cbor::convert_transport_flags(*sig.qr_transport_flags, file_format_version_);
+    if ( sig.dns_flags )
+        res.dns_flags = block_cbor::convert_dns_flags(*sig.dns_flags, file_format_version_);
     if ( sig.query_classtype )
     {
         const block_cbor::ClassType& ct = block_->class_types[*sig.query_classtype];
