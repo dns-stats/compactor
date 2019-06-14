@@ -441,6 +441,7 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
         res.qname = block_->names_rdatas[*qri.qname].str;
     else
         res.qname = defaults_.query_name;
+    res.qr_flags = sig.qr_flags;
     res.qr_transport_flags = sig.qr_transport_flags;
     res.dns_flags = sig.dns_flags;
     if ( sig.query_classtype )
@@ -472,19 +473,18 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     res.response_rcode = sig.response_rcode;
     res.response_size = qri.response_size;
 
-    if ( qri.query_extra_info )
-    {
-    }
-
-    if ( qri.response_extra_info )
-    {
-    }
+    read_extra_info(qri.query_extra_info,
+                    res.query_questions, res.query_answers,
+                    res.query_authorities, res.query_additionals);
+    read_extra_info(qri.response_extra_info,
+                    res.response_questions, res.response_answers,
+                    res.response_authorities, res.response_additionals);
 
     return res;
 }
 
 void BlockCborReader::read_extra_info(
-    std::unique_ptr<block_cbor::QueryResponseExtraInfo>& extra_info,
+    const std::unique_ptr<block_cbor::QueryResponseExtraInfo>& extra_info,
     boost::optional<std::vector<QueryResponseData::Question>>& questions,
     boost::optional<std::vector<QueryResponseData::RR>>& answers,
     boost::optional<std::vector<QueryResponseData::RR>>& authorities,

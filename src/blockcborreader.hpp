@@ -139,6 +139,11 @@ public:
     /**
      * \brief transport flags.
      */
+    boost::optional<uint8_t> qr_flags;
+
+    /**
+     * \brief transport flags.
+     */
     boost::optional<uint8_t> qr_transport_flags;
 
     /*
@@ -173,7 +178,7 @@ public:
     /**
      * \brief Query Authority sections.
      */
-    boost::optional<std::vector<RR>> query_authories;
+    boost::optional<std::vector<RR>> query_authorities;
 
     /**
      * \brief Query Additional sections.
@@ -506,7 +511,7 @@ private:
      * \param index index of the block RR.
      * \param res   output RR vector.
      */
-    void read_extra_info(std::unique_ptr<block_cbor::QueryResponseExtraInfo>& extra_info,
+    void read_extra_info(const std::unique_ptr<block_cbor::QueryResponseExtraInfo>& extra_info,
                          boost::optional<std::vector<QueryResponseData::Question>>& questions,
                          boost::optional<std::vector<QueryResponseData::RR>>& answers,
                          boost::optional<std::vector<QueryResponseData::RR>>& authorities,

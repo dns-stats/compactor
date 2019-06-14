@@ -894,7 +894,7 @@ namespace block_cbor {
         /**
          * \brief indicate whether query and response are present.
          */
-        int qr_flags;
+        uint8_t qr_flags;
 
         /**
          * \brief index of address of the DNS server.
