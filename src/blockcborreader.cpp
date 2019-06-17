@@ -412,10 +412,13 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
 {
     QueryResponseData res;
 
-    eof = true;
+    eof = false;
     while ( need_block_ )
         if ( !readBlock() )
+        {
+            eof = true;
             return res;
+        }
 
     const block_cbor::QueryResponseItem& qri = block_->query_response_items[next_item_];
     need_block_ = (block_->query_response_items.size() == ++next_item_);
@@ -431,6 +434,7 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     else
         res.client_address = defaults_.client_address;
     res.client_port = qri.client_port;
+    res.hoplimit = qri.hoplimit;
     if ( sig.server_address )
         res.server_address = get_server_address(*sig.server_address, sig.qr_transport_flags);
     else
@@ -462,6 +466,7 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     res.query_arcount = sig.query_arcount;
     res.query_nscount = sig.query_nscount;
     res.query_opcode = sig.query_opcode;
+    res.query_rcode = sig.query_rcode;
     res.query_edns_version = sig.query_edns_version;
     res.query_edns_payload_size = sig.query_edns_payload_size;
     if ( sig.query_opt_rdata )
