@@ -24,6 +24,8 @@
 #include "blockcbordata.hpp"
 #include "ipaddress.hpp"
 
+class Configuration;
+
 /**
  * \struct Size
  * \brief A value holding a size, an unsigned number that may be specified
@@ -530,6 +532,16 @@ public:
      * \params hints hints value.
      */
     void set_other_data_hints(block_cbor::OtherDataHintFlags hints);
+
+    /**
+     * \brief Check hints against config.
+     *
+     * If they are incompatible, throw exception.
+     *
+     * \param config config values.
+     * \throws boost::program_options::error.
+     */
+    void check_config(const Configuration& config);
 
 private:
     /**

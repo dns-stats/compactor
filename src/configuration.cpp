@@ -508,6 +508,7 @@ po::variables_map Configuration::reread_config_file()
     }
     else
         exclude_hints.set_section_excludes(output_options_queries, output_options_responses);
+    exclude_hints.check_config(*this);
 
     return res;
 }
@@ -918,6 +919,8 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
         vlan_ids.push_back(v);
 
     filter = cp.filter;
+
+    exclude_hints.check_config(*this);
 }
 
 /**
@@ -1931,4 +1934,16 @@ block_cbor::OtherDataHintFlags HintsExcluded::get_other_data_hints() const
 void HintsExcluded::set_other_data_hints(block_cbor::OtherDataHintFlags hints)
 {
     address_events = !( hints & block_cbor::ADDRESS_EVENT_COUNTS );
+}
+
+void HintsExcluded::check_config(const Configuration& config)
+{
+    // Check that transport flags are not excluded if less than complete
+    // addresses are stored.
+    if ( transport &&
+         ( config.client_address_prefix_ipv4 != DEFAULT_IPV4_PREFIX_LENGTH ||
+           config.server_address_prefix_ipv4 != DEFAULT_IPV4_PREFIX_LENGTH ||
+           config.client_address_prefix_ipv6 != DEFAULT_IPV6_PREFIX_LENGTH ||
+           config.server_address_prefix_ipv6 != DEFAULT_IPV6_PREFIX_LENGTH ) )
+        throw po::error("Can't omit transport flags if not storing full addresses.");
 }

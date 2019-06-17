@@ -911,8 +911,11 @@ namespace block_cbor {
             enc.write(server_port_index);
             enc.write(server_port);
         }
-        enc.write(qr_transport_flags_index);
-        enc.write(qr_transport_flags);
+        if ( !exclude.transport )
+        {
+            enc.write(qr_transport_flags_index);
+            enc.write(qr_transport_flags);
+        }
         if ( !exclude.dns_flags )
         {
             enc.write(qr_dns_flags_index);
