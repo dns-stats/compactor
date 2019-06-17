@@ -473,10 +473,10 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
                          ( qr.query_authorities )
                          ? (*qr.query_authorities).size()
                          : 0);
-        dict.SetIntValue("query_arcount",
-                         ( qr.query_additionals )
-                         ? (*qr.query_additionals).size()
-                         : 0);
+        qcount = !!(qr.qr_flags & block_cbor::QUERY_HAS_OPT);
+        if ( qr.query_additionals )
+            qcount += (*qr.query_additionals).size();
+        dict.SetIntValue("query_arcount", qcount);
     }
 
     if ( qr.timestamp )
@@ -558,6 +558,8 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
         dict.SetIntValue("response_rcode", *qr.response_rcode);
 
     dict.SetIntValue("query_response_flags", qr.qr_flags);
+    if ( qr.qr_transport_flags )
+        dict.SetIntValue("transport_flags", *qr.qr_transport_flags);
     if ( qr.dns_flags )
         dict.SetIntValue("dns_flags", *qr.dns_flags);
 
