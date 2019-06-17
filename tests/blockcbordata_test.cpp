@@ -2134,7 +2134,6 @@ SCENARIO("QueryResponseItems can be read", "[block]")
                 bp.storage_parameters.ticks_per_second = 1000000;
                 qri1_r.readCbor(tcbd, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, fields, defaults);
 
-                REQUIRE(qri1.qr_flags == qri1_r.qr_flags);
                 REQUIRE(qri1.client_address == qri1_r.client_address);
                 REQUIRE(qri1.client_port == qri1_r.client_port);
                 REQUIRE(qri1.hoplimit == qri1_r.hoplimit);
