@@ -771,7 +771,192 @@ void BlockCborReader::dump_address_events(std::ostream& os)
     }
 }
 
+namespace
+{
+    void output_time_point(std::ostream& output, const std::chrono::system_clock::time_point timepoint)
+    {
+        std::time_t t = std::chrono::system_clock::to_time_t(timepoint);
+        std::tm tm = *std::gmtime(&t);
+        char buf[40];
+        std::strftime(buf, sizeof(buf), "%Y-%m-%d %Hh%Mm%Ss", &tm);
+        double us = std::chrono::duration_cast<std::chrono::microseconds>(timepoint.time_since_epoch()).count() % 1000000;
+        output << buf << us << "us UTC:";
+    }
+}
+
 std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
 {
+    std::time_t t;
+    std::tm tm;
+    double us;
+    char buf[40];
+    const char* transport = NULL;
+    unsigned count;
+
+    if ( qr.qr_transport_flags )
+    {
+        switch ((*qr.qr_transport_flags >> 1) & 0xf)
+        {
+        case 0: transport = "UDP"; break;
+        case 1: transport = "TCP"; break;
+        case 2: transport = "TLS"; break;
+        case 3: transport = "DTLS"; break;
+        case 4: transport = "DOH"; break;
+        default: transport = "Unknown"; break;
+        }
+    }
+
     output << "Query/Response:\n";
+    if ( qr.qr_flags & block_cbor::QUERY_ONLY )
+    {
+        output << "Query: ";
+        if ( qr.timestamp )
+            output_time_point(output, *qr.timestamp);
+        if ( qr.client_address )
+            output << "\n\tClient IP: " << *qr.client_address;
+        if ( qr.server_address )
+            output << "\n\tServer IP: " << *qr.server_address;
+        if ( transport )
+            output << "\n\tTransport: " << transport;
+        if ( qr.client_port )
+            output << "\n\tClient port: " << *qr.client_port;
+        if ( qr.server_port )
+            output << "\n\tServer port: " << *qr.server_port;
+        if ( qr.hoplimit )
+            output << "\n\tHop limit: " << +*qr.hoplimit;
+        output << "\n\tDNS QR: Query";
+        if ( qr.id )
+            output << "\n\tID: " << *qr.id;
+        if ( qr.query_opcode )
+            output << "\n\tOpcode: " << *qr.query_opcode;
+        if ( qr.query_rcode )
+            output << "\n\tRcode: " << *qr.query_rcode;
+        if ( qr.dns_flags )
+        {
+            output << "\n\tFlags: ";
+            if ( *qr.dns_flags & block_cbor::QUERY_AA )
+                output << "AA ";
+            if ( *qr.dns_flags & block_cbor::QUERY_TC )
+                output << "TC ";
+            if ( *qr.dns_flags & block_cbor::QUERY_RD )
+                output << "RD ";
+            if ( *qr.dns_flags & block_cbor::QUERY_RA )
+                output << "RA ";
+            if ( *qr.dns_flags & block_cbor::QUERY_AD )
+                output << "AD ";
+            if ( *qr.dns_flags & block_cbor::QUERY_CD )
+                output << "CD ";
+        }
+        count = (qr.query_questions) ? (*qr.query_questions).size() : 0;
+        if ( qr.qr_flags & block_cbor::QR_HAS_QUESTION )
+            count += 1;
+        output << "\n\tQdCount: " << count;
+        count = ( qr.query_answers ) ? (*qr.query_answers).size() : 0;
+        output << "\n\tAnCount: " << count;
+        count = ( qr.query_authorities ) ? (*qr.query_authorities).size() : 0;
+        output << "\n\tNsCount: " << count;
+        count = ( qr.query_additionals ) ? (*qr.query_additionals).size() : 0;
+        if ( qr.qr_flags & block_cbor::QUERY_HAS_OPT )
+            count += 1;
+        output << "\n\tArCount: " << count;
+
+        if ( qr.qname )
+            output << "\n\tName: " << CaptureDNS::decode_domain_name(*qr.qname);
+        if ( qr.query_type )
+            output << "\n\tType: " << *qr.query_type;
+        if ( qr.query_class )
+            output << "\n\tClass: " << *qr.query_class;
+
+        if ( qr.query_questions )
+            for ( const auto& q : *qr.query_questions )
+            {
+                if ( q.qname )
+                    output << "\n\tName: " << CaptureDNS::decode_domain_name(*q.qname);
+                if ( q.qtype )
+                    output << "\n\tType: " << *q.qtype;
+                if ( q.qclass )
+                    output << "\n\tClass: " << *q.qclass;
+            }
+
+        output << "\n";
+    }
+    else
+        output << "No Query\n";
+
+    if ( qr.qr_flags & block_cbor::RESPONSE_ONLY )
+    {
+        output << "Response: ";
+        if ( qr.timestamp && qr.response_delay )
+            output_time_point(output, *qr.timestamp + *qr.response_delay);
+        if ( qr.client_address )
+            output << "\n\tClient IP: " << *qr.client_address;
+        if ( qr.server_address )
+            output << "\n\tServer IP: " << *qr.server_address;
+        if ( transport )
+            output << "\n\tTransport: " << transport;
+        if ( qr.client_port )
+            output << "\n\tClient port: " << *qr.client_port;
+        if ( qr.server_port )
+            output << "\n\tServer port: " << *qr.server_port;
+        if ( qr.hoplimit )
+            output << "\n\tHop limit: 64\n\tDNS QR: Response";
+        if ( qr.id )
+            output << "\n\tID: " << *qr.id;
+        if ( qr.query_opcode )
+            output << "\n\tOpcode: " << *qr.query_opcode;
+        if ( qr.response_rcode )
+            output << "\n\tRcode: " << *qr.response_rcode;
+        if ( qr.dns_flags )
+        {
+            output << "\n\tFlags: ";
+            if ( *qr.dns_flags & block_cbor::RESPONSE_AA )
+                output << "AA ";
+            if ( *qr.dns_flags & block_cbor::RESPONSE_TC )
+                output << "TC ";
+            if ( *qr.dns_flags & block_cbor::RESPONSE_RD )
+                output << "RD ";
+            if ( *qr.dns_flags & block_cbor::RESPONSE_RA )
+                output << "RA ";
+            if ( *qr.dns_flags & block_cbor::RESPONSE_AD )
+                output << "AD ";
+            if ( *qr.dns_flags & block_cbor::RESPONSE_CD )
+                output << "CD ";
+        }
+        count = 0;
+        if ( qr.qr_flags & block_cbor::QR_HAS_QUESTION )
+            count = 1;
+        if ( qr.response_questions )
+            count += (*qr.response_questions).size();
+        output << "\n\tQdCount: " << count;
+        count = ( qr.response_answers ) ? (*qr.response_answers).size() : 0;
+        output << "\n\tAnCount: " << count;
+        count = ( qr.response_authorities ) ? (*qr.response_authorities).size() : 0;
+        output << "\n\tNsCount: " << count;
+        count = ( qr.response_additionals ) ? (*qr.response_additionals).size() : 0;
+        output << "\n\tArCount: " << count;
+
+        if ( qr.qname )
+            output << "\n\tName: " << CaptureDNS::decode_domain_name(*qr.qname);
+        if ( qr.query_type )
+            output << "\n\tType: " << *qr.query_type;
+        if ( qr.query_class )
+            output << "\n\tClass: " << *qr.query_class;
+
+        if ( qr.response_questions )
+            for ( const auto& q : *qr.response_questions )
+            {
+                if ( q.qname )
+                    output << "\n\tName: " << CaptureDNS::decode_domain_name(*q.qname);
+                if ( q.qtype )
+                    output << "\n\tType: " << *q.qtype;
+                if ( q.qclass )
+                    output << "\n\tClass: " << *q.qclass;
+            }
+
+        output << "\n";
+    }
+    else
+        output << "No Response\n";
+
+    return output;
 }
