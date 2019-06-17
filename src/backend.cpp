@@ -185,7 +185,6 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
         response->serverIP = *qrd.server_address;
         response->clientPort = *qrd.client_port;
         response->serverPort = *qrd.server_port;
-        response->hoplimit = *qrd.hoplimit;
         response->dns.type(CaptureDNS::QRType::RESPONSE);
         response->dns.id(*qrd.id);
         response->dns.opcode(*qrd.query_opcode);
