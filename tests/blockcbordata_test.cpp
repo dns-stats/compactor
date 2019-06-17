@@ -2186,7 +2186,8 @@ SCENARIO("AddressEventCounts can be read", "[block]")
             {
                 AddressEventCount aec1_r;
                 block_cbor::FileVersionFields fields;
-                aec1_r.readCbor(tcbd, fields);
+                Defaults defaults;
+                aec1_r.readCbor(tcbd, fields, defaults);
 
                 REQUIRE(aec1.aei == aec1_r.aei);
                 REQUIRE(aec1.count == aec1_r.count);
@@ -2207,9 +2208,12 @@ SCENARIO("AddressEventCounts can be read", "[block]")
 
             THEN("decoder input is correct")
             {
+                aec1.aei.transport_flags = boost::none;
+
                 AddressEventCount aec1_r;
                 block_cbor::FileVersionFields fields(0, 5, 0);
-                aec1_r.readCbor(tcbd, fields);
+                Defaults defaults;
+                aec1_r.readCbor(tcbd, fields, defaults);
 
                 REQUIRE(aec1.aei == aec1_r.aei);
                 REQUIRE(aec1.count == aec1_r.count);
