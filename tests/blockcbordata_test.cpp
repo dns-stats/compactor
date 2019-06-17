@@ -1013,12 +1013,11 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             }
         }
 
-        WHEN("values are encoded, DNS and Q/R flags excluded")
+        WHEN("values are encoded, DNS flags excluded")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
             exclude.dns_flags = true;
-            exclude.qr_flags = true;
             qs1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
@@ -1030,6 +1029,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
                         find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
                         find_query_response_signature_index(QueryResponseSignatureField::query_rcode), 22,

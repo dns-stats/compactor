@@ -1571,7 +1571,6 @@ HintsExcluded::HintsExcluded()
       server_address(false), server_port(false),
       transport(false),
       transaction_id(false),
-      qr_flags(false),
       query_opcode(false),
       dns_flags(false),
       query_rcode(false),

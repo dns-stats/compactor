@@ -293,11 +293,6 @@ public:
     bool transaction_id;
 
     /**
-     * \brief output query response flags?
-     */
-    bool qr_flags;
-
-    /**
      * \brief output query opcode?
      */
     bool query_opcode;
