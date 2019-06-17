@@ -933,18 +933,18 @@ namespace block_cbor {
             enc.write(query_classtype_index);
             enc.write(*query_classtype);
         }
+        if ( ( qr_flags & QUERY_ONLY ) && !exclude.query_rcode )
+        {
+            enc.write(query_rcode_index);
+            enc.write(query_rcode);
+        }
+        if ( ( qr_flags & QUERY_AND_RESPONSE ) && !exclude.query_opcode )
+        {
+            enc.write(query_opcode_index);
+            enc.write(query_opcode);
+        }
         if ( qr_flags & QUERY_ONLY )
         {
-            if ( !exclude.query_rcode )
-            {
-                enc.write(query_rcode_index);
-                enc.write(query_rcode);
-            }
-            if ( !exclude.query_opcode )
-            {
-                enc.write(query_opcode_index);
-                enc.write(query_opcode);
-            }
             if ( !exclude.query_ancount )
             {
                 enc.write(query_an_index);
@@ -1262,8 +1262,9 @@ namespace block_cbor {
             enc.write(hoplimit);
         }
 
-        if ( ( ( qr_flags & QUERY_AND_RESPONSE ) == QUERY_AND_RESPONSE ) &&
-             !exclude.response_delay )
+        if ( ( qr_flags & RESPONSE_ONLY ) &&
+             !exclude.response_delay &&
+            response_delay )
         {
             enc.write(delay_index);
             enc.write((*response_delay).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);

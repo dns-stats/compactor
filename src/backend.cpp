@@ -179,7 +179,9 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
     if ( qrd.qr_flags & block_cbor::RESPONSE_ONLY )
     {
         response = make_unique<DNSMessage>();
-        response->timestamp = *qrd.timestamp + *qrd.response_delay;
+        response->timestamp = *qrd.timestamp;
+        if ( qrd.response_delay )
+            response->timestamp += *qrd.response_delay;
         response->tcp = *qrd.qr_transport_flags & block_cbor::TCP;
         response->clientIP = *qrd.client_address;
         response->serverIP = *qrd.server_address;

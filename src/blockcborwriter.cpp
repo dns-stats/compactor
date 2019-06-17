@@ -188,6 +188,8 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
 
         qri.qr_flags |= block_cbor::RESPONSE_ONLY;
         qri.response_size = r.wire_size;
+        if ( !qs.query_opcode )         // Set from response if not already set.
+            qs.query_opcode = r.dns.opcode();
         qs.response_rcode = r.dns.rcode();
 
         auto edns0 = r.dns.edns0();
