@@ -194,7 +194,8 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
         response->wire_size = *qrd.response_size;
         block_cbor::set_dns_flags(*response, *qrd.dns_flags, false);
 
-        if ( qrd.qr_flags & block_cbor::QR_HAS_QUESTION )
+        if ( ( qrd.qr_flags & block_cbor::QR_HAS_QUESTION ) &&
+             ! ( qrd.qr_flags & block_cbor::RESPONSE_HAS_NO_QUESTION ) )
             response->dns.add_query(CaptureDNS::query(*qrd.qname, *qrd.query_type, *qrd.query_class));
 
         add_extra_sections(*response,
