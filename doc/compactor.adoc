@@ -90,7 +90,7 @@ In a configuration file, the long form of the option name must be used. So, for
 example, to set the snap length to 64, the configuration file entry must read
 `snaplen=64`. `s=64` will not be accepted.
 
-The --excludesfile option can not be specified in the configuration file.
+The `excludesfile` option cannot be specified in the configuration file.
 
 ==== Capture from network
 
@@ -201,7 +201,7 @@ The --excludesfile option can not be specified in the configuration file.
   Indicate which optional sections should be included in the main output. This argument
   can be given multiple times. By default none of these optional sections are included.
   This option is deprecated. and will be removed in a future release. It is replaced by
-  the excluded_fields file. See the user guide for more information.
+  the `excludesfile` option. See the user guide for more information.
 
 *-G, --ignore-opcode* _OPCODE_::
    Indicate an opcode _OPCODE_ that should not be included in the main output.
@@ -300,12 +300,117 @@ as *interface2*, and so on. Similarly, *vlan-id* substitutes all configured VLAN
 separated by *-*. The first VLAN ID can be substituted as *vlan1*, *vland-id2*
 substitutes the second VLAN ID if configured, and so on.
 
+== EXCLUDED FIELDS
+
+To minimise the size of output files, _compactor_ can omit fields that are not required
+by the user. The fields to be omitted are specified by an exclude file. This file
+can be specified using the `excludesfile` option. If not given, the
+default configuration file `/etc/dns-stats-compactor/excluded_fields.conf`
+is read if present.
+
+The fields that can be omitted are divided into different categories.
+By default all fields are included in the output.
+To omit a field from the output, specify the field name in the exclude file in the
+appropriate category section.
+
+Category `[ip-header]`:
+
+*time-offset* ::
+  Time offset of a query/response record from the start of capture. Used to
+  construct the query timestamp.
+*response-delay* ::
+  The time difference between query and response. Used to reconstruct the
+  response timestamp.
+*client-address* ::
+  The IP address of the DNS client.
+*client-port* ::
+  The port used by the DNS client.
+*client-hoplimit* ::
+  The IPv4 TTL or IPv6 hoplimit of the query.
+*server-address* ::
+  The IP address of the DNS server.
+*server-port* ::
+  The port used by the DNS server.
+*qr-transport-flags* ::
+  Details on the query and response transport - IP version, UDP/TCP etc.
+
+Category `[dns-header]`:
+
+*transaction-id* ::
+  The DNS transaction ID of the query/response.
+*query-opcode* ::
+  The DNS OPCODE of the query.
+*query-rcode* ::
+  The DNS RCODE of the query.
+*dns-flags* ::
+  The DNS flags of the query and response.
+*response-rcode* ::
+  The DNS RCODE of the response.
+*query-qdcount* ::
+  The QDCOUNT of the query.
+*query-ancount* ::
+  The ANCOUNT of the query.
+*query-arcount* ::
+  The ARCOUNT of the query.
+*query-nscount* ::
+  The NSCOUNT of the query.
+
+Category `[dns-payload]`:
+
+*query-name* ::
+  The QNAME of the first Question section of the query.
+*query-class-type* ::
+  The TYPE and CLASS of the query.
+*rr-ttl* ::
+  The TTL in any Resource Record (RR) in the response.
+*rr-rdata* ::
+  The RDATA in any Resource Record (RR) in the response.
+*query-udp-size* ::
+  Query EDNS sender's maximum acceptable UDP message size.
+*query-edns-version* ::
+  Query EDNS version.
+*query-opt-data* ::
+  Data part of Query OPT.
+*query-question-sections* ::
+  Second and subsequent Question QRRs in query.
+*query-answer-sections* ::
+  Answer RRs in query.
+*query-authority-sections* ::
+  Authority RRs in query.
+*query-additional-sections* ::
+  Additional RRs in query.
+*response-answer-sections* ::
+  Answer RRs in response.
+*response-authority-sections* ::
+  Authority RRs in response.
+*response-additional-sections* ::
+  Additional RRs in response.
+
+Category `[dns-meta-data]`:
+
+*query-size* ::
+  Size of query DNS message.
+*response-size* ::
+  Size of response DNS message.
+
+Category `[storage-meta-data]`:
+*address-events* ::
+  Address events.
+
 == OUTPUT FILE SECTIONS
 
 The main output of DNS Query/Response pair information can optionally include
-full details on sections of the DNS messages. Using the -n, --include option.
-This option is deprecated. and will be removed in a future release. It is replaced by
-the excluded_fields file. See the user guide for more information. 
+full details on sections of the DNS messages.
+
+The sections to include are specified with the `include` option.
+This option is deprecated, and will be removed in a future release. It is replaced by
+the `excludesfile` option. See the user guide for more information.
+`include` can only be specified if no `excludesfile` is read.
+In that case, no section details are included except for those sections
+specified using the `include` option.
+
+The `include` option can be given multiple times. The sections that can
+be included are:
 
 *query-questions*::
   Include second and subsequent QUESTION sections from queries. The first
