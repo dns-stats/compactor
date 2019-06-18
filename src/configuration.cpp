@@ -1670,7 +1670,7 @@ HintsExcluded::HintsExcluded()
          "exclude query EDNS version.")
         ("dns-payload.query-opt-data",
          po::value<bool>(&query_opt_rdata)->implicit_value(true)->default_value(false),
-         "exclude query UDP size.")
+         "exclude query OPT data.")
         ("dns-payload.query-question-sections",
          po::value<bool>(&query_question_section)->implicit_value(true)->default_value(false),
          "exclude query second or subsequent question sections.")
