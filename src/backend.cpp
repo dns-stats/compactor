@@ -81,7 +81,10 @@ void PcapBackend::output(const QueryResponseData& qrd, const Configuration& conf
     std::unique_ptr<QueryResponse> qr{convert_to_wire(qrd)};
 
     if ( using_compression_ &&
-         config.output_options_responses == Configuration::ALL &&
+         !config.exclude_hints.query_question_section &&
+         !config.exclude_hints.response_answer_section &&
+         !config.exclude_hints.response_authority_section &&
+         !config.exclude_hints.response_additional_section &&
          qr->has_response() &&
          qr->response().wire_size != qr->response().dns.size() )
     {
