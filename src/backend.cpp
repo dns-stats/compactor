@@ -422,3 +422,58 @@ void PcapBackend::write_packet(Tins::PDU* pdu,
 
     writer_->write_packet(ethernet, timestamp);
 }
+
+void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
+{
+    if ( exclude_hints.timestamp && !opts_.defaults.time_offset )
+        throw pcap_defaults_backend_error("time-offset");
+    if ( exclude_hints.client_address && !opts_.defaults.client_address )
+        throw pcap_defaults_backend_error("client-address");
+    if ( exclude_hints.client_port && !opts_.defaults.client_port )
+        throw pcap_defaults_backend_error("client-port");
+    if ( exclude_hints.client_hoplimit && !opts_.defaults.client_hoplimit )
+        throw pcap_defaults_backend_error("client-hoplimit");
+    if ( exclude_hints.server_address && !opts_.defaults.server_address )
+        throw pcap_defaults_backend_error("server-address");
+    if ( exclude_hints.server_port && !opts_.defaults.server_port )
+        throw pcap_defaults_backend_error("server-port");
+    if ( exclude_hints.transport && !opts_.defaults.transport )
+        throw pcap_defaults_backend_error("qr-transport-flags");
+
+    if ( exclude_hints.transaction_id && !opts_.defaults.transaction_id )
+        throw pcap_defaults_backend_error("transaction-id");
+    if ( exclude_hints.query_opcode && !opts_.defaults.query_opcode )
+        throw pcap_defaults_backend_error("query-opcode");
+    if ( exclude_hints.dns_flags && !opts_.defaults.dns_flags )
+        throw pcap_defaults_backend_error("dns-flags");
+    if ( exclude_hints.query_rcode && !opts_.defaults.query_rcode )
+        throw pcap_defaults_backend_error("query-rcode");
+    if ( exclude_hints.query_name && !opts_.defaults.query_name )
+        throw pcap_defaults_backend_error("query-name");
+    if ( exclude_hints.query_class_type )
+    {
+        if ( !opts_.defaults.query_class )
+            throw pcap_defaults_backend_error("query-class");
+        if ( !opts_.defaults.query_type )
+            throw pcap_defaults_backend_error("query-type");
+    }
+    if ( exclude_hints.query_size && !opts_.defaults.query_size )
+        throw pcap_defaults_backend_error("query-size");
+    if ( exclude_hints.query_udp_size && !opts_.defaults.query_udp_size )
+        throw pcap_defaults_backend_error("query-udp-size");
+    if ( exclude_hints.query_edns_version && !opts_.defaults.query_edns_version )
+        throw pcap_defaults_backend_error("query-edns-version");
+    if ( exclude_hints.query_opt_rdata && !opts_.defaults.query_opt_rdata )
+        throw pcap_defaults_backend_error("query-opt-data");
+    if ( exclude_hints.response_delay && !opts_.defaults.response_delay )
+        throw pcap_defaults_backend_error("response-delay");
+    if ( exclude_hints.response_rcode && !opts_.defaults.response_rcode )
+        throw pcap_defaults_backend_error("response-rcode");
+    if ( exclude_hints.response_size && !opts_.defaults.response_size )
+        throw pcap_defaults_backend_error("response-size");
+
+    if ( exclude_hints.rr_ttl && !opts_.defaults.rr_ttl )
+        throw pcap_defaults_backend_error("rr-ttl");
+    if ( exclude_hints.rr_rdata && !opts_.defaults.rr_rdata )
+        throw pcap_defaults_backend_error("rr-rdata");
+}

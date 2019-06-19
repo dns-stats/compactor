@@ -106,6 +106,8 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
     BlockCborReader cbr(dec, config, options.defaults, options.pseudo_anon);
     boost::optional<std::chrono::system_clock::time_point> earliest_time, latest_time;
 
+    backend->check_exclude_hints(config.exclude_hints);
+
     try
     {
         auto start = std::chrono::system_clock::now();

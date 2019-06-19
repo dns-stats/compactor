@@ -23,6 +23,30 @@
  **/
 
 /**
+ * \exception backend_error
+ * \brief Signals an error with a backend.
+ */
+class backend_error : public std::runtime_error
+{
+public:
+    /**
+     * \brief Constructor.
+     *
+     * \param what message detailing the problem.
+     */
+    explicit backend_error(const std::string& what)
+        : std::runtime_error(what) {}
+
+    /**
+     * \brief Constructor.
+     *
+     * \param what message detailing the problem.
+     */
+    explicit backend_error(const char*  what)
+        : std::runtime_error(what) {}
+};
+
+/**
  * \struct OutputBackendOptions
  * \brief Common options for the inspector backends.
  */
@@ -79,6 +103,17 @@ public:
     virtual ~OutputBackend() {}
 
     /**
+     * \brief Give the backend a look at the exclude hints from the input.
+     *
+     * Give it a chance to throw an error if it doesn't think that
+     * it has enough material to work with.
+     *
+     * \param exclude_hints the exclude hints.
+     * \throws backend_error on problems.
+     */
+    virtual void check_exclude_hints(const HintsExcluded& exclude_hints) {}
+
+    /**
      * \brief Output a QueryResponse.
      *
      * \param qr        the QueryResponse.
@@ -114,6 +149,22 @@ private:
      * \brief common options.
      */
     const OutputBackendOptions& baseopts_;
+};
+
+/**
+ * \exception pcap_defaults_backend_error
+ * \brief Signals a missing required default in the PCAP backend.
+ */
+class pcap_defaults_backend_error : public backend_error
+{
+public:
+    /**
+     * \brief Constructor.
+     *
+     * \param what the missing default.
+     */
+    explicit pcap_defaults_backend_error(const std::string& what)
+        : backend_error("Require default: " + what) {}
 };
 
 /**
@@ -162,6 +213,18 @@ public:
      * \brief Destructor.
      */
     virtual ~PcapBackend();
+
+    /**
+     * \brief Give the backend a look at the exclude hints from the input.
+     *
+     * Give it a chance to throw an error if it doesn't think that
+     * it has enough material to work with. In this case, we need defaults
+     * to cover everything that might be missing.
+     *
+     * \param exclude_hints the exclude hints.
+     * \throws pcap_defaults_backend_error on problems.
+     */
+    virtual void check_exclude_hints(const HintsExcluded& exclude_hints);
 
     /**
      * \brief Output a QueryResponse.
@@ -244,6 +307,17 @@ private:
                       const IPAddress& dst,
                       uint8_t hoplimit,
                       const std::chrono::system_clock::time_point& timestamp);
+
+    /**
+     * \brief Check there are sufficient defaults.
+     *
+     * Perhaps a bit of a stopgap, this function checks that there
+     * are defaults for all fields required for PCAP generation.
+     *
+     * \param exclude_hints exclude hints set in the source file.
+     * \throws backend_error if there are insufficient defaults.
+     */
+    void check_defaults(const HintsExcluded& exclude_hints);
 
     /**
      * \brief the options.

@@ -37,6 +37,7 @@ defaultsfile=$(dsconfdir)/default_values.conf
 
 check_PROGRAMS = compactor-tests
 check_SCRIPTS = test-scripts/check-config-info.sh \
+                test-scripts/check-defaults-required.sh \
                 test-scripts/check-dnscap.sh \
                 test-scripts/check-outputs.sh \
                 test-scripts/check-template.sh \
