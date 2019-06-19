@@ -150,7 +150,8 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         block_cbor::ClassType ct;
         ct.qtype = query.query_type();
         ct.qclass = query.query_class();
-        qs.query_classtype = data_->add_classtype(ct);
+        if ( !config_.exclude_hints.query_class_type )
+            qs.query_classtype = data_->add_classtype(ct);
         if ( !config_.exclude_hints.query_name )
             qri.qname = data_->add_name_rdata(query.dname());
         qri.qr_flags |= block_cbor::QR_HAS_QUESTION;
