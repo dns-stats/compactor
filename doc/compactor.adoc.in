@@ -64,11 +64,11 @@ Command options are given on the command line.
 
 *-c, --configfile* [_arg_]::
   Read configuration from file _arg_. If not specified, the default configuration file
-  `/etc/dns-stats-compactor/compactor.conf` is read if present.
+  `@ETCPATH@/compactor.conf` is read if present.
 
 *--excludesfile* [_arg_]::
   Read excludes from file _arg_. If not specified, the default configuration file
-  `/etc/dns-stats-compactor/excluded_fields.conf` is read if present.
+  `@ETCPATH@/excluded_fields.conf` is read if present.
 
 *--debug-dns*::
    Print a summary of each DNS packet to standard output after decoding.

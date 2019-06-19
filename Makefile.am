@@ -28,12 +28,18 @@ user_guide_sources = \
 dslocalstatedir=$(localstatedir)/lib/$(PACKAGE)
 dsconfdir=$(sysconfdir)/$(PACKAGE)
 dsconf_DATA = compactor.conf etc/excluded_fields.conf.sample
-dist_noinst_DATA = etc/compactor.conf.in doc/compactor.adoc doc/inspector.adoc $(user_guide_sources)
+dist_noinst_DATA = etc/compactor.conf.in \
+                   doc/compactor.adoc doc/inspector.adoc \
+                   doc/compactor.adoc.in doc/inspector.adoc.in \
+                   $(user_guide_sources)
 conffile=$(dsconfdir)/compactor.conf
 excludesfile=$(dsconfdir)/excluded_fields.conf.sample
 defaultsfile=$(dsconfdir)/default_values.conf
 
 %.conf :: etc/%.conf.in ; sed -e "s|@DSLOCALSTATEDIR@|$(dslocalstatedir)|g" $< > $@
+
+doc/inspector.adoc :: doc/inspector.adoc.in ; sed -e "s|@ETCPATH@|$(dsconfdir)|" $< > $@
+doc/compactor.adoc :: doc/compactor.adoc.in ; sed -e "s|@ETCPATH@|$(dsconfdir)|" $< > $@
 
 check_PROGRAMS = compactor-tests
 check_SCRIPTS = test-scripts/check-config-info.sh \
@@ -125,7 +131,7 @@ check_DATA = GeoLite2-ASN.mmdb \
              knot-live.raw.pcap \
              knot-live.ignored.pcap
 
-CLEANFILES = $(check_DATA) $(dist_man_MANS)
+CLEANFILES = $(check_DATA) $(dist_man_MANS) doc/inspector.adoc doc/compactor.adoc
 
 % :: test-scripts/%.xz ; xz --decompress --to-stdout $< > $@
 
@@ -136,6 +142,9 @@ AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
 	      -DEXCLUDESFILE=\"$(excludesfile)\" \
 	      -DDEFAULTSFILE=\"$(defaultsfile)\" \
               $(OPENSSL_INCLUDES) -DGEOIPDIR=\"$(geoipdir)\"
+
+
+
 
 %.1 :: %.adoc ; @ASCIIDOC@ -b manpage -d manpage -o $@ $<
 

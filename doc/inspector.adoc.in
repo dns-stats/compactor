@@ -42,6 +42,10 @@ output file must be specified with the *--output* option.
 *-v, --version*::
   Print the version number of *inspector* to the standard output stream and then exit.
 
+*--defaultsfile* [_arg_]::
+  Specify the path to the default_values.conf file. If not specified, the
+  default configuration file `@ETCPATH@/default_values.conf` is read if present.
+
 === Outputs
 
 *-o, --output* _FILENAME_::
