@@ -27,13 +27,13 @@ user_guide_sources = \
 
 dslocalstatedir=$(localstatedir)/lib/$(PACKAGE)
 dsconfdir=$(sysconfdir)/$(PACKAGE)
-dsconf_DATA = compactor.conf etc/excluded_fields.conf.sample
+dsconf_DATA = compactor.conf etc/excluded_fields.conf.sample etc/default_values.conf.sample
 dist_noinst_DATA = etc/compactor.conf.in \
                    doc/compactor.adoc doc/inspector.adoc \
                    doc/compactor.adoc.in doc/inspector.adoc.in \
                    $(user_guide_sources)
 conffile=$(dsconfdir)/compactor.conf
-excludesfile=$(dsconfdir)/excluded_fields.conf.sample
+excludesfile=$(dsconfdir)/excluded_fields.conf
 defaultsfile=$(dsconfdir)/default_values.conf
 
 %.conf :: etc/%.conf.in ; sed -e "s|@DSLOCALSTATEDIR@|$(dslocalstatedir)|g" $< > $@

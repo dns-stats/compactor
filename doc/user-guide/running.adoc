@@ -327,6 +327,8 @@ Usage: inspector [options] [cdns-file [...]]
 Options:
   -h [ --help ]                         show this help message.
   -v [ --version ]                      show version information.
+  --defaultsfile arg (=/usr/local/etc/dns-stats-compactor/default_values.conf)
+                                        default values file.
   -o [ --output ] arg                   output file name.
   -F [ --output-format ] arg            output format. 'pcap' (default) or
                                         'template'.
