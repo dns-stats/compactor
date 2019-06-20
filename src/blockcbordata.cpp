@@ -1018,12 +1018,16 @@ namespace block_cbor {
     void QueryResponseItem::clear()
     {
         qr_flags = 0;
-        client_address = qname = signature = boost::none;
-        client_port = id = boost::none;
-        hoplimit = boost::none;
-        tstamp = boost::none;
-        response_delay = boost::none;
-        query_size = response_size = boost::none;
+        client_address.reset();
+        client_port.reset();
+        hoplimit.reset();
+        id.reset();
+        tstamp.reset();
+        response_delay.reset();
+        qname.reset();
+        signature.reset();
+        query_size.reset();
+        response_size.reset();
         query_extra_info.release();
         response_extra_info.release();
     }
@@ -1032,19 +1036,11 @@ namespace block_cbor {
                                      const std::chrono::system_clock::time_point& earliest_time,
                                      const BlockParameters& block_parameters,
                                      const FileVersionFields& fields,
-                                     const Defaults& defaults)
+                                     const Defaults&)
     {
         try
         {
-            client_address = qname = signature = boost::none;
-            client_port = defaults.client_port;
-            hoplimit = defaults.client_hoplimit;
-            id = defaults.transaction_id;
-            if ( defaults.time_offset )
-                tstamp = earliest_time + *defaults.time_offset;
-            response_delay = defaults.response_delay;
-            query_size = defaults.query_size;
-            response_size = defaults.response_size;
+            clear();
 
             bool indef;
             uint64_t n_elems = dec.readMapHeader(indef);

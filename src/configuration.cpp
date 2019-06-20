@@ -1292,7 +1292,7 @@ namespace std {
          */
         // cppcheck-suppress unusedFunction
         void validate(boost::any& v, const std::vector<std::string>& values,
-                      microseconds* val1, int val2)
+                      nanoseconds* val1, int val2)
         {
             po::validators::check_first_occurrence(v);
             std::string s = po::validators::get_single_string(values);
@@ -1309,21 +1309,21 @@ namespace std {
                 throw po::validation_error(po::validation_error::invalid_option_value);
 
             if ( suffix == "ns" )
-            {
-                nanoseconds ns(val);
-                v = duration_cast<microseconds>(ns);
-            }
+                v = nanoseconds(val);
             else if ( suffix == "us" )
-                v = microseconds(val);
+            {
+                microseconds ns(val);
+                v = duration_cast<nanoseconds>(ns);
+            }
             else if ( suffix == "ms" )
             {
                 milliseconds ms(val);
-                v = duration_cast<microseconds>(ms);
+                v = duration_cast<nanoseconds>(ms);
             }
             else if ( suffix == "s" )
             {
                 seconds s(val);
-                v = duration_cast<microseconds>(s);
+                v = duration_cast<nanoseconds>(s);
             }
             else
                 throw po::validation_error(po::validation_error::invalid_option_value);
@@ -1346,8 +1346,8 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
     // get it working. So instead I'm going the simple way, setting local
     // values and copying into the default optionals if the corresponding
     // argument was actually set.
-    std::chrono::microseconds time_offset;
-    std::chrono::microseconds response_delay;
+    std::chrono::nanoseconds time_offset;
+    std::chrono::nanoseconds response_delay;
     IPAddress client_address;
     uint16_t client_port;
     unsigned client_hoplimit;

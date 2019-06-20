@@ -53,12 +53,12 @@ public:
     /**
      * \brief default time offset.
      */
-    boost::optional<std::chrono::microseconds> time_offset;
+    boost::optional<std::chrono::nanoseconds> time_offset;
 
     /**
      * \brief default response delay.
      */
-    boost::optional<std::chrono::microseconds> response_delay;
+    boost::optional<std::chrono::nanoseconds> response_delay;
 
     /**
      * \brief default client address.
@@ -73,7 +73,7 @@ public:
     /**
      * \brief default client hoplimit.
      */
-    boost::optional<unsigned> client_hoplimit;
+    boost::optional<uint8_t> client_hoplimit;
 
     /**
      * \brief default server address.
@@ -205,12 +205,12 @@ public:
     /**
      * \brief default query size.
      */
-    boost::optional<uint16_t> query_size;
+    boost::optional<uint32_t> query_size;
 
     /**
      * \brief default response size.
      */
-    boost::optional<uint16_t> response_size;
+    boost::optional<uint32_t> response_size;
 
     /*
      * address-event items

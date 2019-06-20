@@ -428,19 +428,19 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
 
     const block_cbor::QueryResponseSignature& sig = block_->query_response_signatures[qri.signature];
 
-    res.timestamp = qri.tstamp;
+    res.timestamp = ( qri.tstamp ) ? qri.tstamp : block_->earliest_time + *defaults_.time_offset;
     if ( qri.client_address )
         res.client_address = get_client_address(*qri.client_address, sig.qr_transport_flags);
     else
         res.client_address = defaults_.client_address;
-    res.client_port = qri.client_port;
-    res.hoplimit = qri.hoplimit;
+    res.client_port = ( qri.client_port ) ? qri.client_port : defaults_.client_port;
+    res.hoplimit = ( qri.hoplimit ) ? qri.hoplimit : defaults_.client_hoplimit;
     if ( sig.server_address )
         res.server_address = get_server_address(*sig.server_address, sig.qr_transport_flags);
     else
         res.server_address = defaults_.server_address;
     res.server_port = ( sig.server_port ) ? sig.server_port : defaults_.server_port;
-    res.id = qri.id;
+    res.id = ( qri.id ) ? qri.id : defaults_.transaction_id;
     if ( qri.qname )
         res.qname = block_->names_rdatas[*qri.qname].str;
     else
@@ -479,11 +479,11 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     }
     else
         res.query_opt_rdata = defaults_.query_opt_rdata;
-    res.query_size = qri.query_size;
+    res.query_size = ( qri.query_size ) ? qri.query_size : defaults_.query_size;
 
-    res.response_delay = qri.response_delay;
+    res.response_delay = ( qri.response_delay ) ? qri.response_delay : defaults_.response_delay;
     res.response_rcode = ( sig.response_rcode ) ? sig.response_rcode : defaults_.response_rcode;
-    res.response_size = qri.response_size;
+    res.response_size = ( qri.response_size ) ? qri.response_size : defaults_.response_size;
 
     read_extra_info(qri.query_extra_info,
                     res.query_questions, res.query_answers,
