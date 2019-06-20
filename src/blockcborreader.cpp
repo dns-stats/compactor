@@ -394,8 +394,13 @@ bool BlockCborReader::readBlock()
             addr = *defaults_.ae_address;
         else
             addr = get_client_address(*aeci.first.address, aeci.first.transport_flags);
+        AddressEvent::EventType ae_type;
+        unsigned ae_code;
 
-        AddressEvent ae(*aeci.first.type, addr, *aeci.first.code);
+        ae_type = ( aeci.first.type ) ? *aeci.first.type : *defaults_.ae_type;
+        ae_code = ( aeci.first.code ) ? *aeci.first.code : *defaults_.ae_code;
+
+        AddressEvent ae(ae_type, addr, ae_code);
         if ( address_events_read_.find(ae) != address_events_read_.end() )
             address_events_read_[ae] += aeci.second;
         else

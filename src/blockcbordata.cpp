@@ -1166,14 +1166,14 @@ namespace block_cbor {
 
     void AddressEventCount::readCbor(CborBaseDecoder& dec,
                                      const FileVersionFields& fields,
-                                     const Defaults& defaults)
+                                     const Defaults&)
     {
         bool seen_count = false;
 
-        aei.code = defaults.ae_code;
-        aei.type = defaults.ae_type;
-        aei.address = boost::none;
-        aei.transport_flags = boost::none;
+        aei.code.reset();
+        aei.type.reset();
+        aei.address.reset();
+        aei.transport_flags.reset();
 
         try
         {
