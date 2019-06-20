@@ -790,10 +790,6 @@ namespace
 
 std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
 {
-    std::time_t t;
-    std::tm tm;
-    double us;
-    char buf[40];
     const char* transport = NULL;
     unsigned count;
 

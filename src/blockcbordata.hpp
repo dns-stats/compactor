@@ -1525,7 +1525,7 @@ namespace block_cbor {
         /**
          * \brief Default constructor.
          */
-        HeaderList(bool one_based = false)
+        explicit HeaderList(bool one_based = false)
             : one_based_(one_based) {}
 
         /**

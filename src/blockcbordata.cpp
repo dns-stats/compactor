@@ -1355,7 +1355,6 @@ namespace block_cbor {
                 case MalformedMessageField::time_offset:
                     tstamp = earliest_time + std::chrono::microseconds(dec.read_signed() * 1000000 / block_parameters.storage_parameters.ticks_per_second);
                     break;
-                    break;
 
                 case MalformedMessageField::client_address_index:
                     client_address = dec.read_unsigned();
@@ -1639,6 +1638,7 @@ namespace block_cbor {
         }
     }
 
+    // cppcheck-suppress unusedFunction
     void BlockData::readMalformedMessageItems(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
         const BlockParameters& block_parameters = block_parameters_[block_parameters_index];
@@ -1829,6 +1829,7 @@ namespace block_cbor {
         }
     }
 
+    // cppcheck-suppress unusedFunction
     void BlockData::writeMalformedMessageItems(CborBaseEncoder& enc)
     {
         constexpr int malformed_messages_index = find_block_index(BlockField::malformed_messages);
