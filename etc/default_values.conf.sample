@@ -1,4 +1,4 @@
-# A list of default values for fields that are needed but were ommited from the capture.
+# A list of default values for fields that are needed but were omitted from the capture.
 # The fields MUST go under the headings as shown
 
 [ip-header]

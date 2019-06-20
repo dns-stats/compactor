@@ -322,6 +322,7 @@ rotation-period=300
 max-compression-threads=2
 ----
 
+[[options]]
 ===== C-DNS options
 
 *include*=_SECTIONS_:: Indicate which optional sections should be

@@ -373,6 +373,83 @@ generates `capture.pcap.info`.
 
 NOTE: The -q option will only write DNS queries to the output PCAP file.
 
+=== Default values
+
+Most fields in C-DNS are optional. See the <<excludes>> and the deprecated <<options>> setting for _compactor_. When converting D-DNS to PCAPs or templated text output it may be necessary to fill in those omitted fields with default values.
+
+==== Default values file location
+
+On startup, _inspector_ looks for a default_values file. By default this is named default_values.conf and is located in a `dns-stats-compactor` system configuration directory. A different location can specified on the command
+line by using the _inspector_ --defaultsfile option.
+
+If installed from a binary package on Linux, a sample excluded fields file will be at 
+`/etc/dns-stats-compactor/default_values.conf.sample` 
+
+==== Default configuration
+
+Both installing via binary packages and installing using the source distribution will install a sample
+`default_values.conf.sample` file. This file (with the .sample ending removed) can be used to specify the default values to be inserted when a field was omitted from the C-DNS output. In the sample all the fields are commented out so no defaults would be used. The fields are specified in logical groups similar to the excludes_fields file <<excludes>>. The file looks like this
+
+----
+# A list of default values for fields that are needed but were omitted from the capture.
+# The fields MUST go under the headings as shown
+
+[ip-header]
+# time-offset                   # <n>s|ms|us|ns
+# response-delay                # <n>s|ms|us|ns
+# client-address                # IPAddress
+# client-port                   # uint16
+# client-hoplimit               # uint8
+# server-address                # IPAddress
+# server-port                   # uint16
+# qr-transport-flags            # (ipv4|ipv6) (udp|tcp|tls|dtls|doh) (trailing-data)
+ 
+[dns-header]
+# transaction-id                # uint16
+# query-opcode                  # query, iquery, status, notify, update or dso
+# query-rcode                   # Any IANA RCODE names, noerror, formerr, servfail etc.
+# dns-flags                     # (query|response)-(cd|ad|z|ra|rd|tc|aa) query-do
+# response-rcode                # Any IANA RCODE names, noerror, formerr, servfail etc.
+
+# Counts used only in template output. PCAPs will use
+# the actual number present in the relavent section 
+# query-qdcount                 # uint16
+# query-ancount                 # uint16
+# query-arcount                 # uint16
+# query-nscount                 # uint16
+ 
+[dns-payload]
+# query-name                    # As normal text, will be translated to label format
+# query-class                   # Any IANA RR CLASSes, internet, in, chaos, ch, etc.
+# query-type                    # IANA RR TYPEs, A, NS, CNAME, etc.
+# rr-ttl                        # uint32
+# rr-rdata                      # byte string
+# query-udp-size                # uint16
+# query-opt-data                # byte string
+# query-edns-version            # uint8
+
+ 
+[dns-meta-data]
+# used only in template output. PCAPs do not use these
+# qr-type                           # Stub, Client, Resolver, Auth, Forwarder, Tool
+# response-processing-bailiwick     # Text domain, example.com
+# response-processing-from-cache    # yes|no
+# query-size                        # uint16
+# response-size                     # uint16
+ 
+[address-event]
+# ae-address                        # IPAddress
+# ae-type                           # TCP-RESET, ICMP-TIME-EXCEEDED, ICMP-DEST-UNREACHABLE, ICMPv6-TIME-EXCEEDED, ICMPv6-DEST-UNREACHABLE, ICMPv6-PACKET-TOO-BIG
+# ae-code                           # uint8
+----
+
+The comments on each line show the format of allowed values and in some case the set of allowed values. For example to set a default for qr-transport-flags you could edit the file to say:
+----
+qr-transport-flags=ipv4 udp
+----
+
+Some of these defaults are ignored if you are generating PCAP files. For example, query-ancount is ignored and the actual count of rr's in the answer section of the DNS message is used. This ensures that valid DNS packets are generated. Other values like qr-type have no meaning in a PCAP file.
+
 === Templated text output
 
 By default, _inspector_ converts input C-DNS to PCAP. Alternatively, though, it
