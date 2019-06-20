@@ -383,7 +383,7 @@ bool BlockCborReader::readBlock()
         return false;
 
     block_->clear();
-    block_->readCbor(dec_, *fields_, defaults_);
+    block_->readCbor(dec_, *fields_);
 
     // Accumulate address events counts.
     for ( auto& aeci : block_->address_event_counts )

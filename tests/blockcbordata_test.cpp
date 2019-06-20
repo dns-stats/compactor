@@ -123,7 +123,7 @@ namespace {
         {
             return !( *this == rhs );
         }
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields&, const Defaults&)
+        void readCbor(CborBaseDecoder& dec, const FileVersionFields&)
         {
             val = dec.read_unsigned();
         }
@@ -1799,9 +1799,8 @@ SCENARIO("IndexVectorItems can be read", "[block]")
             {
                 IndexVectorItem iv1_r, iv2_r;
                 block_cbor::FileVersionFields fields;
-                Defaults defaults;
-                iv1_r.readCbor(tcbd, fields, defaults);
-                iv2_r.readCbor(tcbd, fields, defaults);
+                iv1_r.readCbor(tcbd, fields);
+                iv2_r.readCbor(tcbd, fields);
 
                 REQUIRE(iv1.vec == iv1_r.vec);
                 REQUIRE(iv2.vec == iv2_r.vec);
@@ -1834,9 +1833,8 @@ SCENARIO("ByteStringItems can be read", "[block]")
             {
                 ByteStringItem s1_r, s2_r;
                 block_cbor::FileVersionFields fields;
-                Defaults defaults;
-                s1_r.readCbor(tcbd, fields, defaults);
-                s2_r.readCbor(tcbd, fields, defaults);
+                s1_r.readCbor(tcbd, fields);
+                s2_r.readCbor(tcbd, fields);
 
                 REQUIRE(si1.str == s1_r.str);
                 REQUIRE(si2.str == s2_r.str);
@@ -1872,9 +1870,8 @@ SCENARIO("ClassTypes can be read", "[block]")
             {
                 ClassType ct1_r, ct2_r;
                 block_cbor::FileVersionFields fields;
-                Defaults defaults;
-                ct1_r.readCbor(tcbd, fields, defaults);
-                ct2_r.readCbor(tcbd, fields, defaults);
+                ct1_r.readCbor(tcbd, fields);
+                ct2_r.readCbor(tcbd, fields);
 
                 REQUIRE(ct1 == ct1_r);
                 REQUIRE(ct2 == ct2_r);
@@ -1911,9 +1908,8 @@ SCENARIO("Questions can be read", "[block]")
             {
                 Question q1_r, q2_r;
                 block_cbor::FileVersionFields fields;
-                Defaults defaults;
-                q1_r.readCbor(tcbd, fields, defaults);
-                q2_r.readCbor(tcbd, fields, defaults);
+                q1_r.readCbor(tcbd, fields);
+                q2_r.readCbor(tcbd, fields);
 
                 REQUIRE(q1 == q1_r);
                 REQUIRE(q2 == q2_r);
@@ -1955,9 +1951,8 @@ SCENARIO("ResourceRecords can be read", "[block]")
             {
                 ResourceRecord rr1_r, rr2_r;
                 block_cbor::FileVersionFields fields;
-                Defaults defaults;
-                rr1_r.readCbor(tcbd, fields, defaults);
-                rr2_r.readCbor(tcbd, fields, defaults);
+                rr1_r.readCbor(tcbd, fields);
+                rr2_r.readCbor(tcbd, fields);
 
                 REQUIRE(rr1 == rr1_r);
                 REQUIRE(rr2 == rr2_r);
@@ -2019,8 +2014,7 @@ SCENARIO("QueryResponseSignatures can be read", "[block]")
             {
                 QueryResponseSignature qs1_r;
                 block_cbor::FileVersionFields fields;
-                Defaults defaults;
-                qs1_r.readCbor(tcbd, fields, defaults);
+                qs1_r.readCbor(tcbd, fields);
 
                 REQUIRE(qs1 == qs1_r);
             }
@@ -2096,9 +2090,8 @@ SCENARIO("QueryResponseItems can be read", "[block]")
                 QueryResponseItem qri1_r;
                 block_cbor::FileVersionFields fields;
                 BlockParameters bp;
-                Defaults defaults;
                 bp.storage_parameters.ticks_per_second = 1000000;
-                qri1_r.readCbor(tcbd, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, fields, defaults);
+                qri1_r.readCbor(tcbd, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, fields);
 
                 REQUIRE(qri1.client_address == qri1_r.client_address);
                 REQUIRE(qri1.client_port == qri1_r.client_port);
@@ -2152,8 +2145,7 @@ SCENARIO("AddressEventCounts can be read", "[block]")
             {
                 AddressEventCount aec1_r;
                 block_cbor::FileVersionFields fields;
-                Defaults defaults;
-                aec1_r.readCbor(tcbd, fields, defaults);
+                aec1_r.readCbor(tcbd, fields);
 
                 REQUIRE(aec1.aei == aec1_r.aei);
                 REQUIRE(aec1.count == aec1_r.count);
@@ -2178,8 +2170,7 @@ SCENARIO("AddressEventCounts can be read", "[block]")
 
                 AddressEventCount aec1_r;
                 block_cbor::FileVersionFields fields(0, 5, 0);
-                Defaults defaults;
-                aec1_r.readCbor(tcbd, fields, defaults);
+                aec1_r.readCbor(tcbd, fields);
 
                 REQUIRE(aec1.aei == aec1_r.aei);
                 REQUIRE(aec1.count == aec1_r.count);
@@ -2216,8 +2207,7 @@ SCENARIO("MalformedMessageData can be read", "[block]")
             {
                 MalformedMessageData mmd1_r;
                 block_cbor::FileVersionFields fields;
-                Defaults defaults;
-                mmd1_r.readCbor(tcbd, fields, defaults);
+                mmd1_r.readCbor(tcbd, fields);
 
                 REQUIRE(mmd1 == mmd1_r);
             }
@@ -2287,8 +2277,7 @@ SCENARIO("HeaderList items can be read", "[block]")
             {
                 HeaderList<IntItem> hl_r;
                 block_cbor::FileVersionFields fields;
-                Defaults defaults;
-                hl_r.readCbor(tcbd, fields, defaults);
+                hl_r.readCbor(tcbd, fields);
 
                 REQUIRE(hl_r.size() == 3);
                 REQUIRE(hl_r[0].val == 1);
@@ -2313,8 +2302,7 @@ SCENARIO("HeaderList items can be read", "[block]")
             {
                 HeaderList<IntItem> hl_r(true);
                 block_cbor::FileVersionFields fields;
-                Defaults defaults;
-                hl_r.readCbor(tcbd, fields, defaults);
+                hl_r.readCbor(tcbd, fields);
 
                 REQUIRE(hl_r.size() == 3);
                 REQUIRE(hl_r[1].val == 1);
@@ -2387,8 +2375,7 @@ SCENARIO("BlockData items can be read", "[block]")
             {
                 BlockData cd_r(bpv);
                 block_cbor::FileVersionFields fields;
-                Defaults defaults;
-                cd_r.readCbor(tcbd, fields, defaults);
+                cd_r.readCbor(tcbd, fields);
 
                 REQUIRE(cd_r.earliest_time == cd.earliest_time);
             }
@@ -2443,8 +2430,7 @@ SCENARIO("BlockData items can be read", "[block]")
             {
                 BlockData cd_r(bpv, FileFormatVersion::format_10, 1);
                 block_cbor::FileVersionFields fields;
-                Defaults defaults;
-                cd_r.readCbor(tcbd, fields, defaults);
+                cd_r.readCbor(tcbd, fields);
 
                 REQUIRE(cd_r.earliest_time == cd.earliest_time);
             }

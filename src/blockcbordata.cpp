@@ -498,8 +498,7 @@ namespace block_cbor {
     }
 
     void IndexVectorItem::readCbor(CborBaseDecoder& dec,
-                                   const FileVersionFields& fields,
-                                   const Defaults& defaults)
+                                   const FileVersionFields& fields)
     {
         try
         {
@@ -517,8 +516,7 @@ namespace block_cbor {
     }
 
     void ByteStringItem::readCbor(CborBaseDecoder& dec,
-                                  const FileVersionFields&,
-                                  const Defaults&)
+                                  const FileVersionFields&)
     {
         try
         {
@@ -536,8 +534,7 @@ namespace block_cbor {
     }
 
     void ClassType::readCbor(CborBaseDecoder& dec,
-                             const FileVersionFields& fields,
-                             const Defaults&)
+                             const FileVersionFields& fields)
     {
         qtype.reset();
         qclass.reset();
@@ -597,8 +594,7 @@ namespace block_cbor {
     }
 
     void Question::readCbor(CborBaseDecoder& dec,
-                            const FileVersionFields& fields,
-                            const Defaults&)
+                            const FileVersionFields& fields)
     {
         qname.reset();
         classtype.reset();
@@ -657,8 +653,7 @@ namespace block_cbor {
     }
 
     void ResourceRecord::readCbor(CborBaseDecoder& dec,
-                                  const FileVersionFields& fields,
-                                  const Defaults&)
+                                  const FileVersionFields& fields)
     {
         name.reset();
         classtype.reset();
@@ -734,8 +729,7 @@ namespace block_cbor {
     }
 
     void QueryResponseSignature::readCbor(CborBaseDecoder& dec,
-                                          const FileVersionFields& fields,
-                                          const Defaults&)
+                                          const FileVersionFields& fields)
     {
         bool got_qr_sig_flags = false;
 
@@ -1035,8 +1029,7 @@ namespace block_cbor {
     void QueryResponseItem::readCbor(CborBaseDecoder& dec,
                                      const std::chrono::system_clock::time_point& earliest_time,
                                      const BlockParameters& block_parameters,
-                                     const FileVersionFields& fields,
-                                     const Defaults&)
+                                     const FileVersionFields& fields)
     {
         try
         {
@@ -1165,8 +1158,7 @@ namespace block_cbor {
     }
 
     void AddressEventCount::readCbor(CborBaseDecoder& dec,
-                                     const FileVersionFields& fields,
-                                     const Defaults&)
+                                     const FileVersionFields& fields)
     {
         bool seen_count = false;
 
@@ -1261,16 +1253,15 @@ namespace block_cbor {
     }
 
     void MalformedMessageData::readCbor(CborBaseDecoder& dec,
-                                        const FileVersionFields& fields,
-                                        const Defaults& defaults)
+                                        const FileVersionFields& fields)
     {
         try
         {
             // No necessarily present, default to 0 on repeated read.
-            mm_transport_flags = boost::none;
-            server_address = boost::none;
-            server_port = boost::none;
-            mm_payload = boost::none;
+            mm_transport_flags.reset();
+            server_address.reset();
+            server_port.reset();
+            mm_payload.reset();
 
             bool indef;
             uint64_t n_elems = dec.readMapHeader(indef);
@@ -1412,8 +1403,7 @@ namespace block_cbor {
     }
 
     void BlockData::readCbor(CborBaseDecoder& dec,
-                             const FileVersionFields& fields,
-                             const Defaults& defaults)
+                             const FileVersionFields& fields)
     {
         bool indef;
         uint64_t n_elems = dec.readMapHeader(indef);
@@ -1432,7 +1422,7 @@ namespace block_cbor {
                 break;
 
             case BlockField::tables:
-                readHeaders(dec, fields, defaults);
+                readHeaders(dec, fields);
                 break;
 
             case BlockField::statistics:
@@ -1440,11 +1430,11 @@ namespace block_cbor {
                 break;
 
             case BlockField::queries:
-                readItems(dec, fields, defaults);
+                readItems(dec, fields);
                 break;
 
             case BlockField::address_event_counts:
-                readAddressEventCounts(dec, fields, defaults);
+                readAddressEventCounts(dec, fields);
                 break;
 
             default:
@@ -1488,8 +1478,7 @@ namespace block_cbor {
     }
 
     void BlockData::readHeaders(CborBaseDecoder& dec,
-                                const FileVersionFields& fields,
-                                const Defaults& defaults)
+                                const FileVersionFields& fields)
     {
         bool indef;
         uint64_t n_elems = dec.readMapHeader(indef);
@@ -1504,39 +1493,39 @@ namespace block_cbor {
             switch(fields.block_tables_field(dec.read_unsigned()))
             {
             case BlockTablesField::ip_address:
-                ip_addresses.readCbor(dec, fields, defaults);
+                ip_addresses.readCbor(dec, fields);
                 break;
 
             case BlockTablesField::classtype:
-                class_types.readCbor(dec, fields, defaults);
+                class_types.readCbor(dec, fields);
                 break;
 
             case BlockTablesField::name_rdata:
-                names_rdatas.readCbor(dec, fields, defaults);
+                names_rdatas.readCbor(dec, fields);
                 break;
 
             case BlockTablesField::query_response_signature:
-                query_response_signatures.readCbor(dec, fields, defaults);
+                query_response_signatures.readCbor(dec, fields);
                 break;
 
             case BlockTablesField::question_list:
-                questions_lists.readCbor(dec, fields, defaults);
+                questions_lists.readCbor(dec, fields);
                 break;
 
             case BlockTablesField::question_rr:
-                questions.readCbor(dec, fields, defaults);
+                questions.readCbor(dec, fields);
                 break;
 
             case BlockTablesField::rr_list:
-                rrs_lists.readCbor(dec, fields,  defaults);
+                rrs_lists.readCbor(dec, fields);
                 break;
 
             case BlockTablesField::rr:
-                resource_records.readCbor(dec, fields,  defaults);
+                resource_records.readCbor(dec, fields);
                 break;
 
             case BlockTablesField::malformed_message_data:
-                malformed_message_data.readCbor(dec, fields,  defaults);
+                malformed_message_data.readCbor(dec, fields);
                 break;
 
             default:
@@ -1547,8 +1536,7 @@ namespace block_cbor {
     }
 
     void BlockData::readItems(CborBaseDecoder& dec,
-                              const FileVersionFields& fields,
-                              const Defaults& defaults)
+                              const FileVersionFields& fields)
     {
         const BlockParameters& block_parameters = block_parameters_[block_parameters_index];
         bool indef;
@@ -1564,7 +1552,7 @@ namespace block_cbor {
             }
 
             QueryResponseItem qri;
-            qri.readCbor(dec, earliest_time, block_parameters, fields, defaults);
+            qri.readCbor(dec, earliest_time, block_parameters, fields);
             query_response_items.push_back(std::move(qri));
         }
     }
@@ -1633,8 +1621,7 @@ namespace block_cbor {
     }
 
     void BlockData::readAddressEventCounts(CborBaseDecoder& dec,
-                                           const FileVersionFields& fields,
-                                           const Defaults& defaults)
+                                           const FileVersionFields& fields)
     {
         bool indef;
         uint64_t n_elems = dec.readArrayHeader(indef);
@@ -1647,7 +1634,7 @@ namespace block_cbor {
             }
 
             AddressEventCount aec = {};
-            aec.readCbor(dec, fields, defaults);
+            aec.readCbor(dec, fields);
             address_event_counts[aec.aei] = aec.count;
         }
     }
