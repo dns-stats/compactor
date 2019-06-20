@@ -439,7 +439,7 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
         res.server_address = get_server_address(*sig.server_address, sig.qr_transport_flags);
     else
         res.server_address = defaults_.server_address;
-    res.server_port = sig.server_port;
+    res.server_port = ( sig.server_port ) ? sig.server_port : defaults_.server_port;
     res.id = qri.id;
     if ( qri.qname )
         res.qname = block_->names_rdatas[*qri.qname].str;
@@ -461,14 +461,14 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
         res.query_class = defaults_.query_class;
         res.query_type = defaults_.query_type;
     }
-    res.query_qdcount = sig.qdcount;
-    res.query_ancount = sig.query_ancount;
-    res.query_arcount = sig.query_arcount;
-    res.query_nscount = sig.query_nscount;
-    res.query_opcode = sig.query_opcode;
-    res.query_rcode = sig.query_rcode;
-    res.query_edns_version = sig.query_edns_version;
-    res.query_edns_payload_size = sig.query_edns_payload_size;
+    res.query_qdcount = ( sig.qdcount ) ? sig.qdcount : defaults_.query_qdcount;
+    res.query_ancount = ( sig.query_ancount ) ? sig.query_ancount : defaults_.query_ancount;
+    res.query_arcount = ( sig.query_arcount ) ? sig.query_arcount : defaults_.query_arcount;
+    res.query_nscount = ( sig.query_nscount ) ? sig.query_nscount : defaults_.query_nscount;
+    res.query_opcode = ( sig.query_opcode ) ? sig.query_opcode : defaults_.query_opcode;
+    res.query_rcode = ( sig.query_rcode ) ? sig.query_rcode : defaults_.query_rcode;
+    res.query_edns_version = ( sig.query_edns_version ) ? sig.query_edns_version : defaults_.query_edns_version;
+    res.query_edns_payload_size = ( sig.query_edns_payload_size ) ? sig.query_edns_payload_size : defaults_.query_udp_size;
     if ( sig.query_opt_rdata )
     {
         res.query_opt_rdata = block_->names_rdatas[*sig.query_opt_rdata].str;
@@ -479,11 +479,10 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     }
     else
         res.query_opt_rdata = defaults_.query_opt_rdata;
-    res.query_opcode = sig.query_opcode;
     res.query_size = qri.query_size;
 
     res.response_delay = qri.response_delay;
-    res.response_rcode = sig.response_rcode;
+    res.response_rcode = ( sig.response_rcode ) ? sig.response_rcode : defaults_.response_rcode;
     res.response_size = qri.response_size;
 
     read_extra_info(qri.query_extra_info,

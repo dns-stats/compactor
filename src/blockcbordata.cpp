@@ -735,23 +735,23 @@ namespace block_cbor {
 
     void QueryResponseSignature::readCbor(CborBaseDecoder& dec,
                                           const FileVersionFields& fields,
-                                          const Defaults& defaults)
+                                          const Defaults&)
     {
         bool got_qr_sig_flags = false;
 
-        server_address = query_opt_rdata = query_classtype = boost::none;
-        server_port = defaults.server_port;
-        qr_transport_flags = defaults.transport;
-        query_rcode = defaults.query_rcode;
-        response_rcode = defaults.response_rcode;
-        query_opcode = defaults.query_opcode;
-        query_edns_version = defaults.query_edns_version;
-        query_edns_payload_size = defaults.query_udp_size;
-        dns_flags = defaults.dns_flags;
-        qdcount = defaults.query_qdcount;
-        query_ancount = defaults.query_ancount;
-        query_arcount = defaults.query_arcount;
-        query_nscount = defaults.query_nscount;
+        server_address.reset();
+        server_port.reset();
+        qr_transport_flags.reset();
+        query_rcode.reset();
+        response_rcode.reset();
+        query_opcode.reset();
+        query_edns_version.reset();
+        query_edns_payload_size.reset();
+        dns_flags.reset();
+        qdcount.reset();
+        query_ancount.reset();
+        query_arcount.reset();
+        query_nscount.reset();
 
         try
         {
@@ -797,7 +797,7 @@ namespace block_cbor {
                     break;
 
                 case QueryResponseSignatureField::query_rcode:
-                    query_rcode = dec.read_unsigned();
+                    query_rcode = CaptureDNS::Rcode(dec.read_unsigned());
                     break;
 
                 case QueryResponseSignatureField::query_opcode:
@@ -829,7 +829,7 @@ namespace block_cbor {
                     break;
 
                 case QueryResponseSignatureField::response_rcode:
-                    response_rcode = dec.read_unsigned();
+                    response_rcode = CaptureDNS::Rcode(dec.read_unsigned());
                     break;
 
                 default:

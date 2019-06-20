@@ -825,8 +825,8 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         qs1.qr_transport_flags = 3;
         qs1.qr_flags = 0x1f;
         qs1.qdcount = 1;
-        qs1.query_rcode = 22;
-        qs1.response_rcode = 23;
+        qs1.query_rcode = CaptureDNS::Rcode(22);
+        qs1.response_rcode = CaptureDNS::Rcode(23);
         qs1.query_opcode = CaptureDNS::Opcode(2);
         qs1.query_edns_version = 0;
         qs1.query_edns_payload_size = 22;
@@ -1977,8 +1977,8 @@ SCENARIO("QueryResponseSignatures can be read", "[block]")
         qs1.qr_transport_flags = 3;
         qs1.qr_flags = 0x1f;
         qs1.qdcount = 1;
-        qs1.query_rcode = 22;
-        qs1.response_rcode = 23;
+        qs1.query_rcode = CaptureDNS::Rcode(22);
+        qs1.response_rcode = CaptureDNS::Rcode(23);
         qs1.query_opcode = CaptureDNS::Opcode(2);
         qs1.query_edns_version = 0;
         qs1.query_edns_payload_size = 22;

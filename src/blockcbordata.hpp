@@ -908,12 +908,12 @@ namespace block_cbor {
         /**
          * \brief query RCODE, incorporating extended RCODE.
          */
-        boost::optional<uint16_t> query_rcode;
+        boost::optional<CaptureDNS::Rcode> query_rcode;
 
         /**
          * \brief response RCODE, incorporating extended RCODE.
          */
-        boost::optional<uint16_t> response_rcode;
+        boost::optional<CaptureDNS::Rcode> response_rcode;
 
         /**
          * \brief query OPCODE.

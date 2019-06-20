@@ -180,7 +180,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         if ( !exclude.query_opcode )
             qs.query_opcode = q.dns.opcode();
         if ( !exclude.query_rcode )
-            qs.query_rcode = q.dns.rcode();
+            qs.query_rcode = CaptureDNS::Rcode(q.dns.rcode());
         if ( !exclude.query_ancount )
             qs.query_ancount = q.dns.answers_count();
         if ( !exclude.query_arcount )
@@ -192,7 +192,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         if ( edns0 )
         {
             if ( !exclude.query_rcode )
-                qs.query_rcode = *qs.query_rcode + (edns0->extended_rcode() << 4);
+                qs.query_rcode = CaptureDNS::Rcode(*qs.query_rcode + (edns0->extended_rcode() << 4));
             qri.qr_flags |= block_cbor::QUERY_HAS_OPT;
             if ( !exclude.query_udp_size )
                 qs.query_edns_payload_size = edns0->udp_payload_size();
@@ -214,13 +214,13 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         if ( !exclude.query_opcode && !qs.query_opcode )
             qs.query_opcode = r.dns.opcode();
         if ( !exclude.response_rcode )
-            qs.response_rcode = r.dns.rcode();
+            qs.response_rcode = CaptureDNS::Rcode(r.dns.rcode());
 
         auto edns0 = r.dns.edns0();
         if ( edns0 )
         {
             if ( !exclude.response_rcode )
-                qs.response_rcode = *qs.response_rcode + (edns0->extended_rcode() << 4);
+                qs.response_rcode = CaptureDNS::Rcode(*qs.response_rcode + (edns0->extended_rcode() << 4));
             qri.qr_flags |= block_cbor::RESPONSE_HAS_OPT;
         }
 
