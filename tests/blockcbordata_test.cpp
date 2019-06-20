@@ -740,7 +740,7 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.query_name = true;
+            rr1.name.reset();
             rr1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
@@ -748,11 +748,10 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
             {
                 const uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 3,
                         1, 12,
                         2, 10,
                         3, 11,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -763,7 +762,7 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.query_class_type = true;
+            rr1.classtype.reset();
             rr1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
@@ -771,11 +770,10 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
             {
                 const uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 3,
                         0, 1,
                         2, 10,
                         3, 11,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -786,7 +784,7 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.rr_ttl = true;
+            rr1.ttl.reset();
             rr1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
@@ -794,11 +792,10 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
             {
                 const uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 3,
                         0, 1,
                         1, 12,
                         3, 11,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -809,7 +806,7 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.rr_rdata = true;
+            rr1.rdata.reset();
             rr1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
@@ -817,11 +814,10 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
             {
                 const uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 3,
                         0, 1,
                         1, 12,
                         2, 10,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));

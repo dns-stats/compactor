@@ -277,7 +277,8 @@ void BlockCborWriter::writeResourceRecord(const CaptureDNS::resource& resource)
     ct.qclass = resource.query_class();
     if ( !config_.exclude_hints.query_class_type )
         rr.classtype = data_->add_classtype(ct);
-    rr.ttl = resource.ttl();
+    if ( !config_.exclude_hints.rr_ttl )
+        rr.ttl = resource.ttl();
     if ( !config_.exclude_hints.rr_rdata )
         rr.rdata = data_->add_name_rdata(resource.data());
     ext_rr_->push_back(data_->add_resource_record(rr));

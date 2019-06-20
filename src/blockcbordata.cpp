@@ -705,42 +705,20 @@ namespace block_cbor {
         }
     }
 
-    void ResourceRecord::writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude)
+    void ResourceRecord::writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
     {
         constexpr int name_index = find_rr_index(RRField::name_index);
         constexpr int classtype_index = find_rr_index(RRField::classtype_index);
         constexpr int ttl_index = find_rr_index(RRField::ttl);
         constexpr int rdata_index = find_rr_index(RRField::rdata_index);
 
-        bool write_all = ( !exclude.query_name && !exclude.query_class_type &&
-                           !exclude.rr_ttl && !exclude.rr_rdata );
+        int nitems = !!name + !!classtype + !!ttl + !!rdata;
 
-        if ( write_all )
-            enc.writeMapHeader(4);
-        else
-            enc.writeMapHeader();
-        if ( !exclude.query_name )
-        {
-            enc.write(name_index);
-            enc.write(name);
-        }
-        if ( !exclude.query_class_type )
-        {
-            enc.write(classtype_index);
-            enc.write(classtype);
-        }
-        if ( !exclude.rr_ttl )
-        {
-            enc.write(ttl_index);
-            enc.write(ttl);
-        }
-        if ( !exclude.rr_rdata )
-        {
-            enc.write(rdata_index);
-            enc.write(rdata);
-        }
-        if ( !write_all )
-            enc.writeBreak();
+        enc.writeMapHeader(nitems);
+        enc.write(name_index, name);
+        enc.write(classtype_index, classtype);
+        enc.write(ttl_index, ttl);
+        enc.write(rdata_index, rdata);
     }
 
     std::size_t hash_value(const ResourceRecord& rr)
