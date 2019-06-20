@@ -1370,9 +1370,10 @@ SCENARIO("QueryResponseItems can be written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.client_address = exclude.client_port = true;
             BlockParameters bp;
             bp.storage_parameters.ticks_per_second = 1000000;
+            qri1.client_address.reset();
+            qri1.client_port.reset();
             qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
             tcbe.flush();
 
@@ -1409,13 +1410,15 @@ SCENARIO("QueryResponseItems can be written", "[block]")
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
             }
         }
+
         WHEN("values are encoded, timestamp and transaction ID excluded")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.timestamp = exclude.transaction_id = true;
             BlockParameters bp;
             bp.storage_parameters.ticks_per_second = 1000000;
+            qri1.tstamp.reset();
+            qri1.id.reset();
             qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
             tcbe.flush();
 
@@ -1457,10 +1460,11 @@ SCENARIO("QueryResponseItems can be written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.client_hoplimit = exclude.response_delay =
-                exclude.response_size = true;
             BlockParameters bp;
             bp.storage_parameters.ticks_per_second = 1000000;
+            qri1.hoplimit.reset();
+            qri1.response_delay.reset();
+            qri1.response_size.reset();
             qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
             tcbe.flush();
 
@@ -1501,9 +1505,10 @@ SCENARIO("QueryResponseItems can be written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.query_name = exclude.query_size = true;
             BlockParameters bp;
             bp.storage_parameters.ticks_per_second = 1000000;
+            qri1.qname.reset();
+            qri1.query_size.reset();
             qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
             tcbe.flush();
 

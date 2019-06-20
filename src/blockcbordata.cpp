@@ -1119,7 +1119,7 @@ namespace block_cbor {
     void QueryResponseItem::writeCbor(CborBaseEncoder& enc,
                                       const std::chrono::system_clock::time_point& earliest_time,
                                       const BlockParameters& block_parameters,
-                                      const HintsExcluded& exclude)
+                                      const HintsExcluded&)
     {
         constexpr int time_index = find_query_response_index(QueryResponseField::time_offset);
         constexpr int client_address_index = find_query_response_index(QueryResponseField::client_address_index);
@@ -1135,60 +1135,18 @@ namespace block_cbor {
         constexpr int response_extended_index = find_query_response_index(QueryResponseField::response_extended);
 
         enc.writeMapHeader();
-        if ( !exclude.timestamp )
-        {
-            enc.write(time_index);
-            enc.write(std::chrono::duration_cast<std::chrono::nanoseconds>(*tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
-        }
-        if ( !exclude.client_address )
-        {
-            enc.write(client_address_index);
-            enc.write(client_address);
-        }
-        if ( !exclude.client_port )
-        {
-            enc.write(client_port_index);
-            enc.write(client_port);
-        }
-        if ( !exclude.transaction_id )
-        {
-            enc.write(transaction_id_index);
-            enc.write(id);
-        }
-        enc.write(qr_signature_index);
-        enc.write(signature);
-
-        if ( ( qr_flags & QUERY_ONLY ) && !exclude.client_hoplimit )
-        {
-            enc.write(client_hoplimit_index);
-            enc.write(hoplimit);
-        }
-
-        if ( ( qr_flags & RESPONSE_ONLY ) &&
-             !exclude.response_delay &&
-            response_delay )
-        {
-            enc.write(delay_index);
-            enc.write((*response_delay).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
-        }
-
-        if ( ( qr_flags & QR_HAS_QUESTION ) && !exclude.query_name )
-        {
-            enc.write(query_name_index);
-            enc.write(qname);
-        }
-
-        if ( ( qr_flags & QUERY_ONLY ) && !exclude.query_size )
-        {
-            enc.write(query_size_index);
-            enc.write(query_size);
-        }
-
-        if ( ( qr_flags & RESPONSE_ONLY ) && !exclude.response_size )
-        {
-            enc.write(response_size_index);
-            enc.write(response_size);
-        }
+        if ( tstamp )
+            enc.write(time_index, std::chrono::duration_cast<std::chrono::nanoseconds>(*tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
+        enc.write(client_address_index, client_address);
+        enc.write(client_port_index, client_port);
+        enc.write(transaction_id_index, id);
+        enc.write(qr_signature_index, signature);
+        enc.write(client_hoplimit_index, hoplimit);
+        if ( response_delay )
+            enc.write(delay_index, response_delay->count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
+        enc.write(query_name_index, qname);
+        enc.write(query_size_index, query_size);
+        enc.write(response_size_index, response_size);
 
         if ( query_extra_info )
             writeExtraInfo(enc, query_extended_index, *query_extra_info);

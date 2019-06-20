@@ -141,11 +141,14 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         qs.dns_flags = block_cbor::dns_flags(*qr);
 
     // Basic query/response info.
-    qri.tstamp = d.timestamp;
+    if ( !exclude.timestamp )
+        qri.tstamp = d.timestamp;
     if ( !exclude.client_address )
         qri.client_address = data_->add_address(addr_to_string(d.clientIP, config_));
-    qri.client_port = d.clientPort;
-    qri.id = d.dns.id();
+    if ( !exclude.client_port )
+        qri.client_port = d.clientPort;
+    if ( !exclude.transaction_id )
+        qri.id = d.dns.id();
     if ( !exclude.query_qdcount )
         qs.qdcount = d.dns.questions_count();
 
@@ -168,8 +171,10 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         const DNSMessage &q(qr->query());
 
         qri.qr_flags |= block_cbor::QUERY_ONLY;
-        qri.query_size = q.wire_size;
-        qri.hoplimit = q.hoplimit;
+        if ( !exclude.query_size )
+            qri.query_size = q.wire_size;
+        if ( !exclude.client_hoplimit )
+            qri.hoplimit = q.hoplimit;
 
         if ( !exclude.query_opcode )
             qs.query_opcode = q.dns.opcode();
@@ -202,9 +207,10 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         const DNSMessage &r(qr->response());
 
         qri.qr_flags |= block_cbor::RESPONSE_ONLY;
-        qri.response_size = r.wire_size;
-         // Set from response if not already set.
-         if ( !exclude.query_opcode && !qs.query_opcode )
+        if ( !exclude.response_size )
+            qri.response_size = r.wire_size;
+        // Set from response if not already set.
+        if ( !exclude.query_opcode && !qs.query_opcode )
             qs.query_opcode = r.dns.opcode();
         if ( !exclude.response_rcode )
             qs.response_rcode = r.dns.rcode();
@@ -221,7 +227,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
             qri.qr_flags |= block_cbor::RESPONSE_HAS_NO_QUESTION;
     }
 
-    if ( qr->has_query() && qr->has_response() )
+    if ( qr->has_query() && qr->has_response() && !exclude.response_delay )
         qri.response_delay = std::chrono::duration_cast<std::chrono::microseconds>(qr->response().timestamp - qr->query().timestamp);
 
     qs.qr_flags = qri.qr_flags;
