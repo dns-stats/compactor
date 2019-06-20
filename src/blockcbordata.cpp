@@ -511,7 +511,7 @@ namespace block_cbor {
         }
     }
 
-    void IndexVectorItem::writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
+    void IndexVectorItem::writeCbor(CborBaseEncoder& enc)
     {
         write_vector(vec, enc);
     }
@@ -530,7 +530,7 @@ namespace block_cbor {
         }
     }
 
-    void ByteStringItem::writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
+    void ByteStringItem::writeCbor(CborBaseEncoder& enc)
     {
         enc.write(str);
     }
@@ -577,7 +577,7 @@ namespace block_cbor {
         }
     }
 
-    void ClassType::writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
+    void ClassType::writeCbor(CborBaseEncoder& enc)
     {
         constexpr int type_index = find_class_type_index(ClassTypeField::type_id);
         constexpr int class_index = find_class_type_index(ClassTypeField::class_id);
@@ -637,7 +637,7 @@ namespace block_cbor {
         }
     }
 
-    void Question::writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
+    void Question::writeCbor(CborBaseEncoder& enc)
     {
         constexpr int qname_index = find_question_index(QuestionField::name_index);
         constexpr int classtype_index = find_question_index(QuestionField::classtype_index);
@@ -705,7 +705,7 @@ namespace block_cbor {
         }
     }
 
-    void ResourceRecord::writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
+    void ResourceRecord::writeCbor(CborBaseEncoder& enc)
     {
         constexpr int name_index = find_rr_index(RRField::name_index);
         constexpr int classtype_index = find_rr_index(RRField::classtype_index);
@@ -845,7 +845,7 @@ namespace block_cbor {
             throw cbor_file_format_error("QueryResponseSignature missing qr-sig_flags");
     }
 
-    void QueryResponseSignature::writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
+    void QueryResponseSignature::writeCbor(CborBaseEncoder& enc)
     {
         constexpr int server_address_index = find_query_response_signature_index(QueryResponseSignatureField::server_address_index);
         constexpr int server_port_index = find_query_response_signature_index(QueryResponseSignatureField::server_port);
@@ -1118,8 +1118,7 @@ namespace block_cbor {
 
     void QueryResponseItem::writeCbor(CborBaseEncoder& enc,
                                       const std::chrono::system_clock::time_point& earliest_time,
-                                      const BlockParameters& block_parameters,
-                                      const HintsExcluded&)
+                                      const BlockParameters& block_parameters)
     {
         constexpr int time_index = find_query_response_index(QueryResponseField::time_offset);
         constexpr int client_address_index = find_query_response_index(QueryResponseField::client_address_index);
@@ -1675,7 +1674,7 @@ namespace block_cbor {
         }
     }
 
-    void BlockData::writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude)
+    void BlockData::writeCbor(CborBaseEncoder& enc)
     {
         constexpr int preamble_index = find_block_index(BlockField::preamble);
         constexpr int statistics_index = find_block_index(BlockField::statistics);
@@ -1708,10 +1707,10 @@ namespace block_cbor {
 
         // Header tables.
         enc.write(tables_index);
-        writeHeaders(enc, exclude);
+        writeHeaders(enc);
 
         // Block items.
-        writeItems(enc, exclude);
+        writeItems(enc);
 
         // Address event items.
         writeAddressEventCounts(enc);
@@ -1720,7 +1719,7 @@ namespace block_cbor {
         enc.writeBreak();
     }
 
-    void BlockData::writeHeaders(CborBaseEncoder& enc, const HintsExcluded& exclude)
+    void BlockData::writeHeaders(CborBaseEncoder& enc)
     {
         constexpr int ipaddress_index = find_block_tables_index(BlockTablesField::ip_address);
         constexpr int classtype_index = find_block_tables_index(BlockTablesField::classtype);
@@ -1735,47 +1734,47 @@ namespace block_cbor {
         if ( ip_addresses.size() > 0 )
         {
             enc.write(ipaddress_index);
-            ip_addresses.writeCbor(enc, exclude);
+            ip_addresses.writeCbor(enc);
         }
         if ( class_types.size() > 0 )
         {
             enc.write(classtype_index);
-            class_types.writeCbor(enc, exclude);
+            class_types.writeCbor(enc);
         }
         if ( names_rdatas.size() > 0 )
         {
             enc.write(name_rdata_index);
-            names_rdatas.writeCbor(enc, exclude);
+            names_rdatas.writeCbor(enc);
         }
         if ( query_response_signatures.size() > 0 )
         {
             enc.write(query_response_signature_index);
-            query_response_signatures.writeCbor(enc, exclude);
+            query_response_signatures.writeCbor(enc);
         }
         if ( questions_lists.size() > 0 )
         {
             enc.write(question_list_index);
-            questions_lists.writeCbor(enc, exclude);
+            questions_lists.writeCbor(enc);
         }
         if ( questions.size() > 0 )
         {
             enc.write(question_rr_index);
-            questions.writeCbor(enc, exclude);
+            questions.writeCbor(enc);
         }
         if ( rrs_lists.size() > 0 )
         {
             enc.write(rr_list_index);
-            rrs_lists.writeCbor(enc, exclude);
+            rrs_lists.writeCbor(enc);
         }
         if ( resource_records.size() > 0 )
         {
             enc.write(rr_index);
-            resource_records.writeCbor(enc, exclude);
+            resource_records.writeCbor(enc);
         }
         enc.writeBreak();
     }
 
-    void BlockData::writeItems(CborBaseEncoder& enc, const HintsExcluded& exclude)
+    void BlockData::writeItems(CborBaseEncoder& enc)
     {
         constexpr int queries_index = find_block_index(BlockField::queries);
         const BlockParameters& block_parameters = block_parameters_[block_parameters_index];
@@ -1785,7 +1784,7 @@ namespace block_cbor {
             enc.write(queries_index);
             enc.writeArrayHeader(query_response_items.size());
             for ( auto& qri : query_response_items )
-                qri.writeCbor(enc, earliest_time, block_parameters, exclude);
+                qri.writeCbor(enc, earliest_time, block_parameters);
         }
     }
 

@@ -127,7 +127,7 @@ namespace {
         {
             val = dec.read_unsigned();
         }
-        void writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
+        void writeCbor(CborBaseEncoder& enc)
         {
             enc.write(val);
         }
@@ -460,9 +460,8 @@ SCENARIO("IndexVectorItems can be compared and written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
-            iv1.writeCbor(tcbe, exclude);
-            iv3.writeCbor(tcbe, exclude);
+            iv1.writeCbor(tcbe);
+            iv3.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -509,9 +508,8 @@ SCENARIO("ByteStringItems can be compared and written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
-            si1.writeCbor(tcbe, exclude);
-            si3.writeCbor(tcbe, exclude);
+            si1.writeCbor(tcbe);
+            si3.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -558,9 +556,8 @@ SCENARIO("ClassTypes can be compared and written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
-            ct1.writeCbor(tcbe, exclude);
-            ct3.writeCbor(tcbe, exclude);
+            ct1.writeCbor(tcbe);
+            ct3.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -610,9 +607,8 @@ SCENARIO("Questions can be compared and written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
-            q1.writeCbor(tcbe, exclude);
-            q3.writeCbor(tcbe, exclude);
+            q1.writeCbor(tcbe);
+            q3.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -634,11 +630,10 @@ SCENARIO("Questions can be compared and written", "[block]")
         WHEN("values are encoded, name excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             q1.qname.reset();
             q3.qname.reset();
-            q1.writeCbor(tcbe, exclude);
-            q3.writeCbor(tcbe, exclude);
+            q1.writeCbor(tcbe);
+            q3.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -658,11 +653,10 @@ SCENARIO("Questions can be compared and written", "[block]")
         WHEN("values are encoded, class type excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             q1.classtype.reset();
             q3.classtype.reset();
-            q1.writeCbor(tcbe, exclude);
-            q3.writeCbor(tcbe, exclude);
+            q1.writeCbor(tcbe);
+            q3.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -711,9 +705,8 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
-            rr1.writeCbor(tcbe, exclude);
-            rr3.writeCbor(tcbe, exclude);
+            rr1.writeCbor(tcbe);
+            rr3.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -739,9 +732,8 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
         WHEN("values are encoded, name excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             rr1.name.reset();
-            rr1.writeCbor(tcbe, exclude);
+            rr1.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -761,9 +753,8 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
         WHEN("values are encoded, class type excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             rr1.classtype.reset();
-            rr1.writeCbor(tcbe, exclude);
+            rr1.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -783,9 +774,8 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
         WHEN("values are encoded, TTL excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             rr1.ttl.reset();
-            rr1.writeCbor(tcbe, exclude);
+            rr1.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -805,9 +795,8 @@ SCENARIO("ResourceRecords can be compared and written", "[block]")
         WHEN("values are encoded, RDATA excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             rr1.rdata.reset();
-            rr1.writeCbor(tcbe, exclude);
+            rr1.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -870,8 +859,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
-            qs1.writeCbor(tcbe, exclude);
+            qs1.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -904,9 +892,8 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         WHEN("values are encoded, server address excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             qs1.server_address.reset();
-            qs1.writeCbor(tcbe, exclude);
+            qs1.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -938,9 +925,8 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         WHEN("values are encoded, server port excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             qs1.server_port.reset();
-            qs1.writeCbor(tcbe, exclude);
+            qs1.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -972,9 +958,8 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         WHEN("values are encoded, transport flags excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             qs1.qr_transport_flags.reset();
-            qs1.writeCbor(tcbe, exclude);
+            qs1.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1006,9 +991,8 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         WHEN("values are encoded, DNS flags excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             qs1.dns_flags.reset();
-            qs1.writeCbor(tcbe, exclude);
+            qs1.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1040,12 +1024,11 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         WHEN("values are encoded, query counts omitted")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             qs1.qdcount.reset();
             qs1.query_ancount.reset();
             qs1.query_arcount.reset();
             qs1.query_nscount.reset();
-            qs1.writeCbor(tcbe, exclude);
+            qs1.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1074,10 +1057,9 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         WHEN("values are encoded, OPCODE and RCODE omitted")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             qs1.query_opcode.reset();
             qs1.query_rcode.reset();
-            qs1.writeCbor(tcbe, exclude);
+            qs1.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1108,11 +1090,10 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         WHEN("values are encoded, OPT items omitted")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             qs1.query_edns_version.reset();
             qs1.query_edns_payload_size.reset();
             qs1.query_opt_rdata.reset();
-            qs1.writeCbor(tcbe, exclude);
+            qs1.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1142,10 +1123,9 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         WHEN("values are encoded, class type and response RCODE excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             qs1.query_classtype.reset();
             qs1.response_rcode.reset();
-            qs1.writeCbor(tcbe, exclude);
+            qs1.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1324,10 +1304,9 @@ SCENARIO("QueryResponseItems can be written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             BlockParameters bp;
             bp.storage_parameters.ticks_per_second = 1000000;
-            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
+            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1369,12 +1348,11 @@ SCENARIO("QueryResponseItems can be written", "[block]")
         WHEN("values are encoded, client address and port excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             BlockParameters bp;
             bp.storage_parameters.ticks_per_second = 1000000;
             qri1.client_address.reset();
             qri1.client_port.reset();
-            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
+            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1414,12 +1392,11 @@ SCENARIO("QueryResponseItems can be written", "[block]")
         WHEN("values are encoded, timestamp and transaction ID excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             BlockParameters bp;
             bp.storage_parameters.ticks_per_second = 1000000;
             qri1.tstamp.reset();
             qri1.id.reset();
-            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
+            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1459,13 +1436,12 @@ SCENARIO("QueryResponseItems can be written", "[block]")
         WHEN("values are encoded, client hoplimit, response delay and response size excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             BlockParameters bp;
             bp.storage_parameters.ticks_per_second = 1000000;
             qri1.hoplimit.reset();
             qri1.response_delay.reset();
             qri1.response_size.reset();
-            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
+            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1504,12 +1480,11 @@ SCENARIO("QueryResponseItems can be written", "[block]")
         WHEN("values are encoded, query name and size excluded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             BlockParameters bp;
             bp.storage_parameters.ticks_per_second = 1000000;
             qri1.qname.reset();
             qri1.query_size.reset();
-            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp, exclude);
+            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1599,8 +1574,7 @@ SCENARIO("HeaderList items can be written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
-            hl.writeCbor(tcbe, exclude);
+            hl.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1634,8 +1608,7 @@ SCENARIO("BlockData items can be written", "[block]")
         WHEN("values are encoded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
-            cd.writeCbor(tcbe, exclude);
+            cd.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1673,10 +1646,9 @@ SCENARIO("BlockData items can be written", "[block]")
         WHEN("ticks_per_second changes time value changes")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
             BlockData cd2(bpv, FileFormatVersion::format_10, 1);
             cd2.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(1));
-            cd2.writeCbor(tcbe, exclude);
+            cd2.writeCbor(tcbe);
             tcbe.flush();
 
             THEN("the encoding is as expected")
@@ -1787,9 +1759,8 @@ SCENARIO("BlockData max items works", "[block]")
         WHEN("a value is encoded")
         {
             TestCborEncoder tcbe;
-            HintsExcluded exclude;
-            cd1.writeCbor(tcbe, exclude);
-            cd2.writeCbor(tcbe, exclude);
+            cd1.writeCbor(tcbe);
+            cd2.writeCbor(tcbe);
 
             THEN("full report is as expected")
             {

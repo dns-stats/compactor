@@ -363,6 +363,6 @@ void BlockCborWriter::writeFileFooter()
 void BlockCborWriter::writeBlock()
 {
     data_->last_packet_statistics = last_end_block_statistics_;
-    data_->writeCbor(*enc_, config_.exclude_hints);
+    data_->writeCbor(*enc_);
     data_->clear();
 }
