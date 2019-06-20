@@ -878,7 +878,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 16,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
@@ -895,7 +895,6 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
                         find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
                         find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -906,7 +905,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.server_address = true;
+            qs1.server_address.reset();
             qs1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
@@ -914,7 +913,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 15,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
@@ -930,7 +929,6 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
                         find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
                         find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -941,7 +939,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.server_port = true;
+            qs1.server_port.reset();
             qs1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
@@ -949,7 +947,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 15,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
@@ -965,7 +963,6 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
                         find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
                         find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -976,7 +973,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.transport = true;
+            qs1.qr_transport_flags.reset();
             qs1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
@@ -984,7 +981,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 15,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
@@ -1000,7 +997,6 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
                         find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
                         find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -1011,7 +1007,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.dns_flags = true;
+            qs1.dns_flags.reset();
             qs1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
@@ -1019,7 +1015,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 15,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
@@ -1035,7 +1031,6 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
                         find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
                         find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -1046,8 +1041,10 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.query_qdcount = exclude.query_ancount =
-                exclude.query_arcount = exclude.query_nscount = true;
+            qs1.qdcount.reset();
+            qs1.query_ancount.reset();
+            qs1.query_arcount.reset();
+            qs1.query_nscount.reset();
             qs1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
@@ -1055,7 +1052,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 12,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
@@ -1068,7 +1065,6 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
                         find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
                         find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -1079,7 +1075,8 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.query_opcode = exclude.query_rcode = true;
+            qs1.query_opcode.reset();
+            qs1.query_rcode.reset();
             qs1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
@@ -1087,7 +1084,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 14,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
@@ -1102,7 +1099,6 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
                         find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
                         find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -1113,8 +1109,9 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.query_edns_version = exclude.query_udp_size =
-                exclude.query_opt_rdata = true;
+            qs1.query_edns_version.reset();
+            qs1.query_edns_payload_size.reset();
+            qs1.query_opt_rdata.reset();
             qs1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
@@ -1122,7 +1119,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 13,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
@@ -1136,7 +1133,6 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
                         find_query_response_signature_index(QueryResponseSignatureField::query_ar_count), 3,
                         find_query_response_signature_index(QueryResponseSignatureField::query_ns_count), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -1147,7 +1143,8 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.query_class_type = exclude.response_rcode = true;
+            qs1.query_classtype.reset();
+            qs1.response_rcode.reset();
             qs1.writeCbor(tcbe, exclude);
             tcbe.flush();
 
@@ -1155,7 +1152,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 14,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
@@ -1170,7 +1167,6 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
                         find_query_response_signature_index(QueryResponseSignatureField::edns_version), 0,
                         find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
                         find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));

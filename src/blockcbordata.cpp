@@ -845,7 +845,7 @@ namespace block_cbor {
             throw cbor_file_format_error("QueryResponseSignature missing qr-sig_flags");
     }
 
-    void QueryResponseSignature::writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude)
+    void QueryResponseSignature::writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
     {
         constexpr int server_address_index = find_query_response_signature_index(QueryResponseSignatureField::server_address_index);
         constexpr int server_port_index = find_query_response_signature_index(QueryResponseSignatureField::server_port);
@@ -864,92 +864,30 @@ namespace block_cbor {
         constexpr int opt_rdata_index = find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index);
         constexpr int response_rcode_index = find_query_response_signature_index(QueryResponseSignatureField::response_rcode);
 
-        enc.writeMapHeader();
-        if ( !exclude.server_address )
-        {
-            enc.write(server_address_index);
-            enc.write(server_address);
-        }
-        if ( !exclude.server_port )
-        {
-            enc.write(server_port_index);
-            enc.write(server_port);
-        }
-        if ( !exclude.transport )
-        {
-            enc.write(qr_transport_flags_index);
-            enc.write(qr_transport_flags);
-        }
-        if ( !exclude.dns_flags )
-        {
-            enc.write(qr_dns_flags_index);
-            enc.write(dns_flags);
-        }
-        enc.write(qr_sig_flags_index);
-        enc.write(qr_flags);
-        if ( !exclude.query_qdcount )
-        {
-            enc.write(query_qd_index);
-            enc.write(qdcount);
-        }
-        if ( ( qr_flags & QR_HAS_QUESTION ) && !exclude.query_class_type )
-        {
-            enc.write(query_classtype_index);
-            enc.write(*query_classtype);
-        }
-        if ( ( qr_flags & QUERY_ONLY ) && !exclude.query_rcode )
-        {
-            enc.write(query_rcode_index);
-            enc.write(query_rcode);
-        }
-        if ( ( qr_flags & QUERY_AND_RESPONSE ) && !exclude.query_opcode )
-        {
-            enc.write(query_opcode_index);
-            enc.write(query_opcode);
-        }
-        if ( qr_flags & QUERY_ONLY )
-        {
-            if ( !exclude.query_ancount )
-            {
-                enc.write(query_an_index);
-                enc.write(query_ancount);
-            }
-            if ( !exclude.query_arcount )
-            {
-                enc.write(query_ar_index);
-                enc.write(query_arcount);
-            }
-            if ( !exclude.query_nscount )
-            {
-                enc.write(query_ns_index);
-                enc.write(query_nscount);
-            }
+        int nitems =
+            !!server_address + !!server_port + !!qr_transport_flags +
+            !!dns_flags + 1 + !!qdcount + !!query_classtype + !!query_rcode +
+            !!query_opcode + !!query_ancount + !!query_arcount +
+            !!query_nscount + !!query_edns_version + !!query_edns_payload_size +
+            !!query_opt_rdata + !!response_rcode;
 
-            if ( qr_flags & QUERY_HAS_OPT )
-            {
-                if ( !exclude.query_edns_version )
-                {
-                    enc.write(edns_version_index);
-                    enc.write(query_edns_version);
-                }
-                if ( !exclude.query_udp_size )
-                {
-                    enc.write(udp_buf_size_index);
-                    enc.write(query_edns_payload_size);
-                }
-                if ( !exclude.query_opt_rdata )
-                {
-                    enc.write(opt_rdata_index);
-                    enc.write(query_opt_rdata);
-                }
-            }
-        }
-        if ( ( qr_flags & RESPONSE_ONLY ) && !exclude.response_rcode )
-        {
-            enc.write(response_rcode_index);
-            enc.write(response_rcode);
-        }
-        enc.writeBreak();
+        enc.writeMapHeader(nitems);
+        enc.write(server_address_index, server_address);
+        enc.write(server_port_index, server_port);
+        enc.write(qr_transport_flags_index, qr_transport_flags);
+        enc.write(qr_dns_flags_index, dns_flags);
+        enc.write(qr_sig_flags_index, qr_flags);
+        enc.write(query_qd_index, qdcount);
+        enc.write(query_classtype_index, query_classtype);
+        enc.write(query_rcode_index, query_rcode);
+        enc.write(query_opcode_index, query_opcode);
+        enc.write(query_an_index, query_ancount);
+        enc.write(query_ar_index, query_arcount);
+        enc.write(query_ns_index, query_nscount);
+        enc.write(edns_version_index, query_edns_version);
+        enc.write(udp_buf_size_index, query_edns_payload_size);
+        enc.write(opt_rdata_index, query_opt_rdata);
+        enc.write(response_rcode_index, response_rcode);
     }
 
     std::size_t hash_value(const QueryResponseSignature& qs)

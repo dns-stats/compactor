@@ -117,6 +117,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     const DNSMessage &d(qr->has_query() ? qr->query() : qr->response());
     block_cbor::QueryResponseItem& qri = query_response_;
     block_cbor::QueryResponseSignature qs;
+    const HintsExcluded& exclude = config_.exclude_hints;
 
     qri.qr_flags = 0;
 
@@ -130,19 +131,23 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     last_end_block_statistics_ = stats;
 
     // Basic query signature info.
-    if ( !config_.exclude_hints.server_address )
+    if ( !exclude.server_address )
         qs.server_address = data_->add_address(addr_to_string(d.serverIP, config_, false));
-    qs.server_port = d.serverPort;
-    qs.qr_transport_flags = block_cbor::transport_flags(*qr);
-    qs.dns_flags = block_cbor::dns_flags(*qr);
+    if ( !exclude.server_port )
+        qs.server_port = d.serverPort;
+    if ( !exclude.transport )
+        qs.qr_transport_flags = block_cbor::transport_flags(*qr);
+    if ( !exclude.dns_flags )
+        qs.dns_flags = block_cbor::dns_flags(*qr);
 
     // Basic query/response info.
     qri.tstamp = d.timestamp;
-    if ( !config_.exclude_hints.client_address )
+    if ( !exclude.client_address )
         qri.client_address = data_->add_address(addr_to_string(d.clientIP, config_));
     qri.client_port = d.clientPort;
     qri.id = d.dns.id();
-    qs.qdcount = d.dns.questions_count();
+    if ( !exclude.query_qdcount )
+        qs.qdcount = d.dns.questions_count();
 
     // Get first query info.
     for ( const auto& query : d.dns.queries() )
@@ -150,9 +155,9 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         block_cbor::ClassType ct;
         ct.qtype = query.query_type();
         ct.qclass = query.query_class();
-        if ( !config_.exclude_hints.query_class_type )
+        if ( !exclude.query_class_type )
             qs.query_classtype = data_->add_classtype(ct);
-        if ( !config_.exclude_hints.query_name )
+        if ( !exclude.query_name )
             qri.qname = data_->add_name_rdata(query.dname());
         qri.qr_flags |= block_cbor::QR_HAS_QUESTION;
         break;
@@ -165,20 +170,29 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         qri.qr_flags |= block_cbor::QUERY_ONLY;
         qri.query_size = q.wire_size;
         qri.hoplimit = q.hoplimit;
-        qs.query_opcode = q.dns.opcode();
-        qs.query_rcode = q.dns.rcode();
-        qs.query_ancount = q.dns.answers_count();
-        qs.query_nscount = q.dns.authority_count();
-        qs.query_arcount = q.dns.additional_count();
+
+        if ( !exclude.query_opcode )
+            qs.query_opcode = q.dns.opcode();
+        if ( !exclude.query_rcode )
+            qs.query_rcode = q.dns.rcode();
+        if ( !exclude.query_ancount )
+            qs.query_ancount = q.dns.answers_count();
+        if ( !exclude.query_arcount )
+            qs.query_nscount = q.dns.authority_count();
+        if ( !exclude.query_nscount )
+            qs.query_arcount = q.dns.additional_count();
 
         auto edns0 = q.dns.edns0();
         if ( edns0 )
         {
-            qs.query_rcode = *qs.query_rcode + (edns0->extended_rcode() << 4);
+            if ( !exclude.query_rcode )
+                qs.query_rcode = *qs.query_rcode + (edns0->extended_rcode() << 4);
             qri.qr_flags |= block_cbor::QUERY_HAS_OPT;
-            qs.query_edns_payload_size = edns0->udp_payload_size();
-            qs.query_edns_version = edns0->edns_version();
-            if ( !config_.exclude_hints.query_opt_rdata )
+            if ( !exclude.query_udp_size )
+                qs.query_edns_payload_size = edns0->udp_payload_size();
+            if ( !exclude.query_edns_version )
+                qs.query_edns_version = edns0->edns_version();
+            if ( !exclude.query_opt_rdata )
                 qs.query_opt_rdata = data_->add_name_rdata(edns0->rr().data());
         }
     }
@@ -189,14 +203,17 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
 
         qri.qr_flags |= block_cbor::RESPONSE_ONLY;
         qri.response_size = r.wire_size;
-        if ( !qs.query_opcode )         // Set from response if not already set.
+         // Set from response if not already set.
+         if ( !exclude.query_opcode && !qs.query_opcode )
             qs.query_opcode = r.dns.opcode();
-        qs.response_rcode = r.dns.rcode();
+        if ( !exclude.response_rcode )
+            qs.response_rcode = r.dns.rcode();
 
         auto edns0 = r.dns.edns0();
         if ( edns0 )
         {
-            qs.response_rcode = *qs.response_rcode + (edns0->extended_rcode() << 4);
+            if ( !exclude.response_rcode )
+                qs.response_rcode = *qs.response_rcode + (edns0->extended_rcode() << 4);
             qri.qr_flags |= block_cbor::RESPONSE_HAS_OPT;
         }
 
