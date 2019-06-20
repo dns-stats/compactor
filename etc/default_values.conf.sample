@@ -6,7 +6,7 @@
 # response-delay                # <n>s|ms|us|ns
 # client-address                # IPAddress
 # client-port                   # uint16
-# client-hoplimit               # unsigned
+# client-hoplimit               # uint8
 # server-address                # IPAddress
 # server-port                   # uint16
 # qr-transport-flags            # (ipv4|ipv6) (udp|tcp|tls|dtls|doh) (trailing-data)
@@ -47,4 +47,4 @@
 [address-event]
 # ae-address                        # IPAddress
 # ae-type                           # TCP-RESET, ICMP-TIME-EXCEEDED, ICMP-DEST-UNREACHABLE, ICMPv6-TIME-EXCEEDED, ICMPv6-DEST-UNREACHABLE, ICMPv6-PACKET-TOO-BIG,
-# ae-code                           # unsigned
+# ae-code                           # uint8
