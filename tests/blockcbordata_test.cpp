@@ -635,7 +635,8 @@ SCENARIO("Questions can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.query_name = true;
+            q1.qname.reset();
+            q3.qname.reset();
             q1.writeCbor(tcbe, exclude);
             q3.writeCbor(tcbe, exclude);
             tcbe.flush();
@@ -644,12 +645,10 @@ SCENARIO("Questions can be compared and written", "[block]")
             {
                 const uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 1,
                         1, 20,
-                        0xff,
-                        (5 << 5) | 31,
+                        (5 << 5) | 1,
                         1, 19,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
@@ -660,7 +659,8 @@ SCENARIO("Questions can be compared and written", "[block]")
         {
             TestCborEncoder tcbe;
             HintsExcluded exclude;
-            exclude.query_class_type = true;
+            q1.classtype.reset();
+            q3.classtype.reset();
             q1.writeCbor(tcbe, exclude);
             q3.writeCbor(tcbe, exclude);
             tcbe.flush();
@@ -669,12 +669,10 @@ SCENARIO("Questions can be compared and written", "[block]")
             {
                 const uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 31,
+                        (5 << 5) | 1,
                         0, 1,
-                        0xff,
-                        (5 << 5) | 31,
+                        (5 << 5) | 1,
                         0, 2,
-                        0xff
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));

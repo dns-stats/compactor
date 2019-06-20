@@ -65,6 +65,36 @@ public:
     }
 
     /**
+     * \brief Write index and optional value.
+     *
+     * If there is no value, write nothing.
+     *
+     * \param index the index to write.
+     * \param value the value to write.
+     */
+    template<typename T>
+    void write(int index, const boost::optional<T>& value)
+    {
+        if ( value )
+            write(index, *value);
+    }
+
+    /**
+     * \brief Write index and value.
+     *
+     * If there is no value, write nothing.
+     *
+     * \param index the index to write.
+     * \param value the value to write.
+     */
+    template<typename T>
+    void write(int index, const T& value)
+    {
+        write(index);
+        write(value);
+    }
+
+    /**
      * \brief Write a boolean value.
      *
      * \param value the value to write.

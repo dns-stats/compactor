@@ -637,29 +637,15 @@ namespace block_cbor {
         }
     }
 
-    void Question::writeCbor(CborBaseEncoder& enc, const HintsExcluded& exclude)
+    void Question::writeCbor(CborBaseEncoder& enc, const HintsExcluded&)
     {
         constexpr int qname_index = find_question_index(QuestionField::name_index);
         constexpr int classtype_index = find_question_index(QuestionField::classtype_index);
 
-        bool write_all = ( !exclude.query_name && !exclude.query_class_type );
-
-        if ( write_all )
-            enc.writeMapHeader(2);
-        else
-            enc.writeMapHeader();
-        if ( !exclude.query_name )
-        {
-            enc.write(qname_index);
-            enc.write(qname);
-        }
-        if ( !exclude.query_class_type )
-        {
-            enc.write(classtype_index);
-            enc.write(classtype);
-        }
-        if ( !write_all )
-            enc.writeBreak();
+        int nitems = !!qname + !!classtype;
+        enc.writeMapHeader(nitems);
+        enc.write(qname_index, qname);
+        enc.write(classtype_index, classtype);
     }
 
     std::size_t hash_value(const Question& q)
