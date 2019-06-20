@@ -658,10 +658,12 @@ namespace block_cbor {
 
     void ResourceRecord::readCbor(CborBaseDecoder& dec,
                                   const FileVersionFields& fields,
-                                  const Defaults& defaults)
+                                  const Defaults&)
     {
-        name = classtype = rdata = boost::none;
-        ttl = defaults.rr_ttl;
+        name.reset();
+        classtype.reset();
+        rdata.reset();
+        ttl.reset();
 
         try
         {

@@ -571,7 +571,7 @@ void BlockCborReader::read_rr(block_cbor::index_t index, boost::optional<std::ve
                 newrr.rtype = defaults_.query_type;
             }
 
-            newrr.ttl = rr.ttl;
+            newrr.ttl = ( rr.ttl ) ? rr.ttl : defaults_.rr_ttl;
 
             if ( rr.rdata )
                 newrr.rdata = block_->names_rdatas[*rr.rdata].str;
