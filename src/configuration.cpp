@@ -931,7 +931,6 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
  * @param val1          compiler workaround.
  * @param val2          compiler workaround.
  */
-// cppcheck-suppress unusedFunction
 void validate(boost::any& v, const std::vector<std::string>& values,
               IPAddress* val1, int val2)
 {
@@ -956,7 +955,6 @@ void validate(boost::any& v, const std::vector<std::string>& values,
  * @param val1          compiler workaround.
  * @param val2          compiler workaround.
  */
-// cppcheck-suppress unusedFunction
 void validate(boost::any& v, const std::vector<std::string>& values,
               CaptureDNS::Opcode* val1, int val2)
 {
@@ -979,7 +977,6 @@ void validate(boost::any& v, const std::vector<std::string>& values,
  * @param val1          compiler workaround.
  * @param val2          compiler workaround.
  */
-// cppcheck-suppress unusedFunction
 void validate(boost::any& v, const std::vector<std::string>& values,
               CaptureDNS::Rcode* val1, int val2)
 {
@@ -1002,7 +999,6 @@ void validate(boost::any& v, const std::vector<std::string>& values,
  * @param val1          compiler workaround.
  * @param val2          compiler workaround.
  */
-// cppcheck-suppress unusedFunction
 void validate(boost::any& v, const std::vector<std::string>& values,
               CaptureDNS::QueryClass* val1, int val2)
 {
@@ -1025,7 +1021,6 @@ void validate(boost::any& v, const std::vector<std::string>& values,
  * @param val1          compiler workaround.
  * @param val2          compiler workaround.
  */
-// cppcheck-suppress unusedFunction
 void validate(boost::any& v, const std::vector<std::string>& values,
               CaptureDNS::QueryType* val1, int val2)
 {
@@ -1048,7 +1043,6 @@ void validate(boost::any& v, const std::vector<std::string>& values,
  * @param val1          compiler workaround.
  * @param val2          compiler workaround.
  */
-// cppcheck-suppress unusedFunction
 void validate(boost::any& v, const std::vector<std::string>& values,
               AddressEvent::EventType* val1, int val2)
 {
@@ -1090,7 +1084,6 @@ namespace block_cbor {
      * @param val1          compiler workaround.
      * @param val2          compiler workaround.
      */
-    // cppcheck-suppress unusedFunction
     void validate(boost::any& v, const std::vector<std::string>& values,
                   TransportFlags* val1, int val2)
     {
@@ -1149,7 +1142,6 @@ namespace block_cbor {
      * @param val1          compiler workaround.
      * @param val2          compiler workaround.
      */
-    // cppcheck-suppress unusedFunction
     void validate(boost::any& v, const std::vector<std::string>& values,
                   QueryResponseFlags* val1, int val2)
     {
@@ -1189,7 +1181,6 @@ namespace block_cbor {
      * @param val1          compiler workaround.
      * @param val2          compiler workaround.
      */
-    // cppcheck-suppress unusedFunction
     void validate(boost::any& v, const std::vector<std::string>& values,
                   QueryResponseType* val1, int val2)
     {
@@ -1225,7 +1216,6 @@ namespace block_cbor {
      * @param val1          compiler workaround.
      * @param val2          compiler workaround.
      */
-    // cppcheck-suppress unusedFunction
     void validate(boost::any& v, const std::vector<std::string>& values,
                   DNSFlags* val1, int val2)
     {
@@ -1290,7 +1280,6 @@ namespace std {
          * @param val1          compiler workaround.
          * @param val2          compiler workaround.
          */
-        // cppcheck-suppress unusedFunction
         void validate(boost::any& v, const std::vector<std::string>& values,
                       nanoseconds* val1, int val2)
         {
