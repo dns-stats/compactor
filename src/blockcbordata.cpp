@@ -598,9 +598,10 @@ namespace block_cbor {
 
     void Question::readCbor(CborBaseDecoder& dec,
                             const FileVersionFields& fields,
-                            const Defaults& defaults)
+                            const Defaults&)
     {
-        qname = classtype = boost::none;
+        qname.reset();
+        classtype.reset();
 
         try
         {
