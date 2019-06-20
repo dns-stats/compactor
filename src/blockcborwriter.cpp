@@ -76,10 +76,11 @@ void BlockCborWriter::close()
 void BlockCborWriter::writeAE(const std::shared_ptr<AddressEvent>& ae,
                               const PacketStatistics& stats)
 {
-    data_->count_address_event(ae->type(),
-                               ae->code(),
-                               addr_to_string(ae->address(), config_),
-                               ae->address().is_ipv6());
+    if ( !config_.exclude_hints.address_events )
+        data_->count_address_event(ae->type(),
+                                   ae->code(),
+                                   addr_to_string(ae->address(), config_),
+                                   ae->address().is_ipv6());
     last_end_block_statistics_ = stats;
 }
 

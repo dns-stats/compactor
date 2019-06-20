@@ -1714,8 +1714,7 @@ namespace block_cbor {
         writeItems(enc, exclude);
 
         // Address event items.
-        if ( !exclude.address_events )
-            writeAddressEventCounts(enc);
+        writeAddressEventCounts(enc);
 
         // Block terminator.
         enc.writeBreak();
