@@ -537,10 +537,10 @@ namespace block_cbor {
 
     void ClassType::readCbor(CborBaseDecoder& dec,
                              const FileVersionFields& fields,
-                             const Defaults& defaults)
+                             const Defaults&)
     {
-        qtype = defaults.query_type;
-        qclass = defaults.query_class;
+        qtype.reset();
+        qclass.reset();
 
         try
         {
