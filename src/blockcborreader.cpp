@@ -432,16 +432,21 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
         throw cbor_file_format_error("QueryResponseItem missing signature");
 
     const block_cbor::QueryResponseSignature& sig = block_->query_response_signatures[qri.signature];
+    boost::optional<uint8_t> transport_flags;
+    if ( sig.qr_transport_flags )
+        transport_flags = block_cbor::convert_transport_flags(*sig.qr_transport_flags, file_format_version_);
+    else
+        transport_flags = defaults_.transport;
 
     res.timestamp = ( qri.tstamp ) ? qri.tstamp : block_->earliest_time + *defaults_.time_offset;
     if ( qri.client_address )
-        res.client_address = get_client_address(*qri.client_address, sig.qr_transport_flags);
+        res.client_address = get_client_address(*qri.client_address, transport_flags);
     else
         res.client_address = defaults_.client_address;
     res.client_port = ( qri.client_port ) ? qri.client_port : defaults_.client_port;
     res.hoplimit = ( qri.hoplimit ) ? qri.hoplimit : defaults_.client_hoplimit;
     if ( sig.server_address )
-        res.server_address = get_server_address(*sig.server_address, sig.qr_transport_flags);
+        res.server_address = get_server_address(*sig.server_address, transport_flags);
     else
         res.server_address = defaults_.server_address;
     res.server_port = ( sig.server_port ) ? sig.server_port : defaults_.server_port;
@@ -451,10 +456,12 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     else
         res.qname = defaults_.query_name;
     res.qr_flags = sig.qr_flags;
-    if ( sig.qr_transport_flags )
-        res.qr_transport_flags = block_cbor::convert_transport_flags(*sig.qr_transport_flags, file_format_version_);
+    res.qr_transport_flags = transport_flags;
+
     if ( sig.dns_flags )
         res.dns_flags = block_cbor::convert_dns_flags(*sig.dns_flags, file_format_version_);
+    else
+        res.dns_flags = defaults_.dns_flags;
     if ( sig.query_classtype )
     {
         const block_cbor::ClassType& ct = block_->class_types[*sig.query_classtype];
