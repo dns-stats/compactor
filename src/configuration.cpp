@@ -1531,7 +1531,7 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         this->rr_ttl = rr_ttl;
     if ( res.count("dns-payload.rr-rdata") )
         this->rr_rdata = to_byte_string(res["dns-payload.rr-rdata"].as<std::string>());
-    if ( res.count("dns-payload.query_udp_size") )
+    if ( res.count("dns-payload.query-udp-size") )
         this->query_udp_size = query_udp_size;
     if ( res.count("dns-payload.query-opt-data") )
         this->query_opt_rdata = to_byte_string(res["dns-payload.query-opt-data"].as<std::string>());
