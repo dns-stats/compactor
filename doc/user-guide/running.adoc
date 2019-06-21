@@ -388,7 +388,7 @@ If installed from a binary package on Linux, a sample excluded fields file will 
 ==== Default configuration
 
 Both installing via binary packages and installing using the source distribution will install a sample
-`default_values.conf.sample` file. This file (with the .sample ending removed) can be used to specify the default values to be inserted when a field was omitted from the C-DNS output. In the sample all the fields are commented out so no defaults would be used. The fields are specified in logical groups similar to the excludes_fields file <<excludes>>. The file looks like this
+`default_values.conf.sample` file. This file (with the .sample ending removed) can be used to specify the default values to be inserted when a field was omitted from the C-DNS output. In the sample all the fields are commented out so no defaults would be used. The fields are specified in logical groups similar to <<excludes>>. The file looks like this
 
 ----
 # A list of default values for fields that are needed but were omitted from the capture.
@@ -443,7 +443,7 @@ Both installing via binary packages and installing using the source distribution
 # ae-code                           # uint8
 ----
 
-The comments on each line show the format of allowed values and in some case the set of allowed values. For example to set a default for qr-transport-flags you could edit the file to say:
+The comments on each line show the format of allowed values and in some cases the set of allowed values. For example to set a default for qr-transport-flags you could edit the file to say:
 ----
 qr-transport-flags=ipv4 udp
 ----
