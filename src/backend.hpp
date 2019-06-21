@@ -164,7 +164,7 @@ public:
      * \param what the missing default.
      */
     explicit pcap_defaults_backend_error(const std::string& what)
-        : backend_error("Require default: " + what) {}
+        : backend_error("Require default values for: " + what) {}
 };
 
 /**

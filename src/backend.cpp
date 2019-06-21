@@ -425,55 +425,73 @@ void PcapBackend::write_packet(Tins::PDU* pdu,
 
 void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
 {
+    std::vector<std::string> missing;
+
     if ( exclude_hints.timestamp && !opts_.defaults.time_offset )
-        throw pcap_defaults_backend_error("time-offset");
+        missing.push_back("time-offset");
     if ( exclude_hints.client_address && !opts_.defaults.client_address )
-        throw pcap_defaults_backend_error("client-address");
+        missing.push_back("client-address");
     if ( exclude_hints.client_port && !opts_.defaults.client_port )
-        throw pcap_defaults_backend_error("client-port");
+        missing.push_back("client-port");
     if ( exclude_hints.client_hoplimit && !opts_.defaults.client_hoplimit )
-        throw pcap_defaults_backend_error("client-hoplimit");
+        missing.push_back("client-hoplimit");
     if ( exclude_hints.server_address && !opts_.defaults.server_address )
-        throw pcap_defaults_backend_error("server-address");
+        missing.push_back("server-address");
     if ( exclude_hints.server_port && !opts_.defaults.server_port )
-        throw pcap_defaults_backend_error("server-port");
+        missing.push_back("server-port");
     if ( exclude_hints.transport && !opts_.defaults.transport )
-        throw pcap_defaults_backend_error("qr-transport-flags");
+        missing.push_back("qr-transport-flags");
 
     if ( exclude_hints.transaction_id && !opts_.defaults.transaction_id )
-        throw pcap_defaults_backend_error("transaction-id");
+        missing.push_back("transaction-id");
     if ( exclude_hints.query_opcode && !opts_.defaults.query_opcode )
-        throw pcap_defaults_backend_error("query-opcode");
+        missing.push_back("query-opcode");
     if ( exclude_hints.dns_flags && !opts_.defaults.dns_flags )
-        throw pcap_defaults_backend_error("dns-flags");
+        missing.push_back("dns-flags");
     if ( exclude_hints.query_rcode && !opts_.defaults.query_rcode )
-        throw pcap_defaults_backend_error("query-rcode");
+        missing.push_back("query-rcode");
     if ( exclude_hints.query_name && !opts_.defaults.query_name )
-        throw pcap_defaults_backend_error("query-name");
+        missing.push_back("query-name");
     if ( exclude_hints.query_class_type )
     {
         if ( !opts_.defaults.query_class )
-            throw pcap_defaults_backend_error("query-class");
+            missing.push_back("query-class");
         if ( !opts_.defaults.query_type )
-            throw pcap_defaults_backend_error("query-type");
+            missing.push_back("query-type");
     }
     if ( exclude_hints.query_size && !opts_.defaults.query_size )
-        throw pcap_defaults_backend_error("query-size");
+        missing.push_back("query-size");
     if ( exclude_hints.query_udp_size && !opts_.defaults.query_udp_size )
-        throw pcap_defaults_backend_error("query-udp-size");
+        missing.push_back("query-udp-size");
     if ( exclude_hints.query_edns_version && !opts_.defaults.query_edns_version )
-        throw pcap_defaults_backend_error("query-edns-version");
+        missing.push_back("query-edns-version");
     if ( exclude_hints.query_opt_rdata && !opts_.defaults.query_opt_rdata )
-        throw pcap_defaults_backend_error("query-opt-data");
+        missing.push_back("query-opt-data");
     if ( exclude_hints.response_delay && !opts_.defaults.response_delay )
-        throw pcap_defaults_backend_error("response-delay");
+        missing.push_back("response-delay");
     if ( exclude_hints.response_rcode && !opts_.defaults.response_rcode )
-        throw pcap_defaults_backend_error("response-rcode");
+        missing.push_back("response-rcode");
     if ( exclude_hints.response_size && !opts_.defaults.response_size )
-        throw pcap_defaults_backend_error("response-size");
+        missing.push_back("response-size");
 
     if ( exclude_hints.rr_ttl && !opts_.defaults.rr_ttl )
-        throw pcap_defaults_backend_error("rr-ttl");
+        missing.push_back("rr-ttl");
     if ( exclude_hints.rr_rdata && !opts_.defaults.rr_rdata )
-        throw pcap_defaults_backend_error("rr-rdata");
+        missing.push_back("rr-rdata");
+
+    if ( !missing.empty() )
+    {
+        std::string report;
+        bool comma = false;
+
+        for ( const auto& a : missing )
+        {
+            if ( comma )
+                report.append(", ");
+            report.append(a);
+            comma = true;
+        }
+
+        throw pcap_defaults_backend_error(report);
+    }
 }
