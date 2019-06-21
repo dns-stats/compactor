@@ -143,9 +143,6 @@ AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
 	      -DDEFAULTSFILE=\"$(defaultsfile)\" \
               $(OPENSSL_INCLUDES) -DGEOIPDIR=\"$(geoipdir)\"
 
-
-
-
 %.1 :: %.adoc ; @ASCIIDOC@ -b manpage -d manpage -o $@ $<
 
 doc/user-guide.html : $(user_guide_sources) ; @ASCIIDOC@ -b html5 -d article -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
