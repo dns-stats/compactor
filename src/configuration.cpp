@@ -1457,12 +1457,6 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         ("dns-meta-data.response-processing-from-cache",
          po::value(&response_processing_from_cache),
          "response processing from cache default.")
-        ("dns-meta-data.query-size",
-         po::value(&query_size),
-         "query size default.")
-        ("dns-meta-data.response-size",
-         po::value(&response_size),
-         "response size default.")
         ;
 
     if ( boost::filesystem::exists(defaultsfile) )

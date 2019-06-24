@@ -40,9 +40,6 @@ rr-rdata
 response-answer-sections
 response-authority-sections
 response-additional-sections
-
-[dns-meta-data]
-response-size
 EOF
 
 # Create defaults for the above.
@@ -54,9 +51,6 @@ response-rcode=NOERROR
 [dns-payload]
 rr-ttl=128
 rr-rdata=
-
-[dns-meta-data]
-response-size=1400
 EOF
 
 # Run the converter with excluded data.
