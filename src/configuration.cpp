@@ -1463,16 +1463,6 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         ("dns-meta-data.response-size",
          po::value(&response_size),
          "response size default.")
-
-        ("address-event.ae-address",
-         po::value(&ae_address),
-         "address event address default.")
-        ("address-event.ae-type",
-         po::value(&ae_type),
-         "address event type default.")
-        ("address-event.ae-code",
-         po::value(&ae_code),
-         "address event code default.")
         ;
 
     if ( boost::filesystem::exists(defaultsfile) )

@@ -388,19 +388,13 @@ bool BlockCborReader::readBlock()
     // Accumulate address events counts.
     for ( auto& aeci : block_->address_event_counts )
     {
-        IPAddress addr;
+        // Check we have all address event info required. If not, ignore this one.
+        if ( !aeci.first.address || !aeci.first.type || !aeci.first.code )
+            continue;
 
-        if ( !aeci.first.address )
-            addr = *defaults_.ae_address;
-        else
-            addr = get_client_address(*aeci.first.address, aeci.first.transport_flags);
-        AddressEvent::EventType ae_type;
-        unsigned ae_code;
+        IPAddress addr = get_client_address(*aeci.first.address, aeci.first.transport_flags);
+        AddressEvent ae(*aeci.first.type, addr, *aeci.first.code);
 
-        ae_type = ( aeci.first.type ) ? *aeci.first.type : *defaults_.ae_type;
-        ae_code = ( aeci.first.code ) ? *aeci.first.code : *defaults_.ae_code;
-
-        AddressEvent ae(ae_type, addr, ae_code);
         if ( address_events_read_.find(ae) != address_events_read_.end() )
             address_events_read_[ae] += aeci.second;
         else
