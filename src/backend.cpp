@@ -149,6 +149,7 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
         query->dns.id(*qrd.id);
         query->dns.opcode(*qrd.query_opcode);
         query->dns.rcode(*qrd.query_rcode);
+        query->wire_size = *qrd.query_size;
         block_cbor::set_dns_flags(*query, *qrd.dns_flags, true);
 
         if ( qrd.qr_flags & block_cbor::QR_HAS_QUESTION )
@@ -193,6 +194,7 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
         response->dns.id(*qrd.id);
         response->dns.opcode(*qrd.query_opcode);
         response->dns.rcode(*qrd.response_rcode);
+        response->wire_size = *qrd.response_size;
         block_cbor::set_dns_flags(*response, *qrd.dns_flags, false);
 
         if ( ( qrd.qr_flags & block_cbor::QR_HAS_QUESTION ) &&
@@ -457,6 +459,8 @@ void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
         if ( !opts_.defaults.query_type )
             missing.push_back("query-type");
     }
+    if ( exclude_hints.query_size && !opts_.defaults.query_size )
+        missing.push_back("query-size");
     if ( exclude_hints.query_udp_size && !opts_.defaults.query_udp_size )
         missing.push_back("query-udp-size");
     if ( exclude_hints.query_edns_version && !opts_.defaults.query_edns_version )
@@ -467,6 +471,8 @@ void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
         missing.push_back("response-delay");
     if ( exclude_hints.response_rcode && !opts_.defaults.response_rcode )
         missing.push_back("response-rcode");
+    if ( exclude_hints.response_size && !opts_.defaults.response_size )
+        missing.push_back("response-size");
 
     if ( exclude_hints.rr_ttl && !opts_.defaults.rr_ttl )
         missing.push_back("rr-ttl");
