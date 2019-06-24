@@ -141,6 +141,11 @@ When output for each query/response item
 is generated, elements, or markers, like `{{NAME}}` in the template are replaced
 with a data item named `NAME` from the query/response (QR) item.
 
+If the data item isn't available in the query/response item, nothing is output for
+the marker. For example, "QTYPE `{{query_type}}`" will output "QTYPE 1"
+for a query with a question of type of QTYPE A, and will output "QTYPE " if there
+is no query question.
+
 [cols="2*"]
 |===
 | `client_address`
@@ -168,10 +173,10 @@ with a data item named `NAME` from the query/response (QR) item.
 | QNAME in first Question. Blank if no question.
 
 | `query_class`
-| QCLASS in first Question. Blank if no question.
+| Numeric QCLASS in first Question. Blank if no question.
 
 | `query_type`
-| QTYPE in first Question. Blank if no question.
+| Numeric QTYPE in first Question. Blank if no question.
 
 | `query_authoritative_answer`
 | Value of query AA flag. Blank if no query.
@@ -213,16 +218,16 @@ with a data item named `NAME` from the query/response (QR) item.
 | Value of query RCODE. Blank if no query.
 
 | `query_qdcount`
-| Value of query QDCOUNT. Blank if no query.
+| Count of questions captured from the query. Blank if no query.
 
 | `query_ancount`
-| Value of query ANCOUNT. Blank if no query.
+| Count of answer RR captured from the query. Blank if no query.
 
 | `query_nscount`
-| Value of query NSCOUNT. Blank if no query.
+| Count of authority RR captured from the query. Blank if no query.
 
 | `query_arcount`
-| Value of query ARCOUNT. Blank if no query.
+| Count of additional RR captured from the query. Blank if no query.
 
 | `query_response_has_query`
 | 1 if QR contains a query, otherwise 0.
@@ -270,16 +275,16 @@ with a data item named `NAME` from the query/response (QR) item.
 | Value of response RCODE. Blank if no response.
 
 | `response_qdcount`
-| Value of response QDCOUNT. Blank if no response.
+| Count of questions captured from the response. Blank if no response.
 
 | `response_ancount`
-| Value of response ANCOUNT. Blank if no response.
+| Count of answer RR captures from the response. Blank if no response.
 
 | `response_nscount`
-| Value of response NSCOUNT. Blank if no response.
+| Count of authority RR captured from the response. Blank if no response.
 
 | `response_arcount`
-| Value of response ARCOUNT. Blank if no response.
+| Count of additional RR captured from the response. Blank if no response.
 
 | `response_delay_nanosecs`
 | Nano-seconds between query and response timestamps. 0 if no query or no response.
