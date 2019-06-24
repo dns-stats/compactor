@@ -149,7 +149,9 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
         query->dns.id(*qrd.id);
         query->dns.opcode(*qrd.query_opcode);
         query->dns.rcode(*qrd.query_rcode);
-        query->wire_size = *qrd.query_size;
+        // Used, if present, in output() to evaluate label compression scheme usage.
+        if ( qrd.query_size )
+            query->wire_size = *qrd.query_size;
         block_cbor::set_dns_flags(*query, *qrd.dns_flags, true);
 
         if ( qrd.qr_flags & block_cbor::QR_HAS_QUESTION )
@@ -194,7 +196,9 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
         response->dns.id(*qrd.id);
         response->dns.opcode(*qrd.query_opcode);
         response->dns.rcode(*qrd.response_rcode);
-        response->wire_size = *qrd.response_size;
+        // Used, if present, in output() to evaluate label compression scheme usage.
+        if ( qrd.response_size )
+            response->wire_size = *qrd.response_size;
         block_cbor::set_dns_flags(*response, *qrd.dns_flags, false);
 
         if ( ( qrd.qr_flags & block_cbor::QR_HAS_QUESTION ) &&
