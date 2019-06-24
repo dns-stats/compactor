@@ -1410,18 +1410,6 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         ("dns-header.response-rcode",
          po::value(&response_rcode),
          "response rcode default.")
-        ("dns-header.query-qdcount",
-         po::value(&query_qdcount),
-         "query QDCOUNT default.")
-        ("dns-header.query-ancount",
-         po::value(&query_ancount),
-         "query ANCOUNT default.")
-        ("dns-header.query-arcount",
-         po::value(&query_arcount),
-         "query ARCOUNT default.")
-        ("dns-header.query-nscount",
-         po::value(&query_nscount),
-         "query NSCOUNT default.")
 
         ("dns-payload.query-name",
          po::value<std::string>(),
