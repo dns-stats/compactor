@@ -1447,16 +1447,6 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         ("dns-payload.query-edns-version",
          po::value(&query_edns_version),
          "query EDNS version default.")
-
-        ("dns-meta-data.qr-type",
-         po::value(&qr_type),
-         "query/response type default.")
-        ("dns-meta-data.response-processing-bailiwick",
-         po::value(&response_processing_bailiwick),
-         "response processing bailiwick default.")
-        ("dns-meta-data.response-processing-from-cache",
-         po::value(&response_processing_from_cache),
-         "response processing from cache default.")
         ;
 
     if ( boost::filesystem::exists(defaultsfile) )
