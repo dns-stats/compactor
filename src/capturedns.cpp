@@ -547,17 +547,22 @@ namespace {
               compressed_label_prefix_(0),
               compressed_label_pos_(0)
         {
+            if ( label.empty() )
+                    throw std::length_error("Empty label in compression");
+
             byte_string::size_type start = 0;
+            byte_string::size_type len = label.size();
             while ( label[start] != 0 )
             {
+                if ( start + label[start] + 1 >= len )
+                    throw std::length_error("Bad label in compression");
+
                 LabelComponent lc;
                 lc.offset = offset + start;
                 lc.text = label.substr(start + 1, label[start]);
                 components_.push_back(lc);
 
                 start += label[start] + 1;
-                if ( start >= label.size() )
-                    throw std::length_error("Bad label in compression");
             }
         }
 
@@ -905,9 +910,17 @@ namespace {
      */
     byte_string extract_label(byte_string& b)
     {
+        if ( b.empty() )
+            throw std::length_error("Empty string in label extract");
+
         byte_string::size_type start = 0;
+        byte_string::size_type len = b.size();
         while (b[start] != 0)
+        {
+            if ( start + b[start] + 1 >= len )
+                throw std::length_error("Bad string in label extract");
             start += b[start] + 1;
+        }
         ++start;
         byte_string res = b.substr(0, start);
         b = b.substr(start);
@@ -916,6 +929,9 @@ namespace {
 
     /**
      * \brief compress resource data.
+     *
+     * For the relevant RRs, pick out label data from the RR and
+     * do label compression. On parse errors, fall back to not compressing.
      *
      * \param rdata  resource data.
      * \param type   resource data type.
@@ -930,39 +946,48 @@ namespace {
                                LabelCompressionInfo& lci,
                                uint16_t rr_no)
     {
-        byte_string res;
-        std::shared_ptr<LabelCompressionItem> l;
-        LabelHint hint(HINT_RDATA, rr_no);
-
-        switch(type)
+        try
         {
-        case CaptureDNS::NS:
-        case CaptureDNS::CNAME:
-        case CaptureDNS::PTR:
-            // RDATA is a single label.
-            l = lci.add_label(rdata, type, hint, offset);
-            return l->compressed_label();
+            byte_string res;
+            std::shared_ptr<LabelCompressionItem> l;
+            LabelHint hint(HINT_RDATA, rr_no);
 
-        case CaptureDNS::MX:
-            // RDATA is 2 bytes preference followed by label.
-            res = rdata.substr(0, 2);
-            offset += 2;
-            rdata = rdata.substr(2);
-            l = lci.add_label(extract_label(rdata), type, hint, offset);
-            res.append(l->compressed_label());
-            return res;
+            switch(type)
+            {
+            case CaptureDNS::NS:
+            case CaptureDNS::CNAME:
+            case CaptureDNS::PTR:
+                // RDATA is a single label.
+                l = lci.add_label(rdata, type, hint, offset);
+                return l->compressed_label();
 
-        case CaptureDNS::SOA:
-            // Two labels followed by 5 32bit quantities.
-            l = lci.add_label(extract_label(rdata), type, hint, offset);
-            offset += l->compressed_label_size();
-            res = l->compressed_label();
-            l = lci.add_label(extract_label(rdata), type, hint, offset);
-            res.append(l->compressed_label());
-            res.append(rdata);
-            return res;
+            case CaptureDNS::MX:
+                // RDATA is 2 bytes preference followed by label.
+                if ( rdata.size() < 3 )
+                    throw std::length_error("Short MX data in compression");
+                res = rdata.substr(0, 2);
+                offset += 2;
+                rdata = rdata.substr(2);
+                l = lci.add_label(extract_label(rdata), type, hint, offset);
+                res.append(l->compressed_label());
+                return res;
 
-        default:
+            case CaptureDNS::SOA:
+                // Two labels followed by 5 32bit quantities.
+                l = lci.add_label(extract_label(rdata), type, hint, offset);
+                offset += l->compressed_label_size();
+                res = l->compressed_label();
+                l = lci.add_label(extract_label(rdata), type, hint, offset);
+                res.append(l->compressed_label());
+                res.append(rdata);
+                return res;
+
+            default:
+                return rdata;
+            }
+        }
+        catch (const std::length_error&)
+        {
             return rdata;
         }
     }
