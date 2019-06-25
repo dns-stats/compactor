@@ -85,23 +85,23 @@ void PcapBackend::output(const QueryResponseData& qrd, const Configuration& conf
          !config.exclude_hints.response_answer_section &&
          !config.exclude_hints.response_authority_section &&
          !config.exclude_hints.response_additional_section &&
-         qr->has_response() &&
-         qr->response().wire_size != qr->response().dns.size() )
+         qr->has_response() && qrd.response_size )
     {
-        if ( auto_compression_ )
-        {
-            // See if Knot works better. If it does, stick with it.
-            CaptureDNS::set_name_compression(CaptureDNS::KNOT_1_6);
-            qr->response().dns.clear_cached_size();
-            if ( qr->response().wire_size != qr->response().dns.size() )
+        if ( *qrd.response_size != qr->response().dns.size() )
+            if ( auto_compression_ )
             {
-                CaptureDNS::set_name_compression(CaptureDNS::DEFAULT);
-                bad_response_wire_size_count_++;
+                // See if Knot works better. If it does, stick with it.
+                CaptureDNS::set_name_compression(CaptureDNS::KNOT_1_6);
+                qr->response().dns.clear_cached_size();
+                if ( *qrd.response_size != qr->response().dns.size() )
+                {
+                    CaptureDNS::set_name_compression(CaptureDNS::DEFAULT);
+                    bad_response_wire_size_count_++;
+                }
+                auto_compression_ = false;
             }
-            auto_compression_ = false;
-        }
-        else
-            bad_response_wire_size_count_++;
+            else
+                bad_response_wire_size_count_++;
     }
 
     if ( !opts_.baseopts.write_output)
