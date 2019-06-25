@@ -1423,15 +1423,9 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         ("dns-payload.rr-ttl",
          po::value(&rr_ttl),
          "RR TTL default.")
-        ("dns-payload.rr-rdata",
-         po::value<std::string>(),
-         "RR RDATA default.")
         ("dns-payload.query-udp-size",
          po::value(&query_udp_size),
          "query UDP size default.")
-        ("dns-payload.query-opt-data",
-         po::value<std::string>(),
-         "query OPT RDATA default.")
         ("dns-payload.query-edns-version",
          po::value(&query_edns_version),
          "query EDNS version default.")
@@ -1491,12 +1485,10 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         this->query_type = query_type;
     if ( res.count("dns-payload.rr-ttl") )
         this->rr_ttl = rr_ttl;
-    if ( res.count("dns-payload.rr-rdata") )
-        this->rr_rdata = to_byte_string(res["dns-payload.rr-rdata"].as<std::string>());
+    this->rr_rdata = byte_string();
     if ( res.count("dns-payload.query-udp-size") )
         this->query_udp_size = query_udp_size;
-    if ( res.count("dns-payload.query-opt-data") )
-        this->query_opt_rdata = to_byte_string(res["dns-payload.query-opt-data"].as<std::string>());
+    this->query_opt_rdata = byte_string();
     if ( res.count("dns-payload.query-edns-version") )
         this->query_edns_version = query_edns_version;
 

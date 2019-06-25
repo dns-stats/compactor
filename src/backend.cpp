@@ -468,8 +468,6 @@ void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
         missing.push_back("query-udp-size");
     if ( !opts_.defaults.query_edns_version )
         missing.push_back("query-edns-version");
-    if ( !opts_.defaults.query_opt_rdata )
-        missing.push_back("query-opt-data");
     if ( !opts_.defaults.response_delay )
         missing.push_back("response-delay");
     if ( !opts_.defaults.response_rcode )
@@ -477,8 +475,6 @@ void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
 
     if ( !opts_.defaults.rr_ttl )
         missing.push_back("rr-ttl");
-    if ( !opts_.defaults.rr_rdata )
-        missing.push_back("rr-rdata");
 
     if ( !missing.empty() )
     {

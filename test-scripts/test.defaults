@@ -22,7 +22,5 @@ query-name=example.com
 query-class=in
 query-type=a
 rr-ttl=128
-rr-rdata=
 query-udp-size=1024
-query-opt-data=
 query-edns-version=0
