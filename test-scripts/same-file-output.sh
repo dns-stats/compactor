@@ -9,6 +9,8 @@
 COMP=./compactor
 INSP=./inspector
 
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
+
 DATAFILE=./dns.pcap
 GOLD_CBORFILE=./gold.cbor
 GOLD_PCAPFILE=./gold.pcap
@@ -33,12 +35,12 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-$INSP -o $tmpdir/out.pcap $tmpdir/out.cbor
+$INSP $DEFAULTS -o $tmpdir/out.pcap $tmpdir/out.cbor
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-$INSP -o - $tmpdir/out.cbor > $tmpdir/out2.pcap
+$INSP $DEFAULTS -o - $tmpdir/out.cbor > $tmpdir/out2.pcap
 if [ $? -ne 0 ]; then
     cleanup 1
 fi

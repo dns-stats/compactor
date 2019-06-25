@@ -9,6 +9,8 @@
 COMP=./compactor
 INSP=./inspector
 
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
+
 DATAFILE=./dns.pcap
 
 command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
@@ -56,7 +58,7 @@ cat > $tmpdir/defaults.conf <<EOF
 client-address=192.168.1.1
 EOF
 
-$INSP -o $tmpdir/out.pcap --defaultsfile $tmpdir/defaults.conf $tmpdir/out.cbor
+$INSP -o $tmpdir/out.pcap r/defaults.conf $tmpdir/out.cbor
 if [ $? -eq 0 ]; then
     echo "Too few defaults, should fail."
     cleanup 1
@@ -119,12 +121,20 @@ if [ $? -eq 0 ]; then
     cleanup 1
 fi
 
-# Add rr-ttl default. And now it should work.
+# Add rr-ttl default. And now it would work if just on hints, but fails
+# because we now demand all defaults be present.
 cat >> $tmpdir/defaults.conf <<EOF
 rr-ttl=128
 EOF
 
 $INSP -o $tmpdir/out.pcap --defaultsfile $tmpdir/defaults.conf $tmpdir/out.cbor
+if [ $? -eq 0 ]; then
+    echo "Too few defaults, should fail."
+    cleanup 1
+fi
+
+# Finally, run with the master test defaults and it should work.
+$INSP $DEFAULTS -o $tmpdir/out.pcap $tmpdir/out.cbor
 if [ $? -ne 0 ]; then
     cleanup 1
 fi

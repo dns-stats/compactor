@@ -1,0 +1,28 @@
+# Basic defaults for test scripts.
+
+[ip-header]
+time-offset=0us
+response-delay=4us
+client-address=192.168.1.1
+client-port=1234
+client-hoplimit=64
+server-address=192.168.1.2
+server-port=53
+qr-transport-flags=ipv4 udp
+
+[dns-header]
+transaction-id=1234
+query-opcode=query
+query-rcode=noerror
+dns-flags=query-rd
+response-rcode=noerror
+
+[dns-payload]
+query-name=example.com
+query-class=in
+query-type=a
+rr-ttl=128
+rr-rdata=
+query-udp-size=1024
+query-opt-data=
+query-edns-version=0

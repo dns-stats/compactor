@@ -431,30 +431,30 @@ void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
 {
     std::vector<std::string> missing;
 
-    if ( exclude_hints.timestamp && !opts_.defaults.time_offset )
+    if ( !opts_.defaults.time_offset )
         missing.push_back("time-offset");
-    if ( exclude_hints.client_address && !opts_.defaults.client_address )
+    if ( !opts_.defaults.client_address )
         missing.push_back("client-address");
-    if ( exclude_hints.client_port && !opts_.defaults.client_port )
+    if ( !opts_.defaults.client_port )
         missing.push_back("client-port");
-    if ( exclude_hints.client_hoplimit && !opts_.defaults.client_hoplimit )
+    if ( !opts_.defaults.client_hoplimit )
         missing.push_back("client-hoplimit");
-    if ( exclude_hints.server_address && !opts_.defaults.server_address )
+    if ( !opts_.defaults.server_address )
         missing.push_back("server-address");
-    if ( exclude_hints.server_port && !opts_.defaults.server_port )
+    if ( !opts_.defaults.server_port )
         missing.push_back("server-port");
-    if ( exclude_hints.transport && !opts_.defaults.transport )
+    if ( !opts_.defaults.transport )
         missing.push_back("qr-transport-flags");
 
-    if ( exclude_hints.transaction_id && !opts_.defaults.transaction_id )
+    if ( !opts_.defaults.transaction_id )
         missing.push_back("transaction-id");
-    if ( exclude_hints.query_opcode && !opts_.defaults.query_opcode )
+    if ( !opts_.defaults.query_opcode )
         missing.push_back("query-opcode");
-    if ( exclude_hints.dns_flags && !opts_.defaults.dns_flags )
+    if ( !opts_.defaults.dns_flags )
         missing.push_back("dns-flags");
-    if ( exclude_hints.query_rcode && !opts_.defaults.query_rcode )
+    if ( !opts_.defaults.query_rcode )
         missing.push_back("query-rcode");
-    if ( exclude_hints.query_name && !opts_.defaults.query_name )
+    if ( !opts_.defaults.query_name )
         missing.push_back("query-name");
     if ( exclude_hints.query_class_type )
     {
@@ -463,24 +463,20 @@ void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
         if ( !opts_.defaults.query_type )
             missing.push_back("query-type");
     }
-    if ( exclude_hints.query_size && !opts_.defaults.query_size )
-        missing.push_back("query-size");
-    if ( exclude_hints.query_udp_size && !opts_.defaults.query_udp_size )
+    if ( !opts_.defaults.query_udp_size )
         missing.push_back("query-udp-size");
-    if ( exclude_hints.query_edns_version && !opts_.defaults.query_edns_version )
+    if ( !opts_.defaults.query_edns_version )
         missing.push_back("query-edns-version");
-    if ( exclude_hints.query_opt_rdata && !opts_.defaults.query_opt_rdata )
+    if ( !opts_.defaults.query_opt_rdata )
         missing.push_back("query-opt-data");
-    if ( exclude_hints.response_delay && !opts_.defaults.response_delay )
+    if ( !opts_.defaults.response_delay )
         missing.push_back("response-delay");
-    if ( exclude_hints.response_rcode && !opts_.defaults.response_rcode )
+    if ( !opts_.defaults.response_rcode )
         missing.push_back("response-rcode");
-    if ( exclude_hints.response_size && !opts_.defaults.response_size )
-        missing.push_back("response-size");
 
-    if ( exclude_hints.rr_ttl && !opts_.defaults.rr_ttl )
+    if ( !opts_.defaults.rr_ttl )
         missing.push_back("rr-ttl");
-    if ( exclude_hints.rr_rdata && !opts_.defaults.rr_rdata )
+    if ( !opts_.defaults.rr_rdata )
         missing.push_back("rr-rdata");
 
     if ( !missing.empty() )

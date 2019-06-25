@@ -10,6 +10,8 @@
 COMP=./compactor
 INSP=./inspector
 
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
+
 DATAFILE=./dns.pcap
 
 command -v cmp > /dev/null 2>&1 || { echo "No cmp, skipping test." >&2; exit 77; }
@@ -38,12 +40,12 @@ if [ $? -ne 0 ]; then
 fi
 
 # Run the inspector twice, once with gzip output.
-$INSP -o $tmpdir/out.insp.pcap $tmpdir/out.cbor
+$INSP $DEFAULTS -o $tmpdir/out.insp.pcap $tmpdir/out.cbor
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-$INSP --gzip-output -o $tmpdir/out2.insp.pcap $tmpdir/out.cbor
+$INSP $DEFAULTS --gzip-output -o $tmpdir/out2.insp.pcap $tmpdir/out.cbor
 if [ $? -ne 0 ]; then
     cleanup 1
 fi

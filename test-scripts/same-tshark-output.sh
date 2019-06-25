@@ -9,11 +9,13 @@
 COMP=./compactor
 INSP=./inspector
 
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
+
 INPUT_FILES="matching.pcap unmatched.pcap"
 
 #set -x
 
-command -v cmp > /dev/null 2>&1 || { echo "No cmp, skipping test." >&2; exit 77; }
+command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }
 command -v sed > /dev/null 2>&1 || { echo "No sed, skipping test." >&2; exit 77; }
 command -v tshark > /dev/null 2>&1 || { echo "No tshark, skipping test." >&2; exit 77; }
 command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
@@ -51,7 +53,7 @@ call_tshark()
               -e '/^.*\Acknowledgment number:/d' \
               -e '/^.*\Sequence number:/d' \
               -e '/^.*\[Stream index:/d' \
-              -e '/^.*\[.*GeoIP/d' \
+              -e '/^.*\[.*(Source|Destination) GeoIP/d' \
               -e '/^.*Request In:/d' \
               $3.full > $3.out
 }
@@ -69,7 +71,7 @@ do
         cleanup 1
     fi
 
-    $INSP -o $OUTFILE $CBORFILE
+    $INSP $DEFAULTS -o $OUTFILE $CBORFILE
     if [ $? -ne 0 ]; then
         cleanup 1
     fi
@@ -88,7 +90,7 @@ do
         fi
         total=$((total+1))
         echo $total " of " ${#ids[@]} " with id " $j ", " $i
-        cmp ${TSFILE}.orig.$j.out ${TSFILE}.conv.$j.out && good=$((good+1))
+        diff -u ${TSFILE}.orig.$j.out ${TSFILE}.conv.$j.out && good=$((good+1))
     done
     echo "Total " $total ", good " $good
     if [ $good -eq $total ] ; then

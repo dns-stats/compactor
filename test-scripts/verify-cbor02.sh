@@ -8,6 +8,9 @@
 
 COMP=./compactor
 INSP=./inspector
+
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
+
 CBORFILE=./gold.cbor02
 PCAPFILE=./gold.pcap
 
@@ -25,7 +28,7 @@ cleanup()
 trap "cleanup 1" HUP INT TERM
 
 # Convert cbor v0.2 back to pcap.
-$INSP -o $tmpdir/out.pcap $CBORFILE
+$INSP $DEFAULTS -o $tmpdir/out.pcap $CBORFILE
 if [ $? -ne 0 ]; then
     cleanup 1
 fi

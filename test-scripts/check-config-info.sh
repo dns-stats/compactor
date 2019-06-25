@@ -8,6 +8,9 @@
 
 COMP=./compactor
 INSP=./inspector
+
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
+
 DATAFILE=./dns.pcap
 
 command -v grep > /dev/null 2>&1 || { echo "No grep, skipping test." >&2; exit 77; }
@@ -36,7 +39,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Produce the .info file.
-$INSP -I $tmpdir/out.cbor
+$INSP $DEFAULTS -I $tmpdir/out.cbor
 
 grep "Query timeout *: 2 seconds" $tmpdir/out.cbor.pcap.info > /dev/null
 if [ $? -ne 0 ]; then

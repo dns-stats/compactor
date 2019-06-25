@@ -10,6 +10,8 @@
 COMP=./compactor
 INSP=./inspector
 
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
+
 TCPDUMP=/usr/sbin/tcpdump
 
 DATAFILE=./dns.pcap
@@ -22,7 +24,7 @@ tmpdir=`mktemp -d -t "check-query-only.XXXXXX"`
 
 cleanup()
 {
-    rm -rf $tmpdir
+    #rm -rf $tmpdir
     exit $1
 }
 
@@ -59,7 +61,7 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-$INSP --defaultsfile $tmpdir/defaults.conf -o $tmpdir/out-exclude.pcap $tmpdir/out-exclude.cbor
+$INSP $DEFAULTS -o $tmpdir/out-exclude.pcap $tmpdir/out-exclude.cbor
 if [ $? -ne 0 ]; then
     echo "Can't regenerate when no response data."
     cleanup 1
@@ -82,7 +84,7 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-$INSP -o $tmpdir/out-filter.pcap $tmpdir/out-filter.cbor
+$INSP $DEFAULTS -o $tmpdir/out-filter.pcap $tmpdir/out-filter.cbor
 if [ $? -ne 0 ]; then
     echo "Can't regenerate when no response data."
     cleanup 1

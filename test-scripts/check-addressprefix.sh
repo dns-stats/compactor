@@ -15,8 +15,10 @@
 
 COMP=./compactor
 INSP=./inspector
-
 CBOR2DIAG=cbor2diag.rb
+
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
+
 DATAFILE=./testcontent.pcap
 DATADIAG=$srcdir/test-scripts/addressprefix.diag
 DATAQR=$srcdir/test-scripts/addressprefix.debugqr
@@ -41,7 +43,7 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-$INSP --debug-qr $tmpdir/out.cbor > $tmpdir/out.debugqr
+$INSP $DEFAULTS --debug-qr $tmpdir/out.cbor > $tmpdir/out.debugqr
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
