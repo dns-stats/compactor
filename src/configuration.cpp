@@ -1359,7 +1359,7 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
     byte_string rr_rdata;
     uint16_t query_udp_size;
     byte_string query_opt_rdata;
-    uint8_t query_edns_version;
+    unsigned query_edns_version;
     block_cbor::QueryResponseType qr_type;
     std::string response_processing_bailiwick;
     bool response_processing_from_cache;
