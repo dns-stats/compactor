@@ -1166,7 +1166,7 @@ namespace block_cbor {
                 qrf &= ~QR_HAS_QUESTION;
             else if ( tok == "response-has-no-question" )
                 qrf |= RESPONSE_HAS_NO_QUESTION;
-            else
+            else if ( !tok.empty() )
                 throw po::validation_error(po::validation_error::invalid_option_value);
         }
 
@@ -1258,7 +1258,7 @@ namespace block_cbor {
                 dnsf |= RESPONSE_AA;
             else if ( tok == "query-do" )
                 dnsf |= QUERY_DO;
-            else
+            else if ( !tok.empty() )
                 throw po::validation_error(po::validation_error::invalid_option_value);
         }
 
