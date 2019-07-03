@@ -44,6 +44,7 @@ Command options:
   -h [ --help ]                   show this help message.
   -v [ --version ]                show version information.
   -c [ --configfile ] arg         configuration file.
+  --excludesfile arg              exclude hints file.
   -r [ --report-info ] [=arg(=1)] report info (config and stats summary) on 
                                   exit.
   --debug-dns [=arg(=1)]          print DNS packet details.
@@ -301,6 +302,7 @@ under review.
 If _compactor_ is requested to reload its configuration via `HUP`
 signal, existing compression threads are not affected.
 
+[[runninginspector]]
 == Running _inspector_
 
 _inspector_ is run from the command line to convert C-DNS from one or more
@@ -377,78 +379,73 @@ NOTE: The -q option will only write DNS queries to the output PCAP file.
 
 Most fields in C-DNS are optional. See the <<excludes>> and the deprecated <<options>> setting for _compactor_. When converting D-DNS to PCAPs or templated text output it may be necessary to fill in those omitted fields with default values.
 
+In order for the inspector to be able to generate sane PCAP files from C-DNS with any set of excluded fields a default values file must be present and must contain the full set of default values. If this file is not present or doesn't contain the required default values _inspector_ will exit with an error.
+
 ==== Default values file location
 
-On startup, _inspector_ looks for a default_values file. By default this is named default_values.conf and is located in a `dns-stats-compactor` system configuration directory. A different location can specified on the command
+On startup, _inspector_ looks for a default values file. By default this is named default_values.conf and is located in a `dns-stats-compactor` system configuration directory. A different location can specified on the command
 line by using the _inspector_ --defaultsfile option.
 
-If installed from a binary package on Linux, a sample excluded fields file will be at 
-`/etc/dns-stats-compactor/default_values.conf.sample` 
+If installed from a binary package on Linux, a default values file will be at 
+`/etc/dns-stats-compactor/default_values.conf`.
 
 ==== Default configuration
 
-Both installing via binary packages and installing using the source distribution will install a sample
-`default_values.conf.sample` file. This file (with the .sample ending removed) can be used to specify the default values to be inserted when a field was omitted from the C-DNS output. In the sample all the fields are commented out so no defaults would be used. The fields are specified in logical groups similar to <<excludes>>. The file looks like this
+The `default_values.conf` file looks like this
 
 ----
 # A list of default values for fields that are needed but were omitted from the capture.
 # The fields MUST go under the headings as shown
 
 [ip-header]
-# time-offset                   # <n>s|ms|us|ns
-# response-delay                # <n>s|ms|us|ns
-# client-address                # IPAddress
-# client-port                   # uint16
-# client-hoplimit               # uint8
-# server-address                # IPAddress
-# server-port                   # uint16
-# qr-transport-flags            # (ipv4|ipv6) (udp|tcp|tls|dtls|doh) (trailing-data)
+time-offset=0s                  # <n>s|ms|us|ns
+response-delay=5ms              # <n>s|ms|us|ns
+client-address=127.0.0.1        # IPAddress
+client-port=9999                # uint16
+client-hoplimit=64              # uint8
+server-address=127.0.0.2        # IPAddress
+server-port=53                  # uint16
+qr-transport-flags=ipv4 udp     # (ipv4|ipv6) (udp|tcp) (trailing-data) (TODO: REMOVE??)
  
 [dns-header]
-# transaction-id                # uint16
-# query-opcode                  # query, iquery, status, notify, update or dso
-# query-rcode                   # Any IANA RCODE names, noerror, formerr, servfail etc.
-# dns-flags                     # (query|response)-(cd|ad|z|ra|rd|tc|aa) query-do
-# response-rcode                # Any IANA RCODE names, noerror, formerr, servfail etc.
-
-# Counts used only in template output. PCAPs will use
-# the actual number present in the relavent section 
-# query-qdcount                 # uint16
-# query-ancount                 # uint16
-# query-arcount                 # uint16
-# query-nscount                 # uint16
+transaction-id=0                # uint16
+query-opcode=query              # One of query, iquery, status, notify, update or dso
+query-rcode=noerror             # One of any IANA RCODE name, noerror, formerr, servfail etc.
+dns-flags=                      # empty or (query|response)-(cd|ad|z|ra|rd|tc|aa) query-do
+response-rcode=noerror          # One of any IANA RCODE names, noerror, formerr, servfail etc.
  
 [dns-payload]
-# query-name                    # As normal text, will be translated to label format
-# query-class                   # Any IANA RR CLASSes, internet, in, chaos, ch, etc.
-# query-type                    # IANA RR TYPEs, A, NS, CNAME, etc.
-# rr-ttl                        # uint32
-# rr-rdata                      # byte string
-# query-udp-size                # uint16
-# query-opt-data                # byte string
-# query-edns-version            # uint8
-
- 
-[dns-meta-data]
-# used only in template output. PCAPs do not use these
-# qr-type                           # Stub, Client, Resolver, Auth, Forwarder, Tool
-# response-processing-bailiwick     # Text domain, example.com
-# response-processing-from-cache    # yes|no
-# query-size                        # uint16
-# response-size                     # uint16
- 
-[address-event]
-# ae-address                        # IPAddress
-# ae-type                           # TCP-RESET, ICMP-TIME-EXCEEDED, ICMP-DEST-UNREACHABLE, ICMPv6-TIME-EXCEEDED, ICMPv6-DEST-UNREACHABLE, ICMPv6-PACKET-TOO-BIG
-# ae-code                           # uint8
+query-name=example.com          # As normal text, will be translated to label format
+query-class=in                  # One of any IANA RR CLASSes, internet, in, chaos, ch, etc.
+query-type=a                    # One of any IANA RR TYPEs, A, NS, CNAME, etc.
+rr-ttl=300                      # uint32
+query-udp-size=1220             # uint16
+query-edns-version=0            # uint8
 ----
 
-The comments on each line show the format of allowed values and in some cases the set of allowed values. For example to set a default for qr-transport-flags you could edit the file to say:
+The comments on each line show the format of, and in some cases the set of, allowed values. For example to set a default for dns-flags you could edit the file to say:
 ----
-qr-transport-flags=ipv4 udp
+dns-flags=query-rd response-ra
 ----
 
-Some of these defaults are ignored if you are generating PCAP files. For example, query-ancount is ignored and the actual count of rr's in the answer section of the DNS message is used. This ensures that valid DNS packets are generated. Other values like qr-type have no meaning in a PCAP file.
+NOTE: `dns-flags` is the only default that can have no value specified in order to set all flags to 0. It is also the only default that can have multiple values.
+
+==== Combining excluded fields, default values and pcap-filters
+
+The resulting PCAPs produced by excluding response fields:
+----
+response-delay
+response-rcode
+response-answer-sections
+response-authority-sections
+response-additional-sections
+----
+
+will be different to using a pcap filter
+----
+filter=dst host <serverIP>
+----
+This is because _compactor_ records that it saw a response in the first case, even if it doesn't record anything about the response. In the latter case _compactor_ never saw the response.
 
 === Templated text output
 

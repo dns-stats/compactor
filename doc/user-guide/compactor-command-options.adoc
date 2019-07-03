@@ -1,0 +1,32 @@
+=== _compactor_ Command options
+
+Command options are given on the command line.
+
+*-h, --help*::
+  Print a usage message briefly summarising these command-line options and then exit.
+
+*-v, --version*::
+  Print the version number of *compactor* to the standard output stream and then exit.
+
+*-r. --report-info* [_arg_]::
+  Report info (config and statistics summary) on exit. _arg_ may be
+  `true` or `1` to enable promiscuous mode, `false` or `0` to disable
+  promiscuous mode. If _arg_ is omitted, it defaults to `true`.
+
+*-l, --list-interfaces*::
+  List all network interfaces from which DNS traffic may be captured.
+
+*-c, --configfile* [_arg_]::
+  Read configuration from file _arg_. If not specified, the default configuration file
+  `@ETCPATH@/compactor.conf` is read if present.
+
+*--excludesfile* [_arg_]::
+  Read excludes from file _arg_. If not specified, the default configuration file
+  `@ETCPATH@/excluded_fields.conf` is read if present.
+
+*--debug-dns*::
+   Print a summary of each DNS packet to standard output after decoding.
+
+*--debug-qr*::
+   Print a summary of each query/response pair to standard output after matching
+   query and response.

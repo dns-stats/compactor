@@ -6,8 +6,9 @@ installations of _compactor_ install support for running the
 compactor as a daemon, and these typically restrict the system
 resources available to _compactor_ .
 
-_inspector_  has no configuration file. Only command line arguments
-can be used to control _inspector_ .
+_inspector_ configuration is discussed in the <<runninginspector>> section.
+
+include::compactor-command-options.adoc[]
 
 === _compactor_ configuration file
 
@@ -19,6 +20,9 @@ default this is named `compactor.conf`, and is located in a
 
 If installed from a binary package on Linux, the configuration file
 will be at `/etc/dns-stats-compactor/compactor.conf`.
+
+An alternate path for the configuration file can be specified to the
+compactor using the *-c, --configfile* command line option.
 
 ===== Default configuration
 
@@ -36,70 +40,35 @@ but is otherwise configured to collect traffic:
 * The output files are stored under `/var/lib/dns-stats-compactor`
 in subdirectories `cdns`, `pcap/raw` and `pcap/ignored`.
 
-An alternate path for the configuration file can be specified to the
-compactor using the *-c, --configfile* command line option.
-
 All configuration items can also be specified on the command line. 
 
 IMPORTANT: If an option appears in the configuration file and on the command line, the
 command line setting overrides the configuration file.
 
-==== Configuration file format
-
-A configuration file is a plain text file with lines in the form `option=value`. A `#`
-character introduces a comment that spans until the end of the line. To illustrate,
-here's an extract from a possible configuration file:
-
-[source,ini]
-----
-# Interface on which to capture traffic.
-interface=eth0
-
-# VLAN IDs to capture. If none specified, all are captured.
-# vlan-id=
-
-# Snap length - limit of bytes in package to capture.
-snaplen=5000
-
-# Enable promiscuous mode.
-promiscuous-mode=true
-----
-
-On the command line, configuration options may be specified in short and long
+NOTE: On the command line, configuration options may be specified in short and long
 forms. In a configuration file, the long form of the option name must be used. So, for
 example, to set the snap length to 64, the configuration file entry must read
 `snaplen=64`. `s=64` will not be accepted.
 
-==== Configuration file options
+==== Configuration file format
 
-Full details of the options that may be used in a configuration file
-are in the _compactor_ manual page, *compactor*(1).
+A configuration file is a plain text file with lines in the form `option=value`. A `#`
+character introduces a comment that spans until the end of the line. To illustrate,
+here's the default configuration file:
 
-This section highlights the basic options that need to be set for a typical
-simple collection, and gives a sample of usage of each.
-
-===== Capture from network
-
-*interface*=_arg_::
-  Capture traffic from network interface _arg_. This argument may be given multiple
-  times to allow capture for several interfaces in parallel.
-
-[source,ini]
 ----
-# Collect from eth0 and eth1.
-interface=eth0
-interface=eth1
+include::../../etc/compactor.conf.in[]
 ----
 
-*vlan-id*=_arg_::
-  ID of VLAN to be captured if on a 802.1Q network. The argument may be given
-  multiple times to capture from several VLANs. If no *vlan-id* setting is given,
-  traffic is captured from all VLANs.
 
-[source,ini]
-----
-vlan-id=10
-----
+
+==== Configuration options
+
+include::compactor-capture-from-network.adoc[leveloffset=+1]
+
+include::compactor-outputs.adoc[leveloffset=+1]
+
+include::compactor-query-response-matching.adoc[leveloffset=+1]
 
 ===== Output file patterns
 
@@ -220,7 +189,7 @@ configured VLAN ID, `vlan-id3` the third and so on.
 | `10-12`
 |===
 
-===== Output file options
+Example:
 
 *output*=_PATTERN_::
   Use _PATTERN_ as the template for the file path for the C-DNS output files. If no output
@@ -234,93 +203,6 @@ output=/tmp/cdns/%Y%m%d-%H%M%S_%{rotate_period}_%{interface}.cdns
 Using the above date and time, a rotation period of 300s and
 collecting from interfaces `eth0` and `eth1` this will write to
 `/tmp/cdns/20170116-131805_300_eth0-eth1.cdns`.
-
-*xz-output*=_arg_::
-  Compress data in the C-DNS output files using xz(1) format. _arg_ may be `true`
-  or `1` to enable compression, `false` or `0` to disable compression.
-  If compression is enabled, an extension `.xz` is added to the output filename.
-
-[source,ini]
-----
-xz-output=true
-----
-
-*xz-preset*=_arg_::
-  Compression preset level to use when producing xz(1) C-DNS output. _arg_ must be
-  a single digit `0` to `9`.  If not specified, the default level is `6`.
-
-[source,ini]
-----
-xz-preset=3
-----
-
-*raw-pcap*=_PATTERN_::
-  Use _PATTERN_ as the template for a file path for output of all packets captured to
-  file in PCAP format. If no pattern is given, no raw packet output is written.
-
-[source,ini]
-----
-raw-pcap=/tmp/pcap/%Y%m%d-%H%M%S_%{rotate_period}_%{interface}.raw.pcap
-----
-
-Using the above date and time, a rotation period of 300s and
-collecting from interfaces `eth0` and `eth1` this will write to
-`/tmp/pcap/20170116-131805_300_eth0-eth1.raw.pcap`.
-
-*ignored-pcap*=_PATTERN_::
-  Use _PATTERN_ as the template for a file path for output of all packets captured that
-  were not to the configured DNS ports, or were not validly formed DNS packets.
-  If no pattern is given, no ignored packet output is written.
-
-[source,ini]
-----
-ignored-pcap=/tmp/pcap/%Y%m%d-%H%M%S_%{rotate_period}_%{interface}.ignored.pcap
-----
-
-Using the above date and time, a rotation period of 300s and
-collecting from interfaces `eth0` and `eth1` this will write to
-`/tmp/pcap/20170116-131805_300_eth0-eth1.ignored.pcap`.
-
-*xz-pcap*=_arg_::
-  Compress data in the PCAP output files using xz(1) format. _arg_ may be `true`
-  or `1` to enable compression, `false` or `0` to disable compression.
-  If compression is enabled, an extension `.xz` is added to the output filename.
-
-[source,ini]
-----
-xz-pcap=true
-----
-
-*xz-preset-pcap*=_arg_::
-  Compression preset level to use when producing xz(1) C-DNS output. _arg_ must be
-  a single digit `0` to `9`.  If not specified, the default level is `6`.
-
-[source,ini]
-----
-xz-preset-pcap=3
-----
-
-*rotation-period*=_SECONDS_::
-  Specify the frequency with which all output file path patterns should be re-examined.
-  If the file path has changed, the existing output file is closed and a new one opened
-  using the new pattern expansion. If the file path has not changed, the pattern
-  is re-examined every second until it changes. The default period is 300 seconds.
-
-[source,ini]
-----
-rotation-period=300
-----
-
-*--max-compression-threads* =_arg_::
-  Maximum number of threads to use when compressing. Compression uses
-  one thread per output file, so this argument gives the number of
-  output files that can be compressed simultaneously. _arg_ must be
-  `1` or more.  If not specified, the default number of threads is `2`.
-
-[source,ini]
-----
-max-compression-threads=2
-----
 
 [[options]]
 ===== C-DNS options
