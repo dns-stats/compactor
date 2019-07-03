@@ -28,7 +28,7 @@
 # rr-ttl
 # rr-rdata
 # query-udp-size
-# query-opt-data
+# query-opt-rdata
 # query-edns-version
 # query-question-sections
 # query-answer-sections
@@ -44,3 +44,4 @@
  
 [storage-meta-data]
 # address-events
+# qr-sig-flags
