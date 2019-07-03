@@ -895,7 +895,7 @@ namespace block_cbor {
         boost::hash_combine(seed, qs.dns_flags);
         boost::hash_combine(seed, qs.qr_flags);
         boost::hash_combine(seed, qs.qdcount);
-        if ( qs.qr_flags & QR_HAS_QUESTION )
+        if ( !(qs.qr_flags & QUERY_HAS_NO_QUESTION) )
             boost::hash_combine(seed, qs.query_classtype);
         if ( qs.qr_flags & QUERY_ONLY )
         {

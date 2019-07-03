@@ -425,7 +425,10 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
     dict.SetIntValue("query_response_has_response", !!(qr.qr_flags & block_cbor::RESPONSE_ONLY));
 
     dict.SetIntValue("query_response_query_has_opt", !!(qr.qr_flags & block_cbor::QUERY_HAS_OPT));
-    dict.SetIntValue("query_response_query_has_question", !!(qr.qr_flags & block_cbor::QR_HAS_QUESTION));
+    dict.SetIntValue("query_response_response_has_opt", !!(qr.qr_flags & block_cbor::RESPONSE_HAS_OPT));
+    dict.SetIntValue("query_response_query_has_question", !(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION));
+    dict.SetIntValue("query_response_query_has_no_question", !!(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION));
+    dict.SetIntValue("query_response_response_has_no_question", !!(qr.qr_flags & block_cbor::RESPONSE_HAS_NO_QUESTION));
 
     if ( qr.qr_transport_flags )
     {
@@ -461,7 +464,7 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
 
     if ( qr.qr_flags & block_cbor::QUERY_ONLY )
     {
-        int qcount = !!(qr.qr_flags & block_cbor::QR_HAS_QUESTION);
+        int qcount = !(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION);
         if ( qr.query_questions )
             qcount += (*qr.query_questions).size();
         dict.SetIntValue("query_qdcount", qcount);
@@ -523,7 +526,7 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
 
     if ( qr.qr_flags & block_cbor::RESPONSE_ONLY )
     {
-        int qcount = !!(qr.qr_flags & block_cbor::QR_HAS_QUESTION);
+        int qcount = !(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION);
         if ( qr.response_questions )
             qcount += (*qr.response_questions).size();
         dict.SetIntValue("response_qdcount", qcount);

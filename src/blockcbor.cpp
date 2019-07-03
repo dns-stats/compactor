@@ -273,6 +273,38 @@ namespace block_cbor {
         return flags;
     }
 
+    uint8_t convert_qr_flags(uint8_t flags, FileFormatVersion from_version)
+    {
+        enum QueryResponseFlags05
+        {
+            FORMAT_05_QUERY_ONLY = (1 << 0),
+            FORMAT_05_RESPONSE_ONLY = (1 << 1),
+            FORMAT_05_QR_HAS_QUESTION = (1 << 2),
+            FORMAT_05_QUERY_HAS_OPT = (1 << 3),
+            FORMAT_05_RESPONSE_HAS_OPT = (1 << 4),
+            FORMAT_05_RESPONSE_HAS_NO_QUESTION = (1 << 5),
+        };
+
+        if ( from_version == FileFormatVersion::format_10 )
+            return flags;
+
+        uint8_t res = QUERY_HAS_NO_QUESTION;
+
+        if ( flags & FORMAT_05_QUERY_ONLY )
+            res |= QUERY_ONLY;
+        if ( flags & FORMAT_05_RESPONSE_ONLY )
+            res |= RESPONSE_ONLY;
+        if ( flags & FORMAT_05_QUERY_HAS_OPT )
+            res |= QUERY_HAS_OPT;
+        if ( flags & FORMAT_05_RESPONSE_HAS_OPT )
+            res |= RESPONSE_HAS_OPT;
+        if ( flags & FORMAT_05_QR_HAS_QUESTION )
+            res &= ~QUERY_HAS_NO_QUESTION;
+        if ( flags & FORMAT_05_RESPONSE_HAS_NO_QUESTION )
+            res |= RESPONSE_HAS_NO_QUESTION;
+        return res;
+    }
+
     uint8_t transport_flags(const QueryResponse& qr)
     {
         uint8_t res = 0;

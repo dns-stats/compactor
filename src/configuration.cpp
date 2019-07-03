@@ -1150,7 +1150,7 @@ namespace block_cbor {
         std::vector<std::string> tokens;
         boost::algorithm::to_lower(s);
         boost::split(tokens, s, boost::is_any_of("| "), boost::token_compress_on);
-        uint8_t qrf = QR_HAS_QUESTION;
+        uint8_t qrf = 0;
 
         for ( const auto& tok : tokens )
         {
@@ -1163,7 +1163,7 @@ namespace block_cbor {
             else if ( tok == "response-has-opt" )
                 qrf |= RESPONSE_HAS_OPT;
             else if ( tok == "query-has-no-question" )
-                qrf &= ~QR_HAS_QUESTION;
+                qrf |= QUERY_HAS_NO_QUESTION;
             else if ( tok == "response-has-no-question" )
                 qrf |= RESPONSE_HAS_NO_QUESTION;
             else if ( !tok.empty() )

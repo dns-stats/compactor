@@ -449,7 +449,7 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
         res.qname = block_->names_rdatas[*qri.qname].str;
     else
         res.qname = defaults_.query_name;
-    res.qr_flags = sig.qr_flags;
+    res.qr_flags = block_cbor::convert_qr_flags(sig.qr_flags, file_format_version_);
     res.qr_transport_flags = transport_flags;
 
     if ( sig.dns_flags )
@@ -849,7 +849,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
                 output << "CD ";
         }
         count = (qr.query_questions) ? (*qr.query_questions).size() : 0;
-        if ( qr.qr_flags & block_cbor::QR_HAS_QUESTION )
+        if ( !(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION) )
             count += 1;
         output << "\n\tQdCount: " << count;
         count = ( qr.query_answers ) ? (*qr.query_answers).size() : 0;
@@ -924,7 +924,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
                 output << "CD ";
         }
         count = 0;
-        if ( qr.qr_flags & block_cbor::QR_HAS_QUESTION )
+        if ( !(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION) )
             count = 1;
         if ( qr.response_questions )
             count += (*qr.response_questions).size();

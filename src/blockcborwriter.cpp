@@ -154,17 +154,19 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         qs.qdcount = d.dns.questions_count();
 
     // Get first query info.
-    for ( const auto& query : d.dns.queries() )
+    if ( d.dns.queries().empty() )
+        qri.qr_flags |= block_cbor::QUERY_HAS_NO_QUESTION;
+    else
     {
+        const auto& query = d.dns.queries().front();
         block_cbor::ClassType ct;
+
         ct.qtype = query.query_type();
         ct.qclass = query.query_class();
         if ( !exclude.query_class_type )
             qs.query_classtype = data_->add_classtype(ct);
         if ( !exclude.query_name )
             qri.qname = data_->add_name_rdata(query.dname());
-        qri.qr_flags |= block_cbor::QR_HAS_QUESTION;
-        break;
     }
 
     if ( qr->has_query() )

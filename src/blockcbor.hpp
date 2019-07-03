@@ -135,6 +135,97 @@ namespace block_cbor {
     };
 
     /**
+     * \brief QueryResponse flags values enum.
+     */
+    enum QueryResponseFlags
+    {
+        QUERY_ONLY = (1 << 0),
+        RESPONSE_ONLY = (1 << 1),
+        QUERY_AND_RESPONSE = (QUERY_ONLY | RESPONSE_ONLY),
+        QUERY_HAS_OPT = (1 << 2),
+        RESPONSE_HAS_OPT = (1 << 3),
+        QUERY_HAS_NO_QUESTION = (1 << 4),
+        RESPONSE_HAS_NO_QUESTION = (1 << 5),
+    };
+
+    /**
+     * \brief QueryResponse hint flags values enum.
+     */
+    enum QueryResponseHintFlags
+    {
+        TIME_OFFSET = (1 << 0),
+        CLIENT_ADDRESS_INDEX = (1 << 1),
+        CLIENT_PORT = (1 << 2),
+        TRANSACTION_ID = (1 << 3),
+        QR_SIGNATURE_INDEX = (1 << 4),
+        CLIENT_HOPLIMIT = (1 << 5),
+        RESPONSE_DELAY = (1 << 6),
+        QUERY_NAME_INDEX = (1 << 7),
+        QUERY_SIZE = (1 << 8),
+        RESPONSE_SIZE = (1 << 9),
+        RESPONSE_PROCESSING_DATA = (1 << 10),
+        QUERY_QUESTION_SECTIONS = (1 << 11),
+        QUERY_ANSWER_SECTIONS = (1 << 12),
+        QUERY_AUTHORITY_SECTIONS = (1 << 13),
+        QUERY_ADDITIONAL_SECTIONS = (1 << 14),
+        RESPONSE_ANSWER_SECTIONS = (1 << 15),
+        RESPONSE_AUTHORITY_SECTIONS = (1 << 16),
+        RESPONSE_ADDITIONAL_SECTIONS = (1 << 17)
+    };
+
+    /**
+     * \brief QueryResponse signature hint flags values enum.
+     */
+    enum QueryResponseSignatureHintFlags
+    {
+        SERVER_ADDRESS = (1 << 0),
+        SERVER_PORT = (1 << 1),
+        QR_TRANSPORT_FLAGS = (1 << 2),
+        QR_TYPE = (1 << 3),
+        QR_SIG_FLAGS = (1 << 4),
+        QUERY_OPCODE = (1 << 5),
+        DNS_FLAGS = (1 << 6),
+        QUERY_RCODE = (1 << 7),
+        QUERY_CLASS_TYPE = (1 << 8),
+        QUERY_QDCOUNT = (1 << 9),
+        QUERY_ANCOUNT = (1 << 10),
+        QUERY_NSCOUNT = (1 << 11),
+        QUERY_ARCOUNT = (1 << 12),
+        QUERY_EDNS_VERSION = (1 << 13),
+        QUERY_UDP_SIZE = (1 << 14),
+        QUERY_OPT_RDATA = (1 << 15),
+        RESPONSE_RCODE = (1 << 16)
+    };
+
+    /**
+     * \brief Resource Record hint flags values enum.
+     */
+    enum RRHintFlags
+    {
+        TTL = (1 << 0),
+        RDATA_INDEX = (1 << 1)
+    };
+
+    /**
+     * \brief Other data hint flags values enum.
+     */
+    enum OtherDataHintFlags
+    {
+        MALFORMED_MESSAGES = (1 << 0),
+        ADDRESS_EVENT_COUNTS = (1 << 1)
+    };
+
+    /**
+     * \brief Storage flags values enum.
+     */
+    enum StorageFlags
+    {
+        ANONYMISED_DATA = (1 << 0),
+        SAMPLED_DATA = (1 << 1),
+        NORMALIZED_NAMES = (1 << 2)
+    };
+
+    /**
      * \brief Transport flags enum.
      */
     enum TransportFlags
@@ -1166,6 +1257,14 @@ namespace block_cbor {
      * \param from_version the file format version.
      */
     uint16_t convert_dns_flags(uint16_t flags, FileFormatVersion version);
+
+    /**
+     * \brief Convert possibly older format QR flags to current.
+     *
+     * \param flags        QR flags value.
+     * \param from_version the file format version.
+     */
+    uint8_t convert_qr_flags(uint8_t flags, FileFormatVersion version);
 
     /**
      * \brief Calculate the Transport flags for a Query/Response.
