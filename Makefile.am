@@ -23,7 +23,11 @@ user_guide_sources = \
         $(srcdir)/doc/user-guide/installation.adoc \
         $(srcdir)/doc/user-guide/configuring.adoc \
         $(srcdir)/doc/user-guide/running.adoc \
-        $(srcdir)/doc/user-guide/appendices.adoc
+        $(srcdir)/doc/user-guide/appendices.adoc \
+        $(srcdir)/doc/user-guide/compactor-capture-from-network.adoc \
+        $(srcdir)/doc/user-guide/compactor-command-options.adoc \
+        $(srcdir)/doc/user-guide/compactor-outputs.adoc \
+        $(srcdir)/doc/user-guide/compactor-query-response-matching.adoc
 
 dslocalstatedir=$(localstatedir)/lib/$(PACKAGE)
 dsconfdir=$(sysconfdir)/$(PACKAGE)
@@ -145,9 +149,9 @@ AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
 
 %.1 :: %.adoc ; @ASCIIDOC@ -b manpage -d manpage -o $@ $<
 
-doc/user-guide.html : $(user_guide_sources) ; @ASCIIDOC@ -b html5 -d article -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
+doc/user-guide.html : $(user_guide_sources) compactor.conf ; @ASCIIDOC@ -b html5 -d article -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
 
-doc/user-guide.pdf : $(user_guide_sources) ; @ASCIIDOC@ -b pdf -d article -r asciidoctor-pdf -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
+doc/user-guide.pdf : $(user_guide_sources) compactor.conf ; @ASCIIDOC@ -b pdf -d article -r asciidoctor-pdf -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
 
 .PHONY: user-guide user-guide-html user-guide-pdf
 
