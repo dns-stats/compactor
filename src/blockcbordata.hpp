@@ -881,29 +881,17 @@ namespace block_cbor {
                  server_port != rhs.server_port ||
                  qr_transport_flags != rhs.qr_transport_flags ||
                  dns_flags != rhs.dns_flags ||
-                 qdcount != rhs.qdcount )
-                return false;
-
-            if ( !(qr_flags & QUERY_HAS_NO_QUESTION) &&
-                 query_classtype != rhs.query_classtype )
-                return false;
-
-            if ( ( qr_flags & QUERY_ONLY ) &&
-                 ( query_rcode != rhs.query_rcode ||
-                   query_opcode != rhs.query_opcode ||
-                   query_ancount != rhs.query_ancount ||
-                   query_nscount != rhs.query_nscount ||
-                   query_arcount != rhs.query_arcount ) )
-                return false;
-
-            if ( ( qr_flags & RESPONSE_ONLY ) &&
-                 response_rcode != rhs.response_rcode )
-                return false;
-
-            if ( ( qr_flags & QUERY_HAS_OPT ) &&
-                 ( query_edns_version != rhs.query_edns_version ||
-                   query_edns_payload_size != rhs.query_edns_payload_size ||
-                   query_opt_rdata != rhs.query_opt_rdata ) )
+                 qdcount != rhs.qdcount ||
+                 query_classtype != rhs.query_classtype ||
+                 query_rcode != rhs.query_rcode ||
+                 query_opcode != rhs.query_opcode ||
+                 query_ancount != rhs.query_ancount ||
+                 query_nscount != rhs.query_nscount ||
+                 query_arcount != rhs.query_arcount ||
+                 response_rcode != rhs.response_rcode ||
+                 query_edns_version != rhs.query_edns_version ||
+                 query_edns_payload_size != rhs.query_edns_payload_size ||
+                 query_opt_rdata != rhs.query_opt_rdata )
                 return false;
 
             return true;

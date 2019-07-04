@@ -173,7 +173,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     {
         const DNSMessage &q(qr->query());
 
-        qri.qr_flags |= block_cbor::QUERY_ONLY;
+        qri.qr_flags |= block_cbor::HAS_QUERY;
         if ( !exclude.query_size )
             qri.query_size = q.wire_size;
         if ( !exclude.client_hoplimit )
@@ -209,7 +209,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     {
         const DNSMessage &r(qr->response());
 
-        qri.qr_flags |= block_cbor::RESPONSE_ONLY;
+        qri.qr_flags |= block_cbor::HAS_RESPONSE;
         if ( !exclude.response_size )
             qri.response_size = r.wire_size;
         // Set from response if not already set.

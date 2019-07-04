@@ -139,9 +139,9 @@ namespace block_cbor {
      */
     enum QueryResponseFlags
     {
-        QUERY_ONLY = (1 << 0),
-        RESPONSE_ONLY = (1 << 1),
-        QUERY_AND_RESPONSE = (QUERY_ONLY | RESPONSE_ONLY),
+        HAS_QUERY = (1 << 0),
+        HAS_RESPONSE = (1 << 1),
+        QUERY_AND_RESPONSE = (HAS_QUERY | HAS_RESPONSE),
         QUERY_HAS_OPT = (1 << 2),
         RESPONSE_HAS_OPT = (1 << 3),
         QUERY_HAS_NO_QUESTION = (1 << 4),

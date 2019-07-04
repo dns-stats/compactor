@@ -808,7 +808,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
     }
 
     output << "Query/Response:\n";
-    if ( qr.qr_flags & block_cbor::QUERY_ONLY )
+    if ( qr.qr_flags & block_cbor::HAS_QUERY )
     {
         output << "Query: ";
         if ( qr.timestamp )
@@ -884,7 +884,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
     else
         output << "No Query\n";
 
-    if ( qr.qr_flags & block_cbor::RESPONSE_ONLY )
+    if ( qr.qr_flags & block_cbor::HAS_RESPONSE )
     {
         output << "Response: ";
         if ( qr.timestamp && qr.response_delay )

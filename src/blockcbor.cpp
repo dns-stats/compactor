@@ -277,8 +277,8 @@ namespace block_cbor {
     {
         enum QueryResponseFlags05
         {
-            FORMAT_05_QUERY_ONLY = (1 << 0),
-            FORMAT_05_RESPONSE_ONLY = (1 << 1),
+            FORMAT_05_HAS_QUERY = (1 << 0),
+            FORMAT_05_HAS_RESPONSE = (1 << 1),
             FORMAT_05_QR_HAS_QUESTION = (1 << 2),
             FORMAT_05_QUERY_HAS_OPT = (1 << 3),
             FORMAT_05_RESPONSE_HAS_OPT = (1 << 4),
@@ -290,10 +290,10 @@ namespace block_cbor {
 
         uint8_t res = QUERY_HAS_NO_QUESTION;
 
-        if ( flags & FORMAT_05_QUERY_ONLY )
-            res |= QUERY_ONLY;
-        if ( flags & FORMAT_05_RESPONSE_ONLY )
-            res |= RESPONSE_ONLY;
+        if ( flags & FORMAT_05_HAS_QUERY )
+            res |= HAS_QUERY;
+        if ( flags & FORMAT_05_HAS_RESPONSE )
+            res |= HAS_RESPONSE;
         if ( flags & FORMAT_05_QUERY_HAS_OPT )
             res |= QUERY_HAS_OPT;
         if ( flags & FORMAT_05_RESPONSE_HAS_OPT )

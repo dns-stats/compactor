@@ -892,27 +892,20 @@ namespace block_cbor {
         std::size_t seed = boost::hash_value(qs.server_address);
         boost::hash_combine(seed, qs.server_port);
         boost::hash_combine(seed, qs.qr_transport_flags);
+        boost::hash_combine(seed, qs.qr_flags);
         boost::hash_combine(seed, qs.dns_flags);
         boost::hash_combine(seed, qs.qr_flags);
         boost::hash_combine(seed, qs.qdcount);
-        if ( !(qs.qr_flags & QUERY_HAS_NO_QUESTION) )
-            boost::hash_combine(seed, qs.query_classtype);
-        if ( qs.qr_flags & QUERY_ONLY )
-        {
-            boost::hash_combine(seed, qs.query_rcode);
-            boost::hash_combine(seed, qs.query_opcode);
-            boost::hash_combine(seed, qs.query_ancount);
-            boost::hash_combine(seed, qs.query_nscount);
-            boost::hash_combine(seed, qs.query_arcount);
-        }
-        if ( qs.qr_flags & RESPONSE_ONLY )
-            boost::hash_combine(seed, qs.response_rcode);
-        if ( qs.qr_flags & QUERY_HAS_OPT )
-        {
-            boost::hash_combine(seed, qs.query_edns_version);
-            boost::hash_combine(seed, qs.query_edns_payload_size);
-            boost::hash_combine(seed, qs.query_opt_rdata);
-        }
+        boost::hash_combine(seed, qs.query_classtype);
+        boost::hash_combine(seed, qs.query_rcode);
+        boost::hash_combine(seed, qs.query_opcode);
+        boost::hash_combine(seed, qs.query_ancount);
+        boost::hash_combine(seed, qs.query_nscount);
+        boost::hash_combine(seed, qs.query_arcount);
+        boost::hash_combine(seed, qs.response_rcode);
+        boost::hash_combine(seed, qs.query_edns_version);
+        boost::hash_combine(seed, qs.query_edns_payload_size);
+        boost::hash_combine(seed, qs.query_opt_rdata);
         return seed;
     }
 

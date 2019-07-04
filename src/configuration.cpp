@@ -1155,9 +1155,9 @@ namespace block_cbor {
         for ( const auto& tok : tokens )
         {
             if ( tok == "has-query" )
-                qrf |= QUERY_ONLY;
+                qrf |= HAS_QUERY;
             else if ( tok == "has-response" )
-                qrf |= RESPONSE_ONLY;
+                qrf |= HAS_RESPONSE;
             else if ( tok == "query-has-opt" )
                 qrf |= QUERY_HAS_OPT;
             else if ( tok == "response-has-opt" )
