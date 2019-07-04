@@ -498,6 +498,16 @@ private:
     void read_rr(block_cbor::index_t index, boost::optional<std::vector<QueryResponseData::RR>>& res);
 
     /**
+     * \brief Synthesise Q/R flags from other fields.
+     *
+     * \param qri query response item.
+     * \param sig query response signature.
+     * \returns synthesised signature.
+     */
+    uint8_t synthesise_qr_flags(const block_cbor::QueryResponseItem& qri,
+                                const block_cbor::QueryResponseSignature& sig);
+
+    /**
      * \brief the decoder to read from.
      */
     CborBaseDecoder& dec_;

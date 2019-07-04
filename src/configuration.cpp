@@ -1516,7 +1516,9 @@ HintsExcluded::HintsExcluded()
       client_address(false), client_port(false), client_hoplimit(false),
       server_address(false), server_port(false),
       transport(false),
+      qr_flags(false),
       transaction_id(false),
+      qr_signature(false),
       query_opcode(false),
       dns_flags(false),
       query_rcode(false),
@@ -1611,9 +1613,9 @@ HintsExcluded::HintsExcluded()
         ("dns-payload.query-edns-version",
          po::value<bool>(&query_edns_version)->implicit_value(true)->default_value(false),
          "exclude query EDNS version.")
-        ("dns-payload.query-opt-data",
+        ("dns-payload.query-opt-rdata",
          po::value<bool>(&query_opt_rdata)->implicit_value(true)->default_value(false),
-         "exclude query OPT data.")
+         "exclude query OPT RDATA.")
         ("dns-payload.query-question-sections",
          po::value<bool>(&query_question_section)->implicit_value(true)->default_value(false),
          "exclude query second or subsequent question sections.")
@@ -1636,6 +1638,9 @@ HintsExcluded::HintsExcluded()
          po::value<bool>(&response_additional_section)->implicit_value(true)->default_value(false),
          "exclude response additional sections.")
 
+        ("dns-meta-data.qr-sig-flags",
+         po::value<bool>(&qr_flags)->implicit_value(true)->default_value(false),
+         "exclude query response flags.")
         ("dns-meta-data.query-size",
          po::value<bool>(&query_size)->implicit_value(true)->default_value(false),
          "exclude query size.")
@@ -1721,6 +1726,12 @@ bool HintsExcluded::read_excludes_file(const std::string& excludesfile)
     }
 
     po::notify(res);
+    qr_signature = ( server_address && server_port && transport &&
+                     qr_flags && query_opcode && dns_flags &&
+                     query_rcode && query_class_type &&
+                     query_qdcount && query_ancount && query_nscount &&
+                     query_arcount && query_edns_version &&
+                     query_udp_size && query_opt_rdata && response_rcode );
     return exists;
 }
 
@@ -1796,7 +1807,8 @@ block_cbor::QueryResponseSignatureHintFlags HintsExcluded::get_query_response_si
         res |= block_cbor::SERVER_PORT;
     if ( !transport )
         res |= block_cbor::QR_TRANSPORT_FLAGS;
-    res |= block_cbor::QR_SIG_FLAGS;
+    if ( !qr_signature )
+        res |= block_cbor::QR_SIG_FLAGS;
     if ( !query_opcode )
         res |= block_cbor::QUERY_OPCODE;
     if ( !dns_flags )
@@ -1830,6 +1842,7 @@ void HintsExcluded::set_query_response_signature_hints(block_cbor::QueryResponse
     server_address = !( hints & block_cbor::SERVER_ADDRESS );
     server_port = !( hints & block_cbor::SERVER_PORT );
     transport = !( hints & block_cbor::QR_TRANSPORT_FLAGS );
+    qr_signature = !(hints & block_cbor::QR_SIG_FLAGS );
     query_type = !( hints & block_cbor::QR_TYPE );
     query_opcode = !( hints & block_cbor::QUERY_OPCODE );
     dns_flags = !( hints & block_cbor::DNS_FLAGS );

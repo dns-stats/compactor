@@ -233,8 +233,10 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     if ( qr->has_query() && qr->has_response() && !exclude.response_delay )
         qri.response_delay = std::chrono::duration_cast<std::chrono::microseconds>(qr->response().timestamp - qr->query().timestamp);
 
-    qs.qr_flags = qri.qr_flags;
-    qri.signature = data_->add_query_response_signature(qs);
+    if ( !exclude.qr_flags )
+        qs.qr_flags = qri.qr_flags;
+    if ( !exclude.qr_signature )
+        qri.signature = data_->add_query_response_signature(qs);
 }
 
 void BlockCborWriter::startExtendedQueryGroup()

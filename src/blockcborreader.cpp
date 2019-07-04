@@ -422,13 +422,25 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     const block_cbor::QueryResponseItem& qri = block_->query_response_items[next_item_];
     need_block_ = (block_->query_response_items.size() == ++next_item_);
 
-    if ( !qri.signature )
-        throw cbor_file_format_error("QueryResponseItem missing signature");
+    const block_cbor::QueryResponseSignature* sig;
+    std::unique_ptr<block_cbor::QueryResponseSignature> empty_sig;
 
-    const block_cbor::QueryResponseSignature& sig = block_->query_response_signatures[qri.signature];
+    if ( qri.signature )
+        sig = &block_->query_response_signatures[*qri.signature];
+    else
+    {
+        empty_sig = make_unique<block_cbor::QueryResponseSignature>();
+        sig = empty_sig.get();
+    }
+
+    if ( sig->qr_flags )
+        res.qr_flags = block_cbor::convert_qr_flags(*sig->qr_flags, file_format_version_);
+    else
+        res.qr_flags = synthesise_qr_flags(qri, *sig);
+
     boost::optional<uint8_t> transport_flags;
-    if ( sig.qr_transport_flags )
-        transport_flags = block_cbor::convert_transport_flags(*sig.qr_transport_flags, file_format_version_);
+    if ( sig->qr_transport_flags )
+        transport_flags = block_cbor::convert_transport_flags(*sig->qr_transport_flags, file_format_version_);
     else
         transport_flags = defaults_.transport;
 
@@ -439,26 +451,25 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
         res.client_address = defaults_.client_address;
     res.client_port = ( qri.client_port ) ? qri.client_port : defaults_.client_port;
     res.hoplimit = ( qri.hoplimit ) ? qri.hoplimit : defaults_.client_hoplimit;
-    if ( sig.server_address )
-        res.server_address = get_server_address(*sig.server_address, transport_flags);
+    if ( sig->server_address )
+        res.server_address = get_server_address(*sig->server_address, transport_flags);
     else
         res.server_address = defaults_.server_address;
-    res.server_port = ( sig.server_port ) ? sig.server_port : defaults_.server_port;
+    res.server_port = ( sig->server_port ) ? sig->server_port : defaults_.server_port;
     res.id = ( qri.id ) ? qri.id : defaults_.transaction_id;
     if ( qri.qname )
         res.qname = block_->names_rdatas[*qri.qname].str;
     else
         res.qname = defaults_.query_name;
-    res.qr_flags = block_cbor::convert_qr_flags(sig.qr_flags, file_format_version_);
     res.qr_transport_flags = transport_flags;
 
-    if ( sig.dns_flags )
-        res.dns_flags = block_cbor::convert_dns_flags(*sig.dns_flags, file_format_version_);
+    if ( sig->dns_flags )
+        res.dns_flags = block_cbor::convert_dns_flags(*sig->dns_flags, file_format_version_);
     else
         res.dns_flags = defaults_.dns_flags;
-    if ( sig.query_classtype )
+    if ( sig->query_classtype )
     {
-        const block_cbor::ClassType& ct = block_->class_types[*sig.query_classtype];
+        const block_cbor::ClassType& ct = block_->class_types[*sig->query_classtype];
         res.query_class = ct.qclass;
         res.query_type = ct.qtype;
     }
@@ -467,20 +478,20 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
         res.query_class = defaults_.query_class;
         res.query_type = defaults_.query_type;
     }
-    res.query_qdcount = ( sig.qdcount ) ? sig.qdcount : defaults_.query_qdcount;
-    res.query_ancount = ( sig.query_ancount ) ? sig.query_ancount : defaults_.query_ancount;
-    res.query_arcount = ( sig.query_arcount ) ? sig.query_arcount : defaults_.query_arcount;
-    res.query_nscount = ( sig.query_nscount ) ? sig.query_nscount : defaults_.query_nscount;
-    res.query_opcode = ( sig.query_opcode ) ? sig.query_opcode : defaults_.query_opcode;
-    res.query_rcode = ( sig.query_rcode ) ? sig.query_rcode : defaults_.query_rcode;
-    res.query_edns_version = ( sig.query_edns_version ) ? sig.query_edns_version : defaults_.query_edns_version;
-    res.query_edns_payload_size = ( sig.query_edns_payload_size ) ? sig.query_edns_payload_size : defaults_.query_udp_size;
-    if ( sig.query_opt_rdata )
+    res.query_qdcount = ( sig->qdcount ) ? sig->qdcount : defaults_.query_qdcount;
+    res.query_ancount = ( sig->query_ancount ) ? sig->query_ancount : defaults_.query_ancount;
+    res.query_arcount = ( sig->query_arcount ) ? sig->query_arcount : defaults_.query_arcount;
+    res.query_nscount = ( sig->query_nscount ) ? sig->query_nscount : defaults_.query_nscount;
+    res.query_opcode = ( sig->query_opcode ) ? sig->query_opcode : defaults_.query_opcode;
+    res.query_rcode = ( sig->query_rcode ) ? sig->query_rcode : defaults_.query_rcode;
+    res.query_edns_version = ( sig->query_edns_version ) ? sig->query_edns_version : defaults_.query_edns_version;
+    res.query_edns_payload_size = ( sig->query_edns_payload_size ) ? sig->query_edns_payload_size : defaults_.query_udp_size;
+    if ( sig->query_opt_rdata )
     {
-        res.query_opt_rdata = block_->names_rdatas[*sig.query_opt_rdata].str;
+        res.query_opt_rdata = block_->names_rdatas[*sig->query_opt_rdata].str;
 #if ENABLE_PSEUDOANONYMISATION
         if ( pseudo_anon_ )
-            res.query_opt_rdata = pseudo_anon_->edns0(block_->names_rdatas[*sig.query_opt_rdata].str);
+            res.query_opt_rdata = pseudo_anon_->edns0(block_->names_rdatas[*sig->query_opt_rdata].str);
 #endif
     }
     else
@@ -488,7 +499,7 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     res.query_size = ( qri.query_size ) ? qri.query_size : defaults_.query_size;
 
     res.response_delay = ( qri.response_delay ) ? qri.response_delay : defaults_.response_delay;
-    res.response_rcode = ( sig.response_rcode ) ? sig.response_rcode : defaults_.response_rcode;
+    res.response_rcode = ( sig->response_rcode ) ? sig->response_rcode : defaults_.response_rcode;
     res.response_size = ( qri.response_size ) ? qri.response_size : defaults_.response_size;
 
     read_extra_info(qri.query_extra_info,
@@ -678,6 +689,109 @@ IPAddress BlockCborReader::get_server_address(std::size_t index, boost::optional
         ipv6 = (*transport_flags & block_cbor::IPV6);
 
     return string_to_addr(addr_b, ipv6);
+}
+
+uint8_t BlockCborReader::synthesise_qr_flags(const block_cbor::QueryResponseItem& qri,
+                                             const block_cbor::QueryResponseSignature& sig)
+{
+    uint8_t res = 0;
+
+    if ( qri.hoplimit ||
+         qri.response_delay ||
+         sig.query_opcode ||
+         sig.query_rcode ||
+         sig.qdcount ||
+         sig.query_ancount ||
+         sig.query_nscount ||
+         sig.query_arcount ||
+         qri.query_size )
+        res |= block_cbor::HAS_QUERY;
+
+    if ( qri.response_delay ||
+         sig.response_rcode ||
+         qri.response_size )
+        res |= block_cbor::HAS_RESPONSE;
+
+    if ( sig.query_edns_version ||
+         sig.query_edns_payload_size ||
+         sig.query_opt_rdata )
+        res |= (block_cbor::HAS_QUERY | block_cbor::QUERY_HAS_OPT);
+
+    if ( sig.dns_flags )
+    {
+        if ( *sig.dns_flags &
+             (block_cbor::QUERY_CD | block_cbor::QUERY_AD |
+              block_cbor::QUERY_Z | block_cbor::QUERY_RA |
+              block_cbor::QUERY_RD | block_cbor::QUERY_TC |
+              block_cbor::QUERY_AA | block_cbor::QUERY_DO) )
+            res |= block_cbor::HAS_QUERY;
+        if ( *sig.dns_flags &
+             (block_cbor::RESPONSE_CD | block_cbor::RESPONSE_AD |
+              block_cbor::RESPONSE_Z | block_cbor::RESPONSE_RA |
+              block_cbor::RESPONSE_RD | block_cbor::RESPONSE_TC |
+              block_cbor::RESPONSE_AA) )
+            res |= block_cbor::HAS_RESPONSE;
+    }
+
+    if ( !(res & block_cbor::QUERY_HAS_OPT) &&
+         qri.query_extra_info &&
+         qri.query_extra_info->additional_list )
+    {
+        for ( const auto& rr : block_->rrs_lists[*(qri.query_extra_info->additional_list)].vec )
+        {
+            block_cbor::index_t ctindex = block_->resource_records[*rr].classtype;
+            if ( ctindex )
+            {
+                boost::optional<CaptureDNS::QueryType> qt = block_->class_types[*ctindex].qtype;
+                if ( qt && *qt == CaptureDNS::OPT )
+                {
+                    res |= (block_cbor::HAS_QUERY |block_cbor::QUERY_HAS_OPT);
+                    break;
+                }
+            }
+        }
+    }
+    if ( qri.response_extra_info &&
+         qri.response_extra_info->additional_list )
+    {
+        for ( const auto& rr : block_->rrs_lists[*(qri.response_extra_info->additional_list)].vec )
+        {
+            block_cbor::index_t ctindex = block_->resource_records[*rr].classtype;
+            if ( ctindex )
+            {
+                boost::optional<CaptureDNS::QueryType> qt = block_->class_types[*ctindex].qtype;
+                if ( qt && *qt == CaptureDNS::OPT )
+                {
+                    res |= (block_cbor::HAS_RESPONSE | block_cbor::RESPONSE_HAS_OPT);
+                    break;
+                }
+            }
+        }
+    }
+
+    // In absence of any indication, default to query only.
+    if ( !res )
+        res |= block_cbor::HAS_QUERY;
+
+    if ( !qri.qname && !sig.query_classtype )
+    {
+        const block_cbor::BlockParameters& bp = block_parameters_[block_->block_parameters_index];
+        const block_cbor::StorageParameters& sp = bp.storage_parameters;
+
+        if ( !(sp.storage_hints.query_response_hints & block_cbor::QUERY_NAME_INDEX) ||
+             !(sp.storage_hints.query_response_signature_hints & block_cbor::QUERY_CLASS_TYPE) )
+        {
+            if ( res & block_cbor::HAS_QUERY )
+                res |= block_cbor::QUERY_HAS_NO_QUESTION;
+            if ( res & block_cbor::HAS_RESPONSE )
+                res |= block_cbor::RESPONSE_HAS_NO_QUESTION;
+        }
+    }
+
+    if ( sig.response_rcode && *sig.response_rcode == CaptureDNS::FORMERR )
+        res |= block_cbor::RESPONSE_HAS_NO_QUESTION;
+
+    return res;
 }
 
 void BlockCborReader::dump_collector(std::ostream& os)

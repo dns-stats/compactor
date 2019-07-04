@@ -290,9 +290,22 @@ public:
     bool transport;
 
     /**
+     * \brief output Q/R flags?
+     */
+    bool qr_flags;
+
+    /**
      * \brief output transaction id?
      */
     bool transaction_id;
+
+    /**
+     * \brief output signature index?
+     *
+     * We don't expose this one to the user, but set it if they
+     * exclude all items in the signature.
+     */
+    bool qr_signature;
 
     /**
      * \brief output query opcode?
@@ -330,14 +343,14 @@ public:
     bool query_ancount;
 
     /**
-     * \brief output ARCOUNT?
-     */
-    bool query_arcount;
-
-    /**
      * \brief output NSCOUNT?
      */
     bool query_nscount;
+
+    /**
+     * \brief output ARCOUNT?
+     */
+    bool query_arcount;
 
     /**
      * \brief output query size?

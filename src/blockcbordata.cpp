@@ -731,11 +731,10 @@ namespace block_cbor {
     void QueryResponseSignature::readCbor(CborBaseDecoder& dec,
                                           const FileVersionFields& fields)
     {
-        bool got_qr_sig_flags = false;
-
         server_address.reset();
         server_port.reset();
         qr_transport_flags.reset();
+        qr_flags.reset();
         query_rcode.reset();
         response_rcode.reset();
         query_opcode.reset();
@@ -779,7 +778,6 @@ namespace block_cbor {
 
                 case QueryResponseSignatureField::qr_sig_flags:
                     qr_flags = dec.read_unsigned();
-                    got_qr_sig_flags = true;
                     break;
 
                 case QueryResponseSignatureField::query_qd_count:
@@ -837,9 +835,6 @@ namespace block_cbor {
         {
             throw cbor_file_format_unexpected_item_error("QueryResponseSignature");
         }
-
-        if ( !got_qr_sig_flags )
-            throw cbor_file_format_error("QueryResponseSignature missing qr-sig_flags");
     }
 
     void QueryResponseSignature::writeCbor(CborBaseEncoder& enc)
@@ -863,10 +858,10 @@ namespace block_cbor {
 
         int nitems =
             !!server_address + !!server_port + !!qr_transport_flags +
-            !!dns_flags + 1 + !!qdcount + !!query_classtype + !!query_rcode +
-            !!query_opcode + !!query_ancount + !!query_arcount +
-            !!query_nscount + !!query_edns_version + !!query_edns_payload_size +
-            !!query_opt_rdata + !!response_rcode;
+            !!dns_flags + !!qr_flags + !!qdcount + !!query_classtype +
+            !!query_rcode + !!query_opcode + !!query_ancount +
+            !!query_arcount + !!query_nscount + !!query_edns_version +
+            !!query_edns_payload_size + !!query_opt_rdata + !!response_rcode;
 
         enc.writeMapHeader(nitems);
         enc.write(server_address_index, server_address);

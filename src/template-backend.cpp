@@ -421,8 +421,8 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
         first_line = false;
     }
 
-    dict.SetIntValue("query_response_has_query", !!(qr.qr_flags & block_cbor::QUERY_ONLY));
-    dict.SetIntValue("query_response_has_response", !!(qr.qr_flags & block_cbor::RESPONSE_ONLY));
+    dict.SetIntValue("query_response_has_query", !!(qr.qr_flags & block_cbor::HAS_QUERY));
+    dict.SetIntValue("query_response_has_response", !!(qr.qr_flags & block_cbor::HAS_RESPONSE));
 
     dict.SetIntValue("query_response_query_has_opt", !!(qr.qr_flags & block_cbor::QUERY_HAS_OPT));
     dict.SetIntValue("query_response_response_has_opt", !!(qr.qr_flags & block_cbor::RESPONSE_HAS_OPT));
@@ -436,7 +436,7 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
         dict.SetIntValue("transport_ipv6", !!(*qr.qr_transport_flags & block_cbor::IPV6));
     }
 
-    if ( ( qr.qr_flags & block_cbor::QUERY_ONLY ) && qr.dns_flags )
+    if ( ( qr.qr_flags & block_cbor::HAS_QUERY ) && qr.dns_flags )
     {
         dict.SetIntValue("query_checking_disabled", !!(*qr.dns_flags & block_cbor::QUERY_CD));
         dict.SetIntValue("query_authenticated_data", !!(*qr.dns_flags & block_cbor::QUERY_AD));
@@ -462,7 +462,7 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
     if ( qr.query_rcode )
         dict.SetIntValue("query_rcode", *qr.query_rcode);
 
-    if ( qr.qr_flags & block_cbor::QUERY_ONLY )
+    if ( qr.qr_flags & block_cbor::HAS_QUERY )
     {
         int qcount = !(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION);
         if ( qr.query_questions )
@@ -511,7 +511,7 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
     if ( qr.query_class )
         dict.SetIntValue("query_class", *qr.query_class);
 
-    if ( ( qr.qr_flags & block_cbor::RESPONSE_ONLY ) && qr.dns_flags )
+    if ( ( qr.qr_flags & block_cbor::HAS_RESPONSE ) && qr.dns_flags )
     {
         dict.SetIntValue("response_checking_disabled", !!(*qr.dns_flags & block_cbor::RESPONSE_CD));
         dict.SetIntValue("response_authenticated_data", !!(*qr.dns_flags & block_cbor::RESPONSE_AD));
@@ -524,7 +524,7 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
 
     dict.SetIntValue("query_response_response_has_question", !(qr.qr_flags & block_cbor::RESPONSE_HAS_NO_QUESTION));
 
-    if ( qr.qr_flags & block_cbor::RESPONSE_ONLY )
+    if ( qr.qr_flags & block_cbor::HAS_RESPONSE )
     {
         int qcount = !(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION);
         if ( qr.response_questions )
