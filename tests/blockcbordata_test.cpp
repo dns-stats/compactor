@@ -955,6 +955,39 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             }
         }
 
+        WHEN("values are encoded, Q/R flags excluded")
+        {
+            TestCborEncoder tcbe;
+            qs1.qr_flags.reset();
+            qs1.writeCbor(tcbe);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 15,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_rcode), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_opcode), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_an_count), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ar_count), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ns_count), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::edns_version), 0,
+                        find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
         WHEN("values are encoded, transport flags excluded")
         {
             TestCborEncoder tcbe;
@@ -1456,6 +1489,50 @@ SCENARIO("QueryResponseItems can be written", "[block]")
                         find_query_response_index(QueryResponseField::qr_signature_index), 6,
                         find_query_response_index(QueryResponseField::query_name_index), 5,
                         find_query_response_index(QueryResponseField::query_size), 10,
+                        find_query_response_index(QueryResponseField::query_extended),
+                        (5 << 5) | 31,
+                        0, 12,
+                        1, 13,
+                        2, 14,
+                        3, 15,
+                        0xff,
+                        find_query_response_index(QueryResponseField::response_extended),
+                        (5 << 5) | 31,
+                        0, 16,
+                        1, 17,
+                        2, 18,
+                        3, 19,
+                        0xff,
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, signature excluded")
+        {
+            TestCborEncoder tcbe;
+            BlockParameters bp;
+            bp.storage_parameters.ticks_per_second = 1000000;
+            qri1.signature.reset();
+            qri1.writeCbor(tcbe, std::chrono::system_clock::time_point(std::chrono::microseconds(0)), bp);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        find_query_response_index(QueryResponseField::time_offset), 5,
+                        find_query_response_index(QueryResponseField::client_address_index), 1,
+                        find_query_response_index(QueryResponseField::client_port), 2,
+                        find_query_response_index(QueryResponseField::transaction_id), 21,
+                        find_query_response_index(QueryResponseField::client_hoplimit), 20,
+                        find_query_response_index(QueryResponseField::response_delay), 10,
+                        find_query_response_index(QueryResponseField::query_name_index), 5,
+                        find_query_response_index(QueryResponseField::query_size), 10,
+                        find_query_response_index(QueryResponseField::response_size), 20,
                         find_query_response_index(QueryResponseField::query_extended),
                         (5 << 5) | 31,
                         0, 12,
