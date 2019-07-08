@@ -7,6 +7,7 @@ ClientPort={{client_port}}
 ClientHoplimit={{client_hoplimit}}
 ClientAddress/X-IPAddr-Geo-Location={{client_address:x-ipaddr-geo-location}}
 ClientAddress/X-IPAddr-Geo-ASN={{client_address:x-ipaddr-geo-asn}}
+ClientAddress/X-IPAddr-Geo-AS-Netmask={{client_address:x-ipaddr-geo-as-netmask}}
 ServerAddress/X-IP6Addr-Bin/X-HexString={{server_address:x-ip6addr-bin:x-hexstring}}
 ServerPort={{server_port}}
 TransportFlags={{transport_flags}}

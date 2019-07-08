@@ -241,6 +241,7 @@ compactor_LDFLAGS += \
 endif
 
 compactor_tests_SOURCES = \
+        tests/catch.hpp \
         tests/catch_main.cpp \
         $(compactor_src_without_internal_tests) \
         tests/baseoutputwriter_test.cpp \

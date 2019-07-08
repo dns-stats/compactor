@@ -339,6 +339,9 @@ e.g. `{{client_address:x-ipaddr}}`.
 | `x-ipaddr-geo-asn`
 | Given an IPv4 or IPv6 address, output the ASN reported by the MaxMind database for that address, or 0 if not found. Error if no MaxMind database files are found.
 
+| `x-ipaddr-geo-as-netmask`
+| Given an IPv4 or IPv6 address, output the netmask reported by the MaxMind database for the AS network containing that address, or 0 if not found. Error if no MaxMind database files are found.
+
 | `x-date`
 | Output timestamp in seconds as a UTC date in ISO601 format (YYYY-MM-DD).
 
