@@ -6,6 +6,11 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 0.12.3 - 2019-07-08
+---------------------------
+
+* Fix occasional failure in tshark test.
+
 Version 0.12.3-rc1 - 2019-05-22
 -------------------------------
 
