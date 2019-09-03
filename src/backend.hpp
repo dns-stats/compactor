@@ -309,17 +309,6 @@ private:
                       const std::chrono::system_clock::time_point& timestamp);
 
     /**
-     * \brief Check there are sufficient defaults.
-     *
-     * Perhaps a bit of a stopgap, this function checks that there
-     * are defaults for all fields required for PCAP generation.
-     *
-     * \param exclude_hints exclude hints set in the source file.
-     * \throws backend_error if there are insufficient defaults.
-     */
-    void check_defaults(const HintsExcluded& exclude_hints);
-
-    /**
      * \brief the options.
      */
     const PcapBackendOptions& opts_;
