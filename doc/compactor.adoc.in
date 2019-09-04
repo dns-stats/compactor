@@ -95,7 +95,7 @@ substitutes the second VLAN ID if configured, and so on.
 To minimise the size of output files, _compactor_ can omit fields that are not required
 by the user. The fields to be omitted are specified by an exclude file. This file
 can be specified using the `excludesfile` option. If not given, the
-default configuration file `/etc/dns-stats-compactor/excluded_fields.conf`
+default configuration file `@ETCPATH@/excluded_fields.conf`
 is read if present.
 
 The fields that can be omitted are divided into different categories.
