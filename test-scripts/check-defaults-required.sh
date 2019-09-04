@@ -58,7 +58,7 @@ cat > $tmpdir/defaults.conf <<EOF
 client-address=192.168.1.1
 EOF
 
-$INSP -o $tmpdir/out.pcap r/defaults.conf $tmpdir/out.cbor
+$INSP -o $tmpdir/out.pcap --defaultsfile $tmpdir/defaults.conf $tmpdir/out.cbor
 if [ $? -eq 0 ]; then
     echo "Too few defaults, should fail."
     cleanup 1
