@@ -53,7 +53,7 @@ Whenever the _compactor_ package is installed, the system will attempt
 to start _compactor_ as a service.
 
 The first time the _compactor_ package is installed, it installs a
-default configuration file `/etc/dns-stats-compactor/compactor.conf`. This
+default configuration file `@ETCPATH@/compactor.conf`. This
 default configuration does not specify a capture interface, so the
 attempt at starting _compactor_ as a service will fail.  Before
 using _compactor_ as a service, you need to edit the default

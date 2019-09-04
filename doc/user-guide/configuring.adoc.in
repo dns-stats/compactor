@@ -19,7 +19,7 @@ default this is named `compactor.conf`, and is located in a
 `dns-stats-compactor` system configuration directory.
 
 If installed from a binary package on Linux, the configuration file
-will be at `/etc/dns-stats-compactor/compactor.conf`.
+will be at `@ETCPATH@/compactor.conf`.
 
 An alternate path for the configuration file can be specified to the
 compactor using the *-c, --configfile* command line option.
@@ -37,7 +37,7 @@ but is otherwise configured to collect traffic:
 * A new output file is commenced every 5 minutes.
 * The 'raw' traffic is also recorded to a PCAP output file
 * The 'ignored' traffic is also recorded to a PCAP output file
-* The output files are stored under `/var/lib/dns-stats-compactor`
+* The output files are stored under `@VARLIBPATH@/dns-stats-compactor`
 in subdirectories `cdns`, `pcap/raw` and `pcap/ignored`.
 
 All configuration items can also be specified on the command line. 
@@ -57,7 +57,7 @@ character introduces a comment that spans until the end of the line. To illustra
 here's the default configuration file:
 
 ----
-include::../../compactor.conf[]
+include::../../etc/compactor.conf[]
 ----
 
 
@@ -283,7 +283,7 @@ located in a `dns-stats-compactor` system configuration directory. A different l
 line by using the _compactor --excludesfile_ option.
 
 If installed from a binary package on Linux, a sample excluded fields file will be at 
-`/etc/dns-stats-compactor/excluded_fields.conf.sample`
+`@ETCPATH@/excluded_fields.conf.sample`
 
 ==== Default configuration
 

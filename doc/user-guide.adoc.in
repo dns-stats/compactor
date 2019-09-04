@@ -8,12 +8,12 @@ v{appversion}
 :sectnumlevels: 5
 :icons: font
 
-include::overview.adoc[]
+include::user-guide/overview.adoc[]
 
-include::installation.adoc[]
+include::user-guide/installation.adoc[]
 
-include::configuring.adoc[]
+include::user-guide/configuring.adoc[]
 
-include::running.adoc[]
+include::user-guide/running.adoc[]
 
-include::appendices.adoc[]
+include::user-guide/appendices.adoc[]

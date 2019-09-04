@@ -10,40 +10,46 @@ ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 bin_PROGRAMS = compactor inspector
 
-dist_doc_DATA = LICENSE.txt ChangeLog.txt KNOWN_ISSUES.txt README.adoc
+dist_doc_DATA = LICENSE.txt ChangeLog.txt KNOWN_ISSUES.txt
 
 if BUILD_DOCS
         dist_man_MANS = doc/compactor.1 doc/inspector.1
-        dist_doc_DATA += doc/user-guide.html
+        dist_doc_DATA += doc/user-guide.html README.html
 endif
 
+common_doc_sources = \
+        doc/user-guide/compactor-command-options.adoc \
+        doc/user-guide/compactor-capture-from-network.adoc \
+        doc/user-guide/compactor-outputs.adoc \
+        doc/user-guide/compactor-query-response-matching.adoc
+
 user_guide_sources = \
-        $(srcdir)/doc/user-guide/user-guide.adoc \
-        $(srcdir)/doc/user-guide/overview.adoc \
-        $(srcdir)/doc/user-guide/installation.adoc \
-        $(srcdir)/doc/user-guide/configuring.adoc \
-        $(srcdir)/doc/user-guide/running.adoc \
-        $(srcdir)/doc/user-guide/appendices.adoc \
-        $(srcdir)/doc/user-guide/compactor-capture-from-network.adoc \
-        $(srcdir)/doc/user-guide/compactor-command-options.adoc \
-        $(srcdir)/doc/user-guide/compactor-outputs.adoc \
-        $(srcdir)/doc/user-guide/compactor-query-response-matching.adoc
+	$(common_doc_sources) \
+        doc/user-guide/overview.adoc \
+        doc/user-guide/installation.adoc \
+        doc/user-guide/configuring.adoc \
+        doc/user-guide/running.adoc \
+        doc/user-guide/appendices.adoc
 
 dslocalstatedir=$(localstatedir)/lib/$(PACKAGE)
 dsconfdir=$(sysconfdir)/$(PACKAGE)
-dsconf_DATA = compactor.conf etc/excluded_fields.conf.sample etc/default_values.conf
-dist_noinst_DATA = etc/compactor.conf.in \
-                   doc/compactor.adoc doc/inspector.adoc \
-                   doc/compactor.adoc.in doc/inspector.adoc.in \
-                   $(user_guide_sources)
+dsconf_DATA = etc/compactor.conf \
+              etc/excluded_fields.conf.sample \
+              etc/default_values.conf
+dist_noinst_DATA = doc/compactor.adoc doc/inspector.adoc
+
 conffile=$(dsconfdir)/compactor.conf
 excludesfile=$(dsconfdir)/excluded_fields.conf
 defaultsfile=$(dsconfdir)/default_values.conf
 
-%.conf :: etc/%.conf.in ; sed -e "s|@DSLOCALSTATEDIR@|$(dslocalstatedir)|g" $< > $@
+%.conf :: %.conf.in ; mkdir -p `dirname $@`; sed -e "s|@DSLOCALSTATEDIR@|$(dslocalstatedir)|g" $< > $@
+%.adoc :: %.adoc.in ; mkdir -p `dirname $@`; sed -e "s|@ETCPATH@|$(dsconfdir)|" -e "s|@VARLIBPATH@|$(dslocalstatedir)|g" $< > $@
 
-doc/inspector.adoc :: doc/inspector.adoc.in ; sed -e "s|@ETCPATH@|$(dsconfdir)|" $< > $@
-doc/compactor.adoc :: doc/compactor.adoc.in ; sed -e "s|@ETCPATH@|$(dsconfdir)|" $< > $@
+%.1 : %.adoc ; @ASCIIDOC@ -b manpage -d manpage -o $@ $<
+%.html : %.adoc ; @ASCIIDOC@ -b html5 -d article -a appversion=$(PACKAGE_VERSION) -o $@ $<
+%.pdf : %.adoc ; @ASCIIDOC@ -b pdf -d article -r asciidoctor-pdf -a appversion=$(PACKAGE_VERSION) -o $@ $<
+
+% :: test-scripts/%.xz ; xz --decompress --to-stdout $< > $@
 
 check_PROGRAMS = compactor-tests
 check_SCRIPTS = test-scripts/check-config-info.sh \
@@ -135,9 +141,12 @@ check_DATA = GeoLite2-ASN.mmdb \
              knot-live.raw.pcap \
              knot-live.ignored.pcap
 
-CLEANFILES = $(check_DATA) $(dist_man_MANS) doc/inspector.adoc doc/compactor.adoc
-
-% :: test-scripts/%.xz ; xz --decompress --to-stdout $< > $@
+CLEANFILES = $(check_DATA) $(dist_man_MANS) \
+	     $(common_doc_sources) \
+	     $(user_guide_sources) \
+	     etc/compactor.conf \
+	     doc/user-guide.html doc/user-guide.pdf \
+	     doc/inspector.adoc doc/compactor.adoc
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
@@ -147,17 +156,20 @@ AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
 	      -DDEFAULTSFILE=\"$(defaultsfile)\" \
               $(OPENSSL_INCLUDES) -DGEOIPDIR=\"$(geoipdir)\"
 
-%.1 :: %.adoc ; @ASCIIDOC@ -b manpage -d manpage -o $@ $<
+doc/user-guide.html: $(user_guide_sources) etc/compactor.conf
+doc/user-guide.pdf: $(user_guide_sources) etc/compactor.conf
 
-doc/user-guide.html : $(user_guide_sources) compactor.conf ; @ASCIIDOC@ -b html5 -d article -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
+doc/compactor.1: $(common_doc_sources)
+doc/inspector.1: $(common_doc_sources)
 
-doc/user-guide.pdf : $(user_guide_sources) compactor.conf ; @ASCIIDOC@ -b pdf -d article -r asciidoctor-pdf -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
+README.html: README.adoc ; @ASCIIDOC@ -b html5 -d article -o $@ $<
 
-.PHONY: user-guide user-guide-html user-guide-pdf
+.PHONY: user-guide user-guide-html user-guide-pdf manpages
 
 user-guide : user-guide-html user-guide-pdf
 user-guide-html : doc/user-guide.html
 user-guide-pdf : doc/user-guide.pdf
+manpages: $(dist_man_MANS)
 
 # To speed builds, build common files into a static library.
 noinst_LIBRARIES = libcdns.a
