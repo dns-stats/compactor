@@ -5,16 +5,7 @@
 The DNS-STATS Compactor project is a suite of applications for
 capturing and working with DNS traffic to a DNS nameserver. It stores
 DNS traffic data in Compacted-DNS (C-DNS), a space-efficient format
-defined in an Internet Draft
-https://datatracker.ietf.org/doc/draft-ietf-dnsop-dns-capture-format[draft-ietf-dnsop-dns-capture-format].
-
-[NOTE]
-====
-The C-DNS draft is a work in progress, and the format subject to
-change. At the time of writing, the version of the draft implemented is
-https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-10[version
-10].
-====
+defined in https://tools.ietf.org/html/rfc8618[RFC8618].
 
 The project was initially developed for for
 https://www.icann.org[ICANN] by https://www.sinodun.com[Sinodun IT],
@@ -73,28 +64,27 @@ resources to perform.
 The DNS-STATS Compactor focuses on the needs of DNS operators
 capturing data in environments where resources (CPU, Upload bandwidth,
 etc.) are restricted.  It writes captured traffic using the
-https://datatracker.ietf.org/doc/draft-ietf-dnsop-dns-capture-format/[C-DNS
-file format]. This format is defined in an Internet Draft, adopted by
-https://tools.ietf.org/wg/dnsop/[the IETF DNSOP working group] in
-November 2016.
+https://tools.ietf.org/html/rfc8618[C-DNS file format].
+This format is defined in RFC8618.
 
 [NOTE]
 ====
 
 _compactor_ writes C-DNS as described in
-https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-10[version
-10] of the draft,  with the following changes:
+https://tools.ietf.org/html/rfc8618[RFC8618],
+with the following changes:
 
 * A private version ID of 1 is present.
 
-_inspector_ reads C-DNS as described in version 10 of
-the draft, and is intended to remain backwards compatible in any
+_inspector_ reads C-DNS as described in RFC8618,
+and two older formats used by previous _compactor_ releases.
+It is intended to remain backwards compatible in any
 future format changes.
 ====
 
 [IMPORTANT]
 ====
-The current release does not support the following facilities defined in the draft:
+The current release does not support the following facilities defined in the RFC:
 
 * Malformed packet data recorded directly into C-DNS.
 ====
