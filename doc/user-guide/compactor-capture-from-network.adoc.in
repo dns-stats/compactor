@@ -33,4 +33,3 @@
 *-L, --log-network-stats-period* _arg_::
   Every _arg_ seconds, log basic statistics on packet collection to the system log. The
   default value of 0 disables this logging.
-  
