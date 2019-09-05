@@ -361,8 +361,8 @@ SCENARIO("CollectionParameters can be written", "[block]")
     GIVEN("A sample CollectionParameters item")
     {
         CollectionParameters cp1;
-        cp1.query_timeout = 1;
-        cp1.skew_timeout = 2;
+        cp1.query_timeout = std::chrono::milliseconds(1);
+        cp1.skew_timeout = std::chrono::microseconds(2);
         cp1.snaplen = 3;
         cp1.promisc = true;
 
@@ -396,8 +396,8 @@ SCENARIO("CollectionParameters can be read", "[block]")
     {
         TestCborDecoder tcbd;
         CollectionParameters cp1;
-        cp1.query_timeout = 1;
-        cp1.skew_timeout = 2;
+        cp1.query_timeout = std::chrono::milliseconds(1);
+        cp1.skew_timeout = std::chrono::microseconds(2);
         cp1.snaplen = 3;
         cp1.promisc = true;
 

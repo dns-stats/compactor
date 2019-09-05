@@ -150,7 +150,7 @@ SCENARIO("Generating output", "[output]")
     Configuration config;
 
     config.output_pattern = "output";
-    config.rotation_period = 60;
+    config.rotation_period = std::chrono::seconds(60);
     config.output_options_queries = 0;
     config.output_options_responses = 0;
 

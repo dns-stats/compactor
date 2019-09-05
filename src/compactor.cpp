@@ -544,8 +544,8 @@ static int run_configuration(const po::variables_map& vm,
                 }
             }
         });
-    matcher.set_query_timeout(std::chrono::seconds(config.query_timeout));
-    matcher.set_skew_timeout(std::chrono::microseconds(config.skew_timeout));
+    matcher.set_query_timeout(config.query_timeout);
+    matcher.set_skew_timeout(config.skew_timeout);
 
     // We assume that network capture is typically a daemon process, and
     // log errors. File conversion, on the other hand, is typically a

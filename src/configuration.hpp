@@ -663,23 +663,23 @@ public:
     unsigned int max_compression_threads;
 
     /**
-     * \brief rotation period for all output files, in seconds.
+     * \brief rotation period for all output files.
      */
-    unsigned int rotation_period;
+    std::chrono::seconds rotation_period;
 
     /**
-     * \brief period in seconds after which a query is deemed to
+     * \brief period after which a query is deemed to
      * not have received a response.
      */
-    unsigned int query_timeout;
+    std::chrono::milliseconds query_timeout;
 
     /**
-     * \brief the maximum time in microseconds to allow for out of
+     * \brief the maximum time to allow for out of
      * temporal order packet delivery. If a response arrives without a
      * query, once a packet arrives with a timestamp this much later,
      * give up hoping for a query to arrive.
      */
-    unsigned int skew_timeout;
+    std::chrono::microseconds skew_timeout;
 
     /**
      * \brief packet capture snap length. See `tcpdump` documentation for more.

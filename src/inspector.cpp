@@ -141,7 +141,7 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
         // Approximate the rotation period with the difference between the first
         // and last timestamps, rounded to the nearest second.
         if ( earliest_time )
-            config.rotation_period = (std::chrono::duration_cast<std::chrono::milliseconds>(*latest_time - *earliest_time).count() + 500) / 1000;
+            config.rotation_period = std::chrono::seconds((std::chrono::duration_cast<std::chrono::milliseconds>(*latest_time - *earliest_time).count() + 500) / 1000);
 
         if ( options.generate_info )
             report(info, config, cbr, backend);

@@ -201,11 +201,11 @@ void BlockCborReader::readConfiguration(Configuration& config)
         switch(fields_->configuration_field(dec_.read_unsigned()))
         {
         case block_cbor::ConfigurationField::query_timeout:
-            config.query_timeout = dec_.read_unsigned();
+            config.query_timeout = std::chrono::milliseconds(dec_.read_unsigned());
             break;
 
         case block_cbor::ConfigurationField::skew_timeout:
-            config.skew_timeout = dec_.read_unsigned();
+            config.skew_timeout = std::chrono::microseconds(dec_.read_unsigned());
             break;
 
         case block_cbor::ConfigurationField::snaplen:

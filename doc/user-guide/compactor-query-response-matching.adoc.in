@@ -2,10 +2,11 @@
 
 *-q, --query-timeout* _SECONDS_::
   If no response is found for a query after _SECONDS_, time out the query. The default
-  timeout is 5 seconds.
+  timeout is 5 seconds. Fractional values of _SECONDS_ down to milliseconds
+  may be given.
 
 *-k, --skew-timeout* _MICROSECONDS_::
   Due to the vagaries of the network stack, it is possible for responses to be reported
   before the matching query, even though the query has an earlier timestamp than
   the response. A response is not considered to be missing a query until
-  after _MICROSECONDS_. The default  timeout is 10 microseconds.
+  after _MICROSECONDS_. The default timeout is 10 microseconds.

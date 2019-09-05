@@ -10,6 +10,7 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+#include <cmath>
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
@@ -289,7 +290,7 @@ Configuration::Configuration()
       xz_pcap(false), xz_preset_pcap(6),
       max_compression_threads(2),
       rotation_period(300),
-      query_timeout(5), skew_timeout(10),
+      query_timeout(5000), skew_timeout(10),
       snaplen(65535),
       promisc_mode(false),
       output_options_queries(0), output_options_responses(0),
@@ -347,13 +348,13 @@ Configuration::Configuration()
 
     config_file_options_.add_options()
         ("rotation-period,t",
-         po::value<unsigned int>(&rotation_period)->default_value(300),
+         po::value<unsigned int>(),
          "rotation period for all outputs, in seconds.")
         ("query-timeout,q",
-         po::value<unsigned int>(&query_timeout)->default_value(5),
+         po::value<float>(),
          "timeout period for unanswered queries, in seconds.")
         ("skew-timeout,k",
-         po::value<unsigned int>(&skew_timeout)->default_value(10),
+         po::value<unsigned int>(),
          "timeout period for a query to arrive after its response, in microseconds.")
         ("snaplen,s",
          po::value<unsigned int>(&snaplen)->default_value(65535),
@@ -527,13 +528,13 @@ void Configuration::dump_config(std::ostream& os) const
     bool first = true;
 
     os << "CONFIGURATION:\n"
-       << "  Query timeout        : " << query_timeout << " seconds\n"
-       << "  Skew timeout         : " << skew_timeout << " microseconds\n"
+       << "  Query timeout        : " << query_timeout.count() / 1000.0 << " seconds\n"
+       << "  Skew timeout         : " << skew_timeout.count() << " microseconds\n"
        << "  Snap length          : " << snaplen << "\n"
        << "  Max block items      : " << max_block_items << "\n";
     if ( max_output_size.size > 0 )
         os << "  Max output size      : " << max_output_size.size << "\n";
-    os << "  File rotation period : " << rotation_period << "\n"
+    os << "  File rotation period : " << rotation_period.count() << "\n"
        << "  Promiscuous mode     : " << (promisc_mode ? "On" : "Off") << "\n"
        << "  Capture interfaces   : ";
     for ( const auto& i : network_interfaces )
@@ -662,6 +663,13 @@ void Configuration::set_config_items(const po::variables_map& vm)
     accept_rr_types.clear();
     if ( vm.count("accept-rr-type") )
         set_rr_type_config(accept_rr_types, vm["accept-rr-type"].as<std::vector<std::string>>());
+
+    if ( vm.count("rotation-period") )
+        rotation_period = std::chrono::seconds(vm["rotation-period"].as<unsigned int>());
+    if ( vm.count("query-timeout") )
+        query_timeout = std::chrono::milliseconds(std::lround(vm["query-timeout"].as<float>() * 1000));
+    if ( vm.count("skew-timeout") )
+        skew_timeout = std::chrono::microseconds(vm["skew-timeout"].as<unsigned int>());
 
     for ( const auto& ifname : network_interfaces )
         check_network_interface(ifname);

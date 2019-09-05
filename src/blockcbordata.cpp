@@ -339,11 +339,11 @@ namespace block_cbor {
                 switch(fields.collection_parameters_field(dec.read_unsigned()))
                 {
                 case CollectionParametersField::query_timeout:
-                    query_timeout = dec.read_unsigned();
+                    query_timeout = std::chrono::milliseconds(dec.read_unsigned());
                     break;
 
                 case CollectionParametersField::skew_timeout:
-                    skew_timeout = dec.read_unsigned();
+                    skew_timeout = std::chrono::microseconds(dec.read_unsigned());
                     break;
 
                 case CollectionParametersField::snaplen:
@@ -405,14 +405,10 @@ namespace block_cbor {
         constexpr int host_id_index = find_collection_parameters_index(CollectionParametersField::host_id);
 
         enc.writeMapHeader();
-        enc.write(query_timeout_index);
-        enc.write(query_timeout);
-        enc.write(skew_timeout_index);
-        enc.write(skew_timeout);
-        enc.write(snaplen_index);
-        enc.write(snaplen);
-        enc.write(promisc_index);
-        enc.write(promisc);
+        enc.write(query_timeout_index, query_timeout.count());
+        enc.write(skew_timeout_index, skew_timeout.count());
+        enc.write(snaplen_index, snaplen);
+        enc.write(promisc_index, promisc);
         if ( !interfaces.empty() )
         {
             enc.write(interfaces_index);
@@ -432,18 +428,15 @@ namespace block_cbor {
         }
         if ( !filter.empty() )
         {
-            enc.write(filter_index);
-            enc.write(filter);
+            enc.write(filter_index, filter);
         }
         if ( !generator_id.empty() )
         {
-            enc.write(generator_id_index);
-            enc.write(generator_id);
+            enc.write(generator_id_index, generator_id);
         }
         if ( !host_id.empty() )
         {
-            enc.write(host_id_index);
-            enc.write(host_id);
+            enc.write(host_id_index, host_id);
         }
         enc.writeBreak();
     }

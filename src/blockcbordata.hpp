@@ -61,8 +61,8 @@ namespace block_cbor {
         const unsigned DEFAULT_IPV6_PREFIX_LENGTH = 128;
 
         // Defaults for collection parameters.
-        const unsigned DEFAULT_QUERY_TIMEOUT = 5;
-        const unsigned DEFAULT_SKEW_TIMEOUT = 10;
+        const std::chrono::milliseconds DEFAULT_QUERY_TIMEOUT(5000);
+        const std::chrono::microseconds DEFAULT_SKEW_TIMEOUT(10);
         const unsigned DEFAULT_SNAPLEN = 65535;
         const unsigned DEFAULT_PROMISC = false;
     }
@@ -328,10 +328,10 @@ namespace block_cbor {
         { }
 
         /**
-         * \brief period in seconds after which a query is deemed to
+         * \brief period in milliseconds after which a query is deemed to
          * not have received a response.
          */
-        unsigned query_timeout;
+        std::chrono::milliseconds query_timeout;
 
         /**
          * \brief the maximum time in microseconds to allow for out of
@@ -339,7 +339,7 @@ namespace block_cbor {
          * query, once a packet arrives with a timestamp this much later,
          * give up hoping for a query to arrive.
          */
-        unsigned skew_timeout;
+        std::chrono::microseconds skew_timeout;
 
         /**
          * \brief packet capture snap length. See `tcpdump` documentation for more.

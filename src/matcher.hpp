@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -49,7 +49,7 @@ public:
      * \param skew_timeout  timeout period for out of order packet delivery.
      */
     QueryResponseMatcher(Sink sink,
-                         std::chrono::seconds query_timeout = std::chrono::seconds(10),
+                         std::chrono::milliseconds query_timeout = std::chrono::milliseconds(10000),
                          std::chrono::microseconds skew_timeout = std::chrono::microseconds(10));
 
     /**
@@ -83,7 +83,7 @@ public:
      *
      * \param t the new query timeout value.
      */
-    void set_query_timeout(std::chrono::seconds t);
+    void set_query_timeout(std::chrono::milliseconds t);
 
     /**
      * \brief Set the skew timeout value to be used.
@@ -159,7 +159,7 @@ private:
     /**
      * \brief the query timeout period.
      */
-    std::chrono::seconds query_timeout_;
+    std::chrono::milliseconds query_timeout_;
 
     /**
      * \brief the skew timeout period.
