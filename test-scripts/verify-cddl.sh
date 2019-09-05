@@ -8,7 +8,7 @@
 
 COMP=./compactor
 DATAFILE=./gold.pcap
-CDDL=$srcdir/doc/c-dns-working.cddl
+CDDL=$srcdir/doc/c-dns.cddl
 
 command -v cddl > /dev/null 2>&1 || { echo "No cddl, skipping test." >&2; exit 77; }
 command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }

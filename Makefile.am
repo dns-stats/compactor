@@ -86,7 +86,7 @@ else
                               test-scripts/pseudoanon-inspector-output.sh
 endif
 
-dist_check_DATA = doc/c-dns-working.cddl \
+dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/GeoLite2-ASN.mmdb.xz \
                   test-scripts/GeoLite2-City.mmdb.xz \
                   test-scripts/dns.pcap.xz \
