@@ -31,7 +31,7 @@ tmpdir=`mktemp -d -t "check-testcontent-exclude.XXXXXX"`
 
 cleanup()
 {
-    #rm -rf $tmpdir
+    rm -rf $tmpdir
     exit $1
 }
 
