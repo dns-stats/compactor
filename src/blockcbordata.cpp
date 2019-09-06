@@ -1619,7 +1619,6 @@ namespace block_cbor {
         }
     }
 
-    // cppcheck-suppress unusedFunction
     void BlockData::readMalformedMessageItems(CborBaseDecoder& dec, const FileVersionFields& fields)
     {
         const BlockParameters& block_parameters = block_parameters_[block_parameters_index];
@@ -1810,7 +1809,6 @@ namespace block_cbor {
         }
     }
 
-    // cppcheck-suppress unusedFunction
     void BlockData::writeMalformedMessageItems(CborBaseEncoder& enc)
     {
         constexpr int malformed_messages_index = find_block_index(BlockField::malformed_messages);

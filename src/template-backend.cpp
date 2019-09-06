@@ -30,7 +30,6 @@ namespace
     class CStringModifier : public ctemplate::TemplateModifier
     {
     public:
-        // cppcheck-suppress unusedFunction
         virtual void Modify(const char* in, size_t inlen,
                             const ctemplate::PerExpandData* per_expand_data,
                             ctemplate::ExpandEmitter* out,

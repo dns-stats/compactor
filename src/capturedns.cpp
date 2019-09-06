@@ -176,7 +176,6 @@ void CaptureDNS::EDNS0::extract_options(const byte_string& data)
     }
 }
 
-// cppcheck-suppress unusedFunction
 Tins::PDU::metadata CaptureDNS::extract_metadata(const uint8_t *, uint32_t total_sz) {
     if (TINS_UNLIKELY(total_sz < sizeof(dns_header))) {
         throw Tins::malformed_packet();
@@ -1150,7 +1149,6 @@ namespace {
 
 // This is used by libtins only.
 #ifdef HAVE_LIBTINS4
-// cppcheck-suppress unusedFunction
 void CaptureDNS::write_serialization(uint8_t* buffer, uint32_t total_sz)
 #else
 void CaptureDNS::write_serialization(uint8_t* buffer, uint32_t total_sz, const PDU *)
@@ -1168,7 +1166,6 @@ void CaptureDNS::write_serialization(uint8_t* buffer, uint32_t total_sz, const P
 }
 
 // This is used by libtins only.
-// cppcheck-suppress unusedFunction
 uint32_t CaptureDNS::header_size() const
 {
     // libtins calls this function frequently, expecting it to be

@@ -355,8 +355,9 @@ CPPCHECK_INCLUDE_DIRS = -I$(srcdir)/src
 CPPCHECK_CMD = cppcheck \
         --std=c++11 --language=c++ \
         --xml --xml-version=2 \
-        --inline-suppr
-CPPCHECK_FLAGS = -U DLT_PKTAP --suppress=missingIncludeSystem
+	--relative-paths=$(srcdir) \
+        --suppressions-list=$(srcdir)/cppcheck-suppressions.txt
+CPPCHECK_FLAGS = -U DLT_PKTAP
 
 cppcheck: ; $(CPPCHECK_CMD) $(CPPCHECK_INCLUDE_DIRS) $(CPPCHECK_FLAGS) --enable=all $(CPPCHECK_DIRS)
 

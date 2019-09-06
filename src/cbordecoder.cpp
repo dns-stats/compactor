@@ -163,7 +163,6 @@ uint64_t CborBaseDecoder::readMapHeader(bool& indefinite_length)
 }
 
 // Present for completeness. Not currently used.
-// cppcheck-suppress unusedFunction
 uint64_t CborBaseDecoder::read_tag()
 {
     unsigned major, minor;
@@ -179,7 +178,6 @@ uint64_t CborBaseDecoder::read_tag()
 }
 
 // Present for completeness. Not currently used.
-// cppcheck-suppress unusedFunction
 uint8_t CborBaseDecoder::readSimple()
 {
     unsigned major, minor;
@@ -195,7 +193,6 @@ uint8_t CborBaseDecoder::readSimple()
 }
 
 // Present for completeness. Not currently used.
-// cppcheck-suppress unusedFunction
 double CborBaseDecoder::read_float()
 {
     needRead();

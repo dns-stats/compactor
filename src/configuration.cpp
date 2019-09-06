@@ -251,7 +251,6 @@ namespace {
  * @param val1          compiler workaround.
  * @param val2          compiler workaround.
  */
-// cppcheck-suppress unusedFunction
 void validate(boost::any& v, const std::vector<std::string>& values,
               Size* val1, int val2)
 {
@@ -1346,35 +1345,35 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
     std::chrono::nanoseconds time_offset;
     std::chrono::nanoseconds response_delay;
     IPAddress client_address;
-    uint16_t client_port;
-    unsigned client_hoplimit;
+    uint16_t client_port = 0;
+    unsigned client_hoplimit = 0;
     IPAddress server_address;
-    uint16_t server_port;
+    uint16_t server_port = 0;
     block_cbor::TransportFlags transport;
-    uint16_t transaction_id;
+    uint16_t transaction_id = 0;
     CaptureDNS::Opcode query_opcode;
     CaptureDNS::Rcode query_rcode;
     block_cbor::DNSFlags dns_flags;
     CaptureDNS::Rcode response_rcode;
-    uint16_t query_qdcount;
-    uint16_t query_ancount;
-    uint16_t query_arcount;
-    uint16_t query_nscount;
+    uint16_t query_qdcount = 0;
+    uint16_t query_ancount = 0;
+    uint16_t query_arcount = 0;
+    uint16_t query_nscount = 0;
     byte_string query_name;
     CaptureDNS::QueryClass query_class;
     CaptureDNS::QueryType query_type;
-    uint32_t rr_ttl;
+    uint32_t rr_ttl = 0;
     byte_string rr_rdata;
-    uint16_t query_udp_size;
+    uint16_t query_udp_size = 0;
     byte_string query_opt_rdata;
-    unsigned query_edns_version;
-    block_cbor::QueryResponseType qr_type;
+    unsigned query_edns_version = 0;
+    block_cbor::QueryResponseType qr_type = block_cbor::QueryResponseType::client;
     std::string response_processing_bailiwick;
-    bool response_processing_from_cache;
-    uint16_t query_size;
-    uint16_t response_size;
-    AddressEvent::EventType ae_type;
-    unsigned ae_code;
+    bool response_processing_from_cache = false;
+    uint16_t query_size = 0;
+    uint16_t response_size = 0;
+    AddressEvent::EventType ae_type = AddressEvent::TCP_RESET;
+    unsigned ae_code = 0;
     IPAddress ae_address;
 
     opt.add_options()

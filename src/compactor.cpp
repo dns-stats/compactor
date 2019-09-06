@@ -252,9 +252,7 @@ static void sniff_loop(BaseSniffers* sniffer,
                        PacketStatistics& stats)
 {
     bool seen_raw_overflow = false;
-    // cppcheck-suppress variableScope
     bool seen_ignored_overflow = false;
-    // cppcheck-suppress variableScope
     bool seen_ae_overflow = false;
 
     bool do_raw_pcap = !config.raw_pcap_pattern.empty();
@@ -289,7 +287,6 @@ static void sniff_loop(BaseSniffers* sniffer,
                     if ( !seen_ae_overflow )
                     {
                         LOG_ERROR << "C-DNS overflow. Dropping address event(s)";
-                        // cppcheck-suppress unreadVariable
                         seen_ae_overflow = true;
                     }
                 }
@@ -307,7 +304,6 @@ static void sniff_loop(BaseSniffers* sniffer,
                     if ( !seen_ignored_overflow )
                     {
                         LOG_ERROR << "Ignored PCAP overflow. Dropping packet(s)";
-                        // cppcheck-suppress unreadVariable
                         seen_ignored_overflow = true;
                     }
                 }
@@ -511,7 +507,6 @@ static int run_configuration(const po::variables_map& vm,
     sniff_config.set_chan_max_size(config.max_channel_size);
 
     PacketStatistics stats{};
-    // cppcheck-suppress variableScope
     bool seen_qr_overflow = false;
 
     QueryResponseMatcher matcher(
@@ -538,7 +533,6 @@ static int run_configuration(const po::variables_map& vm,
                     if ( !seen_qr_overflow )
                     {
                         LOG_ERROR << "C-DNS overflow. Dropping query/response(s)";
-                        // cppcheck-suppress unreadVariable
                         seen_qr_overflow = true;
                     }
                 }
