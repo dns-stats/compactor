@@ -444,7 +444,7 @@ static std::unique_ptr<PcapBaseRotatingWriter> make_pcap_writer(const std::strin
  * \param config      the configuration values.
  * \param threads     a vector for all program threads.
  * \param writer_pool pool of compression threads.
- * \returns 0 on normal exit, 1 on SIGHUP, 2 on SIGINT.
+ * \returns 0 on normal exit, 1 on SIGHUP, 2 on SIGINT, 3 on sniffer error.
  */
 static int run_configuration(const po::variables_map& vm,
                              const Configuration& config,
@@ -545,6 +545,7 @@ static int run_configuration(const po::variables_map& vm,
     // log errors. File conversion, on the other hand, is typically a
     // manual process, and so errors go to stderr.
     bool log_errs = ( !vm.count("capture-file") );
+    int res = 0;
 
     try
     {
@@ -569,19 +570,20 @@ static int run_configuration(const po::variables_map& vm,
     catch (const Tins::pcap_error& err)
     {
         if ( log_errs )
-            LOG_ERROR << err.what();
+            LOG_ERROR << "PCAP Error: " << err.what();
         else
-            std::cerr << "Error: " << err.what() << std::endl;
+            std::cerr << "PCAP Error: " << err.what() << std::endl;
+        res = 3;
     }
     catch (const Tins::invalid_pcap_filter& err)
     {
         if ( log_errs )
-            LOG_ERROR << err.what();
+            LOG_ERROR << "Invalid PCAP filter:" << err.what();
         else
-            std::cerr << "Invalid filter: " << err.what() << std::endl;
+            std::cerr << "Invalid PCAP filter: " << err.what() << std::endl;
+        res = 3;
     }
 
-    int res = 0;
     switch(signal_handler_signal)
     {
     case 0:
@@ -730,6 +732,9 @@ int main(int ac, char *av[])
         for ( auto& thread : threads )
             if ( thread.joinable() )
                 thread.join();
+
+        if ( res != 0 )
+            return 1;
     }
     catch (po::error& err)
     {
