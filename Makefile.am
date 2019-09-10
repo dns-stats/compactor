@@ -36,6 +36,9 @@ dsconfdir=$(sysconfdir)/$(PACKAGE)
 dsconf_DATA = etc/compactor.conf \
               etc/excluded_fields.conf.sample \
               etc/default_values.conf
+dist_dsconf_DATA = etc/compactor.conf \
+              etc/excluded_fields.conf.sample \
+              etc/default_values.conf
 dist_noinst_DATA = doc/compactor.adoc doc/inspector.adoc
 
 conffile=$(dsconfdir)/compactor.conf
@@ -157,8 +160,8 @@ AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
 	      -DDEFAULTSFILE=\"$(defaultsfile)\" \
               $(OPENSSL_INCLUDES) -DGEOIPDIR=\"$(geoipdir)\"
 
-doc/user-guide.html: $(user_guide_sources) etc/compactor.conf
-doc/user-guide.pdf: $(user_guide_sources) etc/compactor.conf
+doc/user-guide.html: $(user_guide_sources) etc/compactor.conf etc/excluded_fields.conf.sample etc/default_values.conf
+doc/user-guide.pdf: $(user_guide_sources) etc/compactor.conf etc/excluded_fields.conf.sample etc/default_values.conf
 
 doc/compactor.1: $(common_doc_sources)
 doc/inspector.1: $(common_doc_sources)

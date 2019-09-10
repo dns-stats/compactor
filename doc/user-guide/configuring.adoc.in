@@ -293,6 +293,10 @@ which fields are to be excluded from the C-DNS output. In the sample all the fie
 fields would be collected in the C-DNS.
 The fields are specified in logical groups. 
 
+----
+include::../../../etc/excluded_fields.conf.sample[]
+----
+
 === Configuring _compactor_ daemon startup
 
 All binary packages of _compactor_ include startup setup allowing
