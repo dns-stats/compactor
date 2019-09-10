@@ -63,23 +63,43 @@ resources to perform.
 
 The DNS-STATS Compactor focuses on the needs of DNS operators
 capturing data in environments where resources (CPU, Upload bandwidth,
-etc.) are restricted.  It writes captured traffic using the
-https://tools.ietf.org/html/rfc8618[C-DNS file format].
-This format is defined in RFC8618.
+etc.) are restricted.
+
+The C-DNS file format is designed for efficiently recording DNS traffic information:
+
+* It only captures transport level information likely to be of interest to
+  a DNS operator.
+* It is highly flexible and can be configured to capture only specific pieces of
+  data, basic query and response information, or additional details up to the
+  entire DNS payload. See <<configuring.adoc#_configuring,Configuring>>.
+* It performs DNS-specific compression internally to produce files that are
+  significantly smaller than raw PCAP files even when full payloads are
+  captured.
+
+==== C-DNS versioning
+
+From version 1.0 DNS-STATS Compactor writes and reads captured traffic using the
+https://tools.ietf.org/html/rfc8618[1.0 C-DNS file format] as defined in
+RFC8618.
+
+Previous versions of the DNS-STATS Compactor implemented earlier, more
+contstrained versions of the draft specification. To support backwards
+compatibility _inspector_ reads:
+
+* Version 1.0 of C-DNS as described in RFC8618 and 
+* The two older formats (0.2 and 0.5) used by the previous _compactor_ releases (see below for details of important differences). 
+
+It is intended to remain backwards compatible in any future format changes.
 
 [NOTE]
 ====
 
-_compactor_ writes C-DNS as described in
+_compactor_ 1.0 and later writes C-DNS as described in
 https://tools.ietf.org/html/rfc8618[RFC8618],
 with the following changes:
 
 * A private version ID of 1 is present.
 
-_inspector_ reads C-DNS as described in RFC8618,
-and two older formats used by previous _compactor_ releases.
-It is intended to remain backwards compatible in any
-future format changes.
 ====
 
 [IMPORTANT]
@@ -87,30 +107,39 @@ future format changes.
 The current release does not support the following facilities defined in the RFC:
 
 * Malformed packet data recorded directly into C-DNS.
+* qr-type field
+* response-processing-data field
 ====
 
-The C-DNS file format is designed for efficiently recording DNS traffic information:
+===== Changes in version 1.0 DNS-STATS Compactor
 
-* It only captures transport level information likely to be of interest to
-  a DNS operator.
-* By default it captures only basic query and response information,
-  but can optionally capture selected additional details up to the
-  entire DNS payload.  See <<configuring.adoc#_configuring,Configuring>>.
-* Performs DNS-specific compression internally to produce files that
-  are significantly smaller than raw PCAP files.
+One significant change between the draft C-DNS specification used in earlier
+version of the DNS-STATS Compactor and the RFC8618 specification used in version
+1.0 and later is that virtually every piece of data is now optional to capture.
+In contrast, the earlier versions required a fixed subset of data to always be
+captured with the option to include additional data. Whilst adding flexibility
+to the format is also adds some complexity in terms of configuration and PCAP
+regeneration.
 
-[NOTE]
-====
-These files can then be compressed using general purpose compression,
-producing files that are typically less than half the size of compressed
-raw PCAP files, while using a fraction of the CPU resources used by
-compressing raw PCAP.
-====
+Several things should be noted as a result of specification update:
+
+* The default behaviour in terms of which data is collected will not change in 1.0 DNS-STATS Compactor, all additional sections are still collected.
+* The use of *include* options to capture additional data is deprecated in 1.0 and will be removed in a future release. Users can instead use the more flexible *excluded_fields* file to better customise catpured data (see XXXXXX)
+* For v1.0 C-DNS files that capture less than the minimum subset of data defined in the 0.2 and 0.5 versions, PCAP regeneration becomes more complex and requires some default values to generate sane PCAPS (see XXXXX). 
+
+==== General purpose compression
+DNS-STATS Compactor provides options to then compress the C-DNS files using
+general purpose compression, producing files that are typically less than half
+the size of compressed raw PCAP files, while using a fraction of the CPU
+resources used by compressing raw PCAP.
 
 === Support
 
 Bug reports and feature requests can be submitted via the issue tracker:
 https://github.com/dns-stats/compactor/issues
+
+Known Issues are documented at
+https://github.com/dns-stats/compactor/blob/master/KNOWN_ISSUES.txt
 
 A mailing list is available for users:
 https://mm.dns-stats.org/mailman/listinfo/dns-stats-users

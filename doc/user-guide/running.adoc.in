@@ -379,7 +379,7 @@ NOTE: The -q option will only write DNS queries to the output PCAP file.
 
 Most fields in C-DNS are optional. See the <<excludes>> and the deprecated <<options>> setting for _compactor_. When converting C-DNS to PCAPs or templated text output it may be necessary to fill in those omitted fields with default values.
 
-In order for the inspector to be able to generate sane PCAP files from C-DNS with any set of excluded fields a default values file must be present and must contain the full set of default values. If this file is not present or doesn't contain the required default values _inspector_ will exit with an error.
+In order for the inspector to be able to generate sane PCAP files from C-DNS with any set of *excluded_fields* a default values file must be present and must contain the full set of default values. If this file is not present or doesn't contain the required default values _inspector_ will exit with an error.
 
 ==== Default values file location
 
@@ -404,7 +404,7 @@ dns-flags=query-rd response-ra
 
 NOTE: `dns-flags` is the only default that can have no value specified in order to set all flags to 0. It is also the only default that can have multiple values.
 
-==== Combining excluded fields, default values and pcap-filters
+==== Combining *excluded_fields*, default values and pcap-filters
 
 The resulting PCAPs produced by excluding response fields:
 ----

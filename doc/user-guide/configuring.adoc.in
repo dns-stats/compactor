@@ -99,7 +99,7 @@ they expand to, is in the *strftime*(3) manual page. Some of the
 commonly used ones are given below, with expansions for a date and
 time of Monday January 16th 2017 at 13:18:05.
 
-[cols="3*"]
+[cols="1,3,1"]
 |===
 | `%y`
 | The year, not including the century.
@@ -145,7 +145,7 @@ time of Monday January 16th 2017 at 13:18:05.
 Not all configuration items can be used in a configuration expansion. The
 items that can be used are as follows.
 
-[cols="3*"]
+[cols="1,3,1"]
 |===
 | `%{interface1}`
 | The name of the first configured interface. `interface2` gives the second
@@ -211,8 +211,8 @@ collecting from interfaces `eth0` and `eth1` this will write to
   included in the C-DNS output. This argument can be given multiple
   times. If no include is specified then none of these optional sections are included.
 
-IMPORTANT: The use of *include* lines is deprecated and will be removed in a future major release.
-This functionality will move to the new excluded fields file. See <<excludes>>.
+IMPORTANT: The use of *include* lines is deprecated in v1.0 and will be removed in a future major release.
+The functionality to control what data is captured has moved to the new *excluded_fields* file. See <<excludes>>.
 
 [cols="2*",options="header"]
 |===
@@ -262,36 +262,44 @@ include=all
 ----
 
 [[excludes]]
-=== _compactor_ excluded fields file
+=== _compactor_ *excluded_fields* file
 
-The excluded fields file replaces the deprecated *include* functionality currently found in the configuration file.
+The *excluded_fields* file replaces the deprecated *include* functionality
+currently found in the configuration file. By default in v1.0 this file is not
+used, the deprecated *include* functionality is still used for backwards
+compatibilty.
 
-IMPORTANT: Users must use either the deprecated *include* configuration options or the new excluded fields file.
+IMPORTANT: Users must use either the deprecated *include* configuration options
+or the new *excluded_fields* file. They cannot be combined. If the
+*excluded_fields* file exists AND there are *include* lines in the configuration
+file (or provided on the command line) an error will be logged and _compactor_
+will exit.
 
-If the excluded fields file exists and there are *include* lines in the configuration file or provided on the command
-line an error will be logged and _compactor_ will exit. 
+If the *excluded_fields* file does exists the _compactor_ will act as if
+*include=all* was present. The *excluded_fields* file then controls what fields
+are *excluded* from the C-DNS output.
 
-If the excluded fields file exists then _compactor_ will act as if *include=all* was present. The excluded fields
-file then controls what fields are *excluded* from the C-DNS output.
+NOTE: The *excluded_fields* are stored in the C-DNS file as 'StoreageHints' for _inspector_ to use when processing C-DNS file, see Sections 6.2.1 and 7.3.1.1.1.1 in RFC8616 for more details. 
 
-The excluded fields are stored in the C-DNS file as hints for _inspector_ to use when processing C-DNS files.
+==== *Excluded_fields* file location
 
-==== Excluded fields file location
-
-On startup, _compactor_ looks for a excluded fields file. By default this is named `excluded_fields.conf`, and is
-located in a `dns-stats-compactor` system configuration directory. A different location can specified on the command
-line by using the _compactor --excludesfile_ option.
-
-If installed from a binary package on Linux, a sample excluded fields file will be at 
-`@ETCPATH@/excluded_fields.conf.sample`
+On startup, _compactor_ looks for a *excluded_fields* file named
+`excluded_fields.conf` located in a `dns-stats-compactor` system configuration
+directory. A different file name and location can specified on the command line 
+by using the _compactor --excludesfile_ option.
 
 ==== Default configuration
 
-Both installing via binary packages and installing using the source distribution will install a sample
-`excluded_fields.conf.sample` file. This file (with the .sample ending removed) can be used to specify
-which fields are to be excluded from the C-DNS output. In the sample all the fields are commented out so all 
-fields would be collected in the C-DNS.
-The fields are specified in logical groups. 
+By default only a sample *excluded_fields* file is provided.
+If installed from a binary package on Linux, the file will be at
+`@ETCPATH@/excluded_fields.conf.sample`.
+
+This file (with the .sample extension removed) can be used to specify which
+fields are to be excluded from the C-DNS capture (assuming the *include* option
+is not used). In the sample all the fields are commented out so all fields
+would be collected in the C-DNS capture, which gives the same behaviour as *include=all*.
+
+The fields are specified in logical groups. As noted, excluding some data could have implications for PCAP regeneration, see XXXXX.
 
 ----
 include::../../../etc/excluded_fields.conf.sample[]
