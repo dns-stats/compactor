@@ -24,7 +24,7 @@ tmpdir=`mktemp -d -t "check-query-only.XXXXXX"`
 
 cleanup()
 {
-    #rm -rf $tmpdir
+    rm -rf $tmpdir
     exit $1
 }
 
