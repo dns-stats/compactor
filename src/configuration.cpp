@@ -1329,6 +1329,7 @@ namespace std {
 }
 
 Defaults::Defaults()
+    : defaults_file_read(false)
 {
 }
 
@@ -1444,6 +1445,7 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         if ( defaults.fail() )
             throw po::error("Can't open defaults file " + defaultsfile);
         po::store(po::parse_config_file(defaults, opt), res);
+        defaults_file_read = true;
     }
 
     po::notify(res);

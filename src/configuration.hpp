@@ -231,6 +231,15 @@ public:
      */
     boost::optional<IPAddress> ae_address;
 
+    /*
+     * Defaults meta-info.
+     */
+
+    /**
+     * \brief was a defaults file read?
+     */
+    bool defaults_file_read;
+
     /**
      * \brief Default Constructor.
      */

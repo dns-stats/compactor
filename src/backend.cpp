@@ -520,6 +520,9 @@ void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
             comma = true;
         }
 
+        if ( !opts_.defaults.defaults_file_read )
+            report.append(" (no defaults file found)");
+
         throw pcap_defaults_backend_error(report);
     }
 }
