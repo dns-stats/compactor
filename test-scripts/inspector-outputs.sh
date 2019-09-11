@@ -15,6 +15,7 @@ DATAFILE=./dns.pcap
 
 command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }
 command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
+command -v tail > /dev/null 2>&1 || { echo "No tail, skipping test." >&2; exit 77; }
 
 tmpdir=`mktemp -d -t "inspector-outputs.XXXXXX"`
 
