@@ -17,6 +17,10 @@
   in *pcap-filter*(7). Packets are discarded at the point of capture; discarded packets
   do not appear in any ignored PCAP output file.
 
+*--dns-port* _arg_::
+  Traffic to or from port _arg_ is DNS traffic and should be recorded. Traffic to
+  other ports is ignored. The default is 53.
+
 *-s, --snaplen* _arg_::
   Capture up to _arg_ bytes per packet. The default is 65535.
 

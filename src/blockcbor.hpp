@@ -389,6 +389,7 @@ namespace block_cbor {
         filter,
         generator_id,
         host_id,
+        dns_port,
 
         unknown = -1
     };
@@ -831,6 +832,17 @@ namespace block_cbor {
     };
 
     /**
+     * \brief Map of current private (implementation-specific) collection
+     * parameters indexes.
+     *
+     * The index of a entry in the array subtracted from -1 is the map
+     * value of that entry.
+     */
+    constexpr CollectionParametersField format_10_collection_parameters_private[] = {
+        CollectionParametersField::dns_port,
+    };
+
+    /**
      * \brief find map index of collection parameters fields for current format.
      *
      * \param index the field identifier.
@@ -839,7 +851,7 @@ namespace block_cbor {
      */
     constexpr int find_collection_parameters_index(CollectionParametersField index)
     {
-        return find_index(format_10_collection_parameters, index);
+        return find_index(format_10_collection_parameters, format_10_collection_parameters_private, index);
     }
 
     /**
@@ -1536,6 +1548,11 @@ namespace block_cbor {
          * \brief collection parameters index map.
          */
         std::vector<CollectionParametersField> collection_parameters_;
+
+        /**
+         * \brief collection parameters private index map.
+         */
+        std::vector<CollectionParametersField> collection_parameters_private_;
 
         /**
          * \brief block parameters index map.

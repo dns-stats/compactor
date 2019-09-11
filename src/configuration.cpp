@@ -290,6 +290,7 @@ Configuration::Configuration()
       max_compression_threads(2),
       rotation_period(300),
       query_timeout(5000), skew_timeout(10),
+      dns_port(53),
       snaplen(65535),
       promisc_mode(false),
       output_options_queries(0), output_options_responses(0),
@@ -355,6 +356,9 @@ Configuration::Configuration()
         ("skew-timeout,k",
          po::value<unsigned int>(),
          "timeout period for a query to arrive after its response, in microseconds.")
+        ("dns-port",
+         po::value<unsigned int>(&dns_port)->default_value(53),
+         "traffic to/from this port is DNS traffic.")
         ("snaplen,s",
          po::value<unsigned int>(&snaplen)->default_value(65535),
          "capture this many bytes per packet.")
@@ -530,6 +534,7 @@ void Configuration::dump_config(std::ostream& os) const
        << "  Query timeout        : " << query_timeout.count() / 1000.0 << " seconds\n"
        << "  Skew timeout         : " << skew_timeout.count() << " microseconds\n"
        << "  Snap length          : " << snaplen << "\n"
+       << "  DNS port             : " << dns_port << "\n"
        << "  Max block items      : " << max_block_items << "\n";
     if ( max_output_size.size > 0 )
         os << "  Max output size      : " << max_output_size.size << "\n";
@@ -854,6 +859,7 @@ void Configuration::populate_block_parameters(block_cbor::BlockParameters& bp) c
     cp.query_timeout = query_timeout;
     cp.skew_timeout = skew_timeout;
     cp.snaplen = snaplen;
+    cp.dns_port = dns_port;
     cp.promisc = promisc_mode;
 
     for ( const auto& s : network_interfaces )
@@ -914,6 +920,7 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
     query_timeout = cp.query_timeout;
     skew_timeout = cp.skew_timeout;
     snaplen = cp.snaplen;
+    dns_port = cp.dns_port;
     promisc_mode = cp.promisc;
 
     for ( const auto& s : cp.interfaces )

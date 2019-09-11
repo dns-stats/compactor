@@ -677,6 +677,11 @@ public:
     std::chrono::seconds rotation_period;
 
     /**
+     * \brief port for DNS traffic.
+     */
+    unsigned int dns_port;
+
+    /**
      * \brief period after which a query is deemed to
      * not have received a response.
      */

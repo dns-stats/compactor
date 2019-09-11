@@ -400,6 +400,7 @@ namespace block_cbor {
           storage_hints_(format_10_storage_hints, format_10_storage_hints + countof(format_10_storage_hints)),
           storage_parameters_(format_10_storage_parameters, format_10_storage_parameters + countof(format_10_storage_parameters)),
           collection_parameters_(format_10_collection_parameters, format_10_collection_parameters + countof(format_10_collection_parameters)),
+          collection_parameters_private_(format_10_collection_parameters_private, format_10_collection_parameters_private + countof(format_10_collection_parameters_private)),
           block_parameters_(format_10_block_parameters, format_10_block_parameters + countof(format_10_block_parameters)),
           malformed_message_data_(format_10_malformed_message_data, format_10_malformed_message_data + countof(format_10_malformed_message_data)),
           malformed_message_(format_10_malformed_message, format_10_malformed_message + countof(format_10_malformed_message))
@@ -557,7 +558,9 @@ namespace block_cbor {
 
     CollectionParametersField FileVersionFields::collection_parameters_field(int index) const
     {
-        if ( index < collection_parameters_.size() )
+        if ( index < 0 && index > -1 - collection_parameters_private_.size() )
+            return collection_parameters_private_[-index - 1];
+        else if ( index < collection_parameters_.size() )
             return collection_parameters_[index];
         else
             return CollectionParametersField::unknown;

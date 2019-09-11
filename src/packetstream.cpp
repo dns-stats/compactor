@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -126,7 +126,7 @@ Tins::PDU* PacketStream::ipv6_packet(Tins::IPv6* ip6, PktData& pkt_data)
 
 void PacketStream::udp_packet(Tins::UDP* udp, PktData& pkt_data)
 {
-    if ( udp->dport() != 53 && udp->sport() != 53 )
+    if ( udp->dport() != config_.dns_port && udp->sport() != config_.dns_port )
         throw unhandled_packet();
 
     pkt_data.srcPort = udp->sport();
@@ -143,7 +143,7 @@ void PacketStream::udp_packet(Tins::UDP* udp, PktData& pkt_data)
 void PacketStream::tcp_packet(Tins::TCP* tcp, Tins::PDU* ip_pdu,
                               PktData& pkt_data)
 {
-    if ( tcp->dport() != 53 && tcp->sport() != 53 )
+    if ( tcp->dport() != config_.dns_port && tcp->sport() != config_.dns_port )
         throw unhandled_packet();
 
     pkt_data.srcPort = tcp->sport();

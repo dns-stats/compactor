@@ -64,6 +64,7 @@ namespace block_cbor {
         const std::chrono::milliseconds DEFAULT_QUERY_TIMEOUT(5000);
         const std::chrono::microseconds DEFAULT_SKEW_TIMEOUT(10);
         const unsigned DEFAULT_SNAPLEN = 65535;
+        const unsigned DEFAULT_DNS_PORT = 53;
         const unsigned DEFAULT_PROMISC = false;
     }
 
@@ -324,6 +325,7 @@ namespace block_cbor {
             query_timeout(DEFAULT_QUERY_TIMEOUT),
             skew_timeout(DEFAULT_SKEW_TIMEOUT),
             snaplen(DEFAULT_SNAPLEN),
+            dns_port(DEFAULT_DNS_PORT),
             promisc(DEFAULT_PROMISC)
         { }
 
@@ -345,6 +347,11 @@ namespace block_cbor {
          * \brief packet capture snap length. See `tcpdump` documentation for more.
          */
         unsigned snaplen;
+
+        /**
+         * \brief DNS port.
+         */
+        unsigned dns_port;
 
         /**
          * \brief `true` if the interface should be put into promiscous mode.

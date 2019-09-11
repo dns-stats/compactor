@@ -159,6 +159,8 @@ collection-parameters = 1
       ? filter             => tstr,
       ? generator-id       => tstr,
       ? host-id            => tstr,
+
+      ? dns-port           => uint,
   }
   query-timeout      = 0
   skew-timeout       = 1
@@ -170,6 +172,8 @@ collection-parameters = 1
   filter             = 7
   generator-id       = 8
   host-id            = 9
+
+  dns-port           = -1
 
 ;
 ; Data in the file is stored in Blocks.

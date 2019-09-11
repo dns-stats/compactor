@@ -336,7 +336,7 @@ namespace block_cbor {
                     break;
                 }
 
-                switch(fields.collection_parameters_field(dec.read_unsigned()))
+                switch(fields.collection_parameters_field(dec.read_signed()))
                 {
                 case CollectionParametersField::query_timeout:
                     query_timeout = std::chrono::milliseconds(dec.read_unsigned());
@@ -348,6 +348,10 @@ namespace block_cbor {
 
                 case CollectionParametersField::snaplen:
                     snaplen = dec.read_unsigned();
+                    break;
+
+                case CollectionParametersField::dns_port:
+                    dns_port = dec.read_unsigned();
                     break;
 
                 case CollectionParametersField::promisc:
@@ -396,6 +400,7 @@ namespace block_cbor {
         constexpr int query_timeout_index = find_collection_parameters_index(CollectionParametersField::query_timeout);
         constexpr int skew_timeout_index = find_collection_parameters_index(CollectionParametersField::skew_timeout);
         constexpr int snaplen_index = find_collection_parameters_index(CollectionParametersField::snaplen);
+        constexpr int dns_port_index = find_collection_parameters_index(CollectionParametersField::dns_port);
         constexpr int promisc_index = find_collection_parameters_index(CollectionParametersField::promisc);
         constexpr int interfaces_index = find_collection_parameters_index(CollectionParametersField::interfaces);
         constexpr int server_addresses_index = find_collection_parameters_index(CollectionParametersField::server_addresses);
@@ -408,6 +413,7 @@ namespace block_cbor {
         enc.write(query_timeout_index, query_timeout.count());
         enc.write(skew_timeout_index, skew_timeout.count());
         enc.write(snaplen_index, snaplen);
+        enc.write(dns_port_index, dns_port);
         enc.write(promisc_index, promisc);
         if ( !interfaces.empty() )
         {

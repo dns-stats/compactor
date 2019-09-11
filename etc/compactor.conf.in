@@ -24,6 +24,9 @@
 # RR type to accept. Type name in UPPER CASE e.g. AAAA, RRSIG.
 # accept-rr-type=
 
+# DNS port - only traffic to or from this port is captured.
+# dns-port=53
+
 # Snap length - limit of bytes in package to capture.
 # snaplen=65535
 

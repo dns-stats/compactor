@@ -364,6 +364,7 @@ SCENARIO("CollectionParameters can be written", "[block]")
         cp1.query_timeout = std::chrono::milliseconds(1);
         cp1.skew_timeout = std::chrono::microseconds(2);
         cp1.snaplen = 3;
+        cp1.dns_port = 4;
         cp1.promisc = true;
 
         WHEN("values are encoded")
@@ -380,6 +381,7 @@ SCENARIO("CollectionParameters can be written", "[block]")
                         find_collection_parameters_index(CollectionParametersField::query_timeout), 1,
                         find_collection_parameters_index(CollectionParametersField::skew_timeout), 2,
                         find_collection_parameters_index(CollectionParametersField::snaplen), 3,
+                        (1 << 5) | -find_collection_parameters_index(CollectionParametersField::dns_port) - 1, 4,
                         find_collection_parameters_index(CollectionParametersField::promisc), (7 << 5) | 21,
                         0xff
                     };
@@ -399,6 +401,7 @@ SCENARIO("CollectionParameters can be read", "[block]")
         cp1.query_timeout = std::chrono::milliseconds(1);
         cp1.skew_timeout = std::chrono::microseconds(2);
         cp1.snaplen = 3;
+        cp1.dns_port = 4;
         cp1.promisc = true;
 
         WHEN("decoder is given encoded question data")
@@ -410,6 +413,7 @@ SCENARIO("CollectionParameters can be read", "[block]")
                     1, 2,
                     2, 3,
                     3, (7 << 5) | 21,
+                    (1 << 5), 4,
                     0xff
                 };
             tcbd.set_bytes(INPUT);
@@ -423,6 +427,7 @@ SCENARIO("CollectionParameters can be read", "[block]")
                 REQUIRE(cp1.query_timeout == cp1_r.query_timeout);
                 REQUIRE(cp1.skew_timeout == cp1_r.skew_timeout);
                 REQUIRE(cp1.snaplen == cp1_r.snaplen);
+                REQUIRE(cp1.dns_port == cp1_r.dns_port);
                 REQUIRE(cp1.promisc == cp1_r.promisc);
             }
         }
