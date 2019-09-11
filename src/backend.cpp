@@ -6,6 +6,7 @@
  * file, you can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include <algorithm>
 #include <sstream>
 #include <utility>
 
@@ -210,6 +211,37 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
                            qrd.response_answers,
                            qrd.response_authorities,
                            qrd.response_additionals);
+
+        // If the query had an OPT, and we've not recorded a response OPT,
+        // (unlike query OPTs, response OPTs are recorded in C-DNS if
+        // additional section data is recorded), make one up.
+        // No RDATA, no extended RCODE/flags, and sender
+        // UDP payload size set to the default query payload size.
+        if ( qrd.qr_flags & block_cbor::RESPONSE_HAS_OPT )
+        {
+            if ( !qrd.response_additionals ||
+                 std::find_if(std::begin(*qrd.response_additionals),
+                              std::end(*qrd.response_additionals),
+                              [](const QueryResponseData::RR& rr)
+                              {
+                                  return rr.rtype && *rr.rtype == CaptureDNS::OPT;
+                              }) == std::end(*qrd.response_additionals) )
+            {
+                uint32_t ttl = ((*qrd.response_rcode >> 4) &0xff);
+                ttl <<= 8;
+                ttl |= (*qrd.query_edns_version & 0xff);
+                ttl <<= 16;
+                if ( *qrd.dns_flags & block_cbor::QUERY_DO )
+                    ttl |= 0x8000;
+                response->dns.add_additional(
+                    CaptureDNS::resource(
+                        "",
+                        ""_b,
+                        CaptureDNS::OPT,
+                        static_cast<CaptureDNS::QueryClass>(*qrd.query_edns_payload_size),
+                        ttl));
+            }
+        }
     }
 
     std::unique_ptr<QueryResponse> res;
