@@ -18,6 +18,7 @@ QueryResponseQueryHasOpt={{query_response_query_has_opt}}
 QueryResponseQueryHasQuestion={{query_response_query_has_question}}
 QueryResponseQueryHasNoQuestion={{query_response_query_has_no_question}}
 QueryResponseResponseHasOpt={{query_response_response_has_opt}}
+QueryResponseResponseHasQuestion={{query_response_response_has_question}}
 QueryResponseResponseHasNoQuestion={{query_response_response_has_no_question}}
 QueryLen={{query_len}}
 ResponseLen={{response_len}}

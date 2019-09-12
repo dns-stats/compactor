@@ -433,6 +433,7 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
     if ( qr.qr_flags & block_cbor::HAS_RESPONSE )
     {
         dict.SetIntValue("query_response_response_has_opt", !!(qr.qr_flags & block_cbor::RESPONSE_HAS_OPT));
+        dict.SetIntValue("query_response_response_has_question", !(qr.qr_flags & block_cbor::RESPONSE_HAS_NO_QUESTION));
         dict.SetIntValue("query_response_response_has_no_question", !!(qr.qr_flags & block_cbor::RESPONSE_HAS_NO_QUESTION));
     }
 
@@ -530,8 +531,6 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
         dict.SetIntValue("response_truncated", !!(*qr.dns_flags & block_cbor::RESPONSE_TC));
         dict.SetIntValue("response_authoritative_answer", !!(*qr.dns_flags & block_cbor::RESPONSE_AA));
     }
-
-    dict.SetIntValue("query_response_response_has_question", !(qr.qr_flags & block_cbor::RESPONSE_HAS_NO_QUESTION));
 
     if ( qr.qr_flags & block_cbor::HAS_RESPONSE )
     {
