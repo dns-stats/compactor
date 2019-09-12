@@ -444,11 +444,14 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
         dict.SetIntValue("query_recursion_desired", !!(*qr.dns_flags & block_cbor::QUERY_RD));
         dict.SetIntValue("query_truncated", !!(*qr.dns_flags & block_cbor::QUERY_TC));
         dict.SetIntValue("query_authoritative_answer", !!(*qr.dns_flags & block_cbor::QUERY_AA));
-        dict.SetIntValue("query_do", !!(*qr.dns_flags & block_cbor::QUERY_DO));
     }
 
     if ( qr.query_edns_version )
+    {
         dict.SetIntValue("query_edns_version", *qr.query_edns_version);
+        if ( ( qr.qr_flags & block_cbor::HAS_QUERY ) && qr.dns_flags )
+            dict.SetIntValue("query_do", !!(*qr.dns_flags & block_cbor::QUERY_DO));
+    }
     if ( qr.query_edns_payload_size )
         dict.SetIntValue("query_edns_udp_payload_size", *qr.query_edns_payload_size);
 

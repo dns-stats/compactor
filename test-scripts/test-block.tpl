@@ -33,6 +33,7 @@ QueryANCount={{query_ancount}}
 QueryARCount={{query_arcount}}
 QueryNSCount={{query_nscount}}
 QueryEDNSVersion={{query_edns_version}}
+QueryDO={{query_do}}
 QueryEDNSUDPPayloadSize={{query_edns_udp_payload_size}}
 ResponseDelayNanosecs={{response_delay_nanosecs}}
 ResponseCD={{response_checking_disabled}}
