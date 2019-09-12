@@ -653,7 +653,7 @@ int main(int ac, char *av[])
         if ( vm.count("version") )
         {
             std::cout << PROGNAME << " " PACKAGE_VERSION "\n"
-                      << "https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-10\n";
+                      << "https://tools.ietf.org/html/rfc8618\n";
             return 1;
         }
 
