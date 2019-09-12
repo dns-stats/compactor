@@ -367,6 +367,15 @@ https://github.com/OlafvdSpek/ctemplate.
 
 The exit status is 1 if any error occurred. A successful run ends with an exit status of 0.
 
+== BUGS
+
+The design of C-DNS allows blocks with different storage and collection parameters
+to be present in the same C-DNS file. This might arise when two separate C-DNS
+files are merged.
+
+At the time of writing, no tool exists to do this. *inspector* has not been tested on
+such inputs, and may not exhibit correct behaviour if presented with such a file.
+
 == RESOURCES
 
 https://github.com/dns-stats/compactor/wiki

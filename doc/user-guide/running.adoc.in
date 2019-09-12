@@ -647,6 +647,15 @@ the address, but it increases the chances of the address being re-used in
 subsequent records, as only the prefix bits of the address have to match an
 already-stored address.
 
+=== _inspector_ limitations
+
+The design of C-DNS allows blocks with different storage and collection parameters
+to be present in the same C-DNS file. This might arise when two separate C-DNS
+files are merged.
+
+At the time of writing, no tool exists to do this. _inspector_ has not been tested on
+such inputs, and may not exhibit correct behaviour if presented with such a file.
+
 === _compactor_/_inspector_ `info` output
 
 A typical `info` file is as follows. The report begins with
