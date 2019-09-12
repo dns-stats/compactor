@@ -439,7 +439,7 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
     {
         dict.SetIntValue("query_checking_disabled", !!(*qr.dns_flags & block_cbor::QUERY_CD));
         dict.SetIntValue("query_authenticated_data", !!(*qr.dns_flags & block_cbor::QUERY_AD));
-        dict.SetIntValue("query_z", !!(*qr.dns_flags * block_cbor::QUERY_Z));
+        dict.SetIntValue("query_z", !!(*qr.dns_flags & block_cbor::QUERY_Z));
         dict.SetIntValue("query_recursion_available", !!(*qr.dns_flags & block_cbor::QUERY_RA));
         dict.SetIntValue("query_recursion_desired", !!(*qr.dns_flags & block_cbor::QUERY_RD));
         dict.SetIntValue("query_truncated", !!(*qr.dns_flags & block_cbor::QUERY_TC));
@@ -514,7 +514,7 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
     {
         dict.SetIntValue("response_checking_disabled", !!(*qr.dns_flags & block_cbor::RESPONSE_CD));
         dict.SetIntValue("response_authenticated_data", !!(*qr.dns_flags & block_cbor::RESPONSE_AD));
-        dict.SetIntValue("response_z", !!(*qr.dns_flags * block_cbor::RESPONSE_Z));
+        dict.SetIntValue("response_z", !!(*qr.dns_flags & block_cbor::RESPONSE_Z));
         dict.SetIntValue("response_recursion_available", !!(*qr.dns_flags & block_cbor::RESPONSE_RA));
         dict.SetIntValue("response_recursion_desired", !!(*qr.dns_flags & block_cbor::RESPONSE_RD));
         dict.SetIntValue("response_truncated", !!(*qr.dns_flags & block_cbor::RESPONSE_TC));
