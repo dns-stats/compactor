@@ -423,11 +423,18 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
     dict.SetIntValue("query_response_has_query", !!(qr.qr_flags & block_cbor::HAS_QUERY));
     dict.SetIntValue("query_response_has_response", !!(qr.qr_flags & block_cbor::HAS_RESPONSE));
 
-    dict.SetIntValue("query_response_query_has_opt", !!(qr.qr_flags & block_cbor::QUERY_HAS_OPT));
-    dict.SetIntValue("query_response_response_has_opt", !!(qr.qr_flags & block_cbor::RESPONSE_HAS_OPT));
-    dict.SetIntValue("query_response_query_has_question", !(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION));
-    dict.SetIntValue("query_response_query_has_no_question", !!(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION));
-    dict.SetIntValue("query_response_response_has_no_question", !!(qr.qr_flags & block_cbor::RESPONSE_HAS_NO_QUESTION));
+    if ( qr.qr_flags & block_cbor::HAS_QUERY )
+    {
+        dict.SetIntValue("query_response_query_has_opt", !!(qr.qr_flags & block_cbor::QUERY_HAS_OPT));
+        dict.SetIntValue("query_response_query_has_question", !(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION));
+        dict.SetIntValue("query_response_query_has_no_question", !!(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION));
+    }
+
+    if ( qr.qr_flags & block_cbor::HAS_RESPONSE )
+    {
+        dict.SetIntValue("query_response_response_has_opt", !!(qr.qr_flags & block_cbor::RESPONSE_HAS_OPT));
+        dict.SetIntValue("query_response_response_has_no_question", !!(qr.qr_flags & block_cbor::RESPONSE_HAS_NO_QUESTION));
+    }
 
     if ( qr.qr_transport_flags )
     {
