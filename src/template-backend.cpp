@@ -468,7 +468,10 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
     if ( qr.query_size )
         dict.SetIntValue("query_len", *qr.query_size);
     if ( qr.query_opcode )
+    {
+        dict.SetIntValue("opcode", *qr.query_opcode);
         dict.SetIntValue("query_opcode", *qr.query_opcode);
+    }
     if ( qr.query_rcode )
         dict.SetIntValue("query_rcode", *qr.query_rcode);
 

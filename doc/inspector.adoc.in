@@ -169,6 +169,9 @@ is no query question.
 | `id`
 | Query ID, or response ID if no query.
 
+| `opcode`
+| Value of query OPCODE, or response OPCODE if no query.
+
 | `query_name`
 | QNAME in first Question. Blank if no question.
 
@@ -210,9 +213,6 @@ is no query question.
 
 | `query_len`
 | Value of query length on the wire. Blank if no query.
-
-| `query_opcode`
-| Value of query OPCODE. Blank if no query.
 
 | `query_rcode`
 | Value of query RCODE. Blank if no query.
