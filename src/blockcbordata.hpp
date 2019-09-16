@@ -43,7 +43,7 @@ namespace boost {
     template<typename T>
     std::size_t hash_value(const boost::optional<T>& t)
     {
-        bool there = t;
+        bool there = static_cast<bool>(t);
         std::size_t seed = boost::hash_value(there);
         if ( there )
             boost::hash_combine(seed, *t);
