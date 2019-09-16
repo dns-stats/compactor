@@ -193,8 +193,6 @@ SCENARIO("Check CBOR decoder decodes correct basic values", "[cbor]")
 
             AND_THEN("binary decoder checks types")
             {
-                bool indef;
-
                 REQUIRE(tcbd.type() == CborBaseDecoder::TYPE_STRING);
                 tcbd.skip();
                 REQUIRE(tcbd.type() == CborBaseDecoder::TYPE_BINARY);
