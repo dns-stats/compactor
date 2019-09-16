@@ -28,10 +28,12 @@ BlockCborReader::BlockCborReader(CborBaseDecoder& dec,
                                  Configuration& config,
                                  const Defaults& defaults,
                                  boost::optional<PseudoAnonymise> pseudo_anon)
-    : dec_(dec), next_item_(0), need_block_(true),
+    : dec_(dec),
+      defaults_(defaults),
+      next_item_(0),
+      need_block_(true),
       file_format_version_(block_cbor::FileFormatVersion::format_10),
       current_block_num_(0),
-      defaults_(defaults),
       pseudo_anon_(pseudo_anon)
 {
     readFileHeader(config);

@@ -649,7 +649,7 @@ namespace block_cbor {
      * \throws std::logic_error if the item is not in the array.
      */
     template<typename T, std::size_t N, typename V>
-    constexpr int find_index(T (&arr)[N], V val, int i = 0)
+    constexpr int find_index(T (&arr)[N], V val, unsigned i = 0)
     {
         return ( i < N )
             ? ( arr[i] == val ) ? i : find_index(arr, val, i + 1)
@@ -669,7 +669,7 @@ namespace block_cbor {
      * \throws std::logic_error if the item is not in the array.
      */
     template<typename T, std::size_t N1, std::size_t N2, typename V>
-    constexpr int find_index(T (&arr1)[N1], T (&arr2)[N2], V val, int i = 0)
+    constexpr int find_index(T (&arr1)[N1], T (&arr2)[N2], V val, unsigned i = 0)
     {
         return ( i < N1 )
             ? ( arr1[i] == val ) ? i : find_index(arr1, arr2, val, i + 1)
@@ -1329,7 +1329,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        ConfigurationField configuration_field(int index) const;
+        ConfigurationField configuration_field(unsigned index) const;
 
         /**
          * \brief Return block field for given map index.
@@ -1337,7 +1337,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        BlockField block_field(int index) const;
+        BlockField block_field(unsigned index) const;
 
         /**
          * \brief Return block preamble field for given map index.
@@ -1345,7 +1345,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        BlockPreambleField block_preamble_field(int index) const;
+        BlockPreambleField block_preamble_field(unsigned index) const;
 
         /**
          * \brief Return block statistics field for given map index.
@@ -1361,7 +1361,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        BlockTablesField block_tables_field(int index) const;
+        BlockTablesField block_tables_field(unsigned index) const;
 
         /**
          * \brief Return query response field for given map index.
@@ -1369,7 +1369,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        QueryResponseField query_response_field(int index) const;
+        QueryResponseField query_response_field(unsigned index) const;
 
         /**
          * \brief Return class type field for given map index.
@@ -1377,7 +1377,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        ClassTypeField class_type_field(int index) const;
+        ClassTypeField class_type_field(unsigned index) const;
 
         /**
          * \brief Return query response signature field for given map index.
@@ -1385,7 +1385,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        QueryResponseSignatureField query_response_signature_field(int index) const;
+        QueryResponseSignatureField query_response_signature_field(unsigned index) const;
 
         /**
          * \brief Return question field for given map index.
@@ -1393,7 +1393,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        QuestionField question_field(int index) const;
+        QuestionField question_field(unsigned index) const;
 
         /**
          * \brief Return RR field for given map index.
@@ -1401,7 +1401,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        RRField rr_field(int index) const;
+        RRField rr_field(unsigned index) const;
 
         /**
          * \brief Return query response extended information field
@@ -1410,7 +1410,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        QueryResponseExtendedField query_response_extended_field(int index) const;
+        QueryResponseExtendedField query_response_extended_field(unsigned index) const;
 
         /**
          * \brief Return address event count field for given map index.
@@ -1418,7 +1418,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        AddressEventCountField address_event_count_field(int index) const;
+        AddressEventCountField address_event_count_field(unsigned index) const;
 
         /**
          * \brief Return storage hints field for given map index.
@@ -1426,7 +1426,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        StorageHintsField storage_hints_field(int index) const;
+        StorageHintsField storage_hints_field(unsigned index) const;
 
         /**
          * \brief Return storage parameters field for given map index.
@@ -1434,7 +1434,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        StorageParametersField storage_parameters_field(int index) const;
+        StorageParametersField storage_parameters_field(unsigned index) const;
 
         /**
          * \brief Return collection parameters field for given map index.
@@ -1450,7 +1450,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        BlockParametersField block_parameters_field(int index) const;
+        BlockParametersField block_parameters_field(unsigned index) const;
 
         /**
          * \brief Return malformed message data field for given map index.
@@ -1458,7 +1458,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        MalformedMessageDataField malformed_message_data_field(int index) const;
+        MalformedMessageDataField malformed_message_data_field(unsigned index) const;
 
         /**
          * \brief Return malformed message field for given map index.
@@ -1466,7 +1466,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        MalformedMessageField malformed_message_field(int index) const;
+        MalformedMessageField malformed_message_field(unsigned index) const;
 
     private:
         /**

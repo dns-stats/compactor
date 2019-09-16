@@ -89,6 +89,7 @@ void PcapBackend::output(const QueryResponseData& qrd, const Configuration& conf
          qr->has_response() && qrd.response_size )
     {
         if ( *qrd.response_size != qr->response().dns.size() )
+        {
             if ( auto_compression_ )
             {
                 // See if Knot works better. If it does, stick with it.
@@ -103,6 +104,7 @@ void PcapBackend::output(const QueryResponseData& qrd, const Configuration& conf
             }
             else
                 bad_response_wire_size_count_++;
+        }
     }
 
     if ( !opts_.baseopts.write_output)

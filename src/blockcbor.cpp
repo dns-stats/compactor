@@ -442,7 +442,7 @@ namespace block_cbor {
         throw cbor_file_format_error("Unknown file format version");
     }
 
-    ConfigurationField FileVersionFields::configuration_field(int index) const
+    ConfigurationField FileVersionFields::configuration_field(unsigned index) const
     {
         if ( index < configuration_.size() )
             return configuration_[index];
@@ -450,7 +450,7 @@ namespace block_cbor {
             return ConfigurationField::unknown;
     }
 
-    BlockField FileVersionFields::block_field(int index) const
+    BlockField FileVersionFields::block_field(unsigned index) const
     {
         if ( index < block_.size() )
             return block_[index];
@@ -458,7 +458,7 @@ namespace block_cbor {
             return BlockField::unknown;
     }
 
-    BlockPreambleField FileVersionFields::block_preamble_field(int index) const
+    BlockPreambleField FileVersionFields::block_preamble_field(unsigned index) const
     {
         if ( index < block_preamble_.size() )
             return block_preamble_[index];
@@ -468,15 +468,15 @@ namespace block_cbor {
 
     BlockStatisticsField FileVersionFields::block_statistics_field(int index) const
     {
-        if ( index < 0 && index > -1 - block_statistics_private_.size() )
+        if ( index < 0 && index > -1 - static_cast<int>(block_statistics_private_.size()) )
             return block_statistics_private_[-index - 1];
-        else if ( index < block_statistics_.size() )
+        else if ( index < static_cast<int>(block_statistics_.size()) )
             return block_statistics_[index];
         else
             return BlockStatisticsField::unknown;
     }
 
-    BlockTablesField FileVersionFields::block_tables_field(int index) const
+    BlockTablesField FileVersionFields::block_tables_field(unsigned index) const
     {
         if ( index < block_tables_.size() )
             return block_tables_[index];
@@ -484,7 +484,7 @@ namespace block_cbor {
             return BlockTablesField::unknown;
     }
 
-    QueryResponseField FileVersionFields::query_response_field(int index) const
+    QueryResponseField FileVersionFields::query_response_field(unsigned index) const
     {
         if ( index < query_response_.size() )
             return query_response_[index];
@@ -492,7 +492,7 @@ namespace block_cbor {
             return QueryResponseField::unknown;
     }
 
-    ClassTypeField FileVersionFields::class_type_field(int index) const
+    ClassTypeField FileVersionFields::class_type_field(unsigned index) const
     {
         if ( index < class_type_.size() )
             return class_type_[index];
@@ -500,7 +500,7 @@ namespace block_cbor {
             return ClassTypeField::unknown;
     }
 
-    QueryResponseSignatureField FileVersionFields::query_response_signature_field(int index) const
+    QueryResponseSignatureField FileVersionFields::query_response_signature_field(unsigned index) const
     {
         if ( index < query_response_signature_.size() )
             return query_response_signature_[index];
@@ -508,7 +508,7 @@ namespace block_cbor {
             return QueryResponseSignatureField::unknown;
     }
 
-    QuestionField FileVersionFields::question_field(int index) const
+    QuestionField FileVersionFields::question_field(unsigned index) const
     {
         if ( index < question_.size() )
             return question_[index];
@@ -516,7 +516,7 @@ namespace block_cbor {
             return QuestionField::unknown;
     }
 
-    RRField FileVersionFields::rr_field(int index) const
+    RRField FileVersionFields::rr_field(unsigned index) const
     {
         if ( index < rr_.size() )
             return rr_[index];
@@ -524,7 +524,7 @@ namespace block_cbor {
             return RRField::unknown;
     }
 
-    QueryResponseExtendedField FileVersionFields::query_response_extended_field(int index) const
+    QueryResponseExtendedField FileVersionFields::query_response_extended_field(unsigned index) const
     {
         if ( index < query_response_extended_.size() )
             return query_response_extended_[index];
@@ -532,7 +532,7 @@ namespace block_cbor {
             return QueryResponseExtendedField::unknown;
     }
 
-    AddressEventCountField FileVersionFields::address_event_count_field(int index) const
+    AddressEventCountField FileVersionFields::address_event_count_field(unsigned index) const
     {
         if ( index < address_event_count_.size() )
             return address_event_count_[index];
@@ -540,7 +540,7 @@ namespace block_cbor {
             return AddressEventCountField::unknown;
     }
 
-    StorageHintsField FileVersionFields::storage_hints_field(int index) const
+    StorageHintsField FileVersionFields::storage_hints_field(unsigned index) const
     {
         if ( index < storage_hints_.size() )
             return storage_hints_[index];
@@ -548,7 +548,7 @@ namespace block_cbor {
             return StorageHintsField::unknown;
     }
 
-    StorageParametersField FileVersionFields::storage_parameters_field(int index) const
+    StorageParametersField FileVersionFields::storage_parameters_field(unsigned index) const
     {
         if ( index < storage_parameters_.size() )
             return storage_parameters_[index];
@@ -558,15 +558,15 @@ namespace block_cbor {
 
     CollectionParametersField FileVersionFields::collection_parameters_field(int index) const
     {
-        if ( index < 0 && index > -1 - collection_parameters_private_.size() )
+        if ( index < 0 && index > -1 - static_cast<int>(collection_parameters_private_.size()) )
             return collection_parameters_private_[-index - 1];
-        else if ( index < collection_parameters_.size() )
+        else if ( index < static_cast<int>(collection_parameters_.size()) )
             return collection_parameters_[index];
         else
             return CollectionParametersField::unknown;
     }
 
-    BlockParametersField FileVersionFields::block_parameters_field(int index) const
+    BlockParametersField FileVersionFields::block_parameters_field(unsigned index) const
     {
         if ( index < block_parameters_.size() )
             return block_parameters_[index];
@@ -574,7 +574,7 @@ namespace block_cbor {
             return BlockParametersField::unknown;
     }
 
-    MalformedMessageDataField FileVersionFields::malformed_message_data_field(int index) const
+    MalformedMessageDataField FileVersionFields::malformed_message_data_field(unsigned index) const
     {
         if ( index < malformed_message_data_.size() )
             return malformed_message_data_[index];
@@ -582,7 +582,7 @@ namespace block_cbor {
             return MalformedMessageDataField::unknown;
     }
 
-    MalformedMessageField FileVersionFields::malformed_message_field(int index) const
+    MalformedMessageField FileVersionFields::malformed_message_field(unsigned index) const
     {
         if ( index < malformed_message_.size() )
             return malformed_message_[index];

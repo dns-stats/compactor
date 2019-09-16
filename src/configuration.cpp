@@ -289,8 +289,8 @@ Configuration::Configuration()
       xz_pcap(false), xz_preset_pcap(6),
       max_compression_threads(2),
       rotation_period(300),
-      query_timeout(5000), skew_timeout(10),
       dns_port(53),
+      query_timeout(5000), skew_timeout(10),
       snaplen(65535),
       promisc_mode(false),
       output_options_queries(0), output_options_responses(0),
@@ -300,16 +300,16 @@ Configuration::Configuration()
       debug_dns(false), debug_qr(false),
       omit_hostid(false), omit_sysid(false),
       max_channel_size(10000),
+      client_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
+      client_address_prefix_ipv6(DEFAULT_IPV6_PREFIX_LENGTH),
+      server_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
+      server_address_prefix_ipv6(DEFAULT_IPV6_PREFIX_LENGTH),
       config_file_(CONFFILE),
       excludes_file_(EXCLUDESFILE),
       cmdline_options_("Command options"),
       cmdline_hidden_options_("Hidden command options"),
       config_file_options_("Configuration"),
-      positional_options_(),
-      client_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
-      client_address_prefix_ipv6(DEFAULT_IPV6_PREFIX_LENGTH),
-      server_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
-      server_address_prefix_ipv6(DEFAULT_IPV6_PREFIX_LENGTH)
+      positional_options_()
 {
     cmdline_options_.add_options()
         ("help,h", "show this help message.")
@@ -1540,7 +1540,7 @@ HintsExcluded::HintsExcluded()
       query_rcode(false),
       query_name(false),
       query_class_type(false),
-      query_qdcount(false), query_ancount(false), query_arcount(false), query_nscount(false),
+      query_qdcount(false), query_ancount(false), query_nscount(false), query_arcount(false),
       query_size(false),
       query_udp_size(false), query_edns_version(false), query_opt_rdata(false),
       query_question_section(false), query_answer_section(false),
