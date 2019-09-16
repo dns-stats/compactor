@@ -113,6 +113,7 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
         auto start = std::chrono::system_clock::now();
         unsigned long long nrecs = 0;
         bool eof = false;
+        bool first_timestamp = true;
 
         for ( QueryResponseData qr = cbr.readQRData(eof);
               !eof;
@@ -123,9 +124,11 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
                 std::chrono::system_clock::time_point t = *qr.timestamp;
                 if ( qr.response_delay )
                     t += *qr.response_delay;
-                if ( !earliest_time )
+                if ( first_timestamp )
+                {
                     earliest_time = latest_time = t;
-                else if ( t < earliest_time )
+                    first_timestamp = false;
+                } else if ( t < earliest_time )
                     earliest_time = t;
                 else if ( t > latest_time )
                     latest_time = t;
