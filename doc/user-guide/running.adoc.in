@@ -299,6 +299,14 @@ C-DNS file at the time of the interrupt is lost. This behaviour is
 under review.
 ====
 
+[WARNING]
+====
+If the _compactor_ is listening on an interface where the DNS traffic
+is very low or stops for some reason then temporary output files may 
+not get rolled and/or compressed until, in the case of the CDNS output 
+another DNS packet is seen or in the case of PCAP output any packet is seen.
+====
+
 If _compactor_ is requested to reload its configuration via `HUP`
 signal, existing compression threads are not affected.
 
