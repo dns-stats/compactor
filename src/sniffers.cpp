@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,6 +21,7 @@
 #endif
 
 #include "log.hpp"
+#include "util.hpp"
 
 #include "sniffers.hpp"
 
@@ -208,8 +209,9 @@ void BaseSniffers::notify_read_timeout(unsigned timeout)
 
 void BaseSniffers::packet_read_thread()
 {
-    bool finished = false;
+    set_thread_name("comp:sniffer");
 
+    bool finished = false;
     while ( !finished )
     {
         bool read_one;

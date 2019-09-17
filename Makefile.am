@@ -193,7 +193,8 @@ libcdns_a_headers = \
         src/pseudoanonymise.hpp \
         src/queryresponse.hpp \
         src/rotatingfilename.hpp \
-        src/streamwriter.hpp
+        src/streamwriter.hpp \
+        src/util.hpp
 
 libcdns_a_SOURCES = \
         $(libcdns_a_headers) \
@@ -210,7 +211,8 @@ libcdns_a_SOURCES = \
         src/log.cpp \
         src/pseudoanonymise.cpp \
         src/rotatingfilename.cpp \
-        src/streamwriter.cpp
+        src/streamwriter.cpp \
+	src/util.cpp
 
 libcdns_a_CXXFLAGS = -DBOOST_LOG_DYN_LINK
 

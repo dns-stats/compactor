@@ -38,6 +38,7 @@
 #include "queryresponse.hpp"
 #include "sniffers.hpp"
 #include "streamwriter.hpp"
+#include "util.hpp"
 
 const std::string PROGNAME = "compactor";
 
@@ -124,13 +125,17 @@ struct OutputChannels
 /**
  * \brief Main function for threads writing PCAP files.
  *
- * \param out the output destination.
+ * \param name the thread name.
+ * \param out  the output destination.
  * \param chan the channel to receive packets from.
  */
-static void packet_writer(std::unique_ptr<PcapBaseRotatingWriter> out,
+static void packet_writer(const char* name,
+                          std::unique_ptr<PcapBaseRotatingWriter> out,
                           std::shared_ptr<Channel<std::shared_ptr<PcapItem>>> chan,
                           const Configuration& config)
 {
+    set_thread_name(name);
+
     std::shared_ptr<PcapItem> pcap;
     while ( chan->get(pcap) )
     {
@@ -205,6 +210,8 @@ private:
 static void cbor_writer(std::unique_ptr<BlockCborWriter> out,
                         std::shared_ptr<Channel<CborItem>> chan)
 {
+    set_thread_name("comp:cdns-write");
+
     CborItemVisitor cbiv(out);
     CborItem cbi;
     while ( chan->get(cbi) )
@@ -477,7 +484,7 @@ static int run_configuration(const po::variables_map& vm,
     {
         std::unique_ptr<PcapBaseRotatingWriter> raw_pcap =
             make_pcap_writer(config.raw_pcap_pattern, config);
-        threads.emplace_back(packet_writer, std::move(raw_pcap), output.raw_pcap, std::ref(config));
+        threads.emplace_back(packet_writer, "comp:raw-pcap", std::move(raw_pcap), output.raw_pcap, std::ref(config));
     }
 
     if ( vm.count("ignored-pcap") &&
@@ -485,7 +492,7 @@ static int run_configuration(const po::variables_map& vm,
     {
         std::unique_ptr<PcapBaseRotatingWriter> ignored_pcap =
             make_pcap_writer(config.ignored_pcap_pattern, config);
-        threads.emplace_back(packet_writer, std::move(ignored_pcap), output.ignored_pcap, std::ref(config));
+        threads.emplace_back(packet_writer, "comp:ign-pcap", std::move(ignored_pcap), output.ignored_pcap, std::ref(config));
     }
 
     if ( vm.count("output") && !config.output_pattern.empty() )

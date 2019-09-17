@@ -31,6 +31,7 @@
 #include "log.hpp"
 #include "makeunique.hpp"
 #include "streamwriter.hpp"
+#include "util.hpp"
 
 /**
  * \class CborBaseEncoder
@@ -625,6 +626,8 @@ private:
      */
     void compressFileThread(const std::string& input, const std::string& output)
     {
+        set_thread_name("comp:compress");
+
         try
         {
             std::ifstream ifs(input, std::ios::binary);
