@@ -80,6 +80,9 @@ ignored-pcap=@DSLOCALSTATEDIR@/pcap/ignored/%Y%m%d-%H%M%S_%{rotate-period}_%{int
 # If no include is specified then no optional sections are captured. 
 include=all
 
+# maximum number of compression threads.
+# max-compression-threads=2
+
 # Compress C-DNS using gzip?
 # gzip-output=false
 
