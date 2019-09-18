@@ -412,22 +412,29 @@ present or doesn't contain the required default values _inspector_ will exit
 with an error.
 
 NOTE: The default values are _only_ used if the data field is not present in a
-particular query/response record, they _never_ overwrite data stored in the
+particular query/response record, they _never_ override data stored in the
 C-DNS file.
 
+===== Interoperability
+
 A subtley of the way optionality is specified in the C-DNS format is that even
-if a field is not 'excluded' by the configuration of the collecting application,
-it is still not guaranteed to be present. Also, in priciple, the presence of a
-particular field can vary at the individual query/response record level, not
-just the file level. Therefore, for maximum interoperability, the
-*default_values* file is _required_ in this release for PCAP regeneration. Its use means that as long
-as the file is present, a C-DNS file can be processed in its entirety to produce
-output with failure. Otherwise the absence of a particular field on any single
-record could cause an error in processing the entire file.
+if a field is not 'excluded' in the configuration of the collecting application,
+it is still not _guaranteed_ to be present. For example, a collecting
+application in another deployment scenario may not have access to the
+client-hoplimit. Also, in priciple, the presence of a particular field can vary
+at the individual query/response record level, not just the file level.
+
+Therefore, for maximum interoperability, the *default_values* file is _required_
+in this release for PCAP regeneration. Its use means that as long as the file is
+present, a C-DNS file can be processed in its entirety to produce output without
+failure. Otherwise the absence of a particular field on any single record could
+cause an error in processing the entire file.
 
 Future releases are likely to include options to allow override of requiring
 this *default_values* file or for such incomplete records to be ignored in file
 processing.
+
+===== Corner cases
 
 Whilst the use of *default_values* will produce a 'valid' PCAP file (e.g. one
 that can be loaded into a processing application such as Wireshark) this does

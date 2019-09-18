@@ -309,7 +309,7 @@ include::../../../etc/excluded_fields.conf.sample[]
 As previously noted, excluding some data could have implications for PCAP
 regeneration, see <<default_values>>. The following is a suggested
 *excludes_fields* file which results in the smallest capture files where the
-goal is to be able to reasonably reconstruction just queries in a PCAP (when
+goal is to be able to reasonably reconstruct just queries in a PCAP (when
 using the _inspector_ with the -q option). Capturing less data will require
 populating the PCAP with default values for some fields.
 

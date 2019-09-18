@@ -1,4 +1,5 @@
-# A list of fields to be omitted from compactor outputs
+# A list of fields to be omitted from compactor outputs. 
+# Uncomment the field for it to be omitted.
 # The fields MUST go under the heading as shown
 
 [ip-header]
