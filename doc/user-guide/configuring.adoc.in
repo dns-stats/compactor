@@ -302,7 +302,7 @@ would be collected in the C-DNS capture, which gives the same behaviour as *incl
 The fields are specified in logical groups. 
 
 ----
-include::../../../etc/excluded_fields.conf.sample[]
+include::excluded_fields.conf.sample[]
 ----
 
 ==== Other configurations

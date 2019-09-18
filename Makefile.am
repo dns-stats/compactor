@@ -37,8 +37,8 @@ dsconf_DATA = etc/compactor.conf \
               etc/excluded_fields.conf.sample \
               etc/default_values.conf
 dist_dsconf_DATA = etc/compactor.conf \
-              etc/excluded_fields.conf.sample \
-              etc/default_values.conf
+	           etc/excluded_fields.conf.sample \
+                   etc/default_values.conf
 dist_noinst_DATA = doc/compactor.adoc doc/inspector.adoc
 
 conffile=$(dsconfdir)/compactor.conf

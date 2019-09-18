@@ -464,7 +464,7 @@ If installed from a binary package on Linux, a default values file will be at
 The `default_values.conf` file looks like this
 
 ----
-include::../../../etc/default_values.conf[]
+include::default_values.conf[]
 ----
 
 The comments on each line show the format of, and in some cases the set of, allowed values. For example to set a default for dns-flags you could edit the file to say:

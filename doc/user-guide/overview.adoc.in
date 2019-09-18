@@ -127,7 +127,7 @@ Several things should be noted as a result of specification update:
 
 An overview of the 1.0 processing flow is shown below.
 
-image::../../../doc/user-guide/overview.png[]
+image::overview.png[]
 
 ==== General purpose compression
 DNS-STATS Compactor provides options to then compress the C-DNS files using
