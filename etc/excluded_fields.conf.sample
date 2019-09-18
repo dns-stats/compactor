@@ -10,7 +10,7 @@
 # server-address
 # server-port
 # qr-transport-flags
- 
+
 [dns-header]
 # transaction-id
 # query-opcode
@@ -21,7 +21,7 @@
 # query-ancount
 # query-arcount
 # query-nscount
- 
+
 [dns-payload]
 # query-name
 # query-class-type
@@ -37,11 +37,11 @@
 # response-answer-sections
 # response-authority-sections
 # response-additional-sections
- 
+
 [dns-meta-data]
 # query-size
 # response-size
- 
+# qr-sig-flags
+
 [storage-meta-data]
 # address-events
-# qr-sig-flags
