@@ -303,8 +303,8 @@ under review.
 ====
 If the _compactor_ is listening on an interface where the DNS traffic
 is very low or stops for some reason then temporary output files may 
-not get rolled and/or compressed until, in the case of the CDNS output 
-another DNS packet is seen or in the case of PCAP output any packet is seen.
+not get rolled and/or compressed until a) in the case of the CDNS output 
+another DNS packet is seen or b) in the case of PCAP output any packet is seen.
 ====
 
 If _compactor_ is requested to reload its configuration via `HUP`
@@ -314,8 +314,11 @@ signal, existing compression threads are not affected.
 == Running _inspector_
 
 _inspector_ is run from the command line to convert C-DNS from one or more
-C-DNS file to PCAP. Alternatively, it can be used to convert C-DNS to text,
-based on a template file specifying the output for each query/response record.
+C-DNS file to either
+
+* PCAP format (the default) or
+* text output based on a template file specifying the output for each query/response record.
+
 Each output file may be accompanied by a text `info` file giving basic
 information on the C-DNS file contents (configuration and basic
 statistics).  Alternatively just the `info` file can be output with no
@@ -383,15 +386,67 @@ generates `capture.pcap.info`.
 
 NOTE: The -q option will only write DNS queries to the output PCAP file.
 
-=== Default values
+[#default_values]
+=== _inspector_ *default_values* file
 
-Most fields in C-DNS are optional. See the <<excludes>> and the deprecated <<options>> setting for _compactor_. When converting C-DNS to PCAPs or templated text output it may be necessary to fill in those omitted fields with default values.
+From version 1.0 and later most fields in C-DNS are optional (earlier versions
+always capture a minimum set of fields). See the <<excludes>> and the deprecated
+<<options>> setting for _compactor_ for more details. When converting C-DNS to
+PCAPs or templated text output it may be necessary or desirable to fill in those
+omitted fields with default values in a way that was not necessary with earlier
+versions. Such fields are specified in the *default_values* file.
 
-In order for the inspector to be able to generate sane PCAP files from C-DNS with any set of *excluded_fields* a default values file must be present and must contain the full set of default values. If this file is not present or doesn't contain the required default values _inspector_ will exit with an error.
+==== PCAP generation
 
-==== Default values file location
+The PCAP format requires that certain IP, transport information and basic DNS
+message contents be present in order for a packet to be considered valid. (Note
+that only the contents of well-formed DNS messages are captured in the
+structured C-DNS format used by the DNS-STATS compactor even if not all the data
+is captured. Whilst the 1.0 C-DNS format supports capture of malformed messages
+this is not yet implemeted in the DNS-STATS compactor.)
 
-On startup, _inspector_ looks for a default values file. By default this is named default_values.conf and is located in a `dns-stats-compactor` system configuration directory. A different location can specified on the command
+In order for the _inspector_ to always be able to generate sane PCAP files from
+C-DNS with any set of *excluded_fields* a *default_values* file must be present
+and must contain the full set of required default values. If this file is not
+present or doesn't contain the required default values _inspector_ will exit
+with an error.
+
+NOTE: The default values are _only_ used if the data field is not present in a
+particular query/response record, they _never_ overwrite data stored in the
+C-DNS file.
+
+A subtley of the way optionality is specified in the C-DNS format is that even
+if a field is not 'excluded' by the configuration of the collecting application,
+it is still not guaranteed to be present. Also, in priciple, the presence of a
+particular field can vary at the individual query/response record level, not
+just the file level. Therefore, for maximum interoperability, the
+*default_values* file is _required_ in this release for PCAP regeneration. Its use means that as long
+as the file is present, a C-DNS file can be processed in its entirety to produce
+output with failure. Otherwise the absence of a particular field on any single
+record could cause an error in processing the entire file.
+
+Future releases are likely to include options to allow override of requiring
+this *default_values* file or for such incomplete records to be ignored in file
+processing.
+
+Whilst the use of *default_values* will produce a 'valid' PCAP file (e.g. one
+that can be loaded into a processing application such as Wireshark) this does
+not guarantee that for all permutations *excluded_fields* and *default_values*
+the packets in the file will form a coherent traffic flow with fully
+reconstructed DNS messages. See the following sections for more details on
+specific default values and <<reconstructed_pcap_files>> for more general issues
+with PCAP reconstruction.
+
+==== Template based text output
+
+Since the templated text based output is defined via a template the user should
+carefully consider which specific defaults to provide to create the required
+output. For this reason the *default_values* is not a mandatory requirement in
+this processing flow.
+
+==== *Default_values* file location
+
+On startup, _inspector_ looks for a *default_values* file. By default this is named `default_values.conf` and is located in a `dns-stats-compactor` system configuration directory. A different location can specified on the command
 line by using the _inspector_ --defaultsfile option.
 
 If installed from a binary package on Linux, a default values file will be at
@@ -410,11 +465,21 @@ The comments on each line show the format of, and in some cases the set of, allo
 dns-flags=query-rd response-ra
 ----
 
-NOTE: `dns-flags` is the only default that can have no value specified in order to set all flags to 0. It is also the only default that can have multiple values.
+==== Notes on specific default values
 
-==== Combining *excluded_fields*, default values and pcap-filters
+Some details on default values and resulting PCAP files:
 
-The resulting PCAPs produced by excluding response fields:
+* `dns-flags` is the only default that can have no value specified in order to set all flags to 0. It is also the only default that can have multiple values.
+* No defaults are provides for excluded RDATA fields since there is no suitable general default (the content is type specific). If the RDATA field was excluded on capture the RDATA field will be empty in the resulting PCAP.
+* If the time-offset was excluded on capture then using the default value (0s) will result in all the query (Q/R=0) traffic having the same timestamp. A similar result occurs for response traffic if the response-delay was excluded on capture.
+* Using default timestamps or port numbers can result in traffic flows that are hard to interpret or appear inconsistent, particularly for TCP traffic.
+* A corner case exists where so little data was captured in a record that the _inspector_ cannot determine if a query and/or response was captured. In this case the _inspector_ defaults to generating a query.
+
+A more detailed discussion of the issues around C-DNS to PCAP reconstruction can be found in Section 6.2.1, Section 9 and Appendix D of https://tools.ietf.org/html/rfc8618[RFC8618].
+
+==== Combining *excluded_fields*, *default_values* and pcap-filters
+
+Some further subtleties of optionality involve processing of responses. For example, the PCAPs reconstructed by processing C-DNS files captured with the following *exclude_fields*:
 ----
 response-delay
 response-rcode
@@ -423,11 +488,11 @@ response-authority-sections
 response-additional-sections
 ----
 
-will be different to using a pcap filter
+will be different to using the following pcap filter:
 ----
 filter=dst host <serverIP>
 ----
-This is because _compactor_ records that it saw a response in the first case, even if it doesn't record anything about the response. In the latter case _compactor_ never saw the response.
+This is because in the first case _compactor_ records that it saw a response, even though it doesn't record anything about the response content. It will therefore attempt to reconstruct a response in the PCAP file using the *default_values* (unless the -q option is used). In the latter case _compactor_ never saw the response, records that one was not present and does not attempt to reconstruct one.
 
 === Templated text output
 
@@ -448,7 +513,7 @@ A full list of query/response template markers is given in
 the _inspector_ manual page, *inspector*(1). The following table gives a selection
 of common markers:
 
-[cols="2*"]
+[cols="1,3"]
 |===
 | `client_address`
 | IP address of client as raw bytes, 4 for IPv4, 16 for IPv6.
@@ -515,7 +580,7 @@ e.g. `{{client_address:x-ipaddr}}`.
 
 There is a selection of marker modifiers useful for C-DNS.
 
-[cols="2*"]
+[cols="1,6"]
 |===
 | `x-cstring`
 | Output binary input data using C string style escapes,  e.g. `Hello, world\n\0`.  Non-printable characters without a defined  escape are output as `\xaa`.
@@ -585,7 +650,7 @@ the details of the mechanism used are subject to change.
 === Reconstructed PCAP files
 
 The PCAP files generated from C-DNS are not an exact reproduction of
-the original capture.
+the original capture, mostly due to limitations in the C-DNS format itself.
 
 * Link information below the IP layer is not preserved. An Ethernet
   wrapper is generated for the packets, but MAC addresses are not

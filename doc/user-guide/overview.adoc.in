@@ -124,8 +124,8 @@ regeneration.
 Several things should be noted as a result of specification update:
 
 * The default behaviour in terms of which data is collected will not change in 1.0 DNS-STATS Compactor, all additional sections are still collected.
-* The use of *include* options to capture additional data is deprecated in 1.0 and will be removed in a future release. Users can instead use the more flexible *excluded_fields* file to better customise catpured data (see XXXXXX)
-* For v1.0 C-DNS files that capture less than the minimum subset of data defined in the 0.2 and 0.5 versions, PCAP regeneration becomes more complex and requires some default values to generate sane PCAPS (see XXXXX). 
+* The use of *include* options to capture additional data is deprecated in 1.0 and will be removed in a future release. Users can instead use the more flexible *excluded_fields* file to better customise catpured data (see <<excludes>>)
+* For 1.0 C-DNS files that capture less than the minimum subset of data defined in the 0.2 and 0.5 versions, PCAP regeneration becomes more complex and requires some default values to generate sane PCAPS (see <<default_values>>). 
 
 ==== General purpose compression
 DNS-STATS Compactor provides options to then compress the C-DNS files using

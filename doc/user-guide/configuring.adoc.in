@@ -54,7 +54,7 @@ example, to set the snap length to 64, the configuration file entry must read
 
 A configuration file is a plain text file with lines in the form `option=value`. A `#`
 character introduces a comment that spans until the end of the line. To illustrate,
-here's the default configuration file:
+here is the default configuration file:
 
 ----
 include::../../etc/compactor.conf[]
@@ -277,9 +277,9 @@ will exit.
 
 If the *excluded_fields* file does exists the _compactor_ will act as if
 *include=all* was present. The *excluded_fields* file then controls what fields
-are *excluded* from the C-DNS output.
+are *excluded* from the C-DNS output. Uncommenting a field leads to it being omitted from the capture.
 
-NOTE: The *excluded_fields* are stored in the C-DNS file as 'StoreageHints' for _inspector_ to use when processing C-DNS file, see Sections 6.2.1 and 7.3.1.1.1.1 in RFC8616 for more details. 
+NOTE: The *excluded_fields* are stored in the C-DNS file as 'StoreageHints' for _inspector_ to use when processing C-DNS file, see Sections 6.2.1 and 7.3.1.1.1.1 in https://tools.ietf.org/html/rfc8618[RFC8618] for more details. 
 
 ==== *Excluded_fields* file location
 
@@ -299,11 +299,68 @@ fields are to be excluded from the C-DNS capture (assuming the *include* option
 is not used). In the sample all the fields are commented out so all fields
 would be collected in the C-DNS capture, which gives the same behaviour as *include=all*.
 
-The fields are specified in logical groups. As noted, excluding some data could have implications for PCAP regeneration, see XXXXX.
+The fields are specified in logical groups. 
 
 ----
 include::../../../etc/excluded_fields.conf.sample[]
 ----
+
+==== Other configurations
+As previously noted, excluding some data could have implications for PCAP
+regeneration, see <<default_values>>. The following is a suggested
+*excludes_fields* file which results in the smallest capture files where the
+goal is to be able to reasonably reconstruction just queries in a PCAP (when
+using the _inspector_ with the -q option). Capturing less data will require
+populating the PCAP with default values for some fields.
+
+----
+[ip-header]
+# time-offset
+response-delay
+# client-address
+# client-port
+# client-hoplimit
+# server-address
+# server-port
+# qr-transport-flags
+ 
+[dns-header]
+# transaction-id
+# query-opcode
+# query-rcode
+# dns-flags
+response-rcode
+query-qdcount
+query-ancount
+query-arcount
+query-nscount
+ 
+[dns-payload]
+# query-name
+# query-class-type
+# rr-ttl
+# rr-rdata
+# query-udp-size
+# query-opt-rdata
+# query-edns-version
+# query-question-sections
+# query-answer-sections
+# query-authority-sections
+# query-additional-sections
+response-answer-sections
+response-authority-sections
+response-additional-sections
+ 
+[dns-meta-data]
+query-size
+response-size
+ 
+[storage-meta-data]
+address-events
+qr-sig-flags
+----
+
+A more detailed discussion of the issues around C-DNS to PCAP reconstruction can be found in Section 6.2.1, Section 9 and Appendix D of https://tools.ietf.org/html/rfc8618[RFC8618].
 
 === Configuring _compactor_ daemon startup
 
