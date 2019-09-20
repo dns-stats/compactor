@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
 # 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,9 +8,6 @@
 
 KNOWN ISSUES/LIMITATIONS:
 -------------------------
-
-* Timestamps are recorded at microsecond granularity. Picosecond
-  timestamps as described in the implemented C-DNS draft are not supported.
 
 * Malformed packet recording as described in the implemented C-DNS draft
   is not supported. However, the compactor can record malformed
@@ -28,3 +25,12 @@ KNOWN ISSUES/LIMITATIONS:
   Debian Jessie can be used by updating the kernel to a later backported
   kernel; we have tested this with the 4.7.0 kernel. For Ubuntu we
   recommend upgrading to Xenial.
+
+* The design of C-DNS allows blocks with different storage and
+  collection parameters to be present in the same C-DNS file.
+  This might arise when two separate C-DNS files are merged.
+  inspector has not been tested on such inputs, as there currently
+  exists no tool that can generate them. It may not function correctly
+  if presented with such a file. Currently it will only display
+  configuration and storage hints from the first set of parameters.
+  PCAP writing may work correctly but is untested.
