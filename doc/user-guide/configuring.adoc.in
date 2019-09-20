@@ -323,7 +323,7 @@ response-delay
 # server-address
 # server-port
 # qr-transport-flags
- 
+
 [dns-header]
 # transaction-id
 # query-opcode
@@ -334,7 +334,7 @@ query-qdcount
 query-ancount
 query-arcount
 query-nscount
- 
+
 [dns-payload]
 # query-name
 # query-class-type
@@ -350,14 +350,14 @@ query-nscount
 response-answer-sections
 response-authority-sections
 response-additional-sections
- 
+
 [dns-meta-data]
 query-size
 response-size
- 
+qr-sig-flags
+
 [storage-meta-data]
 address-events
-qr-sig-flags
 ----
 
 A more detailed discussion of the issues around C-DNS to PCAP reconstruction can be found in Section 6.2.1, Section 9 and Appendix D of https://tools.ietf.org/html/rfc8618[RFC8618].
