@@ -377,7 +377,7 @@ https://github.com/OlafvdSpek/ctemplate.
 
 The exit status is 1 if any error occurred. A successful run ends with an exit status of 0.
 
-== BUGS
+== LIMITATIONS
 
 The design of C-DNS allows blocks with different storage and collection parameters
 to be present in the same C-DNS file. This might arise when two separate C-DNS
