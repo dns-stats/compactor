@@ -85,11 +85,17 @@ output file must be specified with the *--output* option.
 *-r. --report-info*::
   Report info (config and statistics summary) to standard output on exit.
 
-*-R, --report-only*::
-  Don't write any output files, just report info to standard output on exit.
+*-N, --no-output*::
+  Don't write any output PCAP or template files, just generate any requested ancillary
+  outputs e.g. `.info` files.
 
-*-I, --info-only*::
-   Don't write any PCAP output files, just write the `.info` files.
+*-O, --no-info*::
+  Don't write any `.info` files.
+
+*-X, --excludesfile*::
+  For each input, write a `.excludesfile` file. This is in the format of an
+  exclude hints file as specified to _compactor_ and indicates which data fields in
+  the input file were not collected.
 
 *-S, --stats*::
   For each input file, write the number of query/response records converted and the time
@@ -126,7 +132,8 @@ output file must be specified with the *--output* option.
 *-g, --geoip-db-dir* _DIR_::
   `inspector` can present geographic  IP data in the output. This requires
   the MaxMind GeoLite2 database files, which
-  should be found in directory _DIR_. *inspector* needs
+  should be found in directory _DIR_.  If not specified, the
+  default directory `@VARLIBPATH@/GeoIP` is checked. *inspector* needs
   files _GeoLite2-ASN.mmdb_ and _GeoLite2-City.mmdb_ to be present to enable
   geographic IP data in the output.
 

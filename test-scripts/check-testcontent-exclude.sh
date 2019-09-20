@@ -59,13 +59,24 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
+$INSP $DEFAULTS --excludesfile --no-info --no-output -o $tmpdir/out.pcap $tmpdir/out.cbor
+if [ $? -ne 0 ]; then
+    cleanup 1
+fi
+
+cmp -s $tmpdir/out.pcap.excludesfile $EXCLUDE
+if [ $? -ne 0 ]; then
+    echo "Generated excludes file does not match $EXCLUDE."
+    cleanup 1
+fi
+
 # Prepare a full info C-DNS and the inspector output from that.
 $COMP -c /dev/null --omit-system-id -n all -o $tmpdir/out-all.cbor $DATAFILE
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-$INSP $DEFAULTS -o $tmpdir/out-all.pcap $tmpdir/out-all.cbor
+$INSP $DEFAULTS --no-info -o $tmpdir/out-all.pcap $tmpdir/out-all.cbor
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
@@ -88,9 +99,9 @@ if [ $? -ne 0 ]; then
 fi
 
 # Run that through inspector, and we should get identical output
-# to the full info inspector output, because we always the info to
+# to the full info inspector output, because we always have the info to
 # re-create the Q/R flags.
-$INSP $DEFAULTS -o $tmpdir/out-sigflags.pcap $tmpdir/out-sigflags.cbor
+$INSP $DEFAULTS --excludesfile --no-info -o $tmpdir/out-sigflags.pcap $tmpdir/out-sigflags.cbor
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
@@ -98,6 +109,12 @@ fi
 cmp -s $tmpdir/out-sigflags.pcap $tmpdir/out-all.pcap
 if [ $? -ne 0 ]; then
     echo "sigflags: Inspector output does not match."
+    cleanup 1
+fi
+
+cmp -s $tmpdir/out-sigflags.pcap.excludesfile $EXCLUDE_SIGFLAGS
+if [ $? -ne 0 ]; then
+    echo "Generated excludes file does not match $EXCLUDE_SIGFLAGS."
     cleanup 1
 fi
 
@@ -115,6 +132,17 @@ fi
 diff -u -i $tmpdir/out-sig.diag $DATADIAG_SIG
 if [ $? -ne 0 ]; then
     echo "sig: diag differs"
+    cleanup 1
+fi
+
+$INSP $DEFAULTS --excludesfile --no-output --no-info -o $tmpdir/out-sig.pcap $tmpdir/out-sig.cbor
+if [ $? -ne 0 ]; then
+    cleanup 1
+fi
+
+cmp -s $tmpdir/out-sig.pcap.excludesfile $EXCLUDE_SIG
+if [ $? -ne 0 ]; then
+    echo "Generated excludes file does not match $EXCLUDE_SIG."
     cleanup 1
 fi
 

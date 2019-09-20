@@ -565,6 +565,13 @@ public:
      */
     void check_config(const Configuration& config);
 
+    /**
+     * \brief Dump the hints configuration to the stream provided
+     *
+     * \param os output stream.
+     */
+    void dump_config(std::ostream& os) const;
+
 private:
     /**
      * \brief Excludes file options.

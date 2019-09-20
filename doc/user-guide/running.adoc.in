@@ -340,7 +340,7 @@ Usage: inspector [options] [cdns-file [...]]
 Options:
   -h [ --help ]                         show this help message.
   -v [ --version ]                      show version information.
-  --defaultsfile arg (=/etc/dns-stats-compactor/default_values.conf)
+  --defaultsfile arg (=@ETCPATH@/dns-stats-compactor/default_values.conf)
                                         default values file.
   -o [ --output ] arg                   output file name.
   -F [ --output-format ] arg            output format. 'pcap' (default) or
@@ -350,7 +350,7 @@ Options:
   -V [ --value ] arg                    <key>=<value> to substitute in the
                                         template. This argument can be
                                         repeated.
-  -g [ --geoip-db-dir ] arg (=/var/lib/GeoIP)
+  -g [ --geoip-db-dir ] arg (=@VARLIBPATH@/GeoIP)
                                         path of directory with the GeoIP
                                         databases.
   -z [ --gzip-output ]                  compress output data using gzip. Adds
@@ -362,10 +362,12 @@ Options:
   -q [ --query-only ]                   write only query messages to output.
   -r [ --report-info ]                  report info (config and stats summary)
                                         on exit.
-  -I [ --info-only ]                    don't generate output data files, only
-                                        info files.
-  -R [ --report-only ]                  don't write output data files, just
-                                        report info.
+  -N [ --no-output ]                    do not output PCAP or template files,
+                                        only ancillary files, e.g. info files,
+                                        for each input.
+  -O [ --no-info ]                      do not output info files.
+  -X [ --excludesfile ]                 generate excluded fields files for each
+                                        input.
   -S [ --stats ]                        report conversion statistics.
   -k [ --pseudo-anonymisation-key ] arg pseudo-anonymisation key.
   -P [ --pseudo-anonymisation-passphrase ] arg

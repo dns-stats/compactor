@@ -1919,3 +1919,86 @@ void HintsExcluded::check_config(const Configuration& config)
            config.server_address_prefix_ipv6 != DEFAULT_IPV6_PREFIX_LENGTH ) )
         throw po::error("Can't omit transport flags if not storing full addresses.");
 }
+
+void HintsExcluded::dump_config(std::ostream& os) const
+{
+    os << "[ip-header]\n";
+    if ( timestamp )
+        os << "time-offset\n";
+    if ( response_delay )
+        os << "response-delay\n";
+    if ( client_address )
+        os << "client-address\n";
+    if ( client_port )
+        os << "client-port\n";
+    if ( client_hoplimit )
+        os << "client-hoplimit\n";
+    if ( server_address )
+        os << "server-address\n";
+    if ( server_port )
+        os << "server-port\n";
+    if ( transport )
+        os << "qr-transport-flags\n";
+
+    os << "\n[dns-header]\n";
+    if ( transaction_id )
+        os << "transaction-id\n";
+    if ( query_opcode )
+        os << "query-opcode\n";
+    if ( query_rcode )
+        os << "query-rcode\n";
+    if ( dns_flags )
+        os << "dns-flags\n";
+    if ( response_rcode )
+        os << "response-rcode\n";
+    if ( query_qdcount )
+        os << "query-qdcount\n";
+    if ( query_ancount )
+        os << "query-ancount\n";
+    if ( query_nscount )
+        os << "query-nscount\n";
+    if ( query_arcount )
+        os << "query-arcount\n";
+
+    os << "\n[dns-payload]\n";
+    if ( query_name )
+        os << "query-name\n";
+    if ( query_class_type )
+        os << "query-class-type\n";
+    if ( rr_ttl )
+        os << "rr-ttl\n";
+    if ( rr_rdata )
+        os << "rr-rdata\n";
+    if ( query_udp_size )
+        os << "query-udp-size\n";
+    if ( query_opt_rdata )
+        os << "query-opt-rdata\n";
+    if ( query_edns_version )
+        os << "query-edns-version\n";
+    if ( query_question_section )
+        os << "query-question-sections\n";
+    if ( query_answer_section )
+        os << "query-answer-sections\n";
+    if ( query_authority_section )
+        os << "query-authority-sections\n";
+    if ( query_additional_section )
+        os << "query-additional-sections\n";
+    if ( response_answer_section )
+        os << "response-answer-sections\n";
+    if ( response_authority_section )
+        os << "response-authority-sections\n";
+    if ( response_additional_section )
+        os << "response-additional-sections\n";
+
+    os << "\n[dns-meta-data]\n";
+    if ( qr_flags )
+        os << "qr-sig-flags\n";
+    if ( query_size )
+        os << "query-size\n";
+    if ( response_size )
+        os << "response-size\n";
+
+    os << "\n[storage-meta-data]\n";
+    if ( address_events )
+        os << "address-events\n";
+}

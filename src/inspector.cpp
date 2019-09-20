@@ -36,6 +36,7 @@ const std::string PROGNAME = "inspector";
 const std::string PCAP_EXT = ".pcap";
 const std::string TEMPLATE_EXT = ".txt";
 const std::string INFO_EXT = ".info";
+const std::string EXCLUDEHINTS_EXT = ".excludesfile";
 
 namespace po = boost::program_options;
 
@@ -77,6 +78,16 @@ struct Options
     bool report_info{false};
 
     /**
+     * \brief generate excluded fields files?
+     */
+    bool generate_excludesfile{false};
+
+    /**
+     * \brief name of the excluded fields hints file.
+     */
+    std::string excludesfile_file_name;
+
+    /**
      * \brief pseudo-anonymisation, if to use.
      */
     boost::optional<PseudoAnonymise> pseudo_anon;
@@ -107,6 +118,21 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
     boost::optional<std::chrono::system_clock::time_point> earliest_time, latest_time;
 
     backend->check_exclude_hints(config.exclude_hints);
+
+    if ( options.generate_excludesfile )
+    {
+        std::ofstream f(options.excludesfile_file_name);
+        if ( !f.is_open() )
+        {
+            std::cerr << PROGNAME << ":  Can't create " << options.excludesfile_file_name << std::endl;
+            return 1;
+        }
+        config.exclude_hints.dump_config(f);
+    }
+
+    if ( !options.generate_output && !options.generate_stats &&
+         !options.generate_info && !options.report_info )
+        return 0;
 
     try
     {
@@ -248,10 +274,12 @@ int main(int ac, char *av[])
          "write only query messages to output.")
         ("report-info,r",
          "report info (config and stats summary) on exit.")
-        ("info-only,I",
-         "don't generate output data files, only info files.")
-        ("report-only,R",
-         "don't write output data files, just report info.")
+        ("no-output,N",
+         "do not output PCAP or template files, only ancillary files, e.g. info files, for each input.")
+        ("no-info,O",
+         "do not output info files.")
+        ("excludesfile,X",
+         "generate excluded fields file for each input.")
         ("stats,S",
          "report conversion statistics.")
 #if ENABLE_PSEUDOANONYMISATION
@@ -274,6 +302,10 @@ int main(int ac, char *av[])
         ("cdns-file",
          po::value<std::vector<std::string>>(),
          "input C-DNS file.")
+        ("info-only,I",
+         "don't generate output data files, only info files.")
+        ("report-only,R",
+         "don't write output data files, just report info.")
         ;
     po::options_description all("Options");
     all.add(visible).add(debug);
@@ -392,18 +424,24 @@ int main(int ac, char *av[])
         options.generate_info = true;
         options.report_info = false;
 
-        if ( vm.count("info-only") != 0 )
+        if ( vm.count("info-only") != 0 ||
+             vm.count("report-only") != 0 ||
+             vm.count("no-output") != 0 )
             options.generate_output = false;
+
+        if ( vm.count("no-info") != 0 )
+            options.generate_info = false;
 
         if ( vm.count("report-info") != 0 )
             options.report_info = true;
 
         if ( vm.count("report-only") != 0 )
         {
-            options.generate_output = false;
             options.generate_info = false;
             options.report_info = true;
         }
+
+        options.generate_excludesfile = ( vm.count("excludesfile") != 0 );
 
         if ( !options.generate_output )
             pcap_options.baseopts.write_output = false;
@@ -476,10 +514,12 @@ int main(int ac, char *av[])
             {
                 if ( options.generate_output )
                 {
-                    if ( options.report_info || options.debug_qr )
+                    if ( options.report_info ||
+                         options.debug_qr ||
+                         options.generate_excludesfile )
                     {
                         std::cerr << PROGNAME
-                                  << ":  Writing output to standard output can't be combined with info reporting or printing Query/Response details.\n";
+                                  << ":  Writing output to standard output can't be combined with info reporting, excluded fields generation or printing Query/Response details.\n";
                         return 1;
                     }
                     options.generate_info = false;
@@ -493,6 +533,8 @@ int main(int ac, char *av[])
                 if ( !open_info_file(output_file_name, info, options) )
                     return 1;
             }
+
+            options.excludesfile_file_name = output_file_name + EXCLUDEHINTS_EXT;
 
             if ( template_backend )
                 backend = make_unique<TemplateBackend>(template_options, output_file_name);
@@ -523,6 +565,8 @@ int main(int ac, char *av[])
 
                 if ( !open_info_file(out_fname, info, options) )
                     return 1;
+
+                options.excludesfile_file_name = fname + EXCLUDEHINTS_EXT;
 
                 if ( template_backend )
                     backend = make_unique<TemplateBackend>(template_options, out_fname);
