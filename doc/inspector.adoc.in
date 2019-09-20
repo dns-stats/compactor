@@ -245,8 +245,11 @@ is no query question.
 | `query_response_query_has_opt`
 | 1 if QR contains a query which has OPT, otherwise 0. Blank if no query.
 
-| `query_response_query_has_question`
-| 1 if QR contains a query which has a question, otherwise 0. Blank if no query.
+| `query_response_query_has_no_question`
+| 0 if QR contains a query which has a question, otherwise 1. Blank if no query.
+
+| `query_response_response_has_no_question`
+| 0 if QR contains a response which has a question, otherwise 1. Blank if no query.
 
 | `query_response_response_has_opt`
 | 1 if QR contains a response which has OPT, otherwise 0. Blank if no response.
