@@ -711,6 +711,8 @@ files are merged.
 
 At the time of writing, no tool exists to do this. _inspector_ has not been tested on
 such inputs, and may not exhibit correct behaviour if presented with such a file.
+At the time of writing, _inspector_ will only display configuration and storage
+hints from the first set of parameters in the file.
 
 === _compactor_/_inspector_ `info` output
 
