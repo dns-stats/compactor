@@ -419,7 +419,7 @@ C-DNS file.
 
 ===== Interoperability
 
-A subtley of the way optionality is specified in the C-DNS format is that even
+A subtlety of the way optionality is specified in the C-DNS format is that even
 if a field is not 'excluded' in the configuration of the collecting application,
 it is still not _guaranteed_ to be present. For example, a collecting
 application in another deployment scenario may not have access to the
