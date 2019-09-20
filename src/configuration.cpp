@@ -1823,7 +1823,7 @@ block_cbor::QueryResponseSignatureHintFlags HintsExcluded::get_query_response_si
         res |= block_cbor::SERVER_PORT;
     if ( !transport )
         res |= block_cbor::QR_TRANSPORT_FLAGS;
-    if ( !qr_signature )
+    if ( !qr_flags )
         res |= block_cbor::QR_SIG_FLAGS;
     if ( !query_opcode )
         res |= block_cbor::QUERY_OPCODE;
@@ -1858,7 +1858,7 @@ void HintsExcluded::set_query_response_signature_hints(block_cbor::QueryResponse
     server_address = !( hints & block_cbor::SERVER_ADDRESS );
     server_port = !( hints & block_cbor::SERVER_PORT );
     transport = !( hints & block_cbor::QR_TRANSPORT_FLAGS );
-    qr_signature = !(hints & block_cbor::QR_SIG_FLAGS );
+    qr_flags = !(hints & block_cbor::QR_SIG_FLAGS );
     query_type = !( hints & block_cbor::QR_TYPE );
     query_opcode = !( hints & block_cbor::QUERY_OPCODE );
     dns_flags = !( hints & block_cbor::DNS_FLAGS );
