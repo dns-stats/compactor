@@ -171,14 +171,10 @@ namespace block_cbor {
         constexpr int other_data_hints_index = find_storage_hints_index(StorageHintsField::other_data_hints);
 
         enc.writeMapHeader(4);
-        enc.write(query_response_hints_index);
-        enc.write(query_response_hints);
-        enc.write(query_response_signature_hints_index);
-        enc.write(query_response_signature_hints);
-        enc.write(rr_hints_index);
-        enc.write(rr_hints);
-        enc.write(other_data_hints_index);
-        enc.write(other_data_hints);
+        enc.write(query_response_hints_index, static_cast<unsigned>(query_response_hints));
+        enc.write(query_response_signature_hints_index, static_cast<unsigned>(query_response_signature_hints));
+        enc.write(rr_hints_index, static_cast<unsigned>(rr_hints));
+        enc.write(other_data_hints_index, static_cast<unsigned>(other_data_hints));
     }
 
     void StorageParameters::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
@@ -285,10 +281,7 @@ namespace block_cbor {
         enc.write(rr_types_index);
         write_vector(rr_types, enc);
         if ( storage_flags )
-        {
-            enc.write(storage_flags_index);
-            enc.write(storage_flags);
-        }
+            enc.write(storage_flags_index, static_cast<unsigned>(storage_flags));
         if ( client_address_prefix_ipv4 != DEFAULT_IPV4_PREFIX_LENGTH )
         {
             enc.write(client_address_prefix_ipv4_index);
@@ -578,11 +571,12 @@ namespace block_cbor {
         constexpr int type_index = find_class_type_index(ClassTypeField::type_id);
         constexpr int class_index = find_class_type_index(ClassTypeField::class_id);
 
-        enc.writeMapHeader(2);
-        enc.write(type_index);
-        enc.write(qtype);
-        enc.write(class_index);
-        enc.write(qclass);
+        int nitems = !!qtype + !!qclass;
+        enc.writeMapHeader(nitems);
+        if ( qtype )
+            enc.write(type_index, static_cast<unsigned>(*qtype));
+        if ( qclass )
+            enc.write(class_index, static_cast<unsigned>(*qclass));
     }
 
     std::size_t hash_value(const ClassType &ct)
@@ -870,15 +864,18 @@ namespace block_cbor {
         enc.write(qr_sig_flags_index, qr_flags);
         enc.write(query_qd_index, qdcount);
         enc.write(query_classtype_index, query_classtype);
-        enc.write(query_rcode_index, query_rcode);
-        enc.write(query_opcode_index, query_opcode);
+        if ( query_rcode )
+            enc.write(query_rcode_index, static_cast<unsigned>(*query_rcode));
+        if ( query_opcode )
+            enc.write(query_opcode_index, static_cast<unsigned>(*query_opcode));
         enc.write(query_an_index, query_ancount);
         enc.write(query_ar_index, query_arcount);
         enc.write(query_ns_index, query_nscount);
         enc.write(edns_version_index, query_edns_version);
         enc.write(udp_buf_size_index, query_edns_payload_size);
         enc.write(opt_rdata_index, query_opt_rdata);
-        enc.write(response_rcode_index, response_rcode);
+        if ( response_rcode )
+            enc.write(response_rcode_index, static_cast<unsigned>(*response_rcode));
     }
 
     std::size_t hash_value(const QueryResponseSignature& qs)
@@ -1214,13 +1211,10 @@ namespace block_cbor {
         constexpr int count_index = find_address_event_count_index(AddressEventCountField::ae_count);
 
         enc.writeMapHeader();
-        enc.write(type_index);
-        enc.write(aei.type);
+        if ( aei.type )
+            enc.write(type_index, static_cast<unsigned>(*aei.type));
         if ( aei.code )
-        {
-            enc.write(code_index);
-            enc.write(aei.code);
-        }
+            enc.write(code_index, aei.code);
         enc.write(address_index);
         enc.write(aei.address);
         enc.write(transport_flags_index);

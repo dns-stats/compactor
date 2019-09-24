@@ -945,9 +945,9 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         if ( qr.id )
             output << "\n\tID: " << *qr.id;
         if ( qr.query_opcode )
-            output << "\n\tOpcode: " << *qr.query_opcode;
+            output << "\n\tOpcode: " << static_cast<unsigned>(*qr.query_opcode);
         if ( qr.query_rcode )
-            output << "\n\tRcode: " << *qr.query_rcode;
+            output << "\n\tRcode: " << static_cast<unsigned>(*qr.query_rcode);
         if ( qr.dns_flags )
         {
             output << "\n\tFlags: ";
@@ -980,9 +980,9 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         if ( qr.qname )
             output << "\n\tName: " << CaptureDNS::decode_domain_name(*qr.qname);
         if ( qr.query_type )
-            output << "\n\tType: " << *qr.query_type;
+            output << "\n\tType: " << static_cast<unsigned>(*qr.query_type);
         if ( qr.query_class )
-            output << "\n\tClass: " << *qr.query_class;
+            output << "\n\tClass: " << static_cast<unsigned>(*qr.query_class);
 
         if ( qr.query_questions )
             for ( const auto& q : *qr.query_questions )
@@ -990,9 +990,9 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
                 if ( q.qname )
                     output << "\n\tName: " << CaptureDNS::decode_domain_name(*q.qname);
                 if ( q.qtype )
-                    output << "\n\tType: " << *q.qtype;
+                    output << "\n\tType: " << static_cast<unsigned>(*q.qtype);
                 if ( q.qclass )
-                    output << "\n\tClass: " << *q.qclass;
+                    output << "\n\tClass: " << static_cast<unsigned>(*q.qclass);
             }
 
         output << "\n";
@@ -1020,9 +1020,9 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         if ( qr.id )
             output << "\n\tID: " << *qr.id;
         if ( qr.query_opcode )
-            output << "\n\tOpcode: " << *qr.query_opcode;
+            output << "\n\tOpcode: " << static_cast<unsigned>(*qr.query_opcode);
         if ( qr.response_rcode )
-            output << "\n\tRcode: " << *qr.response_rcode;
+            output << "\n\tRcode: " << static_cast<unsigned>(*qr.response_rcode);
         if ( qr.dns_flags )
         {
             output << "\n\tFlags: ";
@@ -1055,9 +1055,9 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         if ( qr.qname )
             output << "\n\tName: " << CaptureDNS::decode_domain_name(*qr.qname);
         if ( qr.query_type )
-            output << "\n\tType: " << *qr.query_type;
+            output << "\n\tType: " << static_cast<unsigned>(*qr.query_type);
         if ( qr.query_class )
-            output << "\n\tClass: " << *qr.query_class;
+            output << "\n\tClass: " << static_cast<unsigned>(*qr.query_class);
 
         if ( qr.response_questions )
             for ( const auto& q : *qr.response_questions )
@@ -1065,9 +1065,9 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
                 if ( q.qname )
                     output << "\n\tName: " << CaptureDNS::decode_domain_name(*q.qname);
                 if ( q.qtype )
-                    output << "\n\tType: " << *q.qtype;
+                    output << "\n\tType: " << static_cast<unsigned>(*q.qtype);
                 if ( q.qclass )
-                    output << "\n\tClass: " << *q.qclass;
+                    output << "\n\tClass: " << static_cast<unsigned>(*q.qclass);
             }
 
         output << "\n";
