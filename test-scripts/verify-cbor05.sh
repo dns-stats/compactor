@@ -12,7 +12,7 @@ INSP=./inspector
 DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
 
 CBORFILE=./gold.cbor05
-PCAPFILE=./gold.pcap
+PCAPFILE=./oldfmtgold.pcap
 
 command -v cmp > /dev/null 2>&1 || { echo "No cmp, skipping test." >&2; exit 77; }
 command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }

@@ -55,7 +55,7 @@ namespace block_cbor {
 
     namespace {
         // Default for storage parameters.
-        const unsigned DEFAULT_TICKS_PER_SECOND = 1000000;
+        const int64_t DEFAULT_TICKS_PER_SECOND = 1000000;
         const unsigned DEFAULT_MAX_BLOCK_ITEMS = 5000;
         const unsigned DEFAULT_IPV4_PREFIX_LENGTH = 32;
         const unsigned DEFAULT_IPV6_PREFIX_LENGTH = 128;
@@ -94,7 +94,7 @@ namespace block_cbor {
          * \param ticks_per_second the number of ticks in a second.
          */
         Timestamp(const std::chrono::system_clock::time_point& t,
-                  uint64_t ticks_per_second)
+                  int64_t ticks_per_second)
         {
             setFromTimePoint(t, ticks_per_second);
         }
@@ -140,7 +140,7 @@ namespace block_cbor {
          * \param ticks_per_second the number of ticks in a second.
          */
         void setFromTimePoint(const std::chrono::system_clock::time_point& t,
-                              uint64_t ticks_per_second);
+                              int64_t ticks_per_second);
 
         /**
          * \brief Get the time point represented by this timestamp.
@@ -148,7 +148,7 @@ namespace block_cbor {
          * \param ticks_per_second the number of ticks in a second.
          * \returns the time point.
          */
-        std::chrono::system_clock::time_point getTimePoint(uint64_t ticks_per_second);
+        std::chrono::system_clock::time_point getTimePoint(int64_t ticks_per_second);
     };
 
     /**
@@ -230,7 +230,7 @@ namespace block_cbor {
         /**
          * \brief number of ticks per second.
          */
-        uint64_t ticks_per_second;
+        int64_t ticks_per_second;
 
         /**
          * \brief Max number of items (Q/R, AddressEventCounts, Malformed data)

@@ -10,12 +10,15 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+#include <cstdint>
 #include <type_traits>
 
 #include "configuration.hpp"
 #include "blockcbordata.hpp"
 
 namespace block_cbor {
+
+    const int64_t NS_PER_SEC = INT64_C(1000000000);
 
     template<typename T, typename D>
     void add_vector_item(std::vector<T>& vec, const D& item, typename std::enable_if<std::is_same<T, D>::value>::type* = 0)
@@ -102,19 +105,19 @@ namespace block_cbor {
     }
 
     void Timestamp::setFromTimePoint(const std::chrono::system_clock::time_point& t,
-                                     uint64_t ticks_per_second)
+                                     int64_t ticks_per_second)
     {
         std::chrono::seconds s(std::chrono::duration_cast<std::chrono::seconds>(t.time_since_epoch()));
         std::chrono::nanoseconds ns(std::chrono::duration_cast<std::chrono::nanoseconds>(t.time_since_epoch()));
 
         secs = s.count();
-        ticks = (ns.count() % 1000000000) * ticks_per_second / 1000000000;
+        ticks = (ns.count() % NS_PER_SEC) * ticks_per_second / NS_PER_SEC;
     }
 
-    std::chrono::system_clock::time_point Timestamp::getTimePoint(uint64_t ticks_per_second)
+    std::chrono::system_clock::time_point Timestamp::getTimePoint(int64_t ticks_per_second)
     {
         std::chrono::seconds s(secs);
-        std::chrono::nanoseconds ns(ticks * 1000000000 / ticks_per_second);
+        std::chrono::nanoseconds ns(ticks * NS_PER_SEC / ticks_per_second);
         return std::chrono::system_clock::time_point(s + ns);
     }
 
@@ -1032,7 +1035,7 @@ namespace block_cbor {
                 switch(fields.query_response_field(dec.read_unsigned()))
                 {
                 case QueryResponseField::time_offset:
-                    tstamp = earliest_time + std::chrono::microseconds(dec.read_signed() * 1000000 / block_parameters.storage_parameters.ticks_per_second);
+                    tstamp = earliest_time + std::chrono::nanoseconds(dec.read_signed() * NS_PER_SEC / block_parameters.storage_parameters.ticks_per_second);
                     break;
 
                 case QueryResponseField::client_address_index:
@@ -1056,7 +1059,7 @@ namespace block_cbor {
                     break;
 
                 case QueryResponseField::response_delay:
-                    response_delay = std::chrono::microseconds(dec.read_signed() * 1000000 / block_parameters.storage_parameters.ticks_per_second);
+                    response_delay = std::chrono::nanoseconds(dec.read_signed() * NS_PER_SEC / block_parameters.storage_parameters.ticks_per_second);
                     break;
 
                 case QueryResponseField::query_name_index:
@@ -1111,14 +1114,14 @@ namespace block_cbor {
 
         enc.writeMapHeader();
         if ( tstamp )
-            enc.write(time_index, std::chrono::duration_cast<std::chrono::nanoseconds>(*tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
+            enc.write(time_index, std::chrono::duration_cast<std::chrono::nanoseconds>(*tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / NS_PER_SEC);
         enc.write(client_address_index, client_address);
         enc.write(client_port_index, client_port);
         enc.write(transaction_id_index, id);
         enc.write(qr_signature_index, signature);
         enc.write(client_hoplimit_index, hoplimit);
         if ( response_delay )
-            enc.write(delay_index, response_delay->count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
+            enc.write(delay_index, response_delay->count() * block_parameters.storage_parameters.ticks_per_second / NS_PER_SEC);
         enc.write(query_name_index, qname);
         enc.write(query_size_index, query_size);
         enc.write(response_size_index, response_size);
@@ -1373,7 +1376,7 @@ namespace block_cbor {
 
         enc.writeMapHeader(4);
         enc.write(time_offset_index);
-        enc.write(std::chrono::duration_cast<std::chrono::nanoseconds>(*tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / 1000000000);
+        enc.write(std::chrono::duration_cast<std::chrono::nanoseconds>(*tstamp - earliest_time).count() * block_parameters.storage_parameters.ticks_per_second / NS_PER_SEC);
         enc.write(client_address_index_index);
         enc.write(client_address);
         enc.write(client_port_index);

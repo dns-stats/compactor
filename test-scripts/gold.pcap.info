@@ -26,7 +26,7 @@ STATISTICS:
   Unmatched DNS responses          (C-DNS) : 0
   Malformed DNS packets                    : 0
   Non-DNS packets                          : 0
-  Out-of-order DNS query/responses         : 0
+  Out-of-order DNS query/responses         : 1
   Dropped C-DNS items (overload)           : 0
   Dropped raw PCAP packets (overload)      : 0
   Dropped non-DNS packets (overload)       : 0

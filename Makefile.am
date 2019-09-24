@@ -102,6 +102,7 @@ dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/gold.pcap.info \
                   test-scripts/malformed.pcap.xz \
                   test-scripts/matching.pcap.xz \
+                  test-scripts/oldfmtgold.pcap.xz \
                   test-scripts/testcontent.pcap.xz \
                   test-scripts/testcontent.diag \
                   test-scripts/testcontent-exclude.conf \
@@ -137,6 +138,7 @@ check_DATA = GeoLite2-ASN.mmdb \
              gold.cbor05 \
              malformed.pcap \
              matching.pcap \
+             oldfmtgold.pcap \
              testcontent.pcap \
              unmatched.pcap \
              nsd-live.dump \

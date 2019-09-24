@@ -83,8 +83,6 @@ public:
     /**
      * \brief Write index and value.
      *
-     * If there is no value, write nothing.
-     *
      * \param index the index to write.
      * \param value the value to write.
      */
@@ -101,6 +99,34 @@ public:
      * \param value the value to write.
      */
     void write(bool value);
+
+    /**
+     * \brief Write a signed char value.
+     *
+     * \param value the value to write.
+     */
+    void write(signed char value);
+
+    /**
+     * \brief Write an unsigned char value.
+     *
+     * \param value the value to write.
+     */
+    void write(unsigned char value);
+
+    /**
+     * \brief Write a signed short value.
+     *
+     * \param value the value to write.
+     */
+    void write(short value);
+
+    /**
+     * \brief Write an unsigned short value.
+     *
+     * \param value the value to write.
+     */
+    void write(unsigned short value);
 
     /**
      * \brief Write a signed integer value.

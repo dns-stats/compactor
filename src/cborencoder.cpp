@@ -83,6 +83,16 @@ void CborBaseEncoder::write(bool value)
     writeByte((7 << 5) | (value ? 21 : 20));
 }
 
+void CborBaseEncoder::write(unsigned char value)
+{
+    writeTypeValue(0, value);
+}
+
+void CborBaseEncoder::write(unsigned short value)
+{
+    writeTypeValue(0, value);
+}
+
 void CborBaseEncoder::write(unsigned int value)
 {
     writeTypeValue(0, value);
@@ -96,6 +106,22 @@ void CborBaseEncoder::write(unsigned long value)
 void CborBaseEncoder::write(unsigned long long value)
 {
     writeTypeValue64(0, value);
+}
+
+void CborBaseEncoder::write(signed char value)
+{
+    if ( value < 0 )
+        writeTypeValue(1, static_cast<unsigned long>(-1 - value));
+    else
+        writeTypeValue(0, static_cast<unsigned long>(value));
+}
+
+void CborBaseEncoder::write(short value)
+{
+    if ( value < 0 )
+        writeTypeValue(1, static_cast<unsigned long>(-1 - value));
+    else
+        writeTypeValue(0, static_cast<unsigned long>(value));
 }
 
 void CborBaseEncoder::write(int value)
