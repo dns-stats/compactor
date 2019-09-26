@@ -118,7 +118,7 @@ namespace block_cbor {
     {
         std::chrono::seconds s(secs);
         std::chrono::nanoseconds ns(ticks * NS_PER_SEC / ticks_per_second);
-        return std::chrono::system_clock::time_point(s + ns);
+        return std::chrono::system_clock::time_point(std::chrono::duration_cast<std::chrono::system_clock::duration>(s + ns));
     }
 
     void StorageHints::readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
@@ -1026,6 +1026,8 @@ namespace block_cbor {
             uint64_t n_elems = dec.readMapHeader(indef);
             while ( indef || n_elems-- > 0 )
             {
+                std::chrono::nanoseconds ns;
+
                 if ( indef && dec.type() == CborBaseDecoder::TYPE_BREAK )
                 {
                     dec.readBreak();
@@ -1035,7 +1037,8 @@ namespace block_cbor {
                 switch(fields.query_response_field(dec.read_unsigned()))
                 {
                 case QueryResponseField::time_offset:
-                    tstamp = earliest_time + std::chrono::nanoseconds(dec.read_signed() * NS_PER_SEC / block_parameters.storage_parameters.ticks_per_second);
+                    ns = std::chrono::nanoseconds(dec.read_signed() * NS_PER_SEC / block_parameters.storage_parameters.ticks_per_second);
+                    tstamp = earliest_time + std::chrono::duration_cast<std::chrono::system_clock::duration>(ns);
                     break;
 
                 case QueryResponseField::client_address_index:

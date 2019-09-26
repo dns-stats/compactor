@@ -446,7 +446,10 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     else
         transport_flags = defaults_.transport;
 
-    res.timestamp = ( qri.tstamp ) ? qri.tstamp : block_->earliest_time + *defaults_.time_offset;
+    res.timestamp =
+        ( qri.tstamp )
+        ? qri.tstamp
+        : block_->earliest_time + std::chrono::duration_cast<std::chrono::system_clock::duration>(*defaults_.time_offset);
     if ( qri.client_address )
         res.client_address = get_client_address(*qri.client_address, transport_flags);
     else
@@ -1004,7 +1007,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
     {
         output << "Response: ";
         if ( qr.timestamp && qr.response_delay )
-            output_time_point(output, *qr.timestamp + *qr.response_delay);
+            output_time_point(output, *qr.timestamp + std::chrono::duration_cast<std::chrono::system_clock::duration>(*qr.response_delay));
         if ( qr.client_address )
             output << "\n\tClient IP: " << *qr.client_address;
         if ( qr.server_address )

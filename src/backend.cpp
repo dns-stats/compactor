@@ -190,7 +190,7 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
         response->timestamp = *qrd.timestamp;
         // If there is no query, the timestamp is the response timestamp.
         if ( ( qrd.qr_flags & block_cbor::HAS_QUERY ) && qrd.response_delay )
-            response->timestamp += *qrd.response_delay;
+            response->timestamp += std::chrono::duration_cast<std::chrono::system_clock::duration>(*qrd.response_delay);
         response->tcp = *qrd.qr_transport_flags & block_cbor::TCP;
         response->clientIP = *qrd.client_address;
         response->serverIP = *qrd.server_address;

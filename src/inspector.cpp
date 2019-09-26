@@ -149,7 +149,7 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
             {
                 std::chrono::system_clock::time_point t = *qr.timestamp;
                 if ( qr.response_delay )
-                    t += *qr.response_delay;
+                    t += std::chrono::duration_cast<std::chrono::system_clock::duration>(*qr.response_delay);
                 if ( first_timestamp )
                 {
                     earliest_time = latest_time = t;
