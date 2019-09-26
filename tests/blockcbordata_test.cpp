@@ -2362,7 +2362,7 @@ SCENARIO("HeaderList items can be read", "[block]")
                 hl_r.readCbor(tcbd, fields);
 
                 REQUIRE(hl_r.size() == 3);
-                REQUIRE(hl_r[0].val == 1);
+                REQUIRE(hl_r[std::size_t{0}].val == 1);
                 REQUIRE(hl_r[1].val == 2);
                 REQUIRE(hl_r[2].val == 3);
             }
