@@ -123,7 +123,7 @@ public:
         NOTZONE,
         DSOTYPENI,
         BADVERS = 16,
-        BADSIG,
+        BADTSIG,
         BADKEY,
         BADTIME,
         BADMODE,
