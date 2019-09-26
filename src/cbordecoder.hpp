@@ -109,6 +109,8 @@ public:
      *
      * Read an item of given type. Pass to private implementation which
      * can be overloaded and specialised.
+     *
+     * \param item The item to read.
      */
     template<typename T>
     void read(T& item)
@@ -116,6 +118,14 @@ public:
         read_item(item);
     }
 
+    /**
+     * \brief templated read of optional item.
+     *
+     * Read an item of given type. Pass to private implementation which
+     * can be overloaded and specialised.
+     *
+     * \param item The item to read.
+     */
     template<typename T>
     void read(boost::optional<T>& item)
     {

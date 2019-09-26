@@ -1929,10 +1929,10 @@ namespace block_cbor {
         /**
          * \brief Count the AddressEvent.
          *
-         * \param ae the AddressEvent.
          * \param type       the type of address event.
          * \param code       the event code.
          * \param address    the address.
+         * \param is_ipv6    is this event an IPv6 event?
          */
         void count_address_event(const AddressEvent::EventType& type,
                                  unsigned code,

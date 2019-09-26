@@ -34,8 +34,25 @@ class Configuration;
 struct Size
 {
 public:
+    /**
+     * \brief Constructor.
+     *
+     * Initialise size to 0.
+     */
     Size() : size(0) {}
+
+    /**
+     * \brief Constructor.
+     *
+     * Initialise size to given value.
+     *
+     * \param n the value to initialise to.
+     */
     explicit Size(std::uintmax_t n) : size(n) {}
+
+    /**
+     * \brief the value.
+     */
     std::uintmax_t size;
 };
 
@@ -509,7 +526,7 @@ public:
     /**
      * \brief Set query response hint flags value from storage hints.
      *
-     * \params hints hints value.
+     * \param hints hints value.
      */
     void set_query_response_hints(block_cbor::QueryResponseHintFlags hints);
 
@@ -523,7 +540,7 @@ public:
     /**
      * \brief Set query response signature hint flags value from storage hints.
      *
-     * \params hints hints value.
+     * \param hints hints value.
      */
     void set_query_response_signature_hints(block_cbor::QueryResponseSignatureHintFlags hints);
 
@@ -537,7 +554,7 @@ public:
     /**
      * \brief Set RR hint flags value from storage hints.
      *
-     * \params hints hints value.
+     * \param hints hints value.
      */
      void set_rr_hints(block_cbor::RRHintFlags hints);
 
@@ -551,7 +568,7 @@ public:
     /**
      * \brief Set other data hint flags value from storage hints.
      *
-     * \params hints hints value.
+     * \param hints hints value.
      */
     void set_other_data_hints(block_cbor::OtherDataHintFlags hints);
 

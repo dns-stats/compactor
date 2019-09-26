@@ -173,16 +173,23 @@ public:
     /**
      * \brief Write a string as either text or byte string.
      *
-     * \param str           the value to write.
-     * \param is_text write as text if true.
+     * \param str     the value to write.
+     * \param is_text write as text if true, else as bytes.
      */
     void write(const char* str, bool is_text=true);
+
+    /**
+     * \brief Write a string as either text or byte string.
+     *
+     * \param str     the value to write.
+     * \param is_text write as text if true, else as bytes.
+     */
     void write(const std::string& str, bool is_text=true);
 
     /**
      * \brief Write a byte string.
      *
-     * \param str           the value to write.
+     * \param str     the value to write.
      */
     void write(const byte_string& str);
 

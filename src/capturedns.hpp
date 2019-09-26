@@ -104,6 +104,9 @@ public:
         OP_DSO
     };
 
+    /**
+     * \brief The set of known opcodes.
+     */
     static const std::vector<Opcode> OPCODES;
 
     /**
@@ -222,7 +225,11 @@ public:
         CERT = CERTIFICATE
     };
 
+    /**
+     * \brief The set of known query types.
+     */
     static const std::vector<QueryType> QUERYTYPES;
+
     /**
      * \brief Query classes enum.
      */
