@@ -39,7 +39,9 @@ dsconf_DATA = etc/compactor.conf \
 dist_dsconf_DATA = etc/compactor.conf \
 	           etc/excluded_fields.conf.sample \
                    etc/default_values.conf
-dist_noinst_DATA = doc/compactor.adoc doc/inspector.adoc
+dist_noinst_DATA = README.adoc \
+                   doc/compactor.adoc doc/inspector.adoc \
+                   $(user_guide_sources)
 
 conffile=$(dsconfdir)/compactor.conf
 excludesfile=$(dsconfdir)/excluded_fields.conf
@@ -107,6 +109,10 @@ dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/testcontent.diag \
                   test-scripts/testcontent-exclude.conf \
                   test-scripts/testcontent-exclude.diag \
+                  test-scripts/testcontent-exclude-sig.conf \
+                  test-scripts/testcontent-exclude-sig.diag \
+                  test-scripts/testcontent-exclude-sigflags.conf \
+                  test-scripts/testcontent-exclude-sigflags.diag \
                   test-scripts/testcontent.debugqr \
                   test-scripts/addressprefix.diag \
                   test-scripts/addressprefix.debugqr \
@@ -123,7 +129,8 @@ dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/template.dump \
                   test-scripts/template.pcap \
                   test-scripts/test-csv.tpl \
-                  test-scripts/test-block.tpl
+                  test-scripts/test-block.tpl \
+                  test-scripts/test.defaults
 
 
 EXTRA_DIST = getversion.sh .version
