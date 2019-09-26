@@ -14,7 +14,7 @@ dist_doc_DATA = LICENSE.txt ChangeLog.txt KNOWN_ISSUES.txt
 
 if BUILD_DOCS
         dist_man_MANS = doc/compactor.1 doc/inspector.1
-        dist_doc_DATA += doc/user-guide.html README.html
+        dist_doc_DATA += doc/user-guide.html doc/overview.png README.html
 endif
 
 common_doc_sources = \
@@ -26,6 +26,7 @@ common_doc_sources = \
 user_guide_sources = \
 	$(common_doc_sources) \
         doc/user-guide/overview.adoc \
+        doc/user-guide/overview.png \
         doc/user-guide/installation.adoc \
         doc/user-guide/configuring.adoc \
         doc/user-guide/running.adoc \
