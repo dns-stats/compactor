@@ -154,7 +154,9 @@ namespace {
         { "CAA", 257 },
         { "TA", 32768  },
         { "DLV", 32769  },
+    };
 
+    const std::unordered_map<std::string, unsigned> RR_TYPES_ALT = {
         { "CERT", 37 },
         { "NSEC3PARAMS", 51 }
     };
@@ -177,9 +179,12 @@ namespace {
         {
             auto item = RR_TYPES.find(s);
             if ( item == RR_TYPES.end() )
-                throw po::error("unknown RR type " + s );
-            else
-                config.push_back(item->second);
+            {
+                item = RR_TYPES_ALT.find(s);
+                if ( item == RR_TYPES_ALT.end() )
+                    throw po::error("unknown RR type " + s );
+            }
+            config.push_back(item->second);
         }
     }
 
@@ -1044,9 +1049,12 @@ void validate(boost::any& v, const std::vector<std::string>& values,
 
     auto item = RR_TYPES.find(s);
     if ( item == RR_TYPES.end() )
-        throw po::validation_error(po::validation_error::invalid_option_value);
-    else
-        v = CaptureDNS::QueryType(item->second);
+    {
+        item = RR_TYPES_ALT.find(s);
+        if ( item == RR_TYPES_ALT.end() )
+            throw po::validation_error(po::validation_error::invalid_option_value);
+    }
+    v = CaptureDNS::QueryType(item->second);
 }
 
 /**
