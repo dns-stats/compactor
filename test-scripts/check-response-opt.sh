@@ -42,7 +42,7 @@ fi
 # Get detailed text description of first response and extract the
 # bit that should be about the OPT.
 tshark -c 2 -T text -r $tmpdir/out.pcap -Y dns.flags.response==1 -V | \
-    sed -e "1,/OPT/d" -e "/Request In:/,\$d" -e "s/^            //" > $tmpdir/opt.txt
+    sed -e "1,/OPT/d" -e "/Request In:/,\$d" -e "s/^            //" -e "/^$/d" > $tmpdir/opt.txt
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
