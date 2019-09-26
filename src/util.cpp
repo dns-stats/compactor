@@ -26,7 +26,7 @@
 void set_thread_name(const char* name)
 {
 #if HAVE_PTHREAD_SETNAME_NP
-  #ifdef MACOSX
+  #ifdef __APPLE__
     pthread_setname_np(name);
   #else
     pthread_setname_np(pthread_self(), name);
