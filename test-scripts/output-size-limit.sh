@@ -25,7 +25,7 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-$COMP -c /dev/null --max-output-size 10k --max-block-qr-items 100 -o "$tmpdir/out2.cbor" $DATAFILE
+$COMP -c /dev/null --max-output-size 10k --max-block-items 100 -o "$tmpdir/out2.cbor" $DATAFILE
 if [ $? -ne 0 ]; then
     cleanup 1
 fi

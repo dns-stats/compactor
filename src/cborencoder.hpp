@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,7 +15,6 @@
 
 #include <array>
 #include <atomic>
-#include <chrono>
 #include <condition_variable>
 #include <cstddef>
 #include <cstdint>
@@ -26,10 +25,13 @@
 #include <thread>
 #include <vector>
 
+#include <boost/optional.hpp>
+
 #include "bytestring.hpp"
 #include "log.hpp"
 #include "makeunique.hpp"
 #include "streamwriter.hpp"
+#include "util.hpp"
 
 /**
  * \class CborBaseEncoder
@@ -49,6 +51,82 @@ public:
      * \brief The default constructor.
      */
     CborBaseEncoder() : buf_(), p_(&buf_[0]) {}
+
+    /**
+     * \brief Write optional values.
+     *
+     * Throw if there is no value there.
+     *
+     * \param value the value to write.
+     */
+    template<typename T>
+    void write(const boost::optional<T>& value)
+    {
+        write(*value);
+    }
+
+    /**
+     * \brief Write index and optional value.
+     *
+     * If there is no value, write nothing.
+     *
+     * \param index the index to write.
+     * \param value the value to write.
+     */
+    template<typename T>
+    void write(int index, const boost::optional<T>& value)
+    {
+        if ( value )
+            write(index, *value);
+    }
+
+    /**
+     * \brief Write index and value.
+     *
+     * \param index the index to write.
+     * \param value the value to write.
+     */
+    template<typename T>
+    void write(int index, const T& value)
+    {
+        write(index);
+        write(value);
+    }
+
+    /**
+     * \brief Write a boolean value.
+     *
+     * \param value the value to write.
+     */
+    void write(bool value);
+
+    /**
+     * \brief Write a signed char value.
+     *
+     * \param value the value to write.
+     */
+    void write(signed char value);
+
+    /**
+     * \brief Write an unsigned char value.
+     *
+     * \param value the value to write.
+     */
+    void write(unsigned char value);
+
+    /**
+     * \brief Write a signed short value.
+     *
+     * \param value the value to write.
+     */
+    void write(short value);
+
+    /**
+     * \brief Write an unsigned short value.
+     *
+     * \param value the value to write.
+     */
+    void write(unsigned short value);
 
     /**
      * \brief Write a signed integer value.
@@ -95,31 +173,25 @@ public:
     /**
      * \brief Write a string as either text or byte string.
      *
-     * \param str           the value to write.
-     * \param is_text write as text if true.
+     * \param str     the value to write.
+     * \param is_text write as text if true, else as bytes.
+     */
+    void write(const char* str, bool is_text=true);
+
+    /**
+     * \brief Write a string as either text or byte string.
+     *
+     * \param str     the value to write.
+     * \param is_text write as text if true, else as bytes.
      */
     void write(const std::string& str, bool is_text=true);
 
     /**
      * \brief Write a byte string.
      *
-     * \param str           the value to write.
+     * \param str     the value to write.
      */
     void write(const byte_string& str);
-
-    /**
-     * \brief Write a time point.
-     *
-     * \param t the value to write.
-     */
-    void write(const std::chrono::system_clock::time_point& t);
-
-    /**
-     * \brief Write a microsecond duration.
-     *
-     * \param t the value to write.
-     */
-    void write(const std::chrono::microseconds& t);
 
     /**
      * \brief Write the start of an array with a fixed number of elements.
@@ -587,6 +659,8 @@ private:
      */
     void compressFileThread(const std::string& input, const std::string& output)
     {
+        set_thread_name("comp:compress");
+
         try
         {
             std::ifstream ifs(input, std::ios::binary);

@@ -8,6 +8,9 @@
 
 COMP=./compactor
 INSP=./inspector
+
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
+
 DATAFILE=./knot-live.raw.pcap
 INFOFILE=$srcdir/test-scripts/knot-live.anon.info
 
@@ -33,7 +36,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # -I. Expect only .info to be produced.
-$INSP --info-only -P test -p -o $tmpdir/out.pcap $tmpdir/out.cbor
+$INSP $DEFAULTS --info-only -P test -p -o $tmpdir/out.pcap $tmpdir/out.cbor
 if [ $? -ne 0 ]; then
     cleanup 1
 fi

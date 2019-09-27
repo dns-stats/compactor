@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -106,8 +106,8 @@ struct DNSMessage
                << "\n\tArCount: " << msg.dns.additional_count();
         for ( const auto &q : msg.dns.queries() )
             output << "\n\tName: " << CaptureDNS::decode_domain_name(q.dname())
-                   << "\n\tType: " << q.query_type()
-                   << "\n\tClass: " << q.query_class();
+                   << "\n\tType: " << static_cast<unsigned>(q.query_type())
+                   << "\n\tClass: " << static_cast<unsigned>(q.query_class());
         output << std::endl;
         return output;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2018-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -136,8 +136,7 @@ SCENARIO("Pseudo-Anonymising OPT RDATA", "[pseudoanonymise]")
 
             for (auto t : TESTS)
             {
-                CaptureDNS::EDNS0 edns0(CaptureDNS::INTERNET, 1, t.first);
-                byte_string out = anon.edns0(edns0).rr().data();
+                byte_string out = anon.edns0(t.first);
                 CHECK(out == t.second);
             }
         }

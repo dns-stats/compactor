@@ -6,6 +6,26 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.0.0-beta1 - 2019-09-20
+--------------------------------
+
+* Supports C-DNS as described in RFC8618.
+** compactor writes only C-DNS 1.0 format.
+** inspector reads C-DNS 1.0 and all previously supported draft formats.
+* New fine-grained selection of data stored in C-DNS via excluded_fields file.
+** Previous section 'include' settings are deprecated,
+   and may only be used if excluded_fields file is not specified.
+** Default values may be supplied to inspector for individual items of data not
+   present in the C-DNS file. A complete set of defaults must be supplied
+   when outputting PCAP.
+* inspector command line options --info-only and --report-only are
+  deprecated, and replaced with --no-info and --no-output.
+* Added template items query_response_query_has_no_question
+  and  query_response_response_has_no_question. Item
+  query_response_query_has_question is deprecated.
+* Addresses stored in C-DNS files may be stored only to a given prefix
+  length, potentially saving storage space.
+
 Version 0.12.3 - 2019-07-08
 ---------------------------
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,6 +19,7 @@
 
 #include <list>
 #include <string>
+#include <vector>
 
 #include <boost/optional.hpp>
 
@@ -88,6 +89,51 @@ public:
     {
         QUERY = 0,
         RESPONSE = 1
+    };
+
+    /**
+     * \brief DNS opcodes.
+     */
+    enum Opcode
+    {
+        OP_QUERY = 0,
+        OP_IQUERY,
+        OP_STATUS,
+        OP_NOTIFY = 4,
+        OP_UPDATE,
+        OP_DSO
+    };
+
+    /**
+     * \brief The set of known opcodes.
+     */
+    static const std::vector<Opcode> OPCODES;
+
+    /**
+     * \brief DNS rcodes.
+     */
+    enum Rcode
+    {
+        NOERROR = 0,
+        FORMERR,
+        SERVFAIL,
+        NXDOMAIN,
+        NOTIMP,
+        REFUSED,
+        YXDOMAIN,
+        YXRRSET,
+        NOTAUTH,
+        NOTZONE,
+        DSOTYPENI,
+        BADVERS = 16,
+        BADTSIG,
+        BADKEY,
+        BADTIME,
+        BADMODE,
+        BADNAME,
+        BADALG,
+        BADTRUNC,
+        BADCOOKIE
     };
 
     /**
@@ -180,6 +226,11 @@ public:
     };
 
     /**
+     * \brief The set of known query types.
+     */
+    static const std::vector<QueryType> QUERYTYPES;
+
+    /**
      * \brief Query classes enum.
      */
     enum QueryClass
@@ -196,6 +247,7 @@ public:
         /**
          * \endcond
          */
+        CLASS_NONE = 254,
         CLASS_ANY = 255
     };
 
@@ -722,10 +774,10 @@ public:
     /**
      * \brief Getter for the opcode field.
      *
-     * \return uint8_t containing the value of the opcode field.
+     * \return Opcode containing the value of the opcode field.
      */
-    uint8_t opcode() const {
-        return header_.opcode;
+    Opcode opcode() const {
+        return Opcode(header_.opcode);
     }
 
     /**
@@ -948,7 +1000,7 @@ public:
      *
      * \param new_opcode The new opcode to be set.
      */
-    void opcode(uint8_t new_opcode) {
+    void opcode(Opcode new_opcode) {
         header_.opcode = new_opcode;
     }
 

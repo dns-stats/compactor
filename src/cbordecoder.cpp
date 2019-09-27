@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -62,6 +62,26 @@ int64_t CborBaseDecoder::read_signed()
         return uint_val;
     else
         return -1 - uint_val;
+}
+
+bool CborBaseDecoder::read_bool()
+{
+    unsigned major, minor;
+    uint64_t uint_val;
+
+    needRead();
+    read_type_unsigned(major, minor, uint_val);
+    if ( major != TYPE_SIGNED && major != TYPE_UNSIGNED &&
+         !( major == TYPE_SIMPLE && (minor == 20 || minor == 21) ) )
+        throw std::logic_error("read_signed() called on wrong type");
+    if ( major == TYPE_SIMPLE )
+        return ( minor == 21 );
+    if ( minor > 27 )
+            throw cbor_decode_error("minor > 27 in signed");
+    if ( major == TYPE_UNSIGNED )
+        return ( uint_val != 0 );
+    else
+        return true;
 }
 
 byte_string CborBaseDecoder::read_binary()
@@ -143,7 +163,6 @@ uint64_t CborBaseDecoder::readMapHeader(bool& indefinite_length)
 }
 
 // Present for completeness. Not currently used.
-// cppcheck-suppress unusedFunction
 uint64_t CborBaseDecoder::read_tag()
 {
     unsigned major, minor;
@@ -159,7 +178,6 @@ uint64_t CborBaseDecoder::read_tag()
 }
 
 // Present for completeness. Not currently used.
-// cppcheck-suppress unusedFunction
 uint8_t CborBaseDecoder::readSimple()
 {
     unsigned major, minor;
@@ -175,7 +193,6 @@ uint8_t CborBaseDecoder::readSimple()
 }
 
 // Present for completeness. Not currently used.
-// cppcheck-suppress unusedFunction
 double CborBaseDecoder::read_float()
 {
     needRead();
@@ -190,19 +207,6 @@ void CborBaseDecoder::readBreak()
     if ( type() != TYPE_BREAK )
         throw std::logic_error("read_break() called on wrong type");
     ++p_;
-}
-
-std::chrono::system_clock::time_point CborBaseDecoder::read_time()
-{
-    bool indefLen;
-    uint64_t nelems = readArrayHeader(indefLen);
-
-    if ( indefLen || nelems != 2 )
-        throw std::logic_error("read_time() called on wrong type");
-
-    std::chrono::seconds s(read_unsigned());
-    std::chrono::microseconds us(read_unsigned());
-    return std::chrono::system_clock::time_point(s + us);
 }
 
 void CborBaseDecoder::skip()

@@ -21,6 +21,8 @@
 COMP=./compactor
 INSP=./inspector
 
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
+
 TCPDUMP=/usr/sbin/tcpdump
 
 command -v cmp > /dev/null 2>&1 || { echo "No cmp, skipping test." >&2; exit 77; }
@@ -71,7 +73,7 @@ if [ $? -ne 0 ]; then
     error "compactor failed"
 fi
 
-$INSP -o $tmpdir/gold.cbor.pcap $tmpdir/gold.cbor
+$INSP $DEFAULTS -o $tmpdir/gold.cbor.pcap $tmpdir/gold.cbor
 if [ $? -ne 0 ]; then
     error "inspector failed"
 fi

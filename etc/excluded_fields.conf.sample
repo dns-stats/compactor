@@ -1,0 +1,48 @@
+# A list of fields to be omitted from compactor outputs. 
+# Uncomment the field for it to be omitted.
+# The fields MUST go under the heading as shown
+
+[ip-header]
+# time-offset
+# response-delay
+# client-address
+# client-port
+# client-hoplimit
+# server-address
+# server-port
+# qr-transport-flags
+
+[dns-header]
+# transaction-id
+# query-opcode
+# query-rcode
+# dns-flags
+# response-rcode
+# query-qdcount
+# query-ancount
+# query-arcount
+# query-nscount
+
+[dns-payload]
+# query-name
+# query-class-type
+# rr-ttl
+# rr-rdata
+# query-udp-size
+# query-opt-rdata
+# query-edns-version
+# query-question-sections
+# query-answer-sections
+# query-authority-sections
+# query-additional-sections
+# response-answer-sections
+# response-authority-sections
+# response-additional-sections
+
+[dns-meta-data]
+# query-size
+# response-size
+# qr-sig-flags
+
+[storage-meta-data]
+# address-events

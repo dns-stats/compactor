@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -117,6 +117,24 @@ SCENARIO("Check CBOR encoder encodes correct basic values", "[cbor]")
             }
         }
 
+        WHEN("boolean values are encoded")
+        {
+            tcbe.write(false);
+            tcbe.write(true);
+            tcbe.flush();
+
+            THEN("encoder output is correct")
+            {
+                const uint8_t EXPECTED[] =
+                    {
+                        0xE0 | 20,
+                        0xE0 | 21
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
         WHEN("strings are encoded")
         {
             tcbe.write("Hello");
@@ -135,24 +153,6 @@ SCENARIO("Check CBOR encoder encodes correct basic values", "[cbor]")
                         'o', 'n', 'g', 'e', 'r', ' ', 't', 'h', 'a', 'n',
                         ' ', '2', '4', ' ', 'c', 'h', 'a', 'r', 'a', 'c',
                         't', 'e', 'r', 's',
-                    };
-
-                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
-            }
-        }
-
-        WHEN("time values are encoded")
-        {
-            tcbe.write(std::chrono::system_clock::time_point(std::chrono::microseconds(1)));
-            tcbe.write(std::chrono::system_clock::time_point(std::chrono::seconds(1)));
-            tcbe.flush();
-
-            THEN("encoder output is correct")
-            {
-                const uint8_t EXPECTED[] =
-                    {
-                        (4 << 5) | 2, 0, 1,
-                        (4 << 5) | 2, 1, 0
                     };
 
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));

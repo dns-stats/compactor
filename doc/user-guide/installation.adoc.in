@@ -13,6 +13,7 @@ https://launchpad.net[Launchpad] PPA (Personal Package Archive)
 _compactor_ and  _inspector_  are supplied in separate packages named
 `dns-stats-compactor` and `dns-stats-inspector`.
 
+[[libtins]]
 ===== Pre-requisites
 
 Both _compactor_ and _inspector_ use
@@ -52,7 +53,7 @@ Whenever the _compactor_ package is installed, the system will attempt
 to start _compactor_ as a service.
 
 The first time the _compactor_ package is installed, it installs a
-default configuration file `/etc/dns-stats-compactor/compactor.conf`. This
+default configuration file `@ETCPATH@/compactor.conf`. This
 default configuration does not specify a capture interface, so the
 attempt at starting _compactor_ as a service will fail.  Before
 using _compactor_ as a service, you need to edit the default
@@ -83,7 +84,7 @@ source, see the documentation for those items.
   with the 2011 ISO standard, otherwise {cpp}11.
 
 | `boost-log`
-.4+| Several libraries from http://www.boost.org[Boost
+.5+| Several libraries from http://www.boost.org[Boost
   {cpp}] are required. Depending on your system, it may be possible to
   install just the build requirements for individual libraries, or it
   may be more convenient to install all the Boost libraries.
@@ -94,6 +95,8 @@ source, see the documentation for those items.
 | `boost-system`
 
 | `boost-thread`
+
+| `boost-iostreams`
 
 | `liblzma`| The compression library from http://tukaani.org/xz/[XZ utils].
 
@@ -107,6 +110,7 @@ source, see the documentation for those items.
   system `malloc`.
 
 | `libtins` | Networking functions library. http://libtins.github.io/.
+See  <<libtins>> if there is no package for your OS.
 
 | `openssl` | Cryptography library, used in pseudo-anonymisation.
 http://www.openssl.org/.

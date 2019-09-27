@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -227,12 +227,12 @@ SCENARIO("DNSMessage correctly parses packet", "[parse]")
         THEN("Message is malformed")
         {
             REQUIRE_THROWS_AS(
-                DNSMessage msg(Tins::RawPDU(msg_raw, sizeof(msg_raw)),
-                               std::chrono::system_clock::time_point(std::chrono::hours(24*365*20)),
-                               IPAddress(Tins::IPv4Address("192.168.1.2")),
-                               IPAddress(Tins::IPv4Address("192.168.1.3")),
-                               12345, 6789,
-                               254, false),
+                DNSMessage(Tins::RawPDU(msg_raw, sizeof(msg_raw)),
+                           std::chrono::system_clock::time_point(std::chrono::hours(24*365*20)),
+                           IPAddress(Tins::IPv4Address("192.168.1.2")),
+                           IPAddress(Tins::IPv4Address("192.168.1.3")),
+                           12345, 6789,
+                           254, false),
                 malformed_packet);
         }
     }
@@ -251,12 +251,12 @@ SCENARIO("DNSMessage correctly parses packet", "[parse]")
         THEN("Message is malformed")
         {
             REQUIRE_THROWS_AS(
-                DNSMessage msg(Tins::RawPDU(msg_raw, sizeof(msg_raw)),
-                               std::chrono::system_clock::time_point(std::chrono::hours(24*365*20)),
-                               IPAddress(Tins::IPv4Address("192.168.1.2")),
-                               IPAddress(Tins::IPv4Address("192.168.1.3")),
-                               12345, 6789,
-                               254, false),
+                DNSMessage(Tins::RawPDU(msg_raw, sizeof(msg_raw)),
+                           std::chrono::system_clock::time_point(std::chrono::hours(24*365*20)),
+                           IPAddress(Tins::IPv4Address("192.168.1.2")),
+                           IPAddress(Tins::IPv4Address("192.168.1.3")),
+                           12345, 6789,
+                           254, false),
                 malformed_packet);
         }
     }
@@ -275,12 +275,12 @@ SCENARIO("DNSMessage correctly parses packet", "[parse]")
         THEN("Message is malformed")
         {
             REQUIRE_THROWS_AS(
-                DNSMessage msg(Tins::RawPDU(msg_raw, sizeof(msg_raw)),
-                               std::chrono::system_clock::time_point(std::chrono::hours(24*365*20)),
-                               IPAddress(Tins::IPv4Address("192.168.1.2")),
-                               IPAddress(Tins::IPv4Address("192.168.1.3")),
-                               12345, 6789,
-                               254, false),
+                DNSMessage(Tins::RawPDU(msg_raw, sizeof(msg_raw)),
+                           std::chrono::system_clock::time_point(std::chrono::hours(24*365*20)),
+                           IPAddress(Tins::IPv4Address("192.168.1.2")),
+                           IPAddress(Tins::IPv4Address("192.168.1.3")),
+                           12345, 6789,
+                           254, false),
                 malformed_packet);
         }
     }

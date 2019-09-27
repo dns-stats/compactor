@@ -1,0 +1,136 @@
+==== Outputs
+
+*-o, --output* _PATTERN_::
+  Use _PATTERN_ as the template for the file path for the C-DNS output files. If no output
+  pattern is given, no output is written.
+
+*-z, --gzip-output* [_arg_]::
+  Compress data in the C-DNS output files using gzip(1) format. _arg_ may be
+  `true` or `1` to  enable compression, `false` or `0` to disable compression.
+  If _arg_ is omitted,  it defaults to `true`. If compression is enabled, an
+  extension `.gz` is added to  the output filename.
+
+*-y, --gzip-level* [_arg_]::
+  Compression level to use when producing gzip(1) C-DNS output. _arg_ must be
+  a single digit `0` to `9`.  If not specified, the default level is `6`.
+
+*-x, --xz-output* [_arg_]::
+  Compress data in the C-DNS output files using xz(1) format. _arg_ may be `true`
+  or `1` to enable compression, `false` or `0` to disable compression. If _arg_ is omitted,
+  it defaults to `true`. If compression is enabled, an extension `.xz` is added to
+  the output filename.
+
+*-u, --xz-preset* [_arg_]::
+  Compression preset level to use when producing xz(1) C-DNS output. _arg_ must be
+  a single digit `0` to `9`.  If not specified, the default level is `6`.
+
+*--max-compression-threads* [_arg_]::
+  Maximum number of threads to use when compressing. Compression uses
+  one thread per output file, so this argument gives the number of
+  output files that can be compressed simultaneously. _arg_ must be
+  `1` or more.  If not specified, the default number of threads is `2`.
+
+*-w, --raw-pcap* _PATTERN_::
+  Use _PATTERN_ as the template for a file path for output of all packets captured to
+  file in PCAP format. If no pattern is given, no raw packet output is written.
+
+*-m, --ignored-pcap* _PATTERN_::
+  Use _PATTERN_ as the template for a file path for output of all packets captured that
+  were not to the configured DNS ports, or were not validly formed DNS packets.
+  If no pattern is given, no ignored packet output is written.
+
+*-Z, --gzip-pcap* [_arg_]::
+  Compress data in the PCAP output files using gzip(1) format. _arg_ may be
+  `true` or `1` to  enable compression, `false` or `0` to disable compression.
+  If _arg_ is omitted,  it defaults to `true`. If compression is enabled, an
+  extension `.gz` is added to  the output filename.
+
+*-Y, --gzip-level-pcap* [_arg_]::
+  Compression level to use when producing gzip(1) PCAP output. _arg_ must be
+  a single digit `0` to `9`.  If not specified, the default level is `6`.
+
+*-X, --xz-pcap* [_arg_]::
+  Compress data in the PCAP output files using xz(1) format. _arg_ may be `true`
+  or `1` to enable compression, `false` or `0` to disable compression. If _arg_ is omitted,
+  it defaults to `true`. If compression is enabled, an extension `.xz` is added to
+  the output filename.
+
+*-U, --xz-preset-pcap* [_arg_]::
+  Compression preset level to use when producing xz(1) C-DNS output. _arg_ must be
+  a single digit `0` to `9`.  If not specified, the default level is `6`.
+
+*-t, --rotation-period* _SECONDS_::
+  Specify the frequency with which all output file path patterns should be re-examined.
+  If the file path has changed, the existing output file is closed and a new one opened
+  using the new pattern expansion. If the file path has not changed, the pattern
+  is re-examined every second until it changes. The default period is 300 seconds.
+  This may be combined with maximum output file size rotation, in which case
+  rotation happens when either condition is met.
+
+*-n, --include* _SECTIONS_::
+  Indicate which optional sections should be included in the main output. This argument
+  can be given multiple times. By default none of these optional sections are included.
+  This option is deprecated. and will be removed in a future release. It is replaced by
+  the `excludesfile` option. See the user guide for more information.
+
+*-G, --ignore-opcode* _OPCODE_::
+   Indicate an opcode _OPCODE_ that should not be included in the main output.
+   This argument can be given multiple times.
+
+*-E, --accept-opcode* _OPCODE_::
+   Indicate an opcode _OPCODE_ that should be included in the main output.
+   This argument can be given multiple times.
+
+*-g, --ignore-rr-type* _TYPE_::
+   Indicate an RR type _TYPE_ that should not be included in the main output.
+   The first question is always included, but _TYPE_ nominated using the RR type
+   name (in upper case)  will be omitted from any other question and from
+   any Answer, Authority or  Additional section. This argument can be given
+   multiple times.
+
+*-e, --accept-rr-type* _TYPE_::
+   Indicate an RR type _TYPE_ that should be included in the main output.
+   The first question is always included, but only _TYPE_ nominated using
+   the RR type name (in upper case) will be included in any other question
+   and in any Answer,  Authority or Additional section. This argument can be
+   given multiple times.
+
+*--max-block-items* _arg_::
+   Set the maximum number of query/response items  or address event items
+   included in a single output C-DNS block. _arg_ must be a positive integer.
+   The default maximum size is 5000.
+
+*--max-output-size* _arg_::
+   Sets a maximum size for the uncompressed output before an output file
+   rotation is triggered. _arg_ must be a positive integer, and may optionally
+   be followed by one of the following multiplicative suffixes: _k_=1024, _K_=1000,
+   _m_=1024*1024, _M_=1000*1000 and similarly for _g_, and _t_.
+   If a file rotation is triggered, the remaining block and the file postlude will
+   be written, so the final file size will exceed this setting by a small margin. The
+   default value is 0, which indicates there is no maximum size.
+   This may be combined with a rotation period, in which case
+   rotation happens when either condition is met.
+
+*--client-address-prefix-ipv4* _arg_::
+   Set the prefix size (number of address bits stored) for IPv4 client addresses.
+   The client address is the address of the sender of a query or the receipient
+   of a response.  _arg_ must be a positive integer less than or equal to 32.
+   The default is 32, so the entire IPv4 address is stored.
+
+*--client-address-prefix-ipv6* _arg_::
+   Set the prefix size (number of address bits stored) for IPv6 client addresses.
+   The client address is the address of the sender of a query or the receipient
+   of a response.  _arg_ must be a positive integer less than or equal to 128.
+   The default is 128, so the entire IPv6 address is stored.
+
+*--server-address-prefix-ipv4* _arg_::
+   Set the prefix size (number of address bits stored) for IPv4 server addresses.
+   The server address is the address of the recipient of a query or the sender
+   of a response.  _arg_ must be a positive integer less than or equal to 32.
+   The default is 32, so the entire IPv4 address is stored.
+
+*--server-address-prefix-ipv6* _arg_::
+   Set the prefix size (number of address bits stored) for IPv6 server addresses.
+   The server address is the address of the recipient of a query or the sender
+   of a response.  _arg_ must be a positive integer less than or equal to 128.
+   The default is 128, so the entire IPv6 address is stored.

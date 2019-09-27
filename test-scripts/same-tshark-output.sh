@@ -6,28 +6,21 @@
 #
 # Check that running from pcap->cbor->pcap produces the same output
 
-DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-
 COMP=./compactor
 INSP=./inspector
+
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
 
 INPUT_FILES="matching.pcap unmatched.pcap"
 
 #set -x
 
+command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }
+command -v sed > /dev/null 2>&1 || { echo "No sed, skipping test." >&2; exit 77; }
 command -v tshark > /dev/null 2>&1 || { echo "No tshark, skipping test." >&2; exit 77; }
 command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
 
 tmpdir=`mktemp -d -t "same-tshark-output.XXXXXX"`
-
-rm_files()
-{
-    rm $tmpdir/tshark$1*.out
-    rm $tmpdir/tshark$1*.full
-    rm $tmpdir/ids.out
-    rm $CBORFILE
-    rm $OUTFILE
-}
 
 cleanup()
 {
@@ -35,10 +28,16 @@ cleanup()
     exit $1
 }
 
+trap "cleanup 1" HUP INT TERM
+
 call_tshark()
 {
+    # $1 == Input PCAP.
+    # $2 = dns.id to select.
+    # $3 = Base output file path.
+
     # Should be able to remove the last 2 deletions when we have name compression
-     tshark -nr $1 -Y $FILTER_COND -T text -V  >  $tmpdir/tshark$2.full
+     tshark -nr $1 -Y "dns.id==$2" -T text -V  >  $3.full
      sed -r -e '/Frame [0-9]/,/^.*\[Time shift/d' \
               -e '/^.*\[Time delta/,/Internet/d' \
               -e '/^.*Version: 4/,/Fragment offset:/d' \
@@ -56,30 +55,25 @@ call_tshark()
               -e '/^.*\[Stream index:/d' \
               -e '/^.*\[.*(Source|Destination) GeoIP/d' \
               -e '/^.*Request In:/d' \
-              $tmpdir/tshark$2.full  > $tmpdir/tshark$2.out
+              $3.full > $3.out
 }
-
-trap "cleanup 1" HUP INT TERM
 
 SUCCESS=0
 for DATAFILE in $INPUT_FILES
 do
-    echo "Processing " $DATAFILE
-
-    CBORFILE=$tmpdir/message1.cbor
-    OUTFILE=$tmpdir/message2.pcap
+    CBORFILE=$tmpdir/$DATAFILE.cbor
+    OUTFILE=$tmpdir/$DATAFILE.pcap
+    TSFILE=$tmpdir/$DATAFILE.ts
 
     # Run the converter.
     $COMP -c /dev/null -n all -o $CBORFILE $DATAFILE
     if [ $? -ne 0 ]; then
-        echo "Compactor failed"
-        continue
+        cleanup 1
     fi
 
-    $INSP -o $OUTFILE $CBORFILE
+    $INSP $DEFAULTS -o $OUTFILE $CBORFILE
     if [ $? -ne 0 ]; then
-        echo "Inspector failed"
-        continue
+        cleanup 1
     fi
 
     good=0
@@ -89,16 +83,14 @@ do
 
     for i in "${ids[@]}" ; do
         j=`echo $(($i))`
-        FILTER_COND="dns.id=="$j
-        call_tshark $DATAFILE $j-1
-        call_tshark $OUTFILE $j-2
-        if [ ! -s $tmpdir/tshark$j-1.out ]  || [ ! -s $tmpdir/tshark$j-2.out ] ; then
-            rm_files $j
+        call_tshark $DATAFILE $j ${TSFILE}.orig.$j
+        call_tshark $OUTFILE $j ${TSFILE}.conv.$j
+        if [ ! -s ${TSFILE}.orig.$j.out ] || [ ! -s ${TSFILE}.conv.$j.out ]; then
             continue
         fi
         total=$((total+1))
         echo $total " of " ${#ids[@]} " with id " $j ", " $i
-        cmp $tmpdir/tshark$j-1.out $tmpdir/tshark$j-2.out  && good=$((good+1))
+        diff -u ${TSFILE}.orig.$j.out ${TSFILE}.conv.$j.out && good=$((good+1))
     done
     echo "Total " $total ", good " $good
     if [ $good -eq $total ] ; then
@@ -107,7 +99,6 @@ do
         SUCCESS=1
     fi
     echo
-    rm_files $j
 done
 
 cleanup $SUCCESS

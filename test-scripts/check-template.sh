@@ -52,7 +52,7 @@ if [ $? -ne 0 ]; then
 fi
 
 diff -q $tmpdir/gold.dump nsd-live.dump
-if [ $? -ne 0]; then
+if [ $? -ne 0 ]; then
     error "CSV dump failed"
 fi
 

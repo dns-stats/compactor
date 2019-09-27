@@ -8,10 +8,14 @@
 
 COMP=./compactor
 INSP=./inspector
+
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
+
 DATAFILE=./dns.pcap
 
 command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }
 command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
+command -v tail > /dev/null 2>&1 || { echo "No tail, skipping test." >&2; exit 77; }
 
 tmpdir=`mktemp -d -t "inspector-outputs.XXXXXX"`
 
@@ -30,14 +34,14 @@ if [ $? -ne 0 ]; then
 fi
 
 # No arguments. Expect .info and named output.
-$INSP -o $tmpdir/out.pcap $tmpdir/out.cbor
+$INSP $DEFAULTS -o $tmpdir/out.pcap $tmpdir/out.cbor
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
 # -R. Expect stdout to produce same output as previous .info.
 # Strip off initial "INPUT: " line.
-$INSP --report-only $tmpdir/out.cbor | tail -n +3 > $tmpdir/out.report-only
+$INSP $DEFAULTS --report-only $tmpdir/out.cbor | tail -n +3 > $tmpdir/out.report-only
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
@@ -45,13 +49,13 @@ fi
 # -r. Expect stdout to produce same output as previous .info, plus
 # info file and pcap output. Strip off initial " INPUT:" and " OUTPUT:" lines
 # from stdout.
-$INSP --report-info -o $tmpdir/out2.pcap $tmpdir/out.cbor | tail -n +4 > $tmpdir/out2.report
+$INSP $DEFAULTS --report-info -o $tmpdir/out2.pcap $tmpdir/out.cbor | tail -n +4 > $tmpdir/out2.report
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
 # -I. Expect only .info to be produced.
-$INSP --info-only -o $tmpdir/out3.pcap $tmpdir/out.cbor
+$INSP $DEFAULTS --info-only -o $tmpdir/out3.pcap $tmpdir/out.cbor
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
@@ -59,7 +63,7 @@ fi
 # -r -I. Expect stdout to produce same output as previous .info, plus
 # info file but no pcap output. Strip off initial " INPUT:" and " OUTPUT:"
 # lines from stdout.
-$INSP --report-info --info-only -o $tmpdir/out4.pcap $tmpdir/out.cbor | tail -n +4 > $tmpdir/out4.report
+$INSP $DEFAULTS --report-info --info-only -o $tmpdir/out4.pcap $tmpdir/out.cbor | tail -n +4 > $tmpdir/out4.report
 if [ $? -ne 0 ]; then
     cleanup 1
 fi

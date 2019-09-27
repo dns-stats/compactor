@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -193,8 +193,6 @@ SCENARIO("Check CBOR decoder decodes correct basic values", "[cbor]")
 
             AND_THEN("binary decoder checks types")
             {
-                bool indef;
-
                 REQUIRE(tcbd.type() == CborBaseDecoder::TYPE_STRING);
                 tcbd.skip();
                 REQUIRE(tcbd.type() == CborBaseDecoder::TYPE_BINARY);
@@ -240,39 +238,6 @@ SCENARIO("Check CBOR decoder decodes correct basic values", "[cbor]")
             AND_THEN("map decoder checks types")
             {
                 REQUIRE(tcbd.type() == CborBaseDecoder::TYPE_MAP);
-                REQUIRE_THROWS_AS(tcbd.read_binary(), std::logic_error);
-            }
-
-            AND_THEN("decoder skips properly")
-            {
-                for ( int i = 0; i < 2; ++i )
-                    tcbd.skip();
-                REQUIRE_THROWS_AS(tcbd.type(), cbor_end_of_input);
-            }
-        }
-
-        WHEN("time values are decoded")
-        {
-            const std::vector<uint8_t> INPUT =
-                {
-                    (4 << 5) | 2, 0, 1,
-                    (4 << 5) | 2, 1, 0
-                };
-            tcbd.set_bytes(INPUT);
-
-            THEN("decoder output is correct")
-            {
-                std::chrono::system_clock::time_point t;
-                REQUIRE(tcbd.type() == CborBaseDecoder::TYPE_ARRAY);
-                t = tcbd.read_time();
-                REQUIRE(t == std::chrono::system_clock::time_point(std::chrono::microseconds(1)));
-                t = tcbd.read_time();
-                REQUIRE(t == std::chrono::system_clock::time_point(std::chrono::seconds(1)));
-            }
-
-            AND_THEN("time decoder checks types")
-            {
-                REQUIRE(tcbd.type() == CborBaseDecoder::TYPE_ARRAY);
                 REQUIRE_THROWS_AS(tcbd.read_binary(), std::logic_error);
             }
 

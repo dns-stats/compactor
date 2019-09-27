@@ -13,14 +13,38 @@
 #include <ostream>
 #include <string>
 
+#include "blockcborreader.hpp"
 #include "configuration.hpp"
 #include "dnsmessage.hpp"
 #include "pcapwriter.hpp"
-#include "queryresponse.hpp"
 
 /**
  ** Inspector output backend interface.
  **/
+
+/**
+ * \exception backend_error
+ * \brief Signals an error with a backend.
+ */
+class backend_error : public std::runtime_error
+{
+public:
+    /**
+     * \brief Constructor.
+     *
+     * \param what message detailing the problem.
+     */
+    explicit backend_error(const std::string& what)
+        : std::runtime_error(what) {}
+
+    /**
+     * \brief Constructor.
+     *
+     * \param what message detailing the problem.
+     */
+    explicit backend_error(const char*  what)
+        : std::runtime_error(what) {}
+};
 
 /**
  * \struct OutputBackendOptions
@@ -52,6 +76,11 @@ struct OutputBackendOptions
      * \brief xz compression preset to use.
      */
     unsigned int xz_preset{6};
+
+    /**
+     * \brief pseudo-anonymise?
+     */
+    bool pseudo_anon{false};
 };
 
 /**
@@ -74,12 +103,23 @@ public:
     virtual ~OutputBackend() {}
 
     /**
+     * \brief Give the backend a look at the exclude hints from the input.
+     *
+     * Give it a chance to throw an error if it doesn't think that
+     * it has enough material to work with.
+     *
+     * \param exclude_hints the exclude hints.
+     * \throws backend_error on problems.
+     */
+    virtual void check_exclude_hints(const HintsExcluded& exclude_hints) {}
+
+    /**
      * \brief Output a QueryResponse.
      *
      * \param qr        the QueryResponse.
      * \param config    the configuration applying when recording the QR.
      */
-    virtual void output(std::shared_ptr<QueryResponse>& qr, const Configuration& config) = 0;
+    virtual void output(const QueryResponseData& qr, const Configuration& config) = 0;
 
     /**
      * \brief Write backend-specific report.
@@ -112,6 +152,22 @@ private:
 };
 
 /**
+ * \exception pcap_defaults_backend_error
+ * \brief Signals a missing required default in the PCAP backend.
+ */
+class pcap_defaults_backend_error : public backend_error
+{
+public:
+    /**
+     * \brief Constructor.
+     *
+     * \param what the missing default.
+     */
+    explicit pcap_defaults_backend_error(const std::string& what)
+        : backend_error("Require default values for: " + what) {}
+};
+
+/**
  * \struct PcapBackendOptions
  * \brief Options for the PCAP backend.
  */
@@ -131,6 +187,11 @@ struct PcapBackendOptions
      * \brief auto choose name compression.
      */
     bool auto_compression{true};
+
+    /**
+     * \brief available defaults.
+     */
+    Defaults defaults;
 };
 
 /**
@@ -154,12 +215,24 @@ public:
     virtual ~PcapBackend();
 
     /**
+     * \brief Give the backend a look at the exclude hints from the input.
+     *
+     * Give it a chance to throw an error if it doesn't think that
+     * it has enough material to work with. In this case, we need defaults
+     * to cover everything that might be missing.
+     *
+     * \param exclude_hints the exclude hints.
+     * \throws pcap_defaults_backend_error on problems.
+     */
+    virtual void check_exclude_hints(const HintsExcluded& exclude_hints);
+
+    /**
      * \brief Output a QueryResponse.
      *
-     * \param qr        the QueryResponse.
+     * \param qrd       the QueryResponse.
      * \param config    the configuration applying when recording the QR.
      */
-    virtual void output(std::shared_ptr<QueryResponse>& qr, const Configuration& config);
+    virtual void output(const QueryResponseData& qrd, const Configuration& config);
 
     /**
      * \brief Write backend-specific report.
@@ -177,18 +250,41 @@ public:
 
 private:
     /**
+     * \brief Convert QueryResponseData to wire format.
+     *
+     * \param qr        the Query/Response.
+     * \returns a QueryResponse.
+     */
+    std::unique_ptr<QueryResponse> convert_to_wire(const QueryResponseData& qrd);
+
+    /**
+     * \brief Add extra sections to DNS message.
+     *
+     * \param dns         the DNS message.
+     * \param questions   second and subsequent Question sections.
+     * \param answers     Answer sections.
+     * \param authorities Authorities sections.
+     * \param additionals Additional sections.
+     */
+    void add_extra_sections(DNSMessage& dns,
+                            const boost::optional<std::vector<QueryResponseData::Question>>& questions,
+                            const boost::optional<std::vector<QueryResponseData::RR>>& answers,
+                            const boost::optional<std::vector<QueryResponseData::RR>>& authorities,
+                            const boost::optional<std::vector<QueryResponseData::RR>>& additionals);
+
+    /**
      * \brief Write a TCP QR.
      *
      * \param qr        the Query/Response.
      */
-    void write_qr_tcp(std::shared_ptr<QueryResponse> qr);
+    void write_qr_tcp(const std::unique_ptr<QueryResponse>& qr);
 
     /**
      * \brief Write a UDP QR.
      *
      * \param qr        the Query/Response.
      */
-    void write_qr_udp(std::shared_ptr<QueryResponse> qr);
+    void write_qr_udp(const std::unique_ptr<QueryResponse>& qr);
 
     /**
      * \brief Write a single UDP DNS packet.

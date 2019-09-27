@@ -2,6 +2,7 @@ CONFIGURATION:
   Query timeout        : 5 seconds
   Skew timeout         : 10 microseconds
   Snap length          : 65535
+  DNS port             : 53
   Max block items      : 5000
   File rotation period : 52
   Promiscuous mode     : Off
@@ -11,8 +12,8 @@ CONFIGURATION:
   Filter               : 
   Query options        : 
   Response options     : 
-  Accept RR types      : 
-  Ignore RR types      : 
+  Accept OPCODEs       : QUERY, IQUERY, STATUS, NOTIFY, UPDATE, DSO
+  Accept RR types      : A, NS, MD, MF, CNAME, SOA, MB, MG, MR, NULL_R, WKS, PTR, HINFO, MINFO, MX, TXT, RP, AFSDB, X25, ISDN, RT, NSAP, NSAP_PTR, SIG, KEY, PX, GPOS, AAAA, LOC, NXT, EID, NIMLOC, SRV, ATMA, NAPTR, KX, CERTIFICATE, A6, DNAM, SINK, OPT, APL, DS, SSHFP, IPSECKEY, RRSIG, NSEC, DNSKEY, DHCID, NSEC3, NSEC3PARAM, TLSA, HIP, NINFO, RKEY, TALINK, CDS, SPF, UINFO, UID, GID, UNSPEC, NID, L32, L64, LP, EU148, EUI64, TKEY, TSIG, IXFR, AXFR, MAILB, MAILA, TYPE_ANY, URI, CAA, TA, DLV
 
 COLLECTOR:
   Collection host ID   : 

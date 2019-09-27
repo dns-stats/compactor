@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Sinodun IT.
+ * Copyright 2018, 2019 Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -120,7 +120,7 @@ public:
      * \param qr        the QueryResponse.
      * \param config    the configuration applying when recording the QR.
      */
-    virtual void output(std::shared_ptr<QueryResponse>& qr, const Configuration& config);
+    virtual void output(const QueryResponseData& qr, const Configuration& config);
 
     /**
      * \brief the output file path.

@@ -1,0 +1,39 @@
+==== Capture from network
+
+*-i, --interface* _arg_::
+  Capture traffic from network interface _arg_. This argument may be given multiple
+  times to allow capture for several interfaces in parallel.
+
+*-S, --server-address-hint* _arg_::
+  _arg_ is a single IPv4 or IPv6 address for the server. These hints are optional, do not
+  affect capture in any way, but are stored in C-DNS as a potential aide to
+  post-capture analysis. If capture from one or more interfaces is specified, then
+  a sanity check is performed to ensure the address is be present on a system
+  interface; if not, an error is logged, but collection proceeds. This argument may
+  be given multiple times.
+
+*-f, --filter* _arg_::
+  Discard packets not matching the filter expression _arg_. The filter syntax is described
+  in *pcap-filter*(7). Packets are discarded at the point of capture; discarded packets
+  do not appear in any ignored PCAP output file.
+
+*--dns-port* _arg_::
+  Traffic to or from port _arg_ is DNS traffic and should be recorded. Traffic to
+  other ports is ignored. The default is 53.
+
+*-s, --snaplen* _arg_::
+  Capture up to _arg_ bytes per packet. The default is 65535.
+
+*-p, --promiscuous-mode* [_arg_]:: Put the interface into promiscuous
+  mode. _arg_ may be `true` or `1` to enable promiscuous mode,
+  `false` or `0` to disable promiscuous mode. If _arg_ is omitted, it
+  defaults to `true`. Promiscuous mode is disabled by default.
+
+*-a, --vlan-id* _arg_::
+  ID of VLAN to be captured if on a 802.1Q network. The argument may be given
+  multiple times to capture from several VLANs. If no *vlan-id* argument is given,
+  traffic is captured from all VLANs.
+
+*-L, --log-network-stats-period* _arg_::
+  Every _arg_ seconds, log basic statistics on packet collection to the system log. The
+  default value of 0 disables this logging.

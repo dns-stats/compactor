@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -300,7 +300,7 @@ SCENARIO("DNS messages with EDNS0 options", "[dnspacket]")
         {
             REQUIRE(msg.additional_count() == 1);
             auto edns0 = msg.edns0();
-            REQUIRE(edns0);
+            REQUIRE_FALSE(!edns0);
             REQUIRE_FALSE(edns0->do_bit());
             REQUIRE(edns0->extended_rcode() == 0);
             REQUIRE(edns0->edns_version() == 0);

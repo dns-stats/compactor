@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,46 +19,441 @@
 #include <vector>
 
 #include <boost/functional/hash.hpp>
+#include <boost/optional.hpp>
 
 #include "addressevent.hpp"
 #include "bytestring.hpp"
 #include "blockcbor.hpp"
+#include "capturedns.hpp"
 #include "cbordecoder.hpp"
 #include "cborencoder.hpp"
-#include "capturedns.hpp"
 #include "ipaddress.hpp"
 #include "makeunique.hpp"
 #include "packetstatistics.hpp"
 
+namespace boost {
+    /**
+     * \brief Calculate a hash value for a boost::optional<T>.
+     *
+     * std::optional is hashable, boost::optional isn't. Do something
+     * about that.
+     *
+     * \returns hash value.
+     */
+    template<typename T>
+    std::size_t hash_value(const boost::optional<T>& t)
+    {
+        bool there = static_cast<bool>(t);
+        std::size_t seed = boost::hash_value(there);
+        if ( there )
+            boost::hash_combine(seed, *t);
+        return seed;
+    }
+}
+
 namespace block_cbor {
 
     namespace {
+        // Default for storage parameters.
+        const int64_t DEFAULT_TICKS_PER_SECOND = 1000000;
         const unsigned DEFAULT_MAX_BLOCK_ITEMS = 5000;
+        const unsigned DEFAULT_IPV4_PREFIX_LENGTH = 32;
+        const unsigned DEFAULT_IPV6_PREFIX_LENGTH = 128;
+
+        // Defaults for collection parameters.
+        const std::chrono::milliseconds DEFAULT_QUERY_TIMEOUT(5000);
+        const std::chrono::microseconds DEFAULT_SKEW_TIMEOUT(10);
+        const unsigned DEFAULT_SNAPLEN = 65535;
+        const unsigned DEFAULT_DNS_PORT = 53;
+        const unsigned DEFAULT_PROMISC = false;
     }
 
     // Block header table types.
 
     /**
-     * \brief QueryResponse flags values enum.
+     * \brief type for the index into a header.
+     *
+     * Note that the index may be either is 1-based or 0-based depending
+     * on the file format version. Formats before 1.0 are 1-based, from
+     * 1.0 on are 0-based. In pre-format 1.0 versions, index 0 was reserved
+     * for 'value not present'.
      */
-    enum QueryResponseFlags
+    using index_t = boost::optional<std::size_t>;
+
+    /**
+     * \struct Timestamp
+     * \brief A timestamp as POSIX time in seconds since the epoch
+     * and subsecond ticks.
+     */
+    struct Timestamp
     {
-        QUERY_ONLY = (1 << 0),
-        RESPONSE_ONLY = (1 << 1),
-        QUERY_AND_RESPONSE = (QUERY_ONLY | RESPONSE_ONLY),
-        QR_HAS_QUESTION = (1 << 2),
-        QUERY_HAS_OPT = (1 << 3),
-        RESPONSE_HAS_OPT = (1 << 4),
-        RESPONSE_HAS_NO_QUESTION = (1 << 5),
+        /**
+         * \brief Constructor.
+         *
+         * \param t     the time point.
+         * \param ticks_per_second the number of ticks in a second.
+         */
+        Timestamp(const std::chrono::system_clock::time_point& t,
+                  int64_t ticks_per_second)
+        {
+            setFromTimePoint(t, ticks_per_second);
+        }
+
+        /**
+         * \brief Constructor.
+         */
+        Timestamp() : secs(0), ticks(0) {}
+
+        /**
+         * \brief POSIX seconds since the epoch.
+         */
+        uint64_t secs;
+
+        /**
+         * \brief subsecond ticks.
+         *
+         * The number of ticks per second is a block parameter.
+         */
+        uint64_t ticks;
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec    CBOR stream to read from.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc CBOR stream to write to.
+         */
+        void writeCbor(CborBaseEncoder& enc);
+
+        /**
+         * \brief Set timestamp from time point.
+         *
+         * \param t     the time point.
+         * \param ticks_per_second the number of ticks in a second.
+         */
+        void setFromTimePoint(const std::chrono::system_clock::time_point& t,
+                              int64_t ticks_per_second);
+
+        /**
+         * \brief Get the time point represented by this timestamp.
+         *
+         * \param ticks_per_second the number of ticks in a second.
+         * \returns the time point.
+         */
+        std::chrono::system_clock::time_point getTimePoint(int64_t ticks_per_second);
     };
 
     /**
-     * \brief type for the index into a header.
-     *
-     * Note that the index is 1-based. Index 0 is reserved for
-     * 'value not present'.
+     * \struct StorageHints
+     * \brief Bitmap hints on what data was being collected, and so
+     * should appear in the block is present on the wire.
      */
-    using index_t = std::size_t;
+    struct StorageHints
+    {
+        /**
+         * \brief Default constructor.
+         */
+        StorageHints() :
+            query_response_hints(),
+            query_response_signature_hints(),
+            rr_hints(),
+            other_data_hints()
+        {}
+
+        /**
+         * \brief Hints relating to Query/Response data.
+         */
+        QueryResponseHintFlags query_response_hints;
+
+        /**
+         * \brief Hints relating to Query/Response signature data.
+         */
+        QueryResponseSignatureHintFlags query_response_signature_hints;
+
+        /**
+         * \brief Hints relating to Resource Record data.
+         */
+        RRHintFlags rr_hints;
+
+        /**
+         * \brief Hints relating to other data.
+         */
+        OtherDataHintFlags other_data_hints;
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec    CBOR stream to read from.
+         * \param fields translate map keys to internal values.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc CBOR stream to write to.
+         */
+        void writeCbor(CborBaseEncoder& enc);
+    };
+
+    /**
+     * \struct StorageParameters
+     * \brief Info on the data stored within a block.
+     */
+    struct StorageParameters
+    {
+        /**
+         * \brief Default constructor.
+         */
+        StorageParameters() :
+            ticks_per_second(DEFAULT_TICKS_PER_SECOND),
+            max_block_items(DEFAULT_MAX_BLOCK_ITEMS),
+            storage_hints(),
+            storage_flags(),
+            client_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
+            client_address_prefix_ipv6(DEFAULT_IPV6_PREFIX_LENGTH),
+            server_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
+            server_address_prefix_ipv6(DEFAULT_IPV6_PREFIX_LENGTH)
+        { }
+
+        /**
+         * \brief number of ticks per second.
+         */
+        int64_t ticks_per_second;
+
+        /**
+         * \brief Max number of items (Q/R, AddressEventCounts, Malformed data)
+         * in the block.
+         */
+        unsigned max_block_items;
+
+        /**
+         * \brief Storage hints.
+         */
+        StorageHints storage_hints;
+
+        /**
+         * \brief Opcodes recorded by collector.
+         */
+        std::vector<unsigned> opcodes;
+
+        /**
+         * \brief Resource Record types recorded by collector.
+         */
+        std::vector<unsigned> rr_types;
+
+        /**
+         * \brief Storage flags (flags about the data content).
+         */
+        StorageFlags storage_flags;
+
+        /**
+         * \brief Client IPv4 address prefix length (number of bits
+         * of a client IPv4 address stored).
+         */
+        unsigned client_address_prefix_ipv4;
+
+        /**
+         * \brief Client IPv6 address prefix length (number of bits
+         * of a client IPv6 address stored).
+         */
+        unsigned client_address_prefix_ipv6;
+
+        /**
+         * \brief Server IPv4 address prefix length (number of bits
+         * of a server IPv4 address stored).
+         */
+        unsigned server_address_prefix_ipv4;
+
+        /**
+         * \brief Server IPv6 address prefix length (number of bits
+         * of a server IPv6 address stored).
+         */
+        unsigned server_address_prefix_ipv6;
+
+        /**
+         * \brief Text describing the sampling method, if sampling used.
+         */
+        std::string sampling_method;
+
+        /**
+         * \brief Text describing the anonymisation method, if
+         * anonymisation used.
+         */
+        std::string anonymisation_method;
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec    CBOR stream to read from.
+         * \param fields translate map keys to internal values.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc CBOR stream to write to.
+         */
+        void writeCbor(CborBaseEncoder& enc);
+    };
+
+    /**
+     * \struct CollectionParameters
+     * \brief Info on the data collection settings for the data in a block.
+     */
+    struct CollectionParameters
+    {
+        /**
+         * \brief Default constructor.
+         */
+        CollectionParameters() :
+            query_timeout(DEFAULT_QUERY_TIMEOUT),
+            skew_timeout(DEFAULT_SKEW_TIMEOUT),
+            snaplen(DEFAULT_SNAPLEN),
+            dns_port(DEFAULT_DNS_PORT),
+            promisc(DEFAULT_PROMISC)
+        { }
+
+        /**
+         * \brief period in milliseconds after which a query is deemed to
+         * not have received a response.
+         */
+        std::chrono::milliseconds query_timeout;
+
+        /**
+         * \brief the maximum time in microseconds to allow for out of
+         * temporal order packet delivery. If a response arrives without a
+         * query, once a packet arrives with a timestamp this much later,
+         * give up hoping for a query to arrive.
+         */
+        std::chrono::microseconds skew_timeout;
+
+        /**
+         * \brief packet capture snap length. See `tcpdump` documentation for more.
+         */
+        unsigned snaplen;
+
+        /**
+         * \brief DNS port.
+         */
+        unsigned dns_port;
+
+        /**
+         * \brief `true` if the interface should be put into promiscous mode.
+         * See `tcpdump` documentation for more.
+         */
+        bool promisc;
+
+        /**
+         * \brief the network interfaces to capture from.
+         *
+         * This will be operating system dependent. A Linux example is `eth0`.
+         */
+        std::vector<std::string> interfaces;
+
+        /**
+         * \brief the server network addresses.
+         *
+         * Optional addresses for the server interfaces. Stored in C-DNS but
+         * not otherwise used.
+         */
+        std::vector<IPAddress> server_addresses;
+
+        /**
+         * \brief which vlan IDs are to be accepted.
+         */
+        std::vector<unsigned> vlan_ids;
+
+        /**
+         * \brief packet filter
+         *
+         * `libpcap` packet filter expression. Packets not matching will be
+         * silently discarded.
+         */
+        std::string filter;
+
+        /**
+         * \brief generator ID
+         *
+         * String identifying application doing the collection.
+         */
+        std::string generator_id;
+
+        /**
+         * \brief host ID
+         *
+         * String identifying the hostname of the machine doing the collection.
+         */
+        std::string host_id;
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec    CBOR stream to read from.
+         * \param fields translate map keys to internal values.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc CBOR stream to write to.
+         */
+        void writeCbor(CborBaseEncoder& enc);
+    };
+
+        /**
+     * \struct BlockParameters
+     * \brief Info on all parameters applicable to a block.
+     */
+    struct BlockParameters
+    {
+        /**
+         * \brief storage parameters for the block.
+         */
+        StorageParameters storage_parameters;
+
+        /**
+         * \brief collection parameters for the block.
+         */
+        CollectionParameters collection_parameters;
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec    CBOR stream to read from.
+         * \param fields translate map keys to internal values.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc CBOR stream to write to.
+         */
+        void writeCbor(CborBaseEncoder& enc);
+    };
 
     /**
      * \struct IndexVectorItem
@@ -82,18 +477,19 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values. Unused.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values. Unused.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields);
 
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
          */
         void writeCbor(CborBaseEncoder& enc);
     };
@@ -120,56 +516,19 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values. Unused.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values. Unused.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields);
 
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc CBOR stream to write to.
-         */
-        void writeCbor(CborBaseEncoder& enc);
-    };
-
-    /**
-     * \struct IPAddressItem
-     * \brief A header list item that's an IP address.
-     */
-    struct IPAddressItem
-    {
-        /**
-         * \brief the IP address.
-         */
-        IPAddress addr;
-
-        /**
-         * \brief return the key to be used for storing values.
-         */
-        const IPAddress& key() const
-        {
-            return addr;
-        }
-
-        /**
-         * \brief Read the object contents from CBOR.
-         *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values. Unused.
-         * \throws cbor_file_format_error on unexpected CBOR content.
-         * \throws cbor_decode_error on malformed CBOR items.
-         * \throws cbor_end_of_input on end of CBOR file.
-         */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
-
-        /**
-         * \brief Write the object contents to CBOR.
-         *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
          */
         void writeCbor(CborBaseEncoder& enc);
     };
@@ -188,12 +547,12 @@ namespace block_cbor {
         /**
          * \brief the DNS Class.
          */
-        CaptureDNS::QueryClass qclass;
+        boost::optional<CaptureDNS::QueryClass> qclass;
 
         /**
          * \brief the DNS Type.
          */
-        CaptureDNS::QueryType qtype;
+        boost::optional<CaptureDNS::QueryType> qtype;
 
         /**
          * \brief return the key to be used for storing values.
@@ -226,18 +585,19 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields);
 
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
          */
         void writeCbor(CborBaseEncoder& enc);
     };
@@ -301,18 +661,19 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields);
 
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
          */
         void writeCbor(CborBaseEncoder& enc);
     };
@@ -348,7 +709,7 @@ namespace block_cbor {
         /**
          * \brief RR TTL.
          */
-        uint32_t ttl;
+        boost::optional<uint32_t> ttl;
 
         /**
          * \brief index of RR RDATA.
@@ -387,18 +748,19 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields);
 
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
          */
         void writeCbor(CborBaseEncoder& enc);
     };
@@ -411,16 +773,16 @@ namespace block_cbor {
     std::size_t hash_value(const ResourceRecord& rr);
 
     /**
-     * \struct QuerySignature
+     * \struct QueryResponseSignature
      * \brief A DNS Query Signature.
      */
-    struct QuerySignature
+    struct QueryResponseSignature
     {
         /**
          * \brief Default constructor.
          */
-        QuerySignature() :
-            qr_flags(), server_address(), server_port(), transport_flags(),
+        QueryResponseSignature() :
+            qr_flags(), server_address(), server_port(), qr_transport_flags(),
             query_rcode(), response_rcode(), query_opcode(),
             query_edns_version(), query_edns_payload_size(),
             query_opt_rdata(), dns_flags(), query_classtype(),
@@ -429,7 +791,7 @@ namespace block_cbor {
         /**
          * \brief indicate whether query and response are present.
          */
-        int qr_flags;
+        boost::optional<uint8_t> qr_flags;
 
         /**
          * \brief index of address of the DNS server.
@@ -439,37 +801,37 @@ namespace block_cbor {
         /**
          * \brief port of DNS server.
          */
-        uint16_t server_port;
+        boost::optional<uint16_t> server_port;
 
         /**
          * \brief transport flags.
          */
-        uint8_t transport_flags;
+        boost::optional<uint8_t> qr_transport_flags;
 
         /**
          * \brief query RCODE, incorporating extended RCODE.
          */
-        uint16_t query_rcode;
+        boost::optional<CaptureDNS::Rcode> query_rcode;
 
         /**
          * \brief response RCODE, incorporating extended RCODE.
          */
-        uint16_t response_rcode;
+        boost::optional<CaptureDNS::Rcode> response_rcode;
 
         /**
          * \brief query OPCODE.
          */
-        uint8_t query_opcode;
+        boost::optional<CaptureDNS::Opcode> query_opcode;
 
         /**
          * \brief query EDNS version.
          */
-        uint8_t query_edns_version;
+        boost::optional<uint8_t> query_edns_version;
 
         /**
          * \brief query EDNS UDP size
          */
-        uint16_t query_edns_payload_size;
+        boost::optional<uint16_t> query_edns_payload_size;
 
         /**
          * \brief query OPT RDATA.
@@ -479,7 +841,7 @@ namespace block_cbor {
         /**
          * \brief DNS flags.
          */
-        uint16_t dns_flags;
+        boost::optional<uint16_t> dns_flags;
 
         /**
          * \brief query class/type.
@@ -489,27 +851,27 @@ namespace block_cbor {
         /**
          * \brief query or response QDCOUNT.
          */
-        uint16_t qdcount;
+        boost::optional<uint16_t> qdcount;
 
         /**
          * \brief query ANCOUNT.
          */
-        uint16_t query_ancount;
+        boost::optional<uint16_t> query_ancount;
 
         /**
          * \brief query NSCOUNT.
          */
-        uint16_t query_nscount;
+        boost::optional<uint16_t> query_nscount;
 
         /**
          * \brief query ARCOUNT.
          */
-        uint16_t query_arcount;
+        boost::optional<uint16_t> query_arcount;
 
         /**
          * \brief return the key to be used for storing values.
          */
-        const QuerySignature& key() const
+        const QueryResponseSignature& key() const
         {
             return *this;
         }
@@ -520,35 +882,23 @@ namespace block_cbor {
          * \param rhs item to compare to.
          * \returns `true` if the two are equal.
          */
-        bool operator==(const QuerySignature& rhs) const {
+        bool operator==(const QueryResponseSignature& rhs) const {
             if ( qr_flags != rhs.qr_flags ||
                  server_address != rhs.server_address ||
                  server_port != rhs.server_port ||
-                 transport_flags != rhs.transport_flags ||
+                 qr_transport_flags != rhs.qr_transport_flags ||
                  dns_flags != rhs.dns_flags ||
-                 qdcount != rhs.qdcount )
-                return false;
-
-            if ( ( qr_flags & QR_HAS_QUESTION ) &&
-                 query_classtype != rhs.query_classtype )
-                return false;
-
-            if ( ( qr_flags & QUERY_ONLY ) &&
-                 ( query_rcode != rhs.query_rcode ||
-                   query_opcode != rhs.query_opcode ||
-                   query_ancount != rhs.query_ancount ||
-                   query_nscount != rhs.query_nscount ||
-                   query_arcount != rhs.query_arcount ) )
-                return false;
-
-            if ( ( qr_flags & RESPONSE_ONLY ) &&
-                 response_rcode != rhs.response_rcode )
-                return false;
-
-            if ( ( qr_flags & QUERY_HAS_OPT ) &&
-                 ( query_edns_version != rhs.query_edns_version ||
-                   query_edns_payload_size != rhs.query_edns_payload_size ||
-                   query_opt_rdata != rhs.query_opt_rdata ) )
+                 qdcount != rhs.qdcount ||
+                 query_classtype != rhs.query_classtype ||
+                 query_rcode != rhs.query_rcode ||
+                 query_opcode != rhs.query_opcode ||
+                 query_ancount != rhs.query_ancount ||
+                 query_nscount != rhs.query_nscount ||
+                 query_arcount != rhs.query_arcount ||
+                 response_rcode != rhs.response_rcode ||
+                 query_edns_version != rhs.query_edns_version ||
+                 query_edns_payload_size != rhs.query_edns_payload_size ||
+                 query_opt_rdata != rhs.query_opt_rdata )
                 return false;
 
             return true;
@@ -560,25 +910,26 @@ namespace block_cbor {
          * \param rhs the class/type to compare to.
          * \returns `false` if the two are equal.
          */
-        bool operator!=(const QuerySignature& rhs) const {
+        bool operator!=(const QueryResponseSignature& rhs) const {
             return !(*this == rhs);
         }
 
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields);
 
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
          */
         void writeCbor(CborBaseEncoder& enc);
     };
@@ -588,7 +939,7 @@ namespace block_cbor {
      *
      * \returns hash value.
      */
-    std::size_t hash_value(const QuerySignature& qs);
+    std::size_t hash_value(const QueryResponseSignature& qs);
 
     /**
      * \struct QueryResponseExtraInfo
@@ -643,27 +994,27 @@ namespace block_cbor {
         /**
          * \brief client port.
          */
-        uint16_t client_port;
+        boost::optional<uint16_t> client_port;
 
         /**
          * \brief client hop limit.
          */
-        uint8_t hoplimit;
+        boost::optional<uint8_t> hoplimit;
 
         /**
          * \brief the transaction ID.
          */
-        uint16_t id;
+        boost::optional<uint16_t> id;
 
         /**
          * \brief the timestamp.
          */
-        std::chrono::system_clock::time_point tstamp;
+        boost::optional<std::chrono::system_clock::time_point> tstamp;
 
         /**
          * \brief the response delay.
          */
-        std::chrono::microseconds response_delay;
+        boost::optional<std::chrono::nanoseconds> response_delay;
 
         /**
          * \brief the first query QNAME.
@@ -678,12 +1029,12 @@ namespace block_cbor {
         /**
          * \brief the size of the DNS query message.
          */
-        uint32_t query_size;
+        boost::optional<uint32_t> query_size;
 
         /**
          * \brief the size of the DNS response message.
          */
-        uint32_t response_size;
+        boost::optional<uint32_t> response_size;
 
         /**
          * \brief Optional extra query info.
@@ -711,25 +1062,29 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec           CBOR stream to read from.
-         * \param earliest_time earliest time in block.
-         * \param fields        translate map keys to internal values.
+         * \param dec              CBOR stream to read from.
+         * \param earliest_time    earliest time in block.
+         * \param block_parameters parameters for this block.
+         * \param fields           translate map keys to internal values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
         void readCbor(CborBaseDecoder& dec,
                       const std::chrono::system_clock::time_point& earliest_time,
+                      const BlockParameters& block_parameters,
                       const FileVersionFields& fields);
 
         /**
          * \brief Write the object contents to CBOR.
          *
-         * \param enc           CBOR stream to write to.
-         * \param earliest_time earliest time in block.
+         * \param enc              CBOR stream to write to.
+         * \param earliest_time    earliest time in block.
+         * \param block_parameters parameters for this block.
          */
         void writeCbor(CborBaseEncoder& enc,
-                       const std::chrono::system_clock::time_point& earliest_time);
+                       const std::chrono::system_clock::time_point& earliest_time,
+                       const BlockParameters& block_parameters);
     };
 
     /**
@@ -746,17 +1101,22 @@ namespace block_cbor {
         /**
          * \brief AddressEvent type.
          */
-        AddressEvent::EventType type;
+        boost::optional<AddressEvent::EventType> type;
 
         /**
          * \brief AddressEvent code.
          */
-        unsigned code;
+        boost::optional<unsigned> code;
 
         /**
          * \brief index of event address.
          */
         index_t address;
+
+        /**
+         * \brief address event transport flags.
+         */
+        boost::optional<uint8_t> transport_flags;
 
         /**
          * \brief return the key to be used for storing values.
@@ -773,7 +1133,7 @@ namespace block_cbor {
          * \returns `true` if the two are equal.
          */
         bool operator==(const AddressEventItem& rhs) const {
-            return ( type == rhs.type && code == rhs.code && address == rhs.address);
+            return ( type == rhs.type && code == rhs.code && address == rhs.address && transport_flags == rhs.transport_flags);
         }
 
         /**
@@ -813,13 +1173,14 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields);
 
         /**
          * \brief Write the object contents to CBOR.
@@ -827,6 +1188,165 @@ namespace block_cbor {
          * \param enc CBOR stream to write to.
          */
         void writeCbor(CborBaseEncoder& enc);
+    };
+
+    /**
+     * \struct MalformedMessageData
+     * \brief Table data for malformed messages
+     */
+    struct MalformedMessageData
+    {
+        /**
+         * \brief Default constructor.
+         */
+        MalformedMessageData()
+            : server_address(), server_port(),
+              mm_transport_flags(), mm_payload() { }
+
+        /**
+         * \brief index of address of the DNS server.
+         */
+        index_t server_address;
+
+        /**
+         * \brief port of DNS server.
+         */
+        boost::optional<uint16_t> server_port;
+
+        /**
+         * \brief transport flags.
+         */
+        boost::optional<uint8_t> mm_transport_flags;
+
+        /**
+         * \brief the message data.
+         */
+        boost::optional<byte_string> mm_payload;
+
+        /**
+         * \brief return the key to be used for storing values.
+         */
+        const MalformedMessageData& key() const
+        {
+            return *this;
+        }
+
+        /**
+         * \brief Implement equality operator.
+         *
+         * \param rhs item to compare to.
+         * \returns `true` if the two are equal.
+         */
+        bool operator==(const MalformedMessageData& rhs) const {
+            return ( server_address == rhs.server_address &&
+                     server_port == rhs.server_port &&
+                     mm_transport_flags == rhs.mm_transport_flags &&
+                     mm_payload == rhs.mm_payload );
+        }
+
+        /**
+         * \brief Inequality operator.
+         *
+         * \param rhs the class/type to compare to.
+         * \returns `false` if the two are equal.
+         */
+        bool operator!=(const MalformedMessageData& rhs) const {
+            return !( *this == rhs );
+        }
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc CBOR stream to write to.
+         */
+        void writeCbor(CborBaseEncoder& enc);
+    };
+
+    /**
+     * \brief Calculate a hash value for the item.
+     *
+     * \param mmd message data item.
+     * \returns hash value.
+     */
+    std::size_t hash_value(const MalformedMessageData& mmd);
+
+    /**
+     * \struct MalformedMessageItem
+     * \brief Individual malformed messages.
+     */
+    struct MalformedMessageItem
+    {
+        /**
+         * \brief Default constructor.
+         */
+        MalformedMessageItem()
+        {
+            clear();
+        }
+
+        /**
+         * \brief Clear the malformed message.
+         */
+        void clear();
+
+        /**
+         * \brief the timestamp.
+         */
+        boost::optional<std::chrono::system_clock::time_point> tstamp;
+
+        /**
+         * \brief index of client address.
+         */
+        index_t client_address;
+
+        /**
+         * \brief client port.
+         */
+        boost::optional<uint16_t> client_port;
+
+        /**
+         * \brief index of message data.
+         */
+        index_t message_data;
+
+        /**
+         * \brief Read the object contents from CBOR.
+         *
+         * \param dec           CBOR stream to read from.
+         * \param earliest_time earliest time in block.
+         * \param block_parameters parameters for this block.
+         * \param fields        translate map keys to internal values.
+         * \throws cbor_file_format_error on unexpected CBOR content.
+         * \throws cbor_decode_error on malformed CBOR items.
+         * \throws cbor_end_of_input on end of CBOR file.
+         */
+        void readCbor(CborBaseDecoder& dec,
+                      const std::chrono::system_clock::time_point& earliest_time,
+                      const BlockParameters& block_parameters,
+                      const FileVersionFields& fields);
+
+        /**
+         * \brief Write the object contents to CBOR.
+         *
+         * \param enc           CBOR stream to write to.
+         * \param earliest_time earliest time in block.
+         * \param block_parameters parameters for this block.
+         */
+        void writeCbor(CborBaseEncoder& enc,
+                       const std::chrono::system_clock::time_point& earliest_time,
+                       const BlockParameters& block_parameters);
     };
 
     /**
@@ -909,21 +1429,29 @@ namespace block_cbor {
         /**
          * \brief Default constructor.
          */
-        HeaderList() {}
+        explicit HeaderList(bool one_based = false)
+            : one_based_(one_based) {}
 
         /**
          * \brief Find if a key value is in the list.
          *
-         * \param key the key value to search for.
-         * \returns index of the value, or 0 if not found.
+         * \param key   the key value to search for.
+         * \param index the index of the item, if found.
+         * \returns `true` if the item is found.
          */
-        index_t find(const K& key)
+        bool find(const K& key, index_t& index)
         {
             auto find = map_.find(KeyRef<K>(key));
             if ( find != map_.end() )
-                return find->second;
+            {
+                index = find->second;
+                return true;
+            }
             else
-                return 0;
+            {
+                index = boost::none;
+                return false;
+            }
         }
 
         /**
@@ -968,8 +1496,8 @@ namespace block_cbor {
         index_t add(const T& val)
         {
             const K& key = val.key();
-            index_t res = find(key);
-            if ( res == 0 )
+            index_t res;
+            if ( !find(key, res) )
                 res = add_value(val);
             return res;
         }
@@ -990,9 +1518,17 @@ namespace block_cbor {
          */
         const T& operator[](index_t pos) const
         {
-            if ( pos == 0 || pos > items_.size() )
-                throw cbor_file_format_error("Block index out of range");
-            return items_[pos - 1];
+            if ( one_based_ )
+            {
+                if ( *pos > 0 || *pos <= items_.size() )
+                    return items_[*pos - 1];
+            }
+            else
+            {
+                if ( *pos < items_.size() )
+                    return items_[*pos];
+            }
+            throw cbor_file_format_error("Block index out of range");
         }
 
         /**
@@ -1006,13 +1542,14 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields)
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields)
         {
             bool indef;
             uint64_t n_elems = dec.readArrayHeader(indef);
@@ -1033,7 +1570,7 @@ namespace block_cbor {
         /**
          * \brief Write the list to CBOR.
          *
-         * \param enc CBOR stream to write to.
+         * \param enc     CBOR stream to write to.
          */
         void writeCbor(CborBaseEncoder& enc)
         {
@@ -1071,7 +1608,9 @@ namespace block_cbor {
         index_t record_last_key()
         {
             index_t res = items_.size();
-            map_[KeyRef<K>(items_.back().key())] = res;
+            if ( !one_based_ )
+                res = *res - 1;
+            map_[KeyRef<K>(items_.back().key())] = *res;
             return res;
         }
 
@@ -1084,6 +1623,13 @@ namespace block_cbor {
          * \brief map of values present.
          */
         std::unordered_map<KeyRef<K>, index_t, boost::hash<KeyRef<K>>> map_;
+
+        /**
+         * \brief are indexes 1-based?
+         *
+         * If not, they are 0-based.
+         */
+        bool one_based_;
     };
 
     /**
@@ -1096,18 +1642,34 @@ namespace block_cbor {
     {
     private:
         /**
-         * \brief maximum number of query/response items in block.
+         * \brief the array of block parameters for this file.
+         *
+         * For writing we will always use entry 0.
          */
-        unsigned max_block_qr_items_;
+        const std::vector<BlockParameters>& block_parameters_;
 
     public:
         /**
          * Constructor.
          *
-         * \param max_block_qr_items number of query/response items to full.
+         * \param block_parameters vector of block parameters for this file.
+         * \param file_version     the file format version.
+         * \param bp_index         default index of vector item to use.
          */
-        explicit BlockData(unsigned max_block_qr_items = DEFAULT_MAX_BLOCK_ITEMS)
-            : max_block_qr_items_(max_block_qr_items)
+        explicit BlockData(const std::vector<BlockParameters>& block_parameters,
+                           FileFormatVersion file_version = FileFormatVersion::format_10,
+                           unsigned bp_index = 0)
+            : block_parameters_(block_parameters),
+              block_parameters_index(bp_index),
+              ip_addresses(file_version < FileFormatVersion::format_10),
+              class_types(file_version < FileFormatVersion::format_10),
+              questions(file_version < FileFormatVersion::format_10),
+              resource_records(file_version < FileFormatVersion::format_10),
+              names_rdatas(file_version < FileFormatVersion::format_10),
+              query_response_signatures(file_version < FileFormatVersion::format_10),
+              questions_lists(file_version < FileFormatVersion::format_10),
+              rrs_lists(file_version < FileFormatVersion::format_10),
+              malformed_message_data(file_version < FileFormatVersion::format_10)
         {
             init();
         }
@@ -1116,6 +1678,11 @@ namespace block_cbor {
          * \brief the earliest time of any entry in the block.
          */
         std::chrono::system_clock::time_point earliest_time;
+
+        /**
+         * \brief the index of the parameters applicable to this block.
+         */
+        unsigned block_parameters_index;
 
         /**
          * \brief packet statistics at the start of the block.
@@ -1132,7 +1699,7 @@ namespace block_cbor {
         /**
          * \brief the header list of IP addresses.
          */
-        HeaderList<IPAddressItem, IPAddress> ip_addresses;
+        HeaderList<ByteStringItem, byte_string> ip_addresses;
 
         /**
          * \brief the header list of CLASS/TYPE pairs.
@@ -1157,7 +1724,7 @@ namespace block_cbor {
         /**
          * \brief the header list of query signatures.
          */
-        HeaderList<QuerySignature> query_signatures;
+        HeaderList<QueryResponseSignature> query_response_signatures;
 
         /**
          * \brief the header list of question lists.
@@ -1170,6 +1737,11 @@ namespace block_cbor {
         HeaderList<IndexVectorItem, std::vector<index_t>> rrs_lists;
 
         /**
+         * \brief the header list of malformed message data.
+         */
+        HeaderList<MalformedMessageData> malformed_message_data;
+
+        /**
          * \brief the block list of completed query responses.
          */
         std::vector<QueryResponseItem> query_response_items;
@@ -1178,6 +1750,11 @@ namespace block_cbor {
          * \brief the list of address event counts.
          */
         std::unordered_map<AddressEventItem, unsigned, boost::hash<AddressEventItem>> address_event_counts;
+
+        /**
+         * \brief the block list of malformed messages.
+         */
+        std::vector<MalformedMessageItem> malformed_messages;
 
         /**
          * \brief Clear all block data.
@@ -1189,11 +1766,13 @@ namespace block_cbor {
             questions.clear();
             resource_records.clear();
             names_rdatas.clear();
-            query_signatures.clear();
+            query_response_signatures.clear();
             query_response_items.clear();
             questions_lists.clear();
             rrs_lists.clear();
             address_event_counts.clear();
+            malformed_message_data.clear();
+            malformed_messages.clear();
         }
 
         /**
@@ -1213,7 +1792,11 @@ namespace block_cbor {
          */
         bool is_full()
         {
-            return ( query_response_items.size() >= max_block_qr_items_ );
+            unsigned max_block_items = block_parameters_[block_parameters_index].storage_parameters.max_block_items;
+            return
+                ( query_response_items.size() >= max_block_items ||
+                  address_event_counts.size() >= max_block_items ||
+                  malformed_messages.size() >= max_block_items );
         }
 
         /**
@@ -1222,13 +1805,13 @@ namespace block_cbor {
          * \param addr the address to add.
          * \returns the index of the address.
          */
-        index_t add_address(const IPAddress& addr)
+        index_t add_address(const byte_string& addr)
         {
-            index_t res = ip_addresses.find(addr);
-            if ( res == 0 )
+            index_t res;
+            if ( !ip_addresses.find(addr, res) )
             {
-                IPAddressItem item;
-                item.addr = addr;
+                ByteStringItem item;
+                item.str = addr;
                 res = ip_addresses.add_value(std::move(item));
             }
             return res;
@@ -1246,14 +1829,14 @@ namespace block_cbor {
         }
 
         /**
-         * brief Add a new query signature to the block headers.
+         * brief Add a new query response signature to the block headers.
          *
-         * \param qs the query signature to add.
-         * \returns the index of the query signature.
+         * \param qs the query response signature to add.
+         * \returns the index of the query response signature.
          */
-        index_t add_query_signature(const QuerySignature& qs)
+        index_t add_query_response_signature(const QueryResponseSignature& qs)
         {
-            return query_signatures.add(qs);
+            return query_response_signatures.add(qs);
         }
 
         /**
@@ -1275,8 +1858,8 @@ namespace block_cbor {
          */
         index_t add_questions_list(const std::vector<index_t>& ql)
         {
-            index_t res = questions_lists.find(ql);
-            if ( res == 0 )
+            index_t res;
+            if ( !questions_lists.find(ql, res) )
             {
                 IndexVectorItem item;
                 item.vec = ql;
@@ -1293,8 +1876,8 @@ namespace block_cbor {
          */
         index_t add_name_rdata(const byte_string& rd)
         {
-            index_t res = names_rdatas.find(rd);
-            if ( res == 0 )
+            index_t res;
+            if ( !names_rdatas.find(rd, res) )
             {
                 ByteStringItem item;
                 item.str = rd;
@@ -1322,8 +1905,8 @@ namespace block_cbor {
          */
         index_t add_rrs_list(const std::vector<index_t>& rl)
         {
-            index_t res = rrs_lists.find(rl);
-            if ( res == 0 )
+            index_t res;
+            if ( !rrs_lists.find(rl, res) )
             {
                 IndexVectorItem item;
                 item.vec = rl;
@@ -1333,17 +1916,35 @@ namespace block_cbor {
         }
 
         /**
+         * brief Add a new malformed message data to the block headers.
+         *
+         * \param mmd the malformed message data to add.
+         * \returns the index of the malformed message data.
+         */
+        index_t add_malformed_message_data(const MalformedMessageData& mmd)
+        {
+            return malformed_message_data.add(mmd);
+        }
+
+        /**
          * \brief Count the AddressEvent.
          *
-         * \param ae the AddressEvent.
+         * \param type       the type of address event.
+         * \param code       the event code.
+         * \param address    the address.
+         * \param is_ipv6    is this event an IPv6 event?
          */
-        void count_address_event(const AddressEvent& ae)
+        void count_address_event(const AddressEvent::EventType& type,
+                                 unsigned code,
+                                 const byte_string& address,
+                                 bool is_ipv6)
         {
             AddressEventItem aei;
 
-            aei.type = ae.type();
-            aei.code = ae.code();
-            aei.address = add_address(ae.address());
+            aei.type = type;
+            aei.code = code;
+            aei.address = add_address(address);
+            aei.transport_flags = is_ipv6 ? 1 : 0;
 
             auto search = address_event_counts.find(aei);
             if ( search != address_event_counts.end() )
@@ -1355,13 +1956,14 @@ namespace block_cbor {
         /**
          * \brief Read the object contents from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
          * \throws cbor_file_format_error on unexpected CBOR content.
          * \throws cbor_decode_error on malformed CBOR items.
          * \throws cbor_end_of_input on end of CBOR file.
          */
-        void readCbor(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readCbor(CborBaseDecoder& dec,
+                      const FileVersionFields& fields);
 
         /**
          * \brief Read the block preamble.
@@ -1374,18 +1976,20 @@ namespace block_cbor {
         /**
          * \brief Read header tables from CBOR.
          *
-         * \param dec    CBOR stream to read from.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR stream to read from.
+         * \param fields   translate map keys to internal values.
          */
-        void readHeaders(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readHeaders(CborBaseDecoder& dec,
+                         const FileVersionFields& fields);
 
         /**
          * \brief Read block query/response items from CBOR.
          *
-         * \param dec    CBOR decoder.
-         * \param fields translate map keys to internal values.
+         * \param dec      CBOR decoder.
+         * \param fields   translate map keys to internal values.
          */
-        void readItems(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readItems(CborBaseDecoder& dec,
+                       const FileVersionFields& fields);
 
         /**
          * \brief Read block statistics from CBOR. Accumulate the stats over
@@ -1402,26 +2006,35 @@ namespace block_cbor {
          * \param dec CBOR decoder.
          * \param fields translate map keys to internal values.
          */
-        void readAddressEventCounts(CborBaseDecoder& dec, const FileVersionFields& fields);
+        void readAddressEventCounts(CborBaseDecoder& dec,
+                                    const FileVersionFields& fields);
+
+        /**
+         * \brief Read block malformed message from CBOR.
+         *
+         * \param dec CBOR decoder.
+         * \param fields translate map keys to internal values.
+         */
+        void readMalformedMessageItems(CborBaseDecoder& dec, const FileVersionFields& fields);
 
         /**
          * \brief Write the block out CBOR encoded.
          *
-         * \param enc the CBOR encoder to use for the write.
+         * \param enc     the CBOR encoder to use for the write.
          */
         void writeCbor(CborBaseEncoder& enc);
 
         /**
          * \brief Write block headers.
          *
-         * \param enc the CBOR encoder to use for the write.
+         * \param enc     the CBOR encoder to use for the write.
          */
         void writeHeaders(CborBaseEncoder& enc);
 
         /**
          * \brief Write items.
          *
-         * \param enc the CBOR encoder to use for the write.
+         * \param enc     the CBOR encoder to use for the write.
          */
         void writeItems(CborBaseEncoder& enc);
 
@@ -1438,6 +2051,13 @@ namespace block_cbor {
          * \param enc the CBOR encoder to use for the write.
          */
         void writeAddressEventCounts(CborBaseEncoder& enc);
+
+        /**
+         * \brief Write malformed messages.
+         *
+         * \param enc the CBOR encoder to use for the write.
+         */
+        void writeMalformedMessageItems(CborBaseEncoder& enc);
     };
 }
 

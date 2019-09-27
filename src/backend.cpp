@@ -6,6 +6,7 @@
  * file, you can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include <algorithm>
 #include <sstream>
 #include <utility>
 
@@ -76,27 +77,34 @@ PcapBackend::~PcapBackend()
 {
 }
 
-void PcapBackend::output(std::shared_ptr<QueryResponse>& qr, const Configuration& config)
+void PcapBackend::output(const QueryResponseData& qrd, const Configuration& config)
 {
+    std::unique_ptr<QueryResponse> qr{convert_to_wire(qrd)};
+
     if ( using_compression_ &&
-         config.output_options_responses == Configuration::ALL &&
-         qr->has_response() &&
-         qr->response().wire_size != qr->response().dns.size() )
+         !config.exclude_hints.query_question_section &&
+         !config.exclude_hints.response_answer_section &&
+         !config.exclude_hints.response_authority_section &&
+         !config.exclude_hints.response_additional_section &&
+         qr->has_response() && qrd.response_size )
     {
-        if ( auto_compression_ )
+        if ( *qrd.response_size != qr->response().dns.size() )
         {
-            // See if Knot works better. If it does, stick with it.
-            CaptureDNS::set_name_compression(CaptureDNS::KNOT_1_6);
-            qr->response().dns.clear_cached_size();
-            if ( qr->response().wire_size != qr->response().dns.size() )
+            if ( auto_compression_ )
             {
-                CaptureDNS::set_name_compression(CaptureDNS::DEFAULT);
-                bad_response_wire_size_count_++;
+                // See if Knot works better. If it does, stick with it.
+                CaptureDNS::set_name_compression(CaptureDNS::KNOT_1_6);
+                qr->response().dns.clear_cached_size();
+                if ( *qrd.response_size != qr->response().dns.size() )
+                {
+                    CaptureDNS::set_name_compression(CaptureDNS::DEFAULT);
+                    bad_response_wire_size_count_++;
+                }
+                auto_compression_ = false;
             }
-            auto_compression_ = false;
+            else
+                bad_response_wire_size_count_++;
         }
-        else
-            bad_response_wire_size_count_++;
     }
 
     if ( !opts_.baseopts.write_output)
@@ -126,7 +134,158 @@ std::string PcapBackend::output_file()
     return output_path_;
 }
 
-void PcapBackend::write_qr_tcp(std::shared_ptr<QueryResponse> qr)
+std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseData& qrd)
+{
+    std::unique_ptr<DNSMessage> query, response;
+
+    if ( qrd.qr_flags & block_cbor::HAS_QUERY )
+    {
+        query = make_unique<DNSMessage>();
+        query->timestamp = *qrd.timestamp;
+        query->tcp = *qrd.qr_transport_flags & block_cbor::TCP;
+        query->clientIP = *qrd.client_address;
+        query->serverIP = *qrd.server_address;
+        query->clientPort = *qrd.client_port;
+        query->serverPort = *qrd.server_port;
+        query->hoplimit = *qrd.hoplimit;
+        query->dns.type(CaptureDNS::QRType::QUERY);
+        query->dns.id(*qrd.id);
+        query->dns.opcode(*qrd.query_opcode);
+        query->dns.rcode(*qrd.query_rcode);
+        // Used, if present, in output() to evaluate label compression scheme usage.
+        if ( qrd.query_size )
+            query->wire_size = *qrd.query_size;
+        block_cbor::set_dns_flags(*query, *qrd.dns_flags, true);
+
+        if ( !(qrd.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION) )
+            query->dns.add_query(CaptureDNS::query(*qrd.qname, *qrd.query_type, *qrd.query_class));
+
+        add_extra_sections(*query,
+                           qrd.query_questions,
+                           qrd.query_answers,
+                           qrd.query_authorities,
+                           qrd.query_additionals);
+
+        if ( qrd.qr_flags & block_cbor::QUERY_HAS_OPT )
+        {
+            uint32_t ttl = ((*qrd.query_rcode >> 4) &0xff);
+            ttl <<= 8;
+            ttl |= (*qrd.query_edns_version & 0xff);
+            ttl <<= 16;
+            if ( *qrd.dns_flags & block_cbor::QUERY_DO )
+                ttl |= 0x8000;
+            query->dns.add_additional(
+                CaptureDNS::resource(
+                    "",
+                    *qrd.query_opt_rdata,
+                    CaptureDNS::OPT,
+                    static_cast<CaptureDNS::QueryClass>(*qrd.query_edns_payload_size),
+                    ttl));
+        }
+    }
+
+    if ( qrd.qr_flags & block_cbor::HAS_RESPONSE )
+    {
+        response = make_unique<DNSMessage>();
+        response->timestamp = *qrd.timestamp;
+        // If there is no query, the timestamp is the response timestamp.
+        if ( ( qrd.qr_flags & block_cbor::HAS_QUERY ) && qrd.response_delay )
+            response->timestamp += std::chrono::duration_cast<std::chrono::system_clock::duration>(*qrd.response_delay);
+        response->tcp = *qrd.qr_transport_flags & block_cbor::TCP;
+        response->clientIP = *qrd.client_address;
+        response->serverIP = *qrd.server_address;
+        response->clientPort = *qrd.client_port;
+        response->serverPort = *qrd.server_port;
+        response->dns.type(CaptureDNS::QRType::RESPONSE);
+        response->dns.id(*qrd.id);
+        response->dns.opcode(*qrd.query_opcode);
+        response->dns.rcode(*qrd.response_rcode);
+        // Used, if present, in output() to evaluate label compression scheme usage.
+        if ( qrd.response_size )
+            response->wire_size = *qrd.response_size;
+        block_cbor::set_dns_flags(*response, *qrd.dns_flags, false);
+
+        if ( ! (qrd.qr_flags & block_cbor::RESPONSE_HAS_NO_QUESTION) )
+            response->dns.add_query(CaptureDNS::query(*qrd.qname, *qrd.query_type, *qrd.query_class));
+
+        add_extra_sections(*response,
+                           qrd.response_questions,
+                           qrd.response_answers,
+                           qrd.response_authorities,
+                           qrd.response_additionals);
+
+        // If the query had an OPT, and we've not recorded a response OPT,
+        // (unlike query OPTs, response OPTs are recorded in C-DNS if
+        // additional section data is recorded), make one up.
+        // No RDATA, no extended RCODE/flags, and sender
+        // UDP payload size set to the default query payload size.
+        if ( qrd.qr_flags & block_cbor::RESPONSE_HAS_OPT )
+        {
+            if ( !qrd.response_additionals ||
+                 std::find_if(std::begin(*qrd.response_additionals),
+                              std::end(*qrd.response_additionals),
+                              [](const QueryResponseData::RR& rr)
+                              {
+                                  return rr.rtype && *rr.rtype == CaptureDNS::OPT;
+                              }) == std::end(*qrd.response_additionals) )
+            {
+                uint32_t ttl = ((*qrd.response_rcode >> 4) &0xff);
+                ttl <<= 8;
+                ttl |= (*qrd.query_edns_version & 0xff);
+                ttl <<= 16;
+                if ( *qrd.dns_flags & block_cbor::QUERY_DO )
+                    ttl |= 0x8000;
+                response->dns.add_additional(
+                    CaptureDNS::resource(
+                        "",
+                        ""_b,
+                        CaptureDNS::OPT,
+                        static_cast<CaptureDNS::QueryClass>(*qrd.query_edns_payload_size),
+                        ttl));
+            }
+        }
+    }
+
+    std::unique_ptr<QueryResponse> res;
+
+    if ( query )
+    {
+        res = make_unique<QueryResponse>(std::move(query));
+        if ( response )
+            res->set_response(std::move(response));
+    }
+    else
+    {
+        res = make_unique<QueryResponse>(std::move(response), false);
+    }
+
+    return res;
+}
+
+void PcapBackend::add_extra_sections(DNSMessage& dns,
+                                     const boost::optional<std::vector<QueryResponseData::Question>>& questions,
+                                     const boost::optional<std::vector<QueryResponseData::RR>>& answers,
+                                     const boost::optional<std::vector<QueryResponseData::RR>>& authorities,
+                                     const boost::optional<std::vector<QueryResponseData::RR>>& additionals)
+{
+    if ( questions )
+        for ( const auto& q: *questions )
+            dns.dns.add_query(CaptureDNS::query(*q.qname, *q.qtype, *q.qclass));
+
+    if ( answers )
+        for ( const auto& rr: *answers )
+            dns.dns.add_answer(CaptureDNS::resource(*rr.name, *rr.rdata, *rr.rtype, *rr.rclass, *rr.ttl));
+
+    if ( authorities )
+        for ( const auto& rr: *authorities )
+            dns.dns.add_authority(CaptureDNS::resource(*rr.name, *rr.rdata, *rr.rtype, *rr.rclass, *rr.ttl));
+
+    if ( additionals )
+        for ( const auto& rr: *additionals )
+            dns.dns.add_additional(CaptureDNS::resource(*rr.name, *rr.rdata, *rr.rtype, *rr.rclass, *rr.ttl));
+}
+
+void PcapBackend::write_qr_tcp(const std::unique_ptr<QueryResponse>& qr)
 {
     IPAddress client_address, server_address;
     uint16_t client_port, server_port;
@@ -247,7 +406,7 @@ void PcapBackend::write_qr_tcp(std::shared_ptr<QueryResponse> qr)
     write_packet(&ctcp, client_address, server_address, client_hoplimit, response_timestamp);
 }
 
-void PcapBackend::write_qr_udp(std::shared_ptr<QueryResponse> qr)
+void PcapBackend::write_qr_udp(const std::unique_ptr<QueryResponse>& qr)
 {
     if ( qr->has_query() )
         write_udp_packet(qr->query());
@@ -300,4 +459,72 @@ void PcapBackend::write_packet(Tins::PDU* pdu,
     }
 
     writer_->write_packet(ethernet, timestamp);
+}
+
+void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
+{
+    std::vector<std::string> missing;
+
+    if ( !opts_.defaults.time_offset )
+        missing.push_back("time-offset");
+    if ( !opts_.defaults.client_address )
+        missing.push_back("client-address");
+    if ( !opts_.defaults.client_port )
+        missing.push_back("client-port");
+    if ( !opts_.defaults.client_hoplimit )
+        missing.push_back("client-hoplimit");
+    if ( !opts_.defaults.server_address )
+        missing.push_back("server-address");
+    if ( !opts_.defaults.server_port )
+        missing.push_back("server-port");
+    if ( !opts_.defaults.transport )
+        missing.push_back("qr-transport-flags");
+
+    if ( !opts_.defaults.transaction_id )
+        missing.push_back("transaction-id");
+    if ( !opts_.defaults.query_opcode )
+        missing.push_back("query-opcode");
+    if ( !opts_.defaults.dns_flags )
+        missing.push_back("dns-flags");
+    if ( !opts_.defaults.query_rcode )
+        missing.push_back("query-rcode");
+    if ( !opts_.defaults.query_name )
+        missing.push_back("query-name");
+    if ( exclude_hints.query_class_type )
+    {
+        if ( !opts_.defaults.query_class )
+            missing.push_back("query-class");
+        if ( !opts_.defaults.query_type )
+            missing.push_back("query-type");
+    }
+    if ( !opts_.defaults.query_udp_size )
+        missing.push_back("query-udp-size");
+    if ( !opts_.defaults.query_edns_version )
+        missing.push_back("query-edns-version");
+    if ( !opts_.defaults.response_delay )
+        missing.push_back("response-delay");
+    if ( !opts_.defaults.response_rcode )
+        missing.push_back("response-rcode");
+
+    if ( !opts_.defaults.rr_ttl )
+        missing.push_back("rr-ttl");
+
+    if ( !missing.empty() )
+    {
+        std::string report;
+        bool comma = false;
+
+        for ( const auto& a : missing )
+        {
+            if ( comma )
+                report.append(", ");
+            report.append(a);
+            comma = true;
+        }
+
+        if ( !opts_.defaults.defaults_file_read )
+            report.append(" (no defaults file found)");
+
+        throw pcap_defaults_backend_error(report);
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -38,6 +38,7 @@
 #include "queryresponse.hpp"
 #include "sniffers.hpp"
 #include "streamwriter.hpp"
+#include "util.hpp"
 
 const std::string PROGNAME = "compactor";
 
@@ -124,13 +125,17 @@ struct OutputChannels
 /**
  * \brief Main function for threads writing PCAP files.
  *
- * \param out the output destination.
+ * \param name the thread name.
+ * \param out  the output destination.
  * \param chan the channel to receive packets from.
  */
-static void packet_writer(std::unique_ptr<PcapBaseRotatingWriter> out,
+static void packet_writer(const char* name,
+                          std::unique_ptr<PcapBaseRotatingWriter> out,
                           std::shared_ptr<Channel<std::shared_ptr<PcapItem>>> chan,
                           const Configuration& config)
 {
+    set_thread_name(name);
+
     std::shared_ptr<PcapItem> pcap;
     while ( chan->get(pcap) )
     {
@@ -205,6 +210,8 @@ private:
 static void cbor_writer(std::unique_ptr<BlockCborWriter> out,
                         std::shared_ptr<Channel<CborItem>> chan)
 {
+    set_thread_name("comp:cdns-write");
+
     CborItemVisitor cbiv(out);
     CborItem cbi;
     while ( chan->get(cbi) )
@@ -252,9 +259,7 @@ static void sniff_loop(BaseSniffers* sniffer,
                        PacketStatistics& stats)
 {
     bool seen_raw_overflow = false;
-    // cppcheck-suppress variableScope
     bool seen_ignored_overflow = false;
-    // cppcheck-suppress variableScope
     bool seen_ae_overflow = false;
 
     bool do_raw_pcap = !config.raw_pcap_pattern.empty();
@@ -289,7 +294,6 @@ static void sniff_loop(BaseSniffers* sniffer,
                     if ( !seen_ae_overflow )
                     {
                         LOG_ERROR << "C-DNS overflow. Dropping address event(s)";
-                        // cppcheck-suppress unreadVariable
                         seen_ae_overflow = true;
                     }
                 }
@@ -307,7 +311,6 @@ static void sniff_loop(BaseSniffers* sniffer,
                     if ( !seen_ignored_overflow )
                     {
                         LOG_ERROR << "Ignored PCAP overflow. Dropping packet(s)";
-                        // cppcheck-suppress unreadVariable
                         seen_ignored_overflow = true;
                     }
                 }
@@ -448,7 +451,7 @@ static std::unique_ptr<PcapBaseRotatingWriter> make_pcap_writer(const std::strin
  * \param config      the configuration values.
  * \param threads     a vector for all program threads.
  * \param writer_pool pool of compression threads.
- * \returns 0 on normal exit, 1 on SIGHUP, 2 on SIGINT.
+ * \returns 0 on normal exit, 1 on SIGHUP, 2 on SIGINT, 3 on sniffer error.
  */
 static int run_configuration(const po::variables_map& vm,
                              const Configuration& config,
@@ -481,7 +484,7 @@ static int run_configuration(const po::variables_map& vm,
     {
         std::unique_ptr<PcapBaseRotatingWriter> raw_pcap =
             make_pcap_writer(config.raw_pcap_pattern, config);
-        threads.emplace_back(packet_writer, std::move(raw_pcap), output.raw_pcap, std::ref(config));
+        threads.emplace_back(packet_writer, "comp:raw-pcap", std::move(raw_pcap), output.raw_pcap, std::ref(config));
     }
 
     if ( vm.count("ignored-pcap") &&
@@ -489,7 +492,7 @@ static int run_configuration(const po::variables_map& vm,
     {
         std::unique_ptr<PcapBaseRotatingWriter> ignored_pcap =
             make_pcap_writer(config.ignored_pcap_pattern, config);
-        threads.emplace_back(packet_writer, std::move(ignored_pcap), output.ignored_pcap, std::ref(config));
+        threads.emplace_back(packet_writer, "comp:ign-pcap", std::move(ignored_pcap), output.ignored_pcap, std::ref(config));
     }
 
     if ( vm.count("output") && !config.output_pattern.empty() )
@@ -511,7 +514,6 @@ static int run_configuration(const po::variables_map& vm,
     sniff_config.set_chan_max_size(config.max_channel_size);
 
     PacketStatistics stats{};
-    // cppcheck-suppress variableScope
     bool seen_qr_overflow = false;
 
     QueryResponseMatcher matcher(
@@ -538,19 +540,19 @@ static int run_configuration(const po::variables_map& vm,
                     if ( !seen_qr_overflow )
                     {
                         LOG_ERROR << "C-DNS overflow. Dropping query/response(s)";
-                        // cppcheck-suppress unreadVariable
                         seen_qr_overflow = true;
                     }
                 }
             }
         });
-    matcher.set_query_timeout(std::chrono::seconds(config.query_timeout));
-    matcher.set_skew_timeout(std::chrono::microseconds(config.skew_timeout));
+    matcher.set_query_timeout(config.query_timeout);
+    matcher.set_skew_timeout(config.skew_timeout);
 
     // We assume that network capture is typically a daemon process, and
     // log errors. File conversion, on the other hand, is typically a
     // manual process, and so errors go to stderr.
     bool log_errs = ( !vm.count("capture-file") );
+    int res = 0;
 
     try
     {
@@ -575,19 +577,20 @@ static int run_configuration(const po::variables_map& vm,
     catch (const Tins::pcap_error& err)
     {
         if ( log_errs )
-            LOG_ERROR << err.what();
+            LOG_ERROR << "PCAP Error: " << err.what();
         else
-            std::cerr << "Error: " << err.what() << std::endl;
+            std::cerr << "PCAP Error: " << err.what() << std::endl;
+        res = 3;
     }
     catch (const Tins::invalid_pcap_filter& err)
     {
         if ( log_errs )
-            LOG_ERROR << err.what();
+            LOG_ERROR << "Invalid PCAP filter:" << err.what();
         else
-            std::cerr << "Invalid filter: " << err.what() << std::endl;
+            std::cerr << "Invalid PCAP filter: " << err.what() << std::endl;
+        res = 3;
     }
 
-    int res = 0;
     switch(signal_handler_signal)
     {
     case 0:
@@ -657,7 +660,7 @@ int main(int ac, char *av[])
         if ( vm.count("version") )
         {
             std::cout << PROGNAME << " " PACKAGE_VERSION "\n"
-                      << "https://tools.ietf.org/html/draft-ietf-dnsop-dns-capture-format-04\n";
+                      << "https://tools.ietf.org/html/rfc8618\n";
             return 1;
         }
 
@@ -678,9 +681,29 @@ int main(int ac, char *av[])
             return 1;
         }
 
-        // Disable collection stats logging if reading from file.
+        if ( configuration.client_address_prefix_ipv4 > 32 ||
+             configuration.server_address_prefix_ipv4 > 32 )
+        {
+            std::cerr
+                << "Error:\tIPv4 prefix length must be in range 0 to 32.\n";
+            return 1;
+        }
+
+        if ( configuration.client_address_prefix_ipv6 > 128 ||
+             configuration.server_address_prefix_ipv6 > 128 )
+        {
+            std::cerr
+                << "Error:\tIPv6 prefix length must be in range 0 to 128.\n";
+            return 1;
+        }
+
+        // Disable collection stats logging and disable logging
+        // the hostname if reading from file.
         if ( vm.count("capture-file") )
+        {
             configuration.log_network_stats_period = 0;
+            configuration.omit_hostid = true;
+        }
 
         // To enable a SIGHUP to not lose data, file compression
         // must survive the restart. That means compression
@@ -716,6 +739,9 @@ int main(int ac, char *av[])
         for ( auto& thread : threads )
             if ( thread.joinable() )
                 thread.join();
+
+        if ( res != 0 )
+            return 1;
     }
     catch (po::error& err)
     {

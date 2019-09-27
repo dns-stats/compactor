@@ -9,8 +9,12 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ(2.61)
 AC_INIT(dns-stats-compactor, m4_esyscmd_s([./getversion.sh]), jim@sinodun.com)
+
+AC_PREREQ(2.61)
+# Required if we're going to find pthread_setname_np.
+AC_USE_SYSTEM_EXTENSIONS
+
 AC_CONFIG_SRCDIR([src/compactor.cpp])
 AC_CONFIG_HEADER([config.h])
 
@@ -60,6 +64,10 @@ AX_BOOST_PROGRAM_OPTIONS
 AX_BOOST_SYSTEM
 AX_BOOST_THREAD
 AX_PTHREAD
+
+AC_CHECK_HEADERS([pthread_np.h])
+AC_CHECK_LIB([pthread],[pthread_setname_np],
+        AC_DEFINE([HAVE_PTHREAD_SETNAME_NP], [1], [Define to 1 if you have pthread_setname_np()]))
 
 AS_IF([test "x$enable_pseudo_anonymisation" != xno],
         [AX_CHECK_OPENSSL([], [AC_MSG_ERROR([pseudo-anonymisation requires OpenSSL])])
@@ -145,6 +153,12 @@ AC_ARG_ENABLE(internal-doc,
 AS_IF([test "x$enable_internal_doc" != xno],
     [DX_ENV_APPEND(ENABLE_INTERNAL, YES)],
     [DX_ENV_APPEND(ENABLE_INTERNAL, NO)])
+
+# Files that need to appear in build directories unchanged.
+AC_CONFIG_LINKS([
+        doc/user-guide/excluded_fields.conf.sample:etc/excluded_fields.conf.sample
+        doc/user-guide/default_values.conf:etc/default_values.conf
+        doc/overview.png:doc/user-guide/overview.png])
 
 AC_CONFIG_FILES(Makefile)
 

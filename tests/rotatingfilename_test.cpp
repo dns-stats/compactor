@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -140,10 +140,10 @@ SCENARIO("Rotating file name changes", "[rotation]")
         std::chrono::system_clock::time_point t(std::chrono::hours(24*365*20));
         Configuration config;
         config.network_interfaces = { "interface0" };
-        config.rotation_period = 300;
+        config.rotation_period = std::chrono::seconds(300);
         config.snaplen = 65;
-        config.query_timeout = 10;
-        config.skew_timeout = 20;
+        config.query_timeout = std::chrono::milliseconds(10000);
+        config.skew_timeout = std::chrono::microseconds(20);
         config.promisc_mode = true;
 
         THEN("check the right filename is generated")

@@ -1,0 +1,35 @@
+// On Xenial I get loads of errors about missing system includes.
+missingIncludeSystem
+
+// Awaiting full malformed messages implementation.
+unusedFunction:src/blockcbordata.cpp:1628
+unusedFunction:src/blockcbordata.cpp:1818
+
+// We do need/use CaptureDNS::extract_metadata() and header_size().
+// And write_serialisation() gets confused by HAVE_LIBTINS4.
+unusedFunction:src/capturedns.cpp:179
+unusedFunction:src/capturedns.cpp:1152
+unusedFunction:src/capturedns.cpp:1169
+
+// Some CBOR decoder functions are present for completeness but not used.
+unusedFunction:src/cbordecoder.cpp:166
+unusedFunction:src/cbordecoder.cpp:181
+unusedFunction:src/cbordecoder.cpp:196
+
+// Lambdas are confusing.
+variableScope:src/compactor.cpp:262
+variableScope:src/compactor.cpp:263
+variableScope:src/compactor.cpp:517
+unreadVariable:src/compactor.cpp:314
+unreadVariable:src/compactor.cpp:297
+unreadVariable:src/compactor.cpp:543
+
+// A bunch of variable, e.g query_qdcount, in Default::read_defaults_file()
+// are misdiagnosed as being able to have their scope reduced.
+variableScope:src/configuration.cpp
+
+// validate() for Size is definitely used.
+unusedFunction:src/configuration.cpp:259
+
+// No obvious reason why CStringModifier::Modify should be thought to be unused.
+unusedFunction:src/template-backend.cpp:33

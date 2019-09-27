@@ -3,8 +3,7 @@
 The *DNS-STATS Compactor* project is a set of tools for capturing and
 working with DNS server traffic recorded in C-DNS files. C-DNS is a
 space-efficient file format for storing DNS traffic. It is defined in
-Internet Draft
-https://datatracker.ietf.org/doc/draft-ietf-dnsop-dns-capture-format[draft-ietf-dnsop-dns-capture-format].
+https://tools.ietf.org/html/rfc8618[RFC8618].
 
 *DNS-STATS Compactor* is an open source project licenced under the
 https://mozilla.org/MPL/2.0[Mozilla Public License v2.0].

@@ -36,6 +36,7 @@ const std::string PROGNAME = "inspector";
 const std::string PCAP_EXT = ".pcap";
 const std::string TEMPLATE_EXT = ".txt";
 const std::string INFO_EXT = ".info";
+const std::string EXCLUDEHINTS_EXT = ".excludesfile";
 
 namespace po = boost::program_options;
 
@@ -77,9 +78,24 @@ struct Options
     bool report_info{false};
 
     /**
+     * \brief generate excluded fields files?
+     */
+    bool generate_excludesfile{false};
+
+    /**
+     * \brief name of the excluded fields hints file.
+     */
+    std::string excludesfile_file_name;
+
+    /**
      * \brief pseudo-anonymisation, if to use.
      */
     boost::optional<PseudoAnonymise> pseudo_anon;
+
+    /**
+     * \brief output defaults.
+     */
+    Defaults defaults;
 };
 
 static void report(std::ostream& os,
@@ -98,50 +114,54 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
 {
     Configuration config;
     CborStreamDecoder dec(is);
-    BlockCborReader cbr(dec, config, options.pseudo_anon);
-    std::chrono::system_clock::time_point earliest_time, latest_time;
+    BlockCborReader cbr(dec, config, options.defaults, options.pseudo_anon);
+    boost::optional<std::chrono::system_clock::time_point> earliest_time, latest_time;
+
+    backend->check_exclude_hints(config.exclude_hints);
+
+    if ( options.generate_excludesfile )
+    {
+        std::ofstream f(options.excludesfile_file_name);
+        if ( !f.is_open() )
+        {
+            std::cerr << PROGNAME << ":  Can't create " << options.excludesfile_file_name << std::endl;
+            return 1;
+        }
+        config.exclude_hints.dump_config(f);
+    }
+
+    if ( !options.generate_output && !options.generate_stats &&
+         !options.generate_info && !options.report_info )
+        return 0;
 
     try
     {
         auto start = std::chrono::system_clock::now();
         unsigned long long nrecs = 0;
-        bool first_time = true;
+        bool eof = false;
+        bool first_timestamp = true;
 
-        for ( std::shared_ptr<QueryResponse> qr = cbr.readQR();
-              qr;
-              qr = cbr.readQR() )
+        for ( QueryResponseData qr = cbr.readQRData(eof);
+              !eof;
+              qr = cbr.readQRData(eof) )
         {
-            if ( qr->has_query() )
+            if ( qr.timestamp )
             {
-                std::chrono::system_clock::time_point t = qr->query().timestamp;
-
-                if ( first_time )
+                std::chrono::system_clock::time_point t = *qr.timestamp;
+                if ( qr.response_delay )
+                    t += std::chrono::duration_cast<std::chrono::system_clock::duration>(*qr.response_delay);
+                if ( first_timestamp )
                 {
                     earliest_time = latest_time = t;
-                    first_time = false;
-                }
-                else if ( t < earliest_time )
-                    earliest_time = t;
-                else if ( t > latest_time )
-                    latest_time = t;
-            }
-            if ( qr->has_response() )
-            {
-                std::chrono::system_clock::time_point t = qr->response().timestamp;
-
-                if ( first_time )
-                {
-                    earliest_time = latest_time = t;
-                    first_time = false;
-                }
-                else if ( t < earliest_time )
+                    first_timestamp = false;
+                } else if ( t < earliest_time )
                     earliest_time = t;
                 else if ( t > latest_time )
                     latest_time = t;
             }
 
             if ( options.debug_qr )
-                std::cout << *qr;
+                std::cout << qr;
 
             backend->output(qr, config);
             nrecs++;
@@ -149,7 +169,8 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
 
         // Approximate the rotation period with the difference between the first
         // and last timestamps, rounded to the nearest second.
-        config.rotation_period = (std::chrono::duration_cast<std::chrono::milliseconds>(latest_time - earliest_time).count() + 500) / 1000;
+        if ( earliest_time )
+            config.rotation_period = std::chrono::seconds((std::chrono::duration_cast<std::chrono::milliseconds>(*latest_time - *earliest_time).count() + 500) / 1000);
 
         if ( options.generate_info )
             report(info, config, cbr, backend);
@@ -203,6 +224,7 @@ int main(int ac, char *av[])
 
     init_logging();
 
+    std::string defaults_file_name;
     std::string output_file_name;
     std::string compression_type;
 #if ENABLE_PSEUDOANONYMISATION
@@ -220,6 +242,9 @@ int main(int ac, char *av[])
     visible.add_options()
         ("help,h", "show this help message.")
         ("version,v", "show version information.")
+        ("defaultsfile",
+         po::value<std::string>(&defaults_file_name)->default_value(DEFAULTSFILE),
+         "default values file.")
         ("output,o",
          po::value<std::string>(&output_file_name),
          "output file name.")
@@ -249,10 +274,12 @@ int main(int ac, char *av[])
          "write only query messages to output.")
         ("report-info,r",
          "report info (config and stats summary) on exit.")
-        ("info-only,I",
-         "don't generate output data files, only info files.")
-        ("report-only,R",
-         "don't write output data files, just report info.")
+        ("no-output,N",
+         "do not output PCAP or template files, only ancillary files, e.g. info files, for each input.")
+        ("no-info,O",
+         "do not output info files.")
+        ("excludesfile,X",
+         "generate excluded fields file for each input.")
         ("stats,S",
          "report conversion statistics.")
 #if ENABLE_PSEUDOANONYMISATION
@@ -275,6 +302,10 @@ int main(int ac, char *av[])
         ("cdns-file",
          po::value<std::vector<std::string>>(),
          "input C-DNS file.")
+        ("info-only,I",
+         "don't generate output data files, only info files.")
+        ("report-only,R",
+         "don't write output data files, just report info.")
         ;
     po::options_description all("Options");
     all.add(visible).add(debug);
@@ -386,23 +417,31 @@ int main(int ac, char *av[])
         pcap_options.query_only = ( vm.count("query-only") != 0 );
         options.debug_qr = ( vm.count("debug-qr") != 0 );
         options.generate_stats = ( vm.count("stats") != 0 );
+        options.defaults.read_defaults_file(defaults_file_name);
+        pcap_options.defaults = options.defaults;
 
         options.generate_output = true;
         options.generate_info = true;
         options.report_info = false;
 
-        if ( vm.count("info-only") != 0 )
+        if ( vm.count("info-only") != 0 ||
+             vm.count("report-only") != 0 ||
+             vm.count("no-output") != 0 )
             options.generate_output = false;
+
+        if ( vm.count("no-info") != 0 )
+            options.generate_info = false;
 
         if ( vm.count("report-info") != 0 )
             options.report_info = true;
 
         if ( vm.count("report-only") != 0 )
         {
-            options.generate_output = false;
             options.generate_info = false;
             options.report_info = true;
         }
+
+        options.generate_excludesfile = ( vm.count("excludesfile") != 0 );
 
         if ( !options.generate_output )
             pcap_options.baseopts.write_output = false;
@@ -475,10 +514,12 @@ int main(int ac, char *av[])
             {
                 if ( options.generate_output )
                 {
-                    if ( options.report_info || options.debug_qr )
+                    if ( options.report_info ||
+                         options.debug_qr ||
+                         options.generate_excludesfile )
                     {
                         std::cerr << PROGNAME
-                                  << ":  Writing output to standard output can't be combined with info reporting or printing Query/Response details.\n";
+                                  << ":  Writing output to standard output can't be combined with info reporting, excluded fields generation or printing Query/Response details.\n";
                         return 1;
                     }
                     options.generate_info = false;
@@ -492,6 +533,8 @@ int main(int ac, char *av[])
                 if ( !open_info_file(output_file_name, info, options) )
                     return 1;
             }
+
+            options.excludesfile_file_name = output_file_name + EXCLUDEHINTS_EXT;
 
             if ( template_backend )
                 backend = make_unique<TemplateBackend>(template_options, output_file_name);
@@ -522,6 +565,8 @@ int main(int ac, char *av[])
 
                 if ( !open_info_file(out_fname, info, options) )
                     return 1;
+
+                options.excludesfile_file_name = fname + EXCLUDEHINTS_EXT;
 
                 if ( template_backend )
                     backend = make_unique<TemplateBackend>(template_options, out_fname);

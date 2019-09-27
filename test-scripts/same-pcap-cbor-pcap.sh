@@ -8,6 +8,9 @@
 
 COMP=./compactor
 INSP=./inspector
+
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
+
 DATAFILE=./gold.pcap
 
 command -v cmp > /dev/null 2>&1 || { echo "No cmp, skipping test." >&2; exit 77; }
@@ -30,7 +33,7 @@ if [ $? -ne 0 ]; then
 fi
 
 # Convert output back to pcap.
-$INSP -o $tmpdir/out.pcap $tmpdir/out.cbor
+$INSP $DEFAULTS -o $tmpdir/out.pcap $tmpdir/out.cbor
 if [ $? -ne 0 ]; then
     cleanup 1
 fi

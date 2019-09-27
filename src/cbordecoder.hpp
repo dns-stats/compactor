@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,11 +13,13 @@
 #ifndef CBORDECODER_HPP
 #define CBORDECODER_HPP
 
-#include <chrono>
 #include <cstdint>
 #include <fstream>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
+
+#include <boost/optional.hpp>
 
 #include "bytestring.hpp"
 
@@ -103,6 +105,36 @@ public:
     type_t type();
 
     /**
+     * \brief templated read.
+     *
+     * Read an item of given type. Pass to private implementation which
+     * can be overloaded and specialised.
+     *
+     * \param item The item to read.
+     */
+    template<typename T>
+    void read(T& item)
+    {
+        read_item(item);
+    }
+
+    /**
+     * \brief templated read of optional item.
+     *
+     * Read an item of given type. Pass to private implementation which
+     * can be overloaded and specialised.
+     *
+     * \param item The item to read.
+     */
+    template<typename T>
+    void read(boost::optional<T>& item)
+    {
+        T val;
+        read_item(val);
+        item = val;
+    }
+
+    /**
      * \brief Read the value of the current CBOR unsigned item.
      *
      * Reading moves on the next CBOR item.
@@ -123,6 +155,19 @@ public:
      * \throws std::logic_error if the current CBOR item isn't of signed type.
      */
     int64_t read_signed();
+
+    /**
+     * \brief. Read the value of the current CBOR boolean item.
+     *
+     * Reading moves on the next CBOR item. For C-DNS backwards
+     * compatibility reasons, this will recognise CBOR boolean types
+     * OR any integer type. In the latter case, non-zero is <code>true</code>.
+     *
+     * \return the value of the CBOR item.
+     * \throws cbor_decode_error if the CBOR is invalid.
+     * \throws std::logic_error if the current CBOR item isn't of correct type.
+     */
+    bool read_bool();
 
     /**
      * \brief Read the value of the current CBOR binary item.
@@ -216,20 +261,6 @@ public:
      */
     void readBreak();
 
-
-    /**
-     * \brief Read the value of the current CBOR array item as time.
-     *
-     * A time point is written as a two item array.
-     *
-     * Reading moves on the next CBOR item.
-     *
-     * \return the time point of the CBOR item.
-     * \throws cbor_decode_error if the CBOR is invalid.
-     * \throws std::logic_error if the current CBOR item isn't a time.
-     */
-    std::chrono::system_clock::time_point read_time();
-
     /**
      * \brief Skip past the current CBOR item.
      *
@@ -250,6 +281,36 @@ protected:
     virtual unsigned readBytes(uint8_t* p, std::ptrdiff_t n_bytes) = 0;
 
 private:
+    /**
+     * \brief General read - assume for integer type, so works for enums.
+     */
+    template<typename T>
+    void read_item(T& item, typename std::enable_if<std::is_signed<T>::value>::type* = 0)
+    {
+        item = read_signed();
+    }
+
+    template<typename T>
+    void read_item(T& item, typename std::enable_if<std::is_unsigned<T>::value>::type* = 0)
+    {
+        item = read_unsigned();
+    }
+
+    void read_item(bool& item)
+    {
+        item = read_bool();
+    }
+
+    void read_item(byte_string& item)
+    {
+        item = read_binary();
+    }
+
+    void read_item(std::string& item)
+    {
+        item = read_string();
+    }
+
     /**
      * \brief See whether more bytes need to be read.
      */

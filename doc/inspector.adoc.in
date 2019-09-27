@@ -42,6 +42,10 @@ output file must be specified with the *--output* option.
 *-v, --version*::
   Print the version number of *inspector* to the standard output stream and then exit.
 
+*--defaultsfile* [_arg_]::
+  Specify the path to the default_values.conf file. If not specified, the
+  default configuration file `@ETCPATH@/default_values.conf` is read if present.
+
 === Outputs
 
 *-o, --output* _FILENAME_::
@@ -81,11 +85,17 @@ output file must be specified with the *--output* option.
 *-r. --report-info*::
   Report info (config and statistics summary) to standard output on exit.
 
-*-R, --report-only*::
-  Don't write any output files, just report info to standard output on exit.
+*-N, --no-output*::
+  Don't write any output PCAP or template files, just generate any requested ancillary
+  outputs e.g. `.info` files.
 
-*-I, --info-only*::
-   Don't write any PCAP output files, just write the `.info` files.
+*-O, --no-info*::
+  Don't write any `.info` files.
+
+*-X, --excludesfile*::
+  For each input, write a `.excludesfile` file. This is in the format of an
+  exclude hints file as specified to _compactor_ and indicates which data fields in
+  the input file were not collected.
 
 *-S, --stats*::
   For each input file, write the number of query/response records converted and the time
@@ -122,7 +132,8 @@ output file must be specified with the *--output* option.
 *-g, --geoip-db-dir* _DIR_::
   `inspector` can present geographic  IP data in the output. This requires
   the MaxMind GeoLite2 database files, which
-  should be found in directory _DIR_. *inspector* needs
+  should be found in directory _DIR_.  If not specified, the
+  default directory `@VARLIBPATH@/GeoIP` is checked. *inspector* needs
   files _GeoLite2-ASN.mmdb_ and _GeoLite2-City.mmdb_ to be present to enable
   geographic IP data in the output.
 
@@ -136,6 +147,11 @@ query/response item in a C-DNS file.
 When output for each query/response item
 is generated, elements, or markers, like `{{NAME}}` in the template are replaced
 with a data item named `NAME` from the query/response (QR) item.
+
+If the data item isn't available in the query/response item, nothing is output for
+the marker. For example, "QTYPE `{{query_type}}`" will output "QTYPE 1"
+for a query with a question of type of QTYPE A, and will output "QTYPE " if there
+is no query question.
 
 [cols="2*"]
 |===
@@ -160,14 +176,17 @@ with a data item named `NAME` from the query/response (QR) item.
 | `id`
 | Query ID, or response ID if no query.
 
+| `opcode`
+| Value of query OPCODE, or response OPCODE if no query.
+
 | `query_name`
 | QNAME in first Question. Blank if no question.
 
 | `query_class`
-| QCLASS in first Question. Blank if no question.
+| Numeric QCLASS in first Question. Blank if no question.
 
 | `query_type`
-| QTYPE in first Question. Blank if no question.
+| Numeric QTYPE in first Question. Blank if no question.
 
 | `query_authoritative_answer`
 | Value of query AA flag. Blank if no query.
@@ -202,23 +221,20 @@ with a data item named `NAME` from the query/response (QR) item.
 | `query_len`
 | Value of query length on the wire. Blank if no query.
 
-| `query_opcode`
-| Value of query OPCODE. Blank if no query.
-
 | `query_rcode`
 | Value of query RCODE. Blank if no query.
 
 | `query_qdcount`
-| Value of query QDCOUNT. Blank if no query.
+| Count of questions captured from the query. Blank if no query.
 
 | `query_ancount`
-| Value of query ANCOUNT. Blank if no query.
+| Count of answer RR captured from the query. Blank if no query.
 
 | `query_nscount`
-| Value of query NSCOUNT. Blank if no query.
+| Count of authority RR captured from the query. Blank if no query.
 
 | `query_arcount`
-| Value of query ARCOUNT. Blank if no query.
+| Count of additional RR captured from the query. Blank if no query.
 
 | `query_response_has_query`
 | 1 if QR contains a query, otherwise 0.
@@ -229,8 +245,11 @@ with a data item named `NAME` from the query/response (QR) item.
 | `query_response_query_has_opt`
 | 1 if QR contains a query which has OPT, otherwise 0. Blank if no query.
 
-| `query_response_query_has_question`
-| 1 if QR contains a query which has a question, otherwise 0. Blank if no query.
+| `query_response_query_has_no_question`
+| 0 if QR contains a query which has a question, otherwise 1. Blank if no query.
+
+| `query_response_response_has_no_question`
+| 0 if QR contains a response which has a question, otherwise 1. Blank if no query.
 
 | `query_response_response_has_opt`
 | 1 if QR contains a response which has OPT, otherwise 0. Blank if no response.
@@ -266,16 +285,16 @@ with a data item named `NAME` from the query/response (QR) item.
 | Value of response RCODE. Blank if no response.
 
 | `response_qdcount`
-| Value of response QDCOUNT. Blank if no response.
+| Count of questions captured from the response. Blank if no response.
 
 | `response_ancount`
-| Value of response ANCOUNT. Blank if no response.
+| Count of answer RR captures from the response. Blank if no response.
 
 | `response_nscount`
-| Value of response NSCOUNT. Blank if no response.
+| Count of authority RR captured from the response. Blank if no response.
 
 | `response_arcount`
-| Value of response ARCOUNT. Blank if no response.
+| Count of additional RR captured from the response. Blank if no response.
 
 | `response_delay_nanosecs`
 | Nano-seconds between query and response timestamps. 0 if no query or no response.
@@ -358,9 +377,18 @@ https://github.com/OlafvdSpek/ctemplate.
 
 The exit status is 1 if any error occurred. A successful run ends with an exit status of 0.
 
+== LIMITATIONS
+
+The design of C-DNS allows blocks with different storage and collection parameters
+to be present in the same C-DNS file. This might arise when two separate C-DNS
+files are merged.
+
+At the time of writing, no tool exists to do this. *inspector* has not been tested on
+such inputs, and may not exhibit correct behaviour if presented with such a file.
+
 == RESOURCES
 
-There will be a website one day.
+https://github.com/dns-stats/compactor/wiki
 
 == COPYRIGHT
 

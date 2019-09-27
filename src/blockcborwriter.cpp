@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,15 +26,36 @@
 #include "blockcbordata.hpp"
 #include "blockcborwriter.hpp"
 
+namespace {
+    byte_string addr_to_string(const IPAddress& addr, const Configuration& config, bool is_client = true)
+    {
+        unsigned prefix_len =
+            addr.is_ipv6()
+            ? ( is_client ) ? config.client_address_prefix_ipv6 : config.server_address_prefix_ipv6
+            : ( is_client ) ? config.client_address_prefix_ipv4 : config.server_address_prefix_ipv4;
+        unsigned prefix_nbytes = (prefix_len + 7) / 8;
+        byte_string res = addr.asNetworkBinary();
+        res.resize(prefix_nbytes);
+        if ( prefix_nbytes > 0 )
+            res[prefix_nbytes - 1] &= 0xff << (prefix_nbytes * 8 - prefix_len);
+        return res;
+    }
+}
+
 BlockCborWriter::BlockCborWriter(const Configuration& config,
                                      std::unique_ptr<CborBaseStreamFileEncoder> enc)
     : BaseOutputWriter(config),
       output_pattern_(config.output_pattern + enc->suggested_extension(),
                       std::chrono::seconds(config.rotation_period)),
-      enc_(std::move(enc)), data_(make_unique<block_cbor::BlockData>(config.max_block_qr_items)),
+      enc_(std::move(enc)),
       query_response_(), ext_rr_(nullptr), ext_group_(nullptr),
       last_end_block_statistics_()
 {
+    block_cbor::BlockParameters bp;
+    config.populate_block_parameters(bp);
+    block_parameters_.push_back(bp);
+
+    data_ = make_unique<block_cbor::BlockData>(block_parameters_);
 }
 
 BlockCborWriter::~BlockCborWriter()
@@ -53,9 +74,13 @@ void BlockCborWriter::close()
 }
 
 void BlockCborWriter::writeAE(const std::shared_ptr<AddressEvent>& ae,
-                                const PacketStatistics& stats)
+                              const PacketStatistics& stats)
 {
-    data_->count_address_event(*ae);
+    if ( !config_.exclude_hints.address_events )
+        data_->count_address_event(ae->type(),
+                                   ae->code(),
+                                   addr_to_string(ae->address(), config_),
+                                   ae->address().is_ipv6());
     last_end_block_statistics_ = stats;
 }
 
@@ -92,7 +117,8 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
 {
     const DNSMessage &d(qr->has_query() ? qr->query() : qr->response());
     block_cbor::QueryResponseItem& qri = query_response_;
-    block_cbor::QuerySignature qs;
+    block_cbor::QueryResponseSignature qs;
+    const HintsExcluded& exclude = config_.exclude_hints;
 
     qri.qr_flags = 0;
 
@@ -106,51 +132,76 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     last_end_block_statistics_ = stats;
 
     // Basic query signature info.
-    qs.server_address = data_->add_address(d.serverIP);
-    qs.server_port = d.serverPort;
-    qs.transport_flags = transportFlags(qr);
-    qs.dns_flags = dnsFlags(qr);
+    if ( !exclude.server_address )
+        qs.server_address = data_->add_address(addr_to_string(d.serverIP, config_, false));
+    if ( !exclude.server_port )
+        qs.server_port = d.serverPort;
+    if ( !exclude.transport )
+        qs.qr_transport_flags = block_cbor::transport_flags(*qr);
+    if ( !exclude.dns_flags )
+        qs.dns_flags = block_cbor::dns_flags(*qr);
 
     // Basic query/response info.
-    qri.tstamp = d.timestamp;
-    qri.client_address = data_->add_address(d.clientIP);
-    qri.client_port = d.clientPort;
-    qri.id = d.dns.id();
-    qs.qdcount = d.dns.questions_count();
+    if ( !exclude.timestamp )
+        qri.tstamp = d.timestamp;
+    if ( !exclude.client_address )
+        qri.client_address = data_->add_address(addr_to_string(d.clientIP, config_));
+    if ( !exclude.client_port )
+        qri.client_port = d.clientPort;
+    if ( !exclude.transaction_id )
+        qri.id = d.dns.id();
+    if ( !exclude.query_qdcount )
+        qs.qdcount = d.dns.questions_count();
 
     // Get first query info.
-    for ( const auto& query : d.dns.queries() )
+    if ( d.dns.queries().empty() )
+        qri.qr_flags |= block_cbor::QUERY_HAS_NO_QUESTION;
+    else
     {
+        const auto& query = d.dns.queries().front();
         block_cbor::ClassType ct;
+
         ct.qtype = query.query_type();
         ct.qclass = query.query_class();
-        qs.query_classtype = data_->add_classtype(ct);
-        qri.qname = data_->add_name_rdata(query.dname());
-        qri.qr_flags |= block_cbor::QR_HAS_QUESTION;
-        break;
+        if ( !exclude.query_class_type )
+            qs.query_classtype = data_->add_classtype(ct);
+        if ( !exclude.query_name )
+            qri.qname = data_->add_name_rdata(query.dname());
     }
 
     if ( qr->has_query() )
     {
         const DNSMessage &q(qr->query());
 
-        qri.qr_flags |= block_cbor::QUERY_ONLY;
-        qri.query_size = q.wire_size;
-        qri.hoplimit = q.hoplimit;
-        qs.query_opcode = q.dns.opcode();
-        qs.query_rcode = q.dns.rcode();
-        qs.query_ancount = q.dns.answers_count();
-        qs.query_nscount = q.dns.authority_count();
-        qs.query_arcount = q.dns.additional_count();
+        qri.qr_flags |= block_cbor::HAS_QUERY;
+        if ( !exclude.query_size )
+            qri.query_size = q.wire_size;
+        if ( !exclude.client_hoplimit )
+            qri.hoplimit = q.hoplimit;
+
+        if ( !exclude.query_opcode )
+            qs.query_opcode = q.dns.opcode();
+        if ( !exclude.query_rcode )
+            qs.query_rcode = CaptureDNS::Rcode(q.dns.rcode());
+        if ( !exclude.query_ancount )
+            qs.query_ancount = q.dns.answers_count();
+        if ( !exclude.query_arcount )
+            qs.query_nscount = q.dns.authority_count();
+        if ( !exclude.query_nscount )
+            qs.query_arcount = q.dns.additional_count();
 
         auto edns0 = q.dns.edns0();
         if ( edns0 )
         {
-            qs.query_rcode += edns0->extended_rcode() << 4;
+            if ( !exclude.query_rcode )
+                qs.query_rcode = CaptureDNS::Rcode(*qs.query_rcode + (edns0->extended_rcode() << 4));
             qri.qr_flags |= block_cbor::QUERY_HAS_OPT;
-            qs.query_edns_payload_size = edns0->udp_payload_size();
-            qs.query_edns_version = edns0->edns_version();
-            qs.query_opt_rdata = data_->add_name_rdata(edns0->rr().data());
+            if ( !exclude.query_udp_size )
+                qs.query_edns_payload_size = edns0->udp_payload_size();
+            if ( !exclude.query_edns_version )
+                qs.query_edns_version = edns0->edns_version();
+            if ( !exclude.query_opt_rdata )
+                qs.query_opt_rdata = data_->add_name_rdata(edns0->rr().data());
         }
     }
 
@@ -158,14 +209,20 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     {
         const DNSMessage &r(qr->response());
 
-        qri.qr_flags |= block_cbor::RESPONSE_ONLY;
-        qri.response_size = r.wire_size;
-        qs.response_rcode = r.dns.rcode();
+        qri.qr_flags |= block_cbor::HAS_RESPONSE;
+        if ( !exclude.response_size )
+            qri.response_size = r.wire_size;
+        // Set from response if not already set.
+        if ( !exclude.query_opcode && !qs.query_opcode )
+            qs.query_opcode = r.dns.opcode();
+        if ( !exclude.response_rcode )
+            qs.response_rcode = CaptureDNS::Rcode(r.dns.rcode());
 
         auto edns0 = r.dns.edns0();
         if ( edns0 )
         {
-            qs.response_rcode += edns0->extended_rcode() << 4;
+            if ( !exclude.response_rcode )
+                qs.response_rcode = CaptureDNS::Rcode(*qs.response_rcode + (edns0->extended_rcode() << 4));
             qri.qr_flags |= block_cbor::RESPONSE_HAS_OPT;
         }
 
@@ -173,11 +230,13 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
             qri.qr_flags |= block_cbor::RESPONSE_HAS_NO_QUESTION;
     }
 
-    if ( qr->has_query() && qr->has_response() )
-        qri.response_delay = std::chrono::duration_cast<std::chrono::microseconds>(qr->response().timestamp - qr->query().timestamp);
+    if ( qr->has_query() && qr->has_response() && !exclude.response_delay )
+        qri.response_delay = std::chrono::duration_cast<std::chrono::nanoseconds>(qr->response().timestamp - qr->query().timestamp);
 
-    qs.qr_flags = qri.qr_flags;
-    qri.signature = data_->add_query_signature(qs);
+    if ( !exclude.qr_flags )
+        qs.qr_flags = qri.qr_flags;
+    if ( !exclude.qr_signature )
+        qri.signature = data_->add_query_response_signature(qs);
 }
 
 void BlockCborWriter::startExtendedQueryGroup()
@@ -217,10 +276,12 @@ void BlockCborWriter::writeQuestionRecord(const CaptureDNS::query& question)
     block_cbor::ClassType ct;
     block_cbor::Question q;
 
-    q.qname = data_->add_name_rdata(question.dname());
+    if ( !config_.exclude_hints.query_name )
+        q.qname = data_->add_name_rdata(question.dname());
     ct.qtype = question.query_type();
     ct.qclass = question.query_class();
-    q.classtype = data_->add_classtype(ct);
+    if ( !config_.exclude_hints.query_class_type )
+        q.classtype = data_->add_classtype(ct);
     extra_questions_.push_back(data_->add_question(q));
 }
 
@@ -238,12 +299,16 @@ void BlockCborWriter::writeResourceRecord(const CaptureDNS::resource& resource)
     block_cbor::ClassType ct;
     block_cbor::ResourceRecord rr;
 
-    rr.name = data_->add_name_rdata(resource.dname());
+    if ( !config_.exclude_hints.query_name )
+        rr.name = data_->add_name_rdata(resource.dname());
     ct.qtype = resource.query_type();
     ct.qclass = resource.query_class();
-    rr.classtype = data_->add_classtype(ct);
-    rr.ttl = resource.ttl();
-    rr.rdata = data_->add_name_rdata(resource.data());
+    if ( !config_.exclude_hints.query_class_type )
+        rr.classtype = data_->add_classtype(ct);
+    if ( !config_.exclude_hints.rr_ttl )
+        rr.ttl = resource.ttl();
+    if ( !config_.exclude_hints.rr_rdata )
+        rr.rdata = data_->add_name_rdata(resource.data());
     ext_rr_->push_back(data_->add_resource_record(rr));
 }
 
@@ -259,103 +324,39 @@ void BlockCborWriter::startAdditionalSection()
 
 void BlockCborWriter::writeFileHeader()
 {
-    constexpr unsigned major_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::major_format_version);
-    constexpr unsigned minor_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::minor_format_version);
-    constexpr unsigned configuration_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::configuration);
-    constexpr unsigned generator_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::generator_id);
-    constexpr unsigned host_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::host_id);
+    constexpr int major_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::major_format_version);
+    constexpr int minor_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::minor_format_version);
+    constexpr int private_format_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::private_version);
+    constexpr int block_parameters_index = block_cbor::find_file_preamble_index(block_cbor::FilePreambleField::block_parameters);
 
     enc_->writeArrayHeader(3);
     enc_->write(block_cbor::FILE_FORMAT_ID);
 
     // File preamble.
-    enc_->writeMapHeader();
+    enc_->writeMapHeader(4);
     enc_->write(major_format_index);
-    enc_->write(block_cbor::FILE_FORMAT_MAJOR_VERSION);
+    enc_->write(block_cbor::FILE_FORMAT_10_MAJOR_VERSION);
     enc_->write(minor_format_index);
-    enc_->write(block_cbor::FILE_FORMAT_MINOR_VERSION);
+    enc_->write(block_cbor::FILE_FORMAT_10_MINOR_VERSION);
+    enc_->write(private_format_index);
+    enc_->write(block_cbor::FILE_FORMAT_10_PRIVATE_VERSION);
 
-    enc_->write(configuration_index);
-    writeConfiguration();
-
-    if ( !config_.omit_sysid )
-    {
-        enc_->write(generator_index);
-        enc_->write(PACKAGE_STRING);
-
-        char buf[_POSIX_HOST_NAME_MAX];
-        gethostname(buf, sizeof(buf));
-        buf[_POSIX_HOST_NAME_MAX - 1] = '\0';
-        enc_->write(host_index);
-        enc_->write(std::string(buf));
-    }
-    enc_->writeBreak(); // End of preamble
+    enc_->write(block_parameters_index);
+    writeBlockParameters();
 
     // Write file header: Start of file blocks.
     enc_->writeArrayHeader();
 }
 
-void BlockCborWriter::writeConfiguration()
+void BlockCborWriter::writeBlockParameters()
 {
-    constexpr unsigned query_timeout_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::query_timeout);
-    constexpr unsigned skew_timeout_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::skew_timeout);
-    constexpr unsigned snaplen_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::snaplen);
-    constexpr unsigned promisc_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::promisc);
-    constexpr unsigned interfaces_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::interfaces);
-    constexpr unsigned server_addresses_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::server_addresses);
-    constexpr unsigned vlan_ids_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::vlan_ids);
-    constexpr unsigned filter_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::filter);
-    constexpr unsigned query_options_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::query_options);
-    constexpr unsigned response_options_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::response_options);
-    constexpr unsigned accept_rr_types_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::accept_rr_types);
-    constexpr unsigned ignore_rr_types_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::ignore_rr_types);
-    constexpr unsigned max_block_qr_items_index = block_cbor::find_configuration_index(block_cbor::ConfigurationField::max_block_qr_items);
+    block_cbor::BlockParameters block_parameters;
 
-    enc_->writeMapHeader();
+    config_.populate_block_parameters(block_parameters);
 
-    enc_->write(query_timeout_index);
-    enc_->write(config_.query_timeout);
-    enc_->write(skew_timeout_index);
-    enc_->write(config_.skew_timeout);
-    enc_->write(snaplen_index);
-    enc_->write(config_.snaplen);
-    enc_->write(promisc_index);
-    enc_->write(config_.promisc_mode);
-    enc_->write(interfaces_index);
-    enc_->writeArrayHeader();
-    for ( const auto& s : config_.network_interfaces )
-        enc_->write(s);
-    enc_->writeBreak();
-    enc_->write(server_addresses_index);
-    enc_->writeArrayHeader();
-    for ( const auto& s : config_.server_addresses )
-        enc_->write(s.asNetworkBinary());
-    enc_->writeBreak();
-    enc_->write(vlan_ids_index);
-    enc_->writeArrayHeader();
-    for ( const auto& id : config_.vlan_ids )
-        enc_->write(id);
-    enc_->writeBreak();
-    enc_->write(filter_index);
-    enc_->write(config_.filter);
-    enc_->write(query_options_index);
-    enc_->write(config_.output_options_queries);
-    enc_->write(response_options_index);
-    enc_->write(config_.output_options_responses);
-    enc_->write(accept_rr_types_index);
-    enc_->writeArrayHeader();
-    for ( const auto&a_rr : config_.accept_rr_types )
-        enc_->write(a_rr);
-    enc_->writeBreak();
-    enc_->write(ignore_rr_types_index);
-    enc_->writeArrayHeader();
-    for ( const auto& i_rr : config_.ignore_rr_types )
-        enc_->write(i_rr);
-    enc_->writeBreak();
-    enc_->write(max_block_qr_items_index);
-    enc_->write(config_.max_block_qr_items);
-
-    enc_->writeBreak(); // End of config info
+    // Currently we only write one block parameter item.
+    enc_->writeArrayHeader(1);
+    block_parameters.writeCbor(*enc_);
 }
 
 void BlockCborWriter::writeFileFooter()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2018-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -82,7 +82,7 @@ public:
      * Pseudo-anonymise an EDNS0 option. At present, only
      * CLIENT_SUBNET affected.
      */
-    CaptureDNS::EDNS0 edns0(const CaptureDNS::EDNS0& edns0) const;
+    byte_string edns0(const byte_string& edns0) const;
 
     /**
      * \brief Generate key from passphrase and salt.

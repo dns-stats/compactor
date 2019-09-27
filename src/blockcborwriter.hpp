@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -172,9 +172,9 @@ protected:
     void writeBlock();
 
     /**
-     * \brief Write configuration out to file.
+     * \brief Write block parameters out to file.
      */
-    void writeConfiguration();
+    void writeBlockParameters();
 
 private:
     /**
@@ -191,6 +191,11 @@ private:
      * \brief the final current filename.
      */
     std::string filename_;
+
+    /**
+     * \brief block parameters vector for writing.
+     */
+    std::vector<block_cbor::BlockParameters> block_parameters_;
 
     /**
      * \brief the output CBOR encoder.

@@ -10,35 +10,64 @@ ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 bin_PROGRAMS = compactor inspector
 
-dist_doc_DATA = LICENSE.txt ChangeLog.txt KNOWN_ISSUES.txt README.adoc
+dist_doc_DATA = LICENSE.txt ChangeLog.txt KNOWN_ISSUES.txt
 
 if BUILD_DOCS
         dist_man_MANS = doc/compactor.1 doc/inspector.1
-        dist_doc_DATA += doc/user-guide.html
+        dist_doc_DATA += doc/user-guide.html doc/overview.png README.html
 endif
 
+common_doc_sources = \
+        doc/user-guide/compactor-command-options.adoc \
+        doc/user-guide/compactor-capture-from-network.adoc \
+        doc/user-guide/compactor-outputs.adoc \
+        doc/user-guide/compactor-query-response-matching.adoc
+
 user_guide_sources = \
-        $(srcdir)/doc/user-guide/user-guide.adoc \
-        $(srcdir)/doc/user-guide/overview.adoc \
-        $(srcdir)/doc/user-guide/installation.adoc \
-        $(srcdir)/doc/user-guide/configuring.adoc \
-        $(srcdir)/doc/user-guide/running.adoc \
-        $(srcdir)/doc/user-guide/appendices.adoc
+	$(common_doc_sources) \
+        doc/user-guide/overview.adoc \
+        doc/user-guide/overview.png \
+        doc/user-guide/installation.adoc \
+        doc/user-guide/configuring.adoc \
+        doc/user-guide/running.adoc \
+        doc/user-guide/appendices.adoc
 
 dslocalstatedir=$(localstatedir)/lib/$(PACKAGE)
 dsconfdir=$(sysconfdir)/$(PACKAGE)
-dsconf_DATA = compactor.conf
-dist_noinst_DATA = etc/compactor.conf.in doc/compactor.adoc doc/inspector.adoc $(user_guide_sources)
-conffile=$(dsconfdir)/compactor.conf
+dsconf_DATA = etc/compactor.conf \
+              etc/excluded_fields.conf.sample \
+              etc/default_values.conf
+dist_dsconf_DATA = etc/compactor.conf \
+	           etc/excluded_fields.conf.sample \
+                   etc/default_values.conf
+dist_noinst_DATA = README.adoc \
+                   doc/compactor.adoc doc/inspector.adoc \
+                   $(user_guide_sources)
 
-%.conf :: etc/%.conf.in ; sed -e "s|@DSLOCALSTATEDIR@|$(dslocalstatedir)|g" $< > $@
+conffile=$(dsconfdir)/compactor.conf
+excludesfile=$(dsconfdir)/excluded_fields.conf
+defaultsfile=$(dsconfdir)/default_values.conf
+
+%.conf :: %.conf.in ; mkdir -p `dirname $@`; sed -e "s|@DSLOCALSTATEDIR@|$(dslocalstatedir)|g" $< > $@
+%.adoc :: %.adoc.in ; mkdir -p `dirname $@`; sed -e "s|@ETCPATH@|$(dsconfdir)|" -e "s|@VARLIBPATH@|$(dslocalstatedir)|g" $< > $@
+
+%.1 : %.adoc ; @ASCIIDOC@ -b manpage -d manpage -o $@ $<
+%.html : %.adoc ; @ASCIIDOC@ -b html5 -d article -a appversion=$(PACKAGE_VERSION) -o $@ $<
+%.pdf : %.adoc ; @ASCIIDOC@ -b pdf -d article -r asciidoctor-pdf -a appversion=$(PACKAGE_VERSION) -o $@ $<
+
+% :: test-scripts/%.xz ; xz --decompress --to-stdout $< > $@
 
 check_PROGRAMS = compactor-tests
 check_SCRIPTS = test-scripts/check-config-info.sh \
+                test-scripts/check-defaults-required.sh \
                 test-scripts/check-dnscap.sh \
                 test-scripts/check-outputs.sh \
+                test-scripts/check-query-only.sh \
+                test-scripts/check-response-opt.sh \
                 test-scripts/check-template.sh \
                 test-scripts/check-testcontent.sh \
+                test-scripts/check-testcontent-exclude.sh \
+                test-scripts/check-addressprefix.sh \
                 test-scripts/inspector-outputs.sh \
                 test-scripts/output-size-limit.sh \
                 test-scripts/same-output.sh \
@@ -51,6 +80,7 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/same-tshark-output.sh \
                 test-scripts/same-live.sh \
                 test-scripts/verify-cbor02.sh \
+                test-scripts/verify-cbor05.sh \
                 test-scripts/verify-cddl.sh
 
 if ENABLE_PSEUDOANONYMISATION
@@ -63,7 +93,7 @@ else
                               test-scripts/pseudoanon-inspector-output.sh
 endif
 
-dist_check_DATA = doc/c-dns-working.cddl \
+dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/GeoLite2-ASN.mmdb.xz \
                   test-scripts/GeoLite2-City.mmdb.xz \
                   test-scripts/dns.pcap.xz \
@@ -71,12 +101,22 @@ dist_check_DATA = doc/c-dns-working.cddl \
                   test-scripts/gold.pcap.xz \
                   test-scripts/gold.cbor.xz \
                   test-scripts/gold.cbor02.xz \
+                  test-scripts/gold.cbor05.xz \
                   test-scripts/gold.pcap.info \
                   test-scripts/malformed.pcap.xz \
                   test-scripts/matching.pcap.xz \
+                  test-scripts/oldfmtgold.pcap.xz \
                   test-scripts/testcontent.pcap.xz \
                   test-scripts/testcontent.diag \
+                  test-scripts/testcontent-exclude.conf \
+                  test-scripts/testcontent-exclude.diag \
+                  test-scripts/testcontent-exclude-sig.conf \
+                  test-scripts/testcontent-exclude-sig.diag \
+                  test-scripts/testcontent-exclude-sigflags.conf \
+                  test-scripts/testcontent-exclude-sigflags.diag \
                   test-scripts/testcontent.debugqr \
+                  test-scripts/addressprefix.diag \
+                  test-scripts/addressprefix.debugqr \
                   test-scripts/unmatched.pcap.xz \
                   test-scripts/nsd-live.dump.xz \
                   test-scripts/nsd-live.raw.pcap.xz \
@@ -90,7 +130,8 @@ dist_check_DATA = doc/c-dns-working.cddl \
                   test-scripts/template.dump \
                   test-scripts/template.pcap \
                   test-scripts/test-csv.tpl \
-                  test-scripts/test-block.tpl
+                  test-scripts/test-block.tpl \
+                  test-scripts/test.defaults
 
 
 EXTRA_DIST = getversion.sh .version
@@ -102,8 +143,10 @@ check_DATA = GeoLite2-ASN.mmdb \
              gold.pcap \
              gold.cbor \
              gold.cbor02 \
+             gold.cbor05 \
              malformed.pcap \
              matching.pcap \
+             oldfmtgold.pcap \
              testcontent.pcap \
              unmatched.pcap \
              nsd-live.dump \
@@ -112,26 +155,35 @@ check_DATA = GeoLite2-ASN.mmdb \
              knot-live.raw.pcap \
              knot-live.ignored.pcap
 
-CLEANFILES = $(check_DATA) $(dist_man_MANS)
-
-% :: test-scripts/%.xz ; xz --decompress --to-stdout $< > $@
+CLEANFILES = $(check_DATA) $(dist_man_MANS) \
+	     $(common_doc_sources) \
+	     $(user_guide_sources) \
+	     etc/compactor.conf \
+	     doc/user-guide.html doc/user-guide.pdf \
+	     doc/inspector.adoc doc/compactor.adoc
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
-AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) -DCONFFILE=\"$(conffile)\" \
+AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
+	      -DCONFFILE=\"$(conffile)\" \
+	      -DEXCLUDESFILE=\"$(excludesfile)\" \
+	      -DDEFAULTSFILE=\"$(defaultsfile)\" \
               $(OPENSSL_INCLUDES) -DGEOIPDIR=\"$(geoipdir)\"
 
-%.1 :: %.adoc ; @ASCIIDOC@ -b manpage -d manpage -o $@ $<
+doc/user-guide.html: $(user_guide_sources) etc/compactor.conf etc/excluded_fields.conf.sample etc/default_values.conf
+doc/user-guide.pdf: $(user_guide_sources) etc/compactor.conf etc/excluded_fields.conf.sample etc/default_values.conf
 
-doc/user-guide.html : $(user_guide_sources) ; @ASCIIDOC@ -b html5 -d article -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
+doc/compactor.1: $(common_doc_sources)
+doc/inspector.1: $(common_doc_sources)
 
-doc/user-guide.pdf : $(user_guide_sources) ; @ASCIIDOC@ -b pdf -d article -r asciidoctor-pdf -a appversion=$(PACKAGE_VERSION) -o $@ $(srcdir)/doc/user-guide/user-guide.adoc
+README.html: README.adoc ; @ASCIIDOC@ -b html5 -d article -o $@ $<
 
-.PHONY: user-guide user-guide-html user-guide-pdf
+.PHONY: user-guide user-guide-html user-guide-pdf manpages
 
 user-guide : user-guide-html user-guide-pdf
 user-guide-html : doc/user-guide.html
 user-guide-pdf : doc/user-guide.pdf
+manpages: $(dist_man_MANS)
 
 # To speed builds, build common files into a static library.
 noinst_LIBRARIES = libcdns.a
@@ -154,7 +206,8 @@ libcdns_a_headers = \
         src/pseudoanonymise.hpp \
         src/queryresponse.hpp \
         src/rotatingfilename.hpp \
-        src/streamwriter.hpp
+        src/streamwriter.hpp \
+        src/util.hpp
 
 libcdns_a_SOURCES = \
         $(libcdns_a_headers) \
@@ -171,7 +224,8 @@ libcdns_a_SOURCES = \
         src/log.cpp \
         src/pseudoanonymise.cpp \
         src/rotatingfilename.cpp \
-        src/streamwriter.cpp
+        src/streamwriter.cpp \
+	src/util.cpp
 
 libcdns_a_CXXFLAGS = -DBOOST_LOG_DYN_LINK
 
@@ -243,6 +297,7 @@ compactor_tests_SOURCES = \
         tests/cbordecoder_test.cpp \
         tests/cborencoder_test.cpp \
         tests/channel_test.cpp \
+        tests/blockcbor_test.cpp \
         tests/blockcbordata_test.cpp \
         tests/dnsmessage_test.cpp \
         tests/ipaddress_test.cpp \
@@ -316,8 +371,9 @@ CPPCHECK_INCLUDE_DIRS = -I$(srcdir)/src
 CPPCHECK_CMD = cppcheck \
         --std=c++11 --language=c++ \
         --xml --xml-version=2 \
-        --inline-suppr
-CPPCHECK_FLAGS = -U DLT_PKTAP --suppress=missingIncludeSystem
+	--relative-paths=$(srcdir) \
+        --suppressions-list=$(srcdir)/cppcheck-suppressions.txt
+CPPCHECK_FLAGS = -U DLT_PKTAP
 
 cppcheck: ; $(CPPCHECK_CMD) $(CPPCHECK_INCLUDE_DIRS) $(CPPCHECK_FLAGS) --enable=all $(CPPCHECK_DIRS)
 

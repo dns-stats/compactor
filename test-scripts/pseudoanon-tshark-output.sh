@@ -11,6 +11,9 @@
 
 COMP=./compactor
 INSP=./inspector
+
+DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
+
 INPUT_FILES="nsd-live.raw.pcap knot-live.raw.pcap"
 
 #set -x
@@ -48,7 +51,7 @@ do
         cleanup 1
     fi
 
-    $INSP -P test -p -o $tmpdir/$ANONDATAFILE $tmpdir/$DATAFILE.cdns
+    $INSP $DEFAULTS -P test -p -o $tmpdir/$ANONDATAFILE $tmpdir/$DATAFILE.cdns
     if [ $? -ne 0 ]; then
         echo "Inspector failed"
         cleanup 1

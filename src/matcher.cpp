@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -291,7 +291,7 @@ struct QueryResponseMatcher::QRMData
 };
 
 QueryResponseMatcher::QueryResponseMatcher(Sink sink,
-                                           std::chrono::seconds query_timeout,
+                                           std::chrono::milliseconds query_timeout,
                                            std::chrono::microseconds skew_timeout)
     : query_timeout_(query_timeout), skew_timeout_(skew_timeout), sink_(sink), data_(make_unique<QRMData>())
 {
@@ -301,7 +301,7 @@ QueryResponseMatcher::~QueryResponseMatcher()
 {
 }
 
-void QueryResponseMatcher::set_query_timeout(std::chrono::seconds timeout)
+void QueryResponseMatcher::set_query_timeout(std::chrono::milliseconds timeout)
 {
     query_timeout_ = timeout;
 }

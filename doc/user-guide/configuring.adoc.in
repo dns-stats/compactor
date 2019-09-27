@@ -6,8 +6,9 @@ installations of _compactor_ install support for running the
 compactor as a daemon, and these typically restrict the system
 resources available to _compactor_ .
 
-_inspector_  has no configuration file. Only command line arguments
-can be used to control _inspector_ .
+_inspector_ configuration is discussed in the <<runninginspector>> section.
+
+include::compactor-command-options.adoc[]
 
 === _compactor_ configuration file
 
@@ -15,15 +16,18 @@ can be used to control _inspector_ .
 
 On startup, _compactor_ attempts to read a configuration file. By
 default this is named `compactor.conf`, and is located in a
-`dns-stats-compactor` sytem configuration directory.
+`dns-stats-compactor` system configuration directory.
 
 If installed from a binary package on Linux, the configuration file
-will be at `/etc/dns-stats-compactor/compactor.conf`.
+will be at `@ETCPATH@/compactor.conf`.
+
+An alternate path for the configuration file can be specified to the
+compactor using the *-c, --configfile* command line option.
 
 ===== Default configuration
 
 Both installing via binary packages and installing using the source distribution
-will install a sample `compactor.conf` configuration
+will install a `compactor.conf` configuration
 file. This needs to be edited to specify an interface to collect from,
 but is otherwise configured to collect traffic:
 
@@ -33,73 +37,38 @@ but is otherwise configured to collect traffic:
 * A new output file is commenced every 5 minutes.
 * The 'raw' traffic is also recorded to a PCAP output file
 * The 'ignored' traffic is also recorded to a PCAP output file
-* The output files are stored under `/var/lib/dns-stats-compactor`
+* The output files are stored under `@VARLIBPATH@/dns-stats-compactor`
 in subdirectories `cdns`, `pcap/raw` and `pcap/ignored`.
-
-An alternate path for the configuration file can be specified to the
-compactor using the *-c, --configfile* command line option.
 
 All configuration items can also be specified on the command line. 
 
 IMPORTANT: If an option appears in the configuration file and on the command line, the
 command line setting overrides the configuration file.
 
-==== Configuration file format
-
-A configuration file is a plain text file with lines in the form `option=value`. A `#`
-character introduces a comment that spans until the end of the line. To illustrate,
-here's an extract from a possible configuration file:
-
-[source,ini]
-----
-# Interface on which to capture traffic.
-interface=eth0
-
-# VLAN IDs to capture. If none specified, all are captured.
-# vlan-id=
-
-# Snap length - limit of bytes in package to capture.
-snaplen=5000
-
-# Enable promiscuous mode.
-promiscuous-mode=true
-----
-
-On the command line, configuration options may be specified in short and long
+NOTE: On the command line, configuration options may be specified in short and long
 forms. In a configuration file, the long form of the option name must be used. So, for
 example, to set the snap length to 64, the configuration file entry must read
 `snaplen=64`. `s=64` will not be accepted.
 
-==== Configuration file options
+==== Configuration file format
 
-Full details of the options that may be used in a configuration file
-are in the _compactor_ manual page, *compactor*(1).
+A configuration file is a plain text file with lines in the form `option=value`. A `#`
+character introduces a comment that spans until the end of the line. To illustrate,
+here is the default configuration file:
 
-This section highlights the basic options that need to be set for a typical
-simple collection, and gives a sample of usage of each.
-
-===== Capture from network
-
-*interface*=_arg_::
-  Capture traffic from network interface _arg_. This argument may be given multiple
-  times to allow capture for several interfaces in parallel.
-
-[source,ini]
 ----
-# Collect from eth0 and eth1.
-interface=eth0
-interface=eth1
+include::../../etc/compactor.conf[]
 ----
 
-*vlan-id*=_arg_::
-  ID of VLAN to be captured if on a 802.1Q network. The argument may be given
-  multiple times to capture from several VLANs. If no *vlan-id* setting is given,
-  traffic is captured from all VLANs.
 
-[source,ini]
-----
-vlan-id=10
-----
+
+==== Configuration options
+
+include::compactor-capture-from-network.adoc[leveloffset=+1]
+
+include::compactor-outputs.adoc[leveloffset=+1]
+
+include::compactor-query-response-matching.adoc[leveloffset=+1]
 
 ===== Output file patterns
 
@@ -130,7 +99,7 @@ they expand to, is in the *strftime*(3) manual page. Some of the
 commonly used ones are given below, with expansions for a date and
 time of Monday January 16th 2017 at 13:18:05.
 
-[cols="3*"]
+[cols="1,3,1"]
 |===
 | `%y`
 | The year, not including the century.
@@ -176,7 +145,7 @@ time of Monday January 16th 2017 at 13:18:05.
 Not all configuration items can be used in a configuration expansion. The
 items that can be used are as follows.
 
-[cols="3*"]
+[cols="1,3,1"]
 |===
 | `%{interface1}`
 | The name of the first configured interface. `interface2` gives the second
@@ -220,7 +189,7 @@ configured VLAN ID, `vlan-id3` the third and so on.
 | `10-12`
 |===
 
-===== Output file options
+Example:
 
 *output*=_PATTERN_::
   Use _PATTERN_ as the template for the file path for the C-DNS output files. If no output
@@ -235,98 +204,15 @@ Using the above date and time, a rotation period of 300s and
 collecting from interfaces `eth0` and `eth1` this will write to
 `/tmp/cdns/20170116-131805_300_eth0-eth1.cdns`.
 
-*xz-output*=_arg_::
-  Compress data in the C-DNS output files using xz(1) format. _arg_ may be `true`
-  or `1` to enable compression, `false` or `0` to disable compression.
-  If compression is enabled, an extension `.xz` is added to the output filename.
-
-[source,ini]
-----
-xz-output=true
-----
-
-*xz-preset*=_arg_::
-  Compression preset level to use when producing xz(1) C-DNS output. _arg_ must be
-  a single digit `0` to `9`.  If not specified, the default level is `6`.
-
-[source,ini]
-----
-xz-preset=3
-----
-
-*raw-pcap*=_PATTERN_::
-  Use _PATTERN_ as the template for a file path for output of all packets captured to
-  file in PCAP format. If no pattern is given, no raw packet output is written.
-
-[source,ini]
-----
-raw-pcap=/tmp/pcap/%Y%m%d-%H%M%S_%{rotate_period}_%{interface}.raw.pcap
-----
-
-Using the above date and time, a rotation period of 300s and
-collecting from interfaces `eth0` and `eth1` this will write to
-`/tmp/pcap/20170116-131805_300_eth0-eth1.raw.pcap`.
-
-*ignored-pcap*=_PATTERN_::
-  Use _PATTERN_ as the template for a file path for output of all packets captured that
-  were not to the configured DNS ports, or were not validly formed DNS packets.
-  If no pattern is given, no ignored packet output is written.
-
-[source,ini]
-----
-ignored-pcap=/tmp/pcap/%Y%m%d-%H%M%S_%{rotate_period}_%{interface}.ignored.pcap
-----
-
-Using the above date and time, a rotation period of 300s and
-collecting from interfaces `eth0` and `eth1` this will write to
-`/tmp/pcap/20170116-131805_300_eth0-eth1.ignored.pcap`.
-
-*xz-pcap*=_arg_::
-  Compress data in the PCAP output files using xz(1) format. _arg_ may be `true`
-  or `1` to enable compression, `false` or `0` to disable compression.
-  If compression is enabled, an extension `.xz` is added to the output filename.
-
-[source,ini]
-----
-xz-pcap=true
-----
-
-*xz-preset-pcap*=_arg_::
-  Compression preset level to use when producing xz(1) C-DNS output. _arg_ must be
-  a single digit `0` to `9`.  If not specified, the default level is `6`.
-
-[source,ini]
-----
-xz-preset-pcap=3
-----
-
-*rotation-period*=_SECONDS_::
-  Specify the frequency with which all output file path patterns should be re-examined.
-  If the file path has changed, the existing output file is closed and a new one opened
-  using the new pattern expansion. If the file path has not changed, the pattern
-  is re-examined every second until it changes. The default period is 300 seconds.
-
-[source,ini]
-----
-rotation-period=300
-----
-
-*--max-compression-threads* =_arg_::
-  Maximum number of threads to use when compressing. Compression uses
-  one thread per output file, so this argument gives the number of
-  output files that can be compressed simultaneously. _arg_ must be
-  `1` or more.  If not specified, the default number of threads is `2`.
-
-[source,ini]
-----
-max-compression-threads=2
-----
-
+[[options]]
 ===== C-DNS options
 
 *include*=_SECTIONS_:: Indicate which optional sections should be
   included in the C-DNS output. This argument can be given multiple
-  times. By default none of these optional sections are included.
+  times. If no include is specified then none of these optional sections are included.
+
+IMPORTANT: The use of *include* lines is deprecated in v1.0 and will be removed in a future major release.
+The functionality to control what data is captured has moved to the new *excluded_fields* file. See <<excludes>>.
 
 [cols="2*",options="header"]
 |===
@@ -374,6 +260,107 @@ max-compression-threads=2
 ----
 include=all
 ----
+
+[[excludes]]
+=== _compactor_ *excluded_fields* file
+
+The *excluded_fields* file replaces the deprecated *include* functionality
+currently found in the configuration file. By default in v1.0 this file is not
+used, the deprecated *include* functionality is still used for backwards
+compatibilty.
+
+IMPORTANT: Users must use either the deprecated *include* configuration options
+or the new *excluded_fields* file. They cannot be combined. If the
+*excluded_fields* file exists AND there are *include* lines in the configuration
+file (or provided on the command line) an error will be logged and _compactor_
+will exit.
+
+If the *excluded_fields* file does exists the _compactor_ will act as if
+*include=all* was present. The *excluded_fields* file then controls what fields
+are *excluded* from the C-DNS output. Uncommenting a field leads to it being omitted from the capture.
+
+NOTE: The *excluded_fields* are stored in the C-DNS file as 'StoreageHints' for _inspector_ to use when processing C-DNS file, see Sections 6.2.1 and 7.3.1.1.1.1 in https://tools.ietf.org/html/rfc8618[RFC8618] for more details. 
+
+==== *Excluded_fields* file location
+
+On startup, _compactor_ looks for a *excluded_fields* file named
+`excluded_fields.conf` located in a `dns-stats-compactor` system configuration
+directory. A different file name and location can specified on the command line 
+by using the _compactor --excludesfile_ option.
+
+==== Default configuration
+
+By default only a sample *excluded_fields* file is provided.
+If installed from a binary package on Linux, the file will be at
+`@ETCPATH@/excluded_fields.conf.sample`.
+
+This file (with the .sample extension removed) can be used to specify which
+fields are to be excluded from the C-DNS capture (assuming the *include* option
+is not used). In the sample all the fields are commented out so all fields
+would be collected in the C-DNS capture, which gives the same behaviour as *include=all*.
+
+The fields are specified in logical groups. 
+
+----
+include::excluded_fields.conf.sample[]
+----
+
+==== Other configurations
+As previously noted, excluding some data could have implications for PCAP
+regeneration, see <<default_values>>. The following is a suggested
+*excludes_fields* file which results in the smallest capture files where the
+goal is to be able to reasonably reconstruct just queries in a PCAP (when
+using the _inspector_ with the -q option). Capturing less data will require
+populating the PCAP with default values for some fields.
+
+----
+[ip-header]
+# time-offset
+response-delay
+# client-address
+# client-port
+# client-hoplimit
+# server-address
+# server-port
+# qr-transport-flags
+
+[dns-header]
+# transaction-id
+# query-opcode
+# query-rcode
+# dns-flags
+response-rcode
+query-qdcount
+query-ancount
+query-arcount
+query-nscount
+
+[dns-payload]
+# query-name
+# query-class-type
+# rr-ttl
+# rr-rdata
+# query-udp-size
+# query-opt-rdata
+# query-edns-version
+# query-question-sections
+# query-answer-sections
+# query-authority-sections
+# query-additional-sections
+response-answer-sections
+response-authority-sections
+response-additional-sections
+
+[dns-meta-data]
+query-size
+response-size
+qr-sig-flags
+
+[storage-meta-data]
+address-events
+----
+
+A more detailed discussion of the issues around C-DNS to PCAP reconstruction can be found in Section 6.2.1, Section 9 and Appendix D of https://tools.ietf.org/html/rfc8618[RFC8618].
 
 === Configuring _compactor_ daemon startup
 

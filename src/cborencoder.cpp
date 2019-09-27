@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -78,6 +78,21 @@ void CborBaseEncoder::writeTypeValue64(unsigned cbor_type, unsigned long long va
     }
 }
 
+void CborBaseEncoder::write(bool value)
+{
+    writeByte((7 << 5) | (value ? 21 : 20));
+}
+
+void CborBaseEncoder::write(unsigned char value)
+{
+    writeTypeValue(0, value);
+}
+
+void CborBaseEncoder::write(unsigned short value)
+{
+    writeTypeValue(0, value);
+}
+
 void CborBaseEncoder::write(unsigned int value)
 {
     writeTypeValue(0, value);
@@ -91,6 +106,22 @@ void CborBaseEncoder::write(unsigned long value)
 void CborBaseEncoder::write(unsigned long long value)
 {
     writeTypeValue64(0, value);
+}
+
+void CborBaseEncoder::write(signed char value)
+{
+    if ( value < 0 )
+        writeTypeValue(1, static_cast<unsigned long>(-1 - value));
+    else
+        writeTypeValue(0, static_cast<unsigned long>(value));
+}
+
+void CborBaseEncoder::write(short value)
+{
+    if ( value < 0 )
+        writeTypeValue(1, static_cast<unsigned long>(-1 - value));
+    else
+        writeTypeValue(0, static_cast<unsigned long>(value));
 }
 
 void CborBaseEncoder::write(int value)
@@ -117,6 +148,12 @@ void CborBaseEncoder::write(long long value)
         writeTypeValue64(0, static_cast<unsigned long long>(value));
 }
 
+void CborBaseEncoder::write(const char* str, bool is_text)
+{
+    std::string s(str);
+    write(s, is_text);
+}
+
 void CborBaseEncoder::write(const std::string& str, bool is_text)
 {
     writeTypeValue(is_text ? 3 : 2, str.size());
@@ -129,20 +166,6 @@ void CborBaseEncoder::write(const byte_string& str)
     writeTypeValue(2, str.size());
     for ( auto c : str )
         writeByte(c);
-}
-
-void CborBaseEncoder::write(const std::chrono::system_clock::time_point& t)
-{
-    writeArrayHeader(2);
-    std::chrono::seconds s(std::chrono::duration_cast<std::chrono::seconds>(t.time_since_epoch()));
-    std::chrono::microseconds us(std::chrono::duration_cast<std::chrono::microseconds>(t.time_since_epoch()));
-    write(s.count());
-    write(us.count() % 1000000);
-}
-
-void CborBaseEncoder::write(const std::chrono::microseconds& t)
-{
-    write(t.count());
 }
 
 void CborBaseEncoder::writeArrayHeader(unsigned int array_size)

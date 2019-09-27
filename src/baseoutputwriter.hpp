@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,42 +35,6 @@
 class BaseOutputWriter
 {
 public:
-    /**
-     * \brief DNS flags enum.
-     *
-     * Note that we always store response OPT RRs directly in the file,
-     * so there is no need for a response DO in the following.
-     */
-    enum DNSFlags
-    {
-        QUERY_CD = (1 << 0),
-        QUERY_AD = (1 << 1),
-        QUERY_Z = (1 << 2),
-        QUERY_RA = (1 << 3),
-        QUERY_RD = (1 << 4),
-        QUERY_TC = (1 << 5),
-        QUERY_AA = (1 << 6),
-        QUERY_DO = (1 << 7),
-        RESPONSE_CD = (1 << 8),
-        RESPONSE_AD = (1 << 9),
-        RESPONSE_Z = (1 << 10),
-        RESPONSE_RA = (1 << 11),
-        RESPONSE_RD = (1 << 12),
-        RESPONSE_TC = (1 << 13),
-        RESPONSE_AA = (1 << 14),
-    };
-
-    /**
-     * \brief Transport flags enum.
-     */
-    enum TransportFlags
-    {
-        TCP = (1 << 0),
-        IPV6 = (1 << 1),
-
-        QUERY_TRAILINGDATA = (1 << 2),
-    };
-
     /**
      * \brief Construct the base class.
      *
@@ -183,39 +147,6 @@ public:
      */
     virtual void startAdditionalSection() = 0;
 
-    // Utilities.
-
-    /**
-     * \brief Calculate the DNS flags for a Query/Response.
-     *
-     * The DNS flag value composed from the DNSFlag enum.
-     *
-     * \param qr    the Query/Response.
-     * \return DNS flags value.
-     */
-    uint16_t dnsFlags(const std::shared_ptr<QueryResponse>& qr);
-
-    /**
-     * \brief Calculate the Transport flags for a Query/Response.
-     *
-     * The Transport flag value is composed from the TransportFlags enum.
-     *
-     * \param qr    the Query/Response.
-     * \return DNS flags value.
-     */
-    uint8_t transportFlags(const std::shared_ptr<QueryResponse>& qr);
-
-    /**
-     * \brief Set the basic DNS flags in a query or response message.
-     *
-     * Note this does not set the query DO flag.
-     *
-     * \param msg   the message.
-     * \param flags DNS flags value.
-     * \param query `true` if the message is a query.
-     */
-    static void setDnsFlags(DNSMessage& msg, uint16_t flags, bool query);
-
 protected:
     /**
      * \brief Write the indicated optional sections in a query or response.
@@ -227,20 +158,9 @@ protected:
      * the first OPT section in a Question is skipped.
      *
      * \param dm       the query or response message.
-     * \param options  which sections to write. Values are combined from Configuration::OptionalOutputSections.
+     * \param is_query are we writing a query (<code>true</code>) or response?
      */
-    void writeSections(const DNSMessage& dm, int options);
-
-    /**
-     * \brief Determine if this RR type should be output.
-     *
-     * Check the RR type against the list of configured accept and ignore
-     * RR types.
-     *
-     * \param rr_type the RR type.
-     * \returns `true` if it should be output.
-     */
-    bool outputRRType(CaptureDNS::QueryType rr_type);
+    void writeSections(const DNSMessage& dm, bool is_query);
 
     /**
      * \brief configuration options.
