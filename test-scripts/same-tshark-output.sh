@@ -40,6 +40,8 @@ call_tshark()
      tshark -nr $1 -Y "dns.id==$2" -T text -V  >  $3.full
      sed -r -e '/Frame [0-9]/,/^.*\[Time shift/d' \
               -e '/^.*\[Time delta/,/Internet/d' \
+              -e '/^.*\[Timestamps/d' \
+              -e '/^.*\[Time since/d' \
               -e '/^.*Version: 4/,/Fragment offset:/d' \
               -e '/^.*Version: 6/,/Next header:/d' \
               -e '/^.*Identification:/d' \
