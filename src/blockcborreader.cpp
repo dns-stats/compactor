@@ -647,7 +647,7 @@ bool BlockCborReader::is_ipv6_client_full_address(const byte_string& b) const
     const block_cbor::BlockParameters& bp = block_parameters_[block_->block_parameters_index];
     const block_cbor::StorageParameters& sp = bp.storage_parameters;
 
-    return ( sp.client_address_prefix_ipv4 == 128 && b.length() == 16 );
+    return ( sp.client_address_prefix_ipv6 == 128 && b.length() == 16 );
 }
 
 IPAddress BlockCborReader::get_client_address(std::size_t index, boost::optional<uint8_t> transport_flags)
