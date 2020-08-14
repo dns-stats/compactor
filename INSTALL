@@ -1,0 +1,84 @@
+Installation Instructions
+*************************
+
+This file gives a brief overview of the steps required to build
+compactor and inspector. Detailed install instructions are in the user
+guide. A PDF version of the guide may be downloaded from
+https://github.com/dns-stats/compactor/wiki/user-guide.pdf.
+
+= Installing from packages
+
+Binary install packages for Ubuntu 16.04 'Xenial Xerus' are available
+from a Launchpad Personal Package Archive (PPA).
+
+You need first to add the DNS-STATS PPA to your system's Software Sources:
+
+----
+sudo add-apt-repository ppa:dns-stats/compactor
+sudo apt update
+----
+
+You can then install either both of the `dns-stats-compactor` or
+`dns-stats-inspector` packages. Their pre-requisite packages will be
+downloaded and installed automatically.
+
+----
+$ sudo apt install dns-stats-compactor
+$ sudo apt install dns-stats-inspector
+
+= Building compactor and inspector from source
+
+The source code is available on Github at
+https://github.com/dns-stats/compactor. You can either clone the
+compactor repository or download a release tarball.
+
+You will also need the following pre-requisites:
+
+Required tools:
+
+* A C++ compiler and build chain that supports the 2011 ISO standard,
+  otherwise C++11.
+* GNU autoconf, automake, libtool
+
+Optional tools:
+
+* Asciidoctor v1.5.0 or later (http://asciidoctor.org/).
+  Required to build the documentation.
+
+Required libraries:
+
+* The following Boost (http://www.boost.org) libraries:
+  - boost-log
+  - boost-program-options
+  - boost-thread
+  - boost-iostreams
+* liblzma (http://tukaani.org/xz/)
+* libtins (http://libtins.github.io/)
+* openssl (http://www.openssl.org/)
+* libctemplate (https://github.com/OlafvdSpek/ctemplate)
+* libmaxminddb (https://github.com/maxmind/libmaxminddb)
+* libtcmalloc (http://goog-perftools.sourceforge.net/doc/tcmalloc.html)
+
+Optional libraries:
+
+* libtcmalloc (http://goog-perftools.sourceforge.net/doc/tcmalloc.html).
+  This gives a notable performance boost over the standard glibc malloc.
+
+= Building from a release tarball
+
+$ cd dns-stats-compactor-<version>
+$ ./configure
+$ make
+$ make install
+
+= Building from a git repository
+
+Select the desired branch, for example the
+most recent release branch/tag or the latest development code
+which is in 'develop'.
+
+$ git checkout <branch or tag>
+$ ./autogen.sh
+$ ./configure
+$ make
+$ make install
