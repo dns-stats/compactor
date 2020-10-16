@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,6 +12,7 @@
 
 #include <chrono>
 #include <memory>
+#include <sstream>
 #include <unordered_map>
 #include <vector>
 #include <utility>
@@ -48,13 +49,41 @@ namespace {
             const uint8_t *p = buf;
 
             if ( buflen != bytes.size() )
+            {
+                UNSCOPED_INFO("Buffer sizes differ: expected " << buflen << ", got " << bytes.size());
+                logComparison(buf, buflen);
                 return false;
+            }
 
             for ( auto b : bytes )
                 if ( b != *p++ )
+                {
+                    int expected = *--p;
+                    int got = b;
+                    UNSCOPED_INFO("Bytes differ at offset " << (p - buf));
+                    logComparison(buf, buflen);
                     return false;
+                }
 
             return true;
+        }
+
+        void logComparison(const uint8_t *buf, std::size_t buflen)
+        {
+            std::ostringstream expected;
+            std::ostringstream got;
+
+            expected << std::hex << std::setfill('0');
+            got << std::hex << std::setfill('0');
+
+            for ( auto b : bytes )
+                got << " " << std::setw(2) << static_cast<unsigned>(b);
+
+            while ( buflen-- > 0 )
+                expected << " " << std::setw(2) << static_cast<unsigned>(*buf++);
+
+            UNSCOPED_INFO("Expected:" << expected.str());
+            UNSCOPED_INFO("Got:     " << got.str());
         }
 
     protected:
