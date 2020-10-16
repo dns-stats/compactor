@@ -1,5 +1,5 @@
 # 
-# Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
 # 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -113,8 +113,10 @@ PKG_CHECK_MODULES(libtins,
 AC_SUBST(libtins_LIBS)
 
 AC_CHECK_HEADERS([ctemplate/template.h])
+SAVED_CFLAGS=$CFLAGS
 SAVED_LIBS=$LIBS
-LIBS="$LIBS -lctemplate"
+CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
+LIBS="$LIBS $PTHREAD_LIBS -lctemplate"
 AC_LINK_IFELSE(
   [AC_LANG_PROGRAM([#include <ctemplate/template_string.h>],
     [ctemplate::TemplateString s("example")])],
@@ -124,6 +126,7 @@ AC_LINK_IFELSE(
         ],
         [AC_MSG_ERROR([ctemplate library not found])])
 LIBS="$SAVED_LIBS"
+CXXFLAGS="$SAVED_CXXFLAGS"
 
 AC_CHECK_LIB([maxminddb],[MMDB_open],
         [
