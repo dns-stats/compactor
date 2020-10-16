@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1680,6 +1680,11 @@ namespace block_cbor {
         std::chrono::system_clock::time_point earliest_time;
 
         /**
+         * \brief the end time of the period covered by the block.
+         */
+        boost::optional<std::chrono::system_clock::time_point> end_time;
+
+        /**
          * \brief the index of the parameters applicable to this block.
          */
         unsigned block_parameters_index;
@@ -1761,6 +1766,7 @@ namespace block_cbor {
          */
         void clear()
         {
+            end_time = boost::none;
             ip_addresses.clear();
             class_types.clear();
             questions.clear();

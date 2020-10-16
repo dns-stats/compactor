@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1445,11 +1445,16 @@ namespace block_cbor {
                 break;
             }
 
-            switch(fields.block_preamble_field(dec.read_unsigned()))
+            switch(fields.block_preamble_field(dec.read_signed()))
             {
             case BlockPreambleField::earliest_time:
                 ts.readCbor(dec);
                 earliest_time = ts.getTimePoint(ticks_per_second);
+                break;
+
+            case BlockPreambleField::compactor_end_time:
+                ts.readCbor(dec);
+                end_time = ts.getTimePoint(ticks_per_second);
                 break;
 
             case BlockPreambleField::block_parameters_index:
@@ -1652,6 +1657,7 @@ namespace block_cbor {
         constexpr int statistics_index = find_block_index(BlockField::statistics);
         constexpr int tables_index = find_block_index(BlockField::tables);
         constexpr int earliest_time_index = find_block_preamble_index(BlockPreambleField::earliest_time);
+        constexpr int end_time_index = find_block_preamble_index(BlockPreambleField::compactor_end_time);
         constexpr int block_parameters_index_index = find_block_preamble_index(BlockPreambleField::block_parameters_index);
 
         uint64_t ticks_per_second = block_parameters_[block_parameters_index].storage_parameters.ticks_per_second;
@@ -1661,11 +1667,17 @@ namespace block_cbor {
 
         // Block preamble.
         enc.write(preamble_index);
-        enc.writeMapHeader(1 + (block_parameters_index > 0));
+        enc.writeMapHeader(1 + (!!end_time) + (block_parameters_index > 0));
 
         enc.write(earliest_time_index);
-        Timestamp ts(earliest_time, ticks_per_second);
-        ts.writeCbor(enc);
+        Timestamp earliest_ts(earliest_time, ticks_per_second);
+        earliest_ts.writeCbor(enc);
+        if ( end_time )
+        {
+            enc.write(end_time_index);
+            Timestamp end_ts(*end_time, ticks_per_second);
+            end_ts.writeCbor(enc);
+        }
 
         if ( block_parameters_index > 0 )
         {

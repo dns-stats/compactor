@@ -1711,10 +1711,12 @@ SCENARIO("BlockData items can be written", "[block]")
         BlockParameters bp;
         std::vector<BlockParameters> bpv;
         bpv.push_back(bp);
+        /* 2nd params have 10x ticks per second than default. */
         bp.storage_parameters.ticks_per_second = 10000000;
         bpv.push_back(bp);
         BlockData cd(bpv);
         cd.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(1));
+        cd.end_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(10));
 
         WHEN("values are encoded")
         {
@@ -1727,7 +1729,9 @@ SCENARIO("BlockData items can be written", "[block]")
                 const uint8_t EXPECTED[] =
                     {
                         (5 << 5) | 31,
-                        0, (5 << 5) | 1, 0, (4 << 5) | 2, 1, 1,
+                        0, (5 << 5) | 2,
+                          0, (4 << 5) | 2, 1, 1,
+                          (1 << 5), (4 << 5) | 2, 1, 10,
 
                         1,
                         (5 << 5) | 31,
@@ -1759,6 +1763,7 @@ SCENARIO("BlockData items can be written", "[block]")
             TestCborEncoder tcbe;
             BlockData cd2(bpv, FileFormatVersion::format_10, 1);
             cd2.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(1));
+            cd2.end_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(2));
             cd2.writeCbor(tcbe);
             tcbe.flush();
 
@@ -1767,7 +1772,10 @@ SCENARIO("BlockData items can be written", "[block]")
                 const uint8_t EXPECTED[] =
                     {
                         (5 << 5) | 31,
-                        0, (5 << 5) | 2, 0, (4 << 5) | 2, 1, 10, 1, 1,
+                        0, (5 << 5) | 3,
+                          0, (4 << 5) | 2, 1, 10,
+                          (1 << 5), (4 << 5) | 2, 1, 20,
+                          1, 1,
 
                         1,
                         (5 << 5) | 31,
@@ -1864,6 +1872,10 @@ SCENARIO("BlockData max items works", "[block]")
         bpv.push_back(bp2);
         BlockData cd1(bpv);
         BlockData cd2(bpv, FileFormatVersion::format_10, 1);
+        cd1.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(1));
+        cd1.end_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(10));
+        cd2.earliest_time = cd1.earliest_time;
+        cd2.end_time = cd1.end_time;
         cd1.query_response_items.push_back(std::move(qri1));
         cd2.query_response_items.push_back(std::move(qri2));
 
@@ -2489,6 +2501,7 @@ SCENARIO("BlockData items can be read", "[block]")
                 cd_r.readCbor(tcbd, fields);
 
                 REQUIRE(cd_r.earliest_time == cd.earliest_time);
+                REQUIRE(!cd_r.end_time);
             }
         }
 
