@@ -134,8 +134,6 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         data_->start_packet_statistics = last_end_block_statistics_;
     } else if ( d.timestamp < data_->earliest_time )
          data_->earliest_time = d.timestamp;
-    if ( data_->end_time && d.timestamp > data_->end_time )
-        data_->end_time = d.timestamp;
     last_end_block_statistics_ = stats;
 
     // Basic query signature info.
