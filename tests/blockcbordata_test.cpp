@@ -11,6 +11,7 @@
  */
 
 #include <chrono>
+#include <iomanip>
 #include <memory>
 #include <sstream>
 #include <unordered_map>
@@ -58,8 +59,6 @@ namespace {
             for ( auto b : bytes )
                 if ( b != *p++ )
                 {
-                    int expected = *--p;
-                    int got = b;
                     UNSCOPED_INFO("Bytes differ at offset " << (p - buf));
                     logComparison(buf, buflen);
                     return false;
