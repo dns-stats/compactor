@@ -91,8 +91,11 @@ void BlockCborWriter::checkForRotation(const std::chrono::system_clock::time_poi
            enc_->bytes_written() >= config_.max_output_size.size ) ||
          output_pattern_.need_rotate(timestamp, config_) )
     {
-        data_->end_time = timestamp;
-        close();
+        if ( enc_->is_open() )
+        {
+            data_->end_time = timestamp;
+            close();
+        }
         filename_ = output_pattern_.filename(timestamp, config_);
         enc_->open(filename_);
         writeFileHeader();

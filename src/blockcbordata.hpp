@@ -1766,7 +1766,7 @@ namespace block_cbor {
          */
         void clear()
         {
-            end_time = boost::none;
+            end_time.reset();
             ip_addresses.clear();
             class_types.clear();
             questions.clear();
