@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -314,7 +314,8 @@ Configuration::Configuration()
       cmdline_options_("Command options"),
       cmdline_hidden_options_("Hidden command options"),
       config_file_options_("Configuration"),
-      positional_options_()
+      positional_options_(),
+      read_from_block_(false)
 {
     cmdline_options_.add_options()
         ("help,h", "show this help message.")
@@ -541,10 +542,13 @@ void Configuration::dump_config(std::ostream& os) const
        << "  Snap length          : " << snaplen << "\n"
        << "  DNS port             : " << dns_port << "\n"
        << "  Max block items      : " << max_block_items << "\n";
-    if ( max_output_size.size > 0 )
-        os << "  Max output size      : " << max_output_size.size << "\n";
-    os << "  File rotation period : " << rotation_period.count() << "\n"
-       << "  Promiscuous mode     : " << (promisc_mode ? "On" : "Off") << "\n"
+    if ( !read_from_block_ )
+    {
+        if ( max_output_size.size > 0 )
+            os << "  Max output size      : " << max_output_size.size << "\n";
+        os << "  File rotation period : " << rotation_period.count() << "\n";
+    }
+    os << "  Promiscuous mode     : " << (promisc_mode ? "On" : "Off") << "\n"
        << "  Capture interfaces   : ";
     for ( const auto& i : network_interfaces )
     {
@@ -898,6 +902,10 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
     const block_cbor::StorageParameters& sp = bp.storage_parameters;
     const block_cbor::StorageHints& sh = sp.storage_hints;
     const block_cbor::CollectionParameters& cp = bp.collection_parameters;
+
+    // Mark this configuration as read from block parameters, so we know
+    // which items won't be present.
+    read_from_block_ = true;
 
     // Set configuration from storage parameter values.
     max_block_items = sp.max_block_items;

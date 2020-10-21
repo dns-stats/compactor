@@ -1007,6 +1007,11 @@ private:
     boost::program_options::positional_options_description positional_options_;
 
     /**
+     * \brief Were values read from block?
+     */
+    bool read_from_block_;
+
+    /**
      * \brief Helper method to print output options
      */
     void dump_output_option(std::ostream& os, bool query) const;
