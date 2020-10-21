@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,6 +13,7 @@
 #ifndef BLOCKEDCBORREADER_HPP
 #define BLOCKEDCBORREADER_HPP
 
+#include <chrono>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -342,6 +343,13 @@ public:
     void dump_collector(std::ostream& os);
 
     /**
+     * \brief Dump info on file earliest/latest/end times to the stream provided
+     *
+     * \param os output stream.
+     */
+    void dump_times(std::ostream& os);
+
+    /**
      * \brief Dump address event info to the stream provided.
      *
      * \param os output stream.
@@ -581,6 +589,21 @@ private:
      * \brief vector of block parameters.
      */
     std::vector<block_cbor::BlockParameters> block_parameters_;
+
+    /**
+     * \brief earliest time of data in file.
+     */
+    boost::optional<std::chrono::system_clock::time_point> earliest_time_;
+
+    /**
+     * \brief latest time of data in file.
+     */
+    boost::optional<std::chrono::system_clock::time_point> latest_time_;
+
+    /**
+     * \brief end time of file.
+     */
+    boost::optional<std::chrono::system_clock::time_point> end_time_;
 };
 
 #endif

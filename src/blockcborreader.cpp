@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,6 +23,25 @@
 #include "dnsmessage.hpp"
 
 #include "blockcborreader.hpp"
+
+namespace
+{
+    void output_duration(std::ostream& output, const std::chrono::microseconds duration)
+    {
+        output << duration.count() / 1000000 << "s"
+               << duration.count() % 1000000 << "us";
+    }
+
+    void output_time_point(std::ostream& output, const std::chrono::system_clock::time_point timepoint)
+    {
+        std::time_t t = std::chrono::system_clock::to_time_t(timepoint);
+        std::tm tm = *std::gmtime(&t);
+        char buf[40];
+        std::strftime(buf, sizeof(buf), "%Y-%m-%d %Hh%Mm%Ss", &tm);
+        double us = std::chrono::duration_cast<std::chrono::microseconds>(timepoint.time_since_epoch()).count() % 1000000;
+        output << buf << us << "us UTC";
+    }
+}
 
 BlockCborReader::BlockCborReader(CborBaseDecoder& dec,
                                  Configuration& config,
@@ -420,6 +439,8 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
             eof = true;
             return res;
         }
+        else
+            end_time_ = block_->end_time;
 
     const block_cbor::QueryResponseItem& qri = block_->query_response_items[next_item_];
     need_block_ = (block_->query_response_items.size() == ++next_item_);
@@ -450,6 +471,11 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
         ( qri.tstamp )
         ? qri.tstamp
         : block_->earliest_time + std::chrono::duration_cast<std::chrono::system_clock::duration>(*defaults_.time_offset);
+    if ( !earliest_time_ || *earliest_time_ > res.timestamp )
+        earliest_time_ = res.timestamp;
+    if ( !latest_time_ || *latest_time_ < res.timestamp )
+        latest_time_ = res.timestamp;
+
     if ( qri.client_address )
         res.client_address = get_client_address(*qri.client_address, transport_flags);
     else
@@ -807,6 +833,47 @@ void BlockCborReader::dump_collector(std::ostream& os)
        << "\n";
 }
 
+void BlockCborReader::dump_times(std::ostream& os)
+{
+    if ( !earliest_time_ && ! latest_time_ && !end_time_ )
+        return;
+
+    os << "\nTIMES:\n";
+
+    if ( earliest_time_ )
+    {
+        os << "  Earliest data        : ";
+        output_time_point(os, *earliest_time_);
+        os << "\n";
+    }
+    if ( latest_time_ )
+    {
+        os << "  Latest data          : ";
+        output_time_point(os, *latest_time_);
+        os << "\n";
+    }
+    if ( end_time_ )
+    {
+        os << "  Collection ended     : ";
+        output_time_point(os, *end_time_);
+        os << "\n";
+    }
+
+    if ( earliest_time_ && latest_time_ )
+    {
+        os << "  Data range           : ";
+        output_duration(os, std::chrono::duration_cast<std::chrono::microseconds>(*latest_time_ - *earliest_time_));
+        os << "\n";
+    }
+
+    if ( earliest_time_ && end_time_ )
+    {
+        os << "  File duration        : ";
+        output_duration(os, std::chrono::duration_cast<std::chrono::microseconds>(*end_time_ - *earliest_time_));
+        os << "\n";
+    }
+}
+
 void BlockCborReader::dump_address_events(std::ostream& os)
 {
     for ( unsigned event_type = AddressEvent::EventType::TCP_RESET;
@@ -892,19 +959,6 @@ void BlockCborReader::dump_address_events(std::ostream& os)
 
         if ( seen_one )
             os << "\n";
-    }
-}
-
-namespace
-{
-    void output_time_point(std::ostream& output, const std::chrono::system_clock::time_point timepoint)
-    {
-        std::time_t t = std::chrono::system_clock::to_time_t(timepoint);
-        std::tm tm = *std::gmtime(&t);
-        char buf[40];
-        std::strftime(buf, sizeof(buf), "%Y-%m-%d %Hh%Mm%Ss", &tm);
-        double us = std::chrono::duration_cast<std::chrono::microseconds>(timepoint.time_since_epoch()).count() % 1000000;
-        output << buf << us << "us UTC:";
     }
 }
 
