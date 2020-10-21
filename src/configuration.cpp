@@ -342,6 +342,9 @@ Configuration::Configuration()
         ("omit-system-id",
          po::value<bool>(&omit_sysid)->implicit_value(true),
          "omit system identifiers from CBOR outputs.")
+        ("latest-as-end-time",
+         po::value<bool>(&latest_as_end_time)->implicit_value(true),
+         "use latest data time as end time if not present.")
         ("max-channel-size",
          po::value<unsigned int>(&max_channel_size)->default_value(300000),
          "maximum number of items in inter-thread queue.")
