@@ -104,8 +104,8 @@ static void report(std::ostream& os,
                    std::unique_ptr<OutputBackend>& backend)
 {
     config.dump_config(os);
-    cbr.dump_times(os);
     cbr.dump_collector(os);
+    cbr.dump_times(os);
     cbr.dump_stats(os);
     cbr.dump_address_events(os);
     backend->report(os);
