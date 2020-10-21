@@ -1,5 +1,5 @@
 Query/Response:
-Query: 2016-04-05 19h33m24s561484us UTC:
+Query: 2016-04-05 19h33m24s561484us UTC
 	Client IP: 86.237.170.188
 	Server IP: 211.79.123.239
 	Transport: UDP
@@ -18,7 +18,7 @@ Query: 2016-04-05 19h33m24s561484us UTC:
 	Name: xtsskb5qon8sn._kerberos._tcp.TEVC._sites.dc._msdcs.172.20.222.38
 	Type: 33
 	Class: 1
-Response: 2016-04-05 19h33m24s561574us UTC:
+Response: 2016-04-05 19h33m24s561574us UTC
 	Client IP: 86.237.170.188
 	Server IP: 211.79.123.239
 	Transport: UDP
@@ -38,7 +38,7 @@ Response: 2016-04-05 19h33m24s561574us UTC:
 	Type: 33
 	Class: 1
 Query/Response:
-Query: 2016-04-05 19h33m24s667820us UTC:
+Query: 2016-04-05 19h33m24s667820us UTC
 	Client IP: 3249:ed7d:124b:f9c3:1248:e8c5:12ef:e8c5
 	Server IP: 3249:edc5:124b:e8c5:1248:e8c5:1248:e847
 	Transport: UDP
@@ -57,7 +57,7 @@ Query: 2016-04-05 19h33m24s667820us UTC:
 	Name: CO801M180191.azcorrections.local
 	Type: 6
 	Class: 1
-Response: 2016-04-05 19h33m24s667916us UTC:
+Response: 2016-04-05 19h33m24s667916us UTC
 	Client IP: 3249:ed7d:124b:f9c3:1248:e8c5:12ef:e8c5
 	Server IP: 3249:edc5:124b:e8c5:1248:e8c5:1248:e847
 	Transport: UDP

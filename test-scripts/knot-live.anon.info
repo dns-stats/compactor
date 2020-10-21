@@ -17,6 +17,11 @@ CONFIGURATION:
 COLLECTOR:
   Collection host ID   : 
 
+TIMES:
+  Earliest data        : 2016-10-06 13h54m00s2052us UTC
+  Latest data          : 2016-10-06 13h54m52s7839us UTC
+  Data range           : 52s5787us
+
 STATISTICS:
   Total Packets processed                  : 17493
   Matched DNS query/response pairs (C-DNS) : 8263

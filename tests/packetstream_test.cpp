@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -65,7 +65,7 @@ SCENARIO("PacketStream correctly parses packet", "[parse]")
             std::shared_ptr<PcapItem> pcap = std::make_shared<PcapItem>(pkt);
             pkt_stream.process_packet(pcap);
             std::string expected =
-                "1970-01-01 00h00m02s0us UTC:\n"
+                "1970-01-01 00h00m02s0us UTC\n"
                 "\tClient IP: 2001:578:3:1101::bf:2\n"
                 "\tServer IP: 2001:500:3::42\n"
                 "\tTransport: UDP\n"
@@ -127,7 +127,7 @@ SCENARIO("PacketStream correctly parses packet", "[parse]")
             std::shared_ptr<PcapItem> pcap = std::make_shared<PcapItem>(pkt);
             std::shared_ptr<PcapItem> pcap2 = std::make_shared<PcapItem>(pkt2);
             std::string expected =
-                "1970-01-01 00h00m02s20us UTC:\n"
+                "1970-01-01 00h00m02s20us UTC\n"
                 "\tClient IP: 168.235.87.201\n"
                 "\tServer IP: 199.7.83.42\n"
                 "\tTransport: UDP\n"
@@ -301,7 +301,7 @@ SCENARIO("PacketStream correctly parses packet", "[parse]")
             REQUIRE(dns_msgs.size() == 2);
 
             std::string expected =
-                "1970-01-01 00h00m02s60us UTC:\n"
+                "1970-01-01 00h00m02s60us UTC\n"
                 "\tClient IP: 192.168.1.77\n"
                 "\tServer IP: 192.168.1.254\n"
                 "\tTransport: TCP\n"
@@ -320,7 +320,7 @@ SCENARIO("PacketStream correctly parses packet", "[parse]")
                 "\tName: www.lunch.org.uk\n"
                 "\tType: 1\n"
                 "\tClass: 1\n"
-                "1970-01-01 00h00m02s100us UTC:\n"
+                "1970-01-01 00h00m02s100us UTC\n"
                 "\tClient IP: 192.168.1.77\n"
                 "\tServer IP: 192.168.1.254\n"
                 "\tTransport: TCP\n"
@@ -424,7 +424,7 @@ SCENARIO("PacketStream correctly parses packet", "[parse]")
             std::shared_ptr<PcapItem> pcap = std::make_shared<PcapItem>(pkt);
             pkt_stream.process_packet(pcap);
             std::string expected =
-                "1970-01-01 00h00m02s0us UTC:\n"
+                "1970-01-01 00h00m02s0us UTC\n"
                 "\tClient IP: 2001:578:3:1101::bf:2\n"
                 "\tServer IP: 2001:500:3::42\n"
                 "\tTransport: UDP\n"
@@ -479,7 +479,7 @@ SCENARIO("PacketStream correctly parses packet", "[parse]")
             std::shared_ptr<PcapItem> pcap = std::make_shared<PcapItem>(pkt);
             pkt_stream.process_packet(pcap);
             std::string expected =
-                "1970-01-01 00h00m02s0us UTC:\n"
+                "1970-01-01 00h00m02s0us UTC\n"
                 "\tClient IP: 2001:578:3:1101::bf:2\n"
                 "\tServer IP: 2001:500:3::42\n"
                 "\tTransport: UDP\n"
