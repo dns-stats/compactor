@@ -160,7 +160,7 @@ collection-parameters = 1
       ? generator-id       => tstr,
       ? host-id            => tstr,
 
-      ? dns-port           => uint,
+      ? compactor-dns-port => uint,
   }
   query-timeout      = 0
   skew-timeout       = 1
@@ -173,7 +173,7 @@ collection-parameters = 1
   generator-id       = 8
   host-id            = 9
 
-  dns-port           = -1
+  compactor-dns-port = -1
 
 ;
 ; Data in the file is stored in Blocks.
@@ -199,13 +199,13 @@ malformed-messages    = 5
 ;
 BlockPreamble = {
     ? earliest-time          => Timestamp,
-    ? end-time               => Timestamp,
+    ? compactor-end-time     => Timestamp,
     ? block-parameters-index => uint .default 0,
 }
 earliest-time          = 0
 block-parameters-index = 1
 
-end-time               = -1
+compactor-end-time     = -1
 
 ; Ticks are sub-second intervals.  The number of ticks in a second is
 ; file/block metadata.  Signed and unsigned tick types are defined.
