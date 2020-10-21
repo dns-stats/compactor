@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017, 2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2019, 2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -387,6 +387,7 @@ namespace block_cbor {
         : configuration_(current_configuration, current_configuration + countof(current_configuration)),
           block_(current_block, current_block + countof(current_block)),
           block_preamble_(format_10_block_preamble, format_10_block_preamble + countof(format_10_block_preamble)),
+          block_preamble_private_(format_10_block_preamble_private, format_10_block_preamble_private + countof(format_10_block_preamble_private)),
           block_statistics_(format_10_block_statistics, format_10_block_statistics + countof(format_10_block_statistics)),
           block_statistics_private_(format_10_block_statistics_private, format_10_block_statistics_private + countof(format_10_block_statistics_private)),
           block_tables_(current_block_tables, current_block_tables + countof(current_block_tables)),
@@ -417,6 +418,7 @@ namespace block_cbor {
              minor_version == FILE_FORMAT_10_MINOR_VERSION )
             return;
 
+        block_preamble_private_.clear();
         block_statistics_private_.clear();
 
         if ( major_version == FILE_FORMAT_05_MAJOR_VERSION &&
@@ -458,9 +460,11 @@ namespace block_cbor {
             return BlockField::unknown;
     }
 
-    BlockPreambleField FileVersionFields::block_preamble_field(unsigned index) const
+    BlockPreambleField FileVersionFields::block_preamble_field(int index) const
     {
-        if ( index < block_preamble_.size() )
+        if ( index < 0 && index > -1 - static_cast<int>(block_preamble_private_.size()) )
+            return block_preamble_private_[-index - 1];
+        else if ( index < static_cast<int>(block_preamble_.size()) )
             return block_preamble_[index];
         else
             return BlockPreambleField::unknown;

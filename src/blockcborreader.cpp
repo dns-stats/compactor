@@ -406,6 +406,8 @@ bool BlockCborReader::readBlock()
     block_->clear();
     block_->readCbor(dec_, *fields_);
 
+    end_time_ = block_->end_time;
+
     // Accumulate address events counts.
     for ( auto& aeci : block_->address_event_counts )
     {
@@ -439,8 +441,6 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
             eof = true;
             return res;
         }
-        else
-            end_time_ = block_->end_time;
 
     const block_cbor::QueryResponseItem& qri = block_->query_response_items[next_item_];
     need_block_ = (block_->query_response_items.size() == ++next_item_);

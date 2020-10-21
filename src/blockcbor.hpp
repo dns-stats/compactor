@@ -1357,7 +1357,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        BlockPreambleField block_preamble_field(unsigned index) const;
+        BlockPreambleField block_preamble_field(int index) const;
 
         /**
          * \brief Return block statistics field for given map index.
@@ -1495,6 +1495,11 @@ namespace block_cbor {
          * \brief block preamble index map.
          */
         std::vector<BlockPreambleField> block_preamble_;
+
+        /**
+         * \brief block preamble private index map.
+         */
+        std::vector<BlockPreambleField> block_preamble_private_;
 
         /**
          * \brief block statistics index map.
