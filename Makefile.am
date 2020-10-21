@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -66,6 +66,7 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/check-response-opt.sh \
                 test-scripts/check-template.sh \
                 test-scripts/check-testcontent.sh \
+                test-scripts/check-testcontent-endtime.sh \
                 test-scripts/check-testcontent-exclude.sh \
                 test-scripts/check-addressprefix.sh \
                 test-scripts/inspector-outputs.sh \
@@ -108,6 +109,7 @@ dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/oldfmtgold.pcap.xz \
                   test-scripts/testcontent.pcap.xz \
                   test-scripts/testcontent.diag \
+                  test-scripts/testcontent-endtime.diag \
                   test-scripts/testcontent-exclude.conf \
                   test-scripts/testcontent-exclude.diag \
                   test-scripts/testcontent-exclude-sig.conf \

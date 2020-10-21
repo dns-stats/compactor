@@ -1,0 +1,48 @@
+CONFIGURATION:
+  Query timeout        : 5 seconds
+  Skew timeout         : 10 microseconds
+  Snap length          : 65535
+  DNS port             : 53
+  Max block items      : 5000
+  Promiscuous mode     : Off
+  Capture interfaces   : 
+  Server addresses     : 
+  VLAN IDs             : 
+  Filter               : 
+  Query options        : Extra questions, Answers, Authorities, Additionals
+  Response options     : Extra questions, Answers, Authorities, Additionals
+  Accept OPCODEs       : QUERY, IQUERY, STATUS, NOTIFY, UPDATE, DSO
+  Accept RR types      : A, NS, MD, MF, CNAME, SOA, MB, MG, MR, NULL_R, WKS, PTR, HINFO, MINFO, MX, TXT, RP, AFSDB, X25, ISDN, RT, NSAP, NSAP_PTR, SIG, KEY, PX, GPOS, AAAA, LOC, NXT, EID, NIMLOC, SRV, ATMA, NAPTR, KX, CERTIFICATE, A6, DNAM, SINK, OPT, APL, DS, SSHFP, IPSECKEY, RRSIG, NSEC, DNSKEY, DHCID, NSEC3, NSEC3PARAM, TLSA, HIP, NINFO, RKEY, TALINK, CDS, SPF, UINFO, UID, GID, UNSPEC, NID, L32, L64, LP, EU148, EUI64, TKEY, TSIG, IXFR, AXFR, MAILB, MAILA, TYPE_ANY, URI, CAA, TA, DLV
+
+COLLECTOR:
+  Collector ID         : 
+  Collection host ID   : 
+
+TIMES:
+  Earliest data        : 2016-10-06 13h55m00s9660us UTC
+  Latest data          : 2016-10-06 13h55m28s743168us UTC
+  Collection ended     : 2016-10-06 13h55m28s744975us UTC
+  Data range           : 28s733508us
+  File duration        : 28s735315us
+
+STATISTICS:
+  Total Packets processed                  : 10511
+  Matched DNS query/response pairs (C-DNS) : 5001
+  Unmatched DNS queries            (C-DNS) : 0
+  Unmatched DNS responses          (C-DNS) : 0
+  Malformed DNS packets                    : 0
+  Non-DNS packets                          : 7
+  Out-of-order DNS query/responses         : 0
+  Dropped C-DNS items (overload)           : 0
+  Dropped raw PCAP packets (overload)      : 0
+  Dropped non-DNS packets (overload)       : 0
+
+ICMP DEST UNREACHABLE:
+  Code:  3  Count:     1  Address: 28.59.150.146
+  Code:  3  Count:     1  Address: 60.108.56.136
+  Code:  3  Count:     1  Address: 194.118.60.38
+  Code:  3  Count:     2  Address: 106.254.71.182
+  Code:  3  Count:     3  Address: 125.182.51.8
+  Code:  3  Count:    11  Address: 129.216.91.251
+  Code: 13  Count:     1  Address: 247.120.71.17
+
