@@ -157,12 +157,6 @@ AS_IF([test "x$enable_internal_doc" != xno],
     [DX_ENV_APPEND(ENABLE_INTERNAL, YES)],
     [DX_ENV_APPEND(ENABLE_INTERNAL, NO)])
 
-# Files that need to appear in build directories unchanged.
-AC_CONFIG_LINKS([
-        doc/user-guide/excluded_fields.conf.sample:etc/excluded_fields.conf.sample
-        doc/user-guide/default_values.conf:etc/default_values.conf
-        doc/overview.png:doc/user-guide/overview.png])
-
 AC_CONFIG_FILES(Makefile)
 
 AC_OUTPUT

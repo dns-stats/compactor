@@ -162,6 +162,9 @@ CLEANFILES = $(check_DATA) $(dist_man_MANS) \
 	     $(user_guide_sources) \
 	     etc/compactor.conf \
 	     doc/user-guide.html doc/user-guide.pdf \
+	     doc/overview.png doc/user-guide/compactor.conf \
+	     doc/user-guide/excluded_fields.conf.sample \
+	     doc/user-guide/default_values.conf \
 	     doc/inspector.adoc doc/compactor.adoc
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
@@ -172,8 +175,13 @@ AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
 	      -DDEFAULTSFILE=\"$(defaultsfile)\" \
               $(OPENSSL_INCLUDES) -DGEOIPDIR=\"$(geoipdir)\"
 
-doc/user-guide.html: $(user_guide_sources) etc/compactor.conf etc/excluded_fields.conf.sample etc/default_values.conf
-doc/user-guide.pdf: $(user_guide_sources) etc/compactor.conf etc/excluded_fields.conf.sample etc/default_values.conf
+doc/user-guide.html: $(user_guide_sources) doc/user-guide/compactor.conf doc/user-guide/excluded_fields.conf.sample doc/user-guide/default_values.conf doc/overview.png
+doc/user-guide.pdf: $(user_guide_sources) doc/user-guide/compactor.conf doc/user-guide/excluded_fields.conf.sample doc/user-guide/default_values.conf doc/overview.png
+
+doc/user-guide/compactor.conf: etc/compactor.conf ; cp $< $@
+doc/user-guide/excluded_fields.conf.sample: etc/excluded_fields.conf.sample ; cp $< $@
+doc/user-guide/default_values.conf: etc/default_values.conf ; cp $< $@
+doc/overview.png: doc/user-guide/overview.png ; cp $< $@
 
 doc/compactor.1: $(common_doc_sources)
 doc/inspector.1: $(common_doc_sources)
