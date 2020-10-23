@@ -406,7 +406,12 @@ bool BlockCborReader::readBlock()
     block_->clear();
     block_->readCbor(dec_, *fields_);
 
-    end_time_ = block_->end_time;
+    // If any block does not have an end time, there is no end time.
+    // Otherwise it's the oldest of the end times.
+    if ( current_block_num_ == 0 ||
+         !block_->end_time ||
+         ( end_time_ && *end_time_ < *(block_->end_time) ) )
+        end_time_ = block_->end_time;
 
     // Accumulate address events counts.
     for ( auto& aeci : block_->address_event_counts )
