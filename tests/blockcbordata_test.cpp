@@ -219,7 +219,6 @@ SCENARIO("Timestamp can be read", "[block]")
             THEN("decoder input is correct")
             {
                 Timestamp ts1_r;
-                std::chrono::system_clock::time_point t;
                 ts1_r.readCbor(tcbd);
                 REQUIRE(ts1_r.secs == 0);
                 REQUIRE(ts1_r.ticks == 1);
