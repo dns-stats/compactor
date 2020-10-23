@@ -110,6 +110,9 @@ dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/testcontent.pcap.xz \
                   test-scripts/testcontent.diag \
                   test-scripts/testcontent-endtime.diag \
+                  test-scripts/testcontent-endtime.info \
+                  test-scripts/testcontent-endtime.big2.info \
+                  test-scripts/testcontent-endtime.big.info \
                   test-scripts/testcontent-exclude.conf \
                   test-scripts/testcontent-exclude.diag \
                   test-scripts/testcontent-exclude-sig.conf \
