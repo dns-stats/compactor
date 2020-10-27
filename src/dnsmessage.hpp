@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -68,7 +68,7 @@ struct DNSMessage
         char buf[40];
         std::strftime(buf, sizeof(buf), "%Y-%m-%d %Hh%Mm%Ss", &tm);
         double us = std::chrono::duration_cast<std::chrono::microseconds>(msg.timestamp.time_since_epoch()).count() % 1000000;
-        output << buf << us << "us UTC:"
+        output << buf << us << "us UTC"
                << "\n\tClient IP: " << msg.clientIP
                << "\n\tServer IP: " << msg.serverIP
                << "\n\tTransport: ";

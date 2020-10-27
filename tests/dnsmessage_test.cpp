@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -45,7 +45,7 @@ SCENARIO("DNSMessage will report values", "[dump]")
             std::ostringstream oss;
             oss << d1;
             std::string expected1 =
-                "1989-12-27 00h00m00s0us UTC:\n"
+                "1989-12-27 00h00m00s0us UTC\n"
                 "\tClient IP: 192.168.1.2\n"
                 "\tServer IP: 192.168.1.3\n"
                 "\tTransport: UDP\n"
@@ -70,7 +70,7 @@ SCENARIO("DNSMessage will report values", "[dump]")
             std::ostringstream oss2;
             oss2 << d2;
             std::string expected2 =
-                "1989-12-27 00h00m00s0us UTC:\n"
+                "1989-12-27 00h00m00s0us UTC\n"
                 "\tClient IP: 192.168.1.2\n"
                 "\tServer IP: 192.168.1.3\n"
                 "\tTransport: UDP\n"
@@ -119,7 +119,7 @@ SCENARIO("DNSMessage correctly parses packet", "[parse]")
             std::ostringstream oss;
             oss << msg;
             std::string expected =
-                "1989-12-27 00h00m00s0us UTC:\n"
+                "1989-12-27 00h00m00s0us UTC\n"
                 "\tClient IP: 192.168.1.2\n"
                 "\tServer IP: 192.168.1.3\n"
                 "\tTransport: UDP\n"
@@ -177,7 +177,7 @@ SCENARIO("DNSMessage correctly parses packet", "[parse]")
             std::ostringstream oss;
             oss << msg;
             std::string expected =
-                "1989-12-27 00h00m00s0us UTC:\n"
+                "1989-12-27 00h00m00s0us UTC\n"
                 "\tClient IP: 192.168.1.2\n"
                 "\tServer IP: 192.168.1.3\n"
                 "\tTransport: UDP\n"
@@ -393,7 +393,7 @@ SCENARIO("DNSMessage correctly parses packet", "[parse]")
             std::ostringstream oss;
             oss << msg;
             std::string expected =
-                "1989-12-27 00h00m00s0us UTC:\n"
+                "1989-12-27 00h00m00s0us UTC\n"
                 "\tClient IP: 192.168.1.3\n"
                 "\tServer IP: 192.168.1.2\n"
                 "\tTransport: UDP\n"
@@ -462,7 +462,7 @@ SCENARIO("DNSMessage correctly parses RDATA", "[parse]")
             std::ostringstream oss;
             oss << msg;
             std::string expected =
-                "1989-12-27 00h00m00s0us UTC:\n"
+                "1989-12-27 00h00m00s0us UTC\n"
                 "\tClient IP: 192.168.1.3\n"
                 "\tServer IP: 192.168.1.2\n"
                 "\tTransport: UDP\n"
@@ -551,7 +551,7 @@ SCENARIO("DNSMessage correctly parses RDATA", "[parse]")
             std::ostringstream oss;
             oss << msg;
             std::string expected =
-                "1989-12-27 00h00m00s0us UTC:\n"
+                "1989-12-27 00h00m00s0us UTC\n"
                 "\tClient IP: 192.168.1.3\n"
                 "\tServer IP: 192.168.1.2\n"
                 "\tTransport: UDP\n"
@@ -618,7 +618,7 @@ SCENARIO("DNSMessage correctly parses RDATA", "[parse]")
             std::ostringstream oss;
             oss << msg;
             std::string expected =
-                "1989-12-27 00h00m00s0us UTC:\n"
+                "1989-12-27 00h00m00s0us UTC\n"
                 "\tClient IP: 192.168.1.3\n"
                 "\tServer IP: 192.168.1.2\n"
                 "\tTransport: UDP\n"

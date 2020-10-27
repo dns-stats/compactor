@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -91,17 +91,25 @@ void BlockCborWriter::checkForRotation(const std::chrono::system_clock::time_poi
            enc_->bytes_written() >= config_.max_output_size.size ) ||
          output_pattern_.need_rotate(timestamp, config_) )
     {
-        close();
+        if ( enc_->is_open() )
+        {
+            data_->end_time = timestamp;
+            close();
+        }
         filename_ = output_pattern_.filename(timestamp, config_);
         enc_->open(filename_);
         writeFileHeader();
     }
 }
 
-void BlockCborWriter::startRecord(const std::shared_ptr<QueryResponse>&)
+void BlockCborWriter::startRecord(const std::shared_ptr<QueryResponse>& qr)
 {
     if ( data_->is_full() )
+    {
+        const DNSMessage &d(qr->has_query() ? qr->query() : qr->response());
+        data_->end_time = d.timestamp;
         writeBlock();
+    }
     query_response_.clear();
     clear_in_progress_extra_info();
 }
@@ -129,6 +137,8 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         data_->start_packet_statistics = last_end_block_statistics_;
     } else if ( d.timestamp < data_->earliest_time )
          data_->earliest_time = d.timestamp;
+    if ( config_.latest_as_end_time && ( !data_->end_time || d.timestamp > *(data_->end_time) ) )
+        data_->end_time = d.timestamp;
     last_end_block_statistics_ = stats;
 
     // Basic query signature info.

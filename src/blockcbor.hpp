@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -441,6 +441,8 @@ namespace block_cbor {
     {
         earliest_time,
         block_parameters_index,
+
+        compactor_end_time,
 
         unknown = -1
     };
@@ -924,6 +926,16 @@ namespace block_cbor {
     };
 
     /**
+     * \brief Map of current block preamble private indexes.
+     *
+     * The index of a entry in the array subtracted from -1 is the map
+     * value of that entry.
+     */
+    constexpr BlockPreambleField format_10_block_preamble_private[] = {
+        BlockPreambleField::compactor_end_time,
+    };
+
+    /**
      * \brief find map index of block preamble fields for current format.
      *
      * \param index the field identifier.
@@ -932,7 +944,7 @@ namespace block_cbor {
      */
     constexpr int find_block_preamble_index(BlockPreambleField index)
     {
-        return find_index(format_10_block_preamble, index);
+        return find_index(format_10_block_preamble, format_10_block_preamble_private, index);
     }
 
     /**
@@ -1345,7 +1357,7 @@ namespace block_cbor {
          * \param index the map index read from file.
          * \returns field identifier.
          */
-        BlockPreambleField block_preamble_field(unsigned index) const;
+        BlockPreambleField block_preamble_field(int index) const;
 
         /**
          * \brief Return block statistics field for given map index.
@@ -1483,6 +1495,11 @@ namespace block_cbor {
          * \brief block preamble index map.
          */
         std::vector<BlockPreambleField> block_preamble_;
+
+        /**
+         * \brief block preamble private index map.
+         */
+        std::vector<BlockPreambleField> block_preamble_private_;
 
         /**
          * \brief block statistics index map.

@@ -726,7 +726,6 @@ CONFIGURATION:
   Snap length          : 65535
   DNS port             : 53
   Max block items      : 5000
-  File rotation period : 300
   Promiscuous mode     : Off
   Capture interfaces   :
   Server addresses     :
@@ -734,21 +733,44 @@ CONFIGURATION:
   Filter               :
   Query options        : Extra questions, Answers, Authorities, Additionals
   Response options     : Extra questions, Answers, Authorities, Additionals
-  Accept OPCODEs       : QUERY, IQUERY, STATUS, NOTIFY, UPDATE, DSO  Accept RR types      : A, NS, MD, MF, CNAME, SOA, MB, MG, MR, NULL_R, WKS, PTR, HINFO, MINFO, MX, TXT, RP, AFSDB, X25, ISDN, RT, NSAP, NSAP_PTR, SIG, KEY, PX, GPOS, AAAA, LOC, NXT, EID, NIMLOC, SRV, ATMA, NAPTR, KX, CERT, A6, DNAM, SINK, OPT, APL, DS, SSHFP, IPSECKEY, RRSIG, NSEC, DNSKEY, DHCID, NSEC3, NSEC3PARAM, TLSA, HIP, NINFO, RKEY, TALINK, CDS, SPF, UINFO, UID, GID, UNSPEC, NID, L32, L64, LP, EU148, EUI64, TKEY, TSIG, IXFR, AXFR, MAILB, MAILA, TYPE_ANY, URI, CAA, TA
+  Accept OPCODEs       : QUERY, IQUERY, STATUS, NOTIFY, UPDATE, DSO
+  Accept RR types      : A, NS, MD, MF, CNAME, SOA, MB, MG, MR, NULL_R, WKS, PTR, HINFO, MINFO, MX, TXT, RP, AFSDB, X25, ISDN, RT, NSAP, NSAP_PTR, SIG, KEY, PX, GPOS, AAAA, LOC, NXT, EID, NIMLOC, SRV, ATMA, NAPTR, KX, CERT, A6, DNAM, SINK, OPT, APL, DS, SSHFP, IPSECKEY, RRSIG, NSEC, DNSKEY, DHCID, NSEC3, NSEC3PARAM, TLSA, HIP, NINFO, RKEY, TALINK, CDS, SPF, UINFO, UID, GID, UNSPEC, NID, L32, L64, LP, EU148, EUI64, TKEY, TSIG, IXFR, AXFR, MAILB, MAILA, TYPE_ANY, URI, CAA, TA
 ----
-
-NOTE: File rotation is an implementation detail of _compactor_. As
-such, it is not recorded in C-DNS. The value reported by _inspector_
-is the duration (in seconds) of the data in the C-DNS file.
 
 There follows information on the program used to created the C-DNS and the
 host on which it was running.
 
 ----
 COLLECTOR:
-  Collector ID         : dns-stats-compactor 0.10.1
+  Collector ID         : dns-stats-compactor 1.1.0
   Collection host ID   : capturehost
 ----
+
+After that, the `info` file gives time information on the capture. The `Earliest data` and the
+`Latest data` are the timestamps of the earliest and latest query/response pairs in the
+file. The reported `Data range` is the time between `Earliest data` and `Latest data`.
+
+----
+TIMES:
+  Earliest data        : 2016-10-06 13h55m00s9660us UTC
+  Latest data          : 2016-10-06 13h55m28s743168us UTC
+  Collection ended     : 2016-10-06 13h55m28s744975us UTC
+  Data range           : 28s733508us
+  File duration        : 28s735315us
+----
+
+If, during recording, _compactor_ rolls over a file during collection, the rollover time
+is recorded in the old file, and reported as the `Collection ended` time. The time between
+the `Earliest data` and the `Collection ended` time is reported as the `File duration`.
+
+Note that in this version of _compactor_ if either:
+
+* collection is stopped (e.g., via an interrupt during command line collection), or
+* C-DNS is produced directly from a PCAP file
+
+no `Collection ended` time is recorded or reported, and no `File duration` is reported.
+
+NOTE: Recording the `Collection ended` time is a _compactor_ extension to the C-DNS RFC format.
 
 Then follows some overall statistics on the capture.
 
@@ -765,6 +787,9 @@ STATISTICS:
   Dropped raw PCAP packets (overload)      : 0
   Dropped non-DNS packets (overload)       : 0
 ----
+
+NOTE: The above counts are based on traffic as reported to _compactor_ by the
+underlying _libpcap_ library. When under load, this may not reflect actual traffic.
 
 And finally counts of occurrences of various events recorded, and associated
 addresses.

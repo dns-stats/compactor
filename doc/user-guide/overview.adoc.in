@@ -89,16 +89,34 @@ compatibility _inspector_ reads:
 
 It is intended to remain backwards compatible in any future format changes.
 
-[NOTE]
-====
+===== _compactor_ private version and customisations
 
 _compactor_ 1.0 and later writes C-DNS as described in
 https://tools.ietf.org/html/rfc8618[RFC8618],
 with the following changes:
 
-* A private version ID of 1 is present.
-
-====
+* A private version ID of 2 is present.
+* Some _compactor_ implementation-specific entries are added
+  to several C-DNS maps (see RFC section 7.1). They are listed below
+  with their _compactor_ key values in parenthesis.
+** _CollectionParameters_:
+*** _compactor-dns-port_ (-1): specifies the configured port on which
+    _compactor_ listened for traffic.
+** _BlockPreamble_:
+*** _compactor-end-time_ (-1): if the block rolled over (i.e. a new incoming data caused
+    collection to begin a new block), the timestamp of that new data is recorded as
+    the end time of the (older) block.
+** _BlockStatistics_:
+*** _compactor-non-dns-packets_ (-1): count of the number of received packets that
+    could not be interpreted as DNS packets.
+*** _compactor-out-of-order-packets (-2): count of the number of received packets that
+    were not received by _compactor_ in strict chronological order.
+*** _compactor-missing-pairs_ (-3): count of output query/response pairs not written
+    by _compactor_ because they could not be processed quickly enough.
+*** _compactor-missing-packets_ (-4): count of output raw PCAP packets not written
+    by _compactor_ because they could not be processed quickly enough.
+*** _compactor-missing-non-dns_ (-5): count of output ignored PCAP packets not written
+    by _compactor_ because they could not be processed quickly enough.
 
 [IMPORTANT]
 ====

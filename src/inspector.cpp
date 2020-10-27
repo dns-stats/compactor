@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -105,6 +105,7 @@ static void report(std::ostream& os,
 {
     config.dump_config(os);
     cbr.dump_collector(os);
+    cbr.dump_times(os);
     cbr.dump_stats(os);
     cbr.dump_address_events(os);
     backend->report(os);
@@ -115,7 +116,6 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
     Configuration config;
     CborStreamDecoder dec(is);
     BlockCborReader cbr(dec, config, options.defaults, options.pseudo_anon);
-    boost::optional<std::chrono::system_clock::time_point> earliest_time, latest_time;
 
     backend->check_exclude_hints(config.exclude_hints);
 
@@ -139,38 +139,17 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
         auto start = std::chrono::system_clock::now();
         unsigned long long nrecs = 0;
         bool eof = false;
-        bool first_timestamp = true;
 
         for ( QueryResponseData qr = cbr.readQRData(eof);
               !eof;
               qr = cbr.readQRData(eof) )
         {
-            if ( qr.timestamp )
-            {
-                std::chrono::system_clock::time_point t = *qr.timestamp;
-                if ( qr.response_delay )
-                    t += std::chrono::duration_cast<std::chrono::system_clock::duration>(*qr.response_delay);
-                if ( first_timestamp )
-                {
-                    earliest_time = latest_time = t;
-                    first_timestamp = false;
-                } else if ( t < earliest_time )
-                    earliest_time = t;
-                else if ( t > latest_time )
-                    latest_time = t;
-            }
-
             if ( options.debug_qr )
                 std::cout << qr;
 
             backend->output(qr, config);
             nrecs++;
         }
-
-        // Approximate the rotation period with the difference between the first
-        // and last timestamps, rounded to the nearest second.
-        if ( earliest_time )
-            config.rotation_period = std::chrono::seconds((std::chrono::duration_cast<std::chrono::milliseconds>(*latest_time - *earliest_time).count() + 500) / 1000);
 
         if ( options.generate_info )
             report(info, config, cbr, backend);

@@ -52,8 +52,8 @@ call_tshark()
               -e '/^.*TCP segment data/,/^.*\[Reassembled TCP Data/d' \
               -e '/^.*Transmission Control Protocol/d' \
               -e '/^.*\[Next sequence number:/d' \
-              -e '/^.*\Acknowledgment number:/d' \
-              -e '/^.*\Sequence number:/d' \
+              -e '/^.*\Acknowledgment number.*:/d' \
+              -e '/^.*\Sequence number.*:/d' \
               -e '/^.*\[Stream index:/d' \
               -e '/^.*\[.*(Source|Destination) GeoIP/d' \
               -e '/^.*Request In:/d' \

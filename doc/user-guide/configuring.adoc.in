@@ -57,7 +57,7 @@ character introduces a comment that spans until the end of the line. To illustra
 here is the default configuration file:
 
 ----
-include::../../etc/compactor.conf[]
+include::compactor.conf[]
 ----
 
 

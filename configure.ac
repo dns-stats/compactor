@@ -1,5 +1,5 @@
 # 
-# Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
 # 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -113,8 +113,10 @@ PKG_CHECK_MODULES(libtins,
 AC_SUBST(libtins_LIBS)
 
 AC_CHECK_HEADERS([ctemplate/template.h])
+SAVED_CXXFLAGS=$CXXFLAGS
 SAVED_LIBS=$LIBS
-LIBS="$LIBS -lctemplate"
+CXXFLAGS="$CXXFLAGS $PTHREAD_CFLAGS"
+LIBS="$LIBS $PTHREAD_LIBS -lctemplate"
 AC_LINK_IFELSE(
   [AC_LANG_PROGRAM([#include <ctemplate/template_string.h>],
     [ctemplate::TemplateString s("example")])],
@@ -124,6 +126,7 @@ AC_LINK_IFELSE(
         ],
         [AC_MSG_ERROR([ctemplate library not found])])
 LIBS="$SAVED_LIBS"
+CXXFLAGS="$SAVED_CXXFLAGS"
 
 AC_CHECK_LIB([maxminddb],[MMDB_open],
         [
@@ -153,12 +156,6 @@ AC_ARG_ENABLE(internal-doc,
 AS_IF([test "x$enable_internal_doc" != xno],
     [DX_ENV_APPEND(ENABLE_INTERNAL, YES)],
     [DX_ENV_APPEND(ENABLE_INTERNAL, NO)])
-
-# Files that need to appear in build directories unchanged.
-AC_CONFIG_LINKS([
-        doc/user-guide/excluded_fields.conf.sample:etc/excluded_fields.conf.sample
-        doc/user-guide/default_values.conf:etc/default_values.conf
-        doc/overview.png:doc/user-guide/overview.png])
 
 AC_CONFIG_FILES(Makefile)
 

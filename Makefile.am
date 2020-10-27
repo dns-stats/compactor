@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -66,6 +66,7 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/check-response-opt.sh \
                 test-scripts/check-template.sh \
                 test-scripts/check-testcontent.sh \
+                test-scripts/check-testcontent-endtime.sh \
                 test-scripts/check-testcontent-exclude.sh \
                 test-scripts/check-addressprefix.sh \
                 test-scripts/inspector-outputs.sh \
@@ -108,6 +109,10 @@ dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/oldfmtgold.pcap.xz \
                   test-scripts/testcontent.pcap.xz \
                   test-scripts/testcontent.diag \
+                  test-scripts/testcontent-endtime.diag \
+                  test-scripts/testcontent-endtime.info \
+                  test-scripts/testcontent-endtime.big2.info \
+                  test-scripts/testcontent-endtime.big.info \
                   test-scripts/testcontent-exclude.conf \
                   test-scripts/testcontent-exclude.diag \
                   test-scripts/testcontent-exclude-sig.conf \
@@ -160,6 +165,9 @@ CLEANFILES = $(check_DATA) $(dist_man_MANS) \
 	     $(user_guide_sources) \
 	     etc/compactor.conf \
 	     doc/user-guide.html doc/user-guide.pdf \
+	     doc/overview.png doc/user-guide/compactor.conf \
+	     doc/user-guide/excluded_fields.conf.sample \
+	     doc/user-guide/default_values.conf \
 	     doc/inspector.adoc doc/compactor.adoc
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
@@ -170,8 +178,13 @@ AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
 	      -DDEFAULTSFILE=\"$(defaultsfile)\" \
               $(OPENSSL_INCLUDES) -DGEOIPDIR=\"$(geoipdir)\"
 
-doc/user-guide.html: $(user_guide_sources) etc/compactor.conf etc/excluded_fields.conf.sample etc/default_values.conf
-doc/user-guide.pdf: $(user_guide_sources) etc/compactor.conf etc/excluded_fields.conf.sample etc/default_values.conf
+doc/user-guide.html: $(user_guide_sources) doc/user-guide/compactor.conf doc/user-guide/excluded_fields.conf.sample doc/user-guide/default_values.conf doc/overview.png
+doc/user-guide.pdf: $(user_guide_sources) doc/user-guide/compactor.conf doc/user-guide/excluded_fields.conf.sample doc/user-guide/default_values.conf doc/overview.png
+
+doc/user-guide/compactor.conf: etc/compactor.conf ; cp $< $@
+doc/user-guide/excluded_fields.conf.sample: etc/excluded_fields.conf.sample ; cp $< $@
+doc/user-guide/default_values.conf: etc/default_values.conf ; cp $< $@
+doc/overview.png: doc/user-guide/overview.png ; cp $< $@
 
 doc/compactor.1: $(common_doc_sources)
 doc/inspector.1: $(common_doc_sources)

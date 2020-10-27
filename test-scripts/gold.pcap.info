@@ -4,7 +4,6 @@ CONFIGURATION:
   Snap length          : 65535
   DNS port             : 53
   Max block items      : 5000
-  File rotation period : 10
   Promiscuous mode     : Off
   Capture interfaces   : 
   Server addresses     : 
@@ -18,6 +17,11 @@ CONFIGURATION:
 COLLECTOR:
   Collector ID         : 
   Collection host ID   : 
+
+TIMES:
+  Earliest data        : 2016-06-29 15h52m14s321102us UTC
+  Latest data          : 2016-06-29 15h52m24s301184us UTC
+  Data range           : 9s980082us
 
 STATISTICS:
   Total Packets processed                  : 1998

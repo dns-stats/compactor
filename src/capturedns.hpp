@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,6 +29,10 @@
 #include "config.h"
 
 #include "bytestring.hpp"
+
+#ifdef CAPTUREDNS_TEST
+#define private public
+#endif
 
 /**
  * \class CaptureDNS
@@ -1336,5 +1340,9 @@ private:
      */
     static NameCompression name_compression_;
 };
+
+#ifdef CAPTUREDNS_TEST
+#undef private
+#endif
 
 #endif

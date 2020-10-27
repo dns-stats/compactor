@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -839,6 +839,13 @@ public:
     bool omit_sysid;
 
     /**
+     * \brief use latest data time as end time in CBOR output.
+     *
+     * This is a hidden debug parameter.
+     */
+    bool latest_as_end_time;
+
+    /**
      * \brief set the maximum size of the inter-thread channels.
      *
      * This is (for now) a hidden debug parameter.
@@ -1005,6 +1012,11 @@ private:
      * \brief Positional options.
      */
     boost::program_options::positional_options_description positional_options_;
+
+    /**
+     * \brief Were values read from block?
+     */
+    bool read_from_block_;
 
     /**
      * \brief Helper method to print output options
