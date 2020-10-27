@@ -2,8 +2,8 @@
 missingIncludeSystem
 
 // Awaiting full malformed messages implementation.
-unusedFunction:src/blockcbordata.cpp:1628
-unusedFunction:src/blockcbordata.cpp:1818
+unusedFunction:src/blockcbordata.cpp:1633
+unusedFunction:src/blockcbordata.cpp:1830
 
 // We do need/use CaptureDNS::extract_metadata() and header_size().
 // And write_serialisation() gets confused by HAVE_LIBTINS4.
