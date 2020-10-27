@@ -20,7 +20,7 @@ File = [
 FilePreamble = {
     major-format-version => 1,
     minor-format-version => 0,
-    ? private-version    => 1,       ; Compactor private indicator
+    ? private-version    => 2,       ; Compactor private indicator
     block-parameters     => [+ BlockParameters],
 }
 major-format-version = 0

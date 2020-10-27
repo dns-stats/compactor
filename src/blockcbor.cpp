@@ -35,7 +35,7 @@ namespace block_cbor {
     /**
      * \brief Current output format private version.
      */
-    const unsigned FILE_FORMAT_10_PRIVATE_VERSION = 1;
+    const unsigned FILE_FORMAT_10_PRIVATE_VERSION = 2;
 
     /**
      * \brief Current output format major version.
