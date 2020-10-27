@@ -763,10 +763,10 @@ If, during recording, _compactor_ rolls over a file during collection, the rollo
 is recorded in the old file, and reported as the `Collection ended` time. The time between
 the `Earliest data` and the `Collection ended` time is reported as the `File duration`.
 
-Note that in this version of _compactor_ if collection is either:
+Note that in this version of _compactor_ if either:
 
-* stopped (e.g., via an interrupt during command line collection)
-* or C-DNS is produced directly from a PCAP file
+* collection is stopped (e.g., via an interrupt during command line collection), or
+* C-DNS is produced directly from a PCAP file
 
 no `Collection ended` time is recorded or reported, and no `File duration` is reported.
 
