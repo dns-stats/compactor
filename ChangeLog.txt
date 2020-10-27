@@ -6,6 +6,12 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.1.0-beta1 - 2020-10-26
+--------------------------------
+
+* Add custom field of collection end time to block and time
+  section to info file.
+
 Version 1.0.0 - 2020-03-12
 --------------------------
 
