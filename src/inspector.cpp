@@ -144,13 +144,6 @@ static int convert_stream_to_backend(const std::string& fname, std::istream& is,
               !eof;
               qr = cbr.readQRData(eof) )
         {
-            if ( qr.timestamp )
-            {
-                std::chrono::system_clock::time_point t = *qr.timestamp;
-                if ( qr.response_delay )
-                    t += std::chrono::duration_cast<std::chrono::system_clock::duration>(*qr.response_delay);
-            }
-
             if ( options.debug_qr )
                 std::cout << qr;
 
