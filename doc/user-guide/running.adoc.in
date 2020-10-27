@@ -746,9 +746,9 @@ COLLECTOR:
   Collection host ID   : capturehost
 ----
 
-After that, the `info` file gives time information on the capture. The earliest data and the
-latest data are the timestamps of the earliest and latest query/response pairs in the
-file. The reported data range is the time between the earliest and latest query/response pairs.
+After that, the `info` file gives time information on the capture. The `Earliest data` and the
+`Latest data` are the timestamps of the earliest and latest query/response pairs in the
+file. The reported `Data range` is the time between `Earliest data` and `Latest data`.
 
 ----
 TIMES:
@@ -760,12 +760,17 @@ TIMES:
 ----
 
 If, during recording, _compactor_ rolls over a file during collection, the rollover time
-is recorded in the old file, and reported as the collection ended time. The time between
-the earliest data and the collection ended time is reported as the file duration.
-If collection is stopped, or C-DNS is produced from PCAP, no collection ended time is
-recorded or reported, and no file duration is reported.
+is recorded in the old file, and reported as the `Collection ended` time. The time between
+the `Earliest data` and the `Collection ended` time is reported as the `File duration`.
 
-NOTE: Recording the collection ended time is a _compactor_ extension to C-DNS.
+Note that in this version of _compactor_ if collection is either:
+
+* stopped (e.g., via an interrupt during command line collection)
+* or C-DNS is produced directly from a PCAP file
+
+no `Collection ended` time is recorded or reported, and no `File duration` is reported.
+
+NOTE: Recording the `Collection ended` time is a _compactor_ extension to the C-DNS RFC format.
 
 Then follows some overall statistics on the capture.
 
