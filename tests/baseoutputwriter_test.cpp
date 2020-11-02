@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017, 2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2019, 2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -43,8 +43,8 @@ public:
     {
     }
 
-    virtual void writeAE(const std::shared_ptr<AddressEvent>& ae,
-                         const PacketStatistics& stats)
+    virtual void writeAE(const std::shared_ptr<AddressEvent>& /* ae */,
+                         const PacketStatistics& /* stats */)
     {
         add_action("writeAE");
     }
@@ -66,7 +66,7 @@ public:
     }
 
     virtual void writeBasic(const std::shared_ptr<QueryResponse>& qr,
-                            const PacketStatistics& stats)
+                            const PacketStatistics& /* stats */)
     {
         std::ostringstream ostr;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
+ * Copyright 2018-2020 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -31,9 +31,9 @@ namespace
     {
     public:
         virtual void Modify(const char* in, size_t inlen,
-                            const ctemplate::PerExpandData* per_expand_data,
+                            const ctemplate::PerExpandData* /* per_expand_data */,
                             ctemplate::ExpandEmitter* out,
-                            const std::string& arg) const
+                            const std::string& /* arg */) const
         {
             const char* pos = in;
             const char* const limit = in + inlen;
@@ -102,9 +102,9 @@ namespace
     {
     public:
         virtual void Modify(const char* in, size_t inlen,
-                            const ctemplate::PerExpandData* per_expand_data,
+                            const ctemplate::PerExpandData* /* per_expand_data */,
                             ctemplate::ExpandEmitter* out,
-                            const std::string& arg) const
+                            const std::string& /* arg */) const
         {
             const char* pos = in;
             const char* const limit = in + inlen;
@@ -136,9 +136,9 @@ namespace
     {
     public:
         virtual void Modify(const char* in, size_t inlen,
-                            const ctemplate::PerExpandData* per_expand_data,
+                            const ctemplate::PerExpandData* /* per_expand_data */,
                             ctemplate::ExpandEmitter* out,
-                            const std::string& arg) const
+                            const std::string& /* arg */) const
         {
             bool need_escape = false;
 
@@ -172,9 +172,9 @@ namespace
     {
     public:
         virtual void Modify(const char* in, size_t inlen,
-                            const ctemplate::PerExpandData* per_expand_data,
+                            const ctemplate::PerExpandData* /* per_expand_data */,
                             ctemplate::ExpandEmitter* out,
-                            const std::string& arg) const
+                            const std::string& /* arg */) const
         {
             byte_string b(reinterpret_cast<const unsigned char*>(in), inlen);
             IPAddress addr(b);
@@ -186,9 +186,9 @@ namespace
     {
     public:
         virtual void Modify(const char* in, size_t inlen,
-                            const ctemplate::PerExpandData* per_expand_data,
+                            const ctemplate::PerExpandData* /* per_expand_data */,
                             ctemplate::ExpandEmitter* out,
-                            const std::string& arg) const
+                            const std::string& /* arg */) const
         {
             byte_string b(reinterpret_cast<const unsigned char*>(in), inlen);
             IPAddress addr(b);
@@ -201,9 +201,9 @@ namespace
     {
     public:
         virtual void Modify(const char* in, size_t inlen,
-                            const ctemplate::PerExpandData* per_expand_data,
+                            const ctemplate::PerExpandData* /* per_expand_data */,
                             ctemplate::ExpandEmitter* out,
-                            const std::string& arg) const
+                            const std::string& /* arg */) const
         {
             byte_string b(reinterpret_cast<const unsigned char*>(in), inlen);
             IPAddress addr(b);
@@ -234,9 +234,9 @@ namespace
         explicit IPAddrGeoLocationModifier(GeoIPContext& ctx) : ctx_(ctx) {}
 
         virtual void Modify(const char* in, size_t inlen,
-                            const ctemplate::PerExpandData* per_expand_data,
+                            const ctemplate::PerExpandData* /* per_expand_data */,
                             ctemplate::ExpandEmitter* out,
-                            const std::string& arg) const
+                            const std::string& /* arg */) const
         {
             byte_string b(reinterpret_cast<const unsigned char*>(in), inlen);
             IPAddress addr(b);
@@ -253,9 +253,9 @@ namespace
         explicit IPAddrGeoASNModifier(GeoIPContext& ctx) : ctx_(ctx) {}
 
         virtual void Modify(const char* in, size_t inlen,
-                            const ctemplate::PerExpandData* per_expand_data,
+                            const ctemplate::PerExpandData* /* per_expand_data */,
                             ctemplate::ExpandEmitter* out,
-                            const std::string& arg) const
+                            const std::string& /* arg */) const
         {
             byte_string b(reinterpret_cast<const unsigned char*>(in), inlen);
             IPAddress addr(b);
@@ -272,9 +272,9 @@ namespace
         explicit IPAddrGeoASNetmaskModifier(GeoIPContext& ctx) : ctx_(ctx) {}
 
         virtual void Modify(const char* in, size_t inlen,
-                            const ctemplate::PerExpandData* per_expand_data,
+                            const ctemplate::PerExpandData* /* per_expand_data */,
                             ctemplate::ExpandEmitter* out,
-                            const std::string& arg) const
+                            const std::string& /* arg */) const
         {
             byte_string b(reinterpret_cast<const unsigned char*>(in), inlen);
             IPAddress addr(b);
@@ -288,10 +288,10 @@ namespace
     class NoGeoLocationModifier : public ctemplate::TemplateModifier
     {
     public:
-        virtual void Modify(const char* in, size_t inlen,
-                            const ctemplate::PerExpandData* per_expand_data,
-                            ctemplate::ExpandEmitter* out,
-                            const std::string& arg) const
+        virtual void Modify(const char* /* in */, size_t /* inlen */,
+                            const ctemplate::PerExpandData* /* per_expand_data */,
+                            ctemplate::ExpandEmitter* /* out */,
+                            const std::string& /* arg */) const
         {
             throw geoip_error("No GeoLocation data.");
         }
@@ -301,9 +301,9 @@ namespace
     {
     public:
         virtual void Modify(const char* in, size_t inlen,
-                            const ctemplate::PerExpandData* per_expand_data,
+                            const ctemplate::PerExpandData* /* per_expand_data */,
                             ctemplate::ExpandEmitter* out,
-                            const std::string& arg) const
+                            const std::string& /* arg */) const
         {
             std::string s(in, inlen);
             std::time_t t = static_cast<std::time_t>(std::stoll(s));
@@ -318,9 +318,9 @@ namespace
     {
     public:
         virtual void Modify(const char* in, size_t inlen,
-                            const ctemplate::PerExpandData* per_expand_data,
+                            const ctemplate::PerExpandData* /* per_expand_data */,
                             ctemplate::ExpandEmitter* out,
-                            const std::string& arg) const
+                            const std::string& /* arg */) const
         {
             std::string s(in, inlen);
             std::time_t t = static_cast<std::time_t>(std::stoll(s));
@@ -411,7 +411,7 @@ TemplateBackend::~TemplateBackend()
 {
 }
 
-void TemplateBackend::output(const QueryResponseData& qr, const Configuration& config)
+void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /* config */)
 {
     ctemplate::TemplateDictionary dict("ONE_QUERY_RESPONSE");
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 Sinodun IT.
+ * Copyright 2018-2020 Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -111,7 +111,7 @@ public:
      * \param exclude_hints the exclude hints.
      * \throws backend_error on problems.
      */
-    virtual void check_exclude_hints(const HintsExcluded& exclude_hints) {}
+    virtual void check_exclude_hints(const HintsExcluded& /* exclude_hints */) {}
 
     /**
      * \brief Output a QueryResponse.
@@ -126,7 +126,7 @@ public:
      *
      * \param os        stream to which to write report.
      */
-    virtual void report(std::ostream& os) {}
+    virtual void report(std::ostream& /* os */) {}
 
     /**
      * \brief the output file path.
