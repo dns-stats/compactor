@@ -178,6 +178,13 @@ protected:
 
 private:
     /**
+     * \brief Update block stats.
+     *
+     * \param stats     latest statistics.
+     */
+    void updateBlockStats(const PacketStatistics& stats);
+
+    /**
      * \brief output file details.
      */
     RotatingFileName output_pattern_;
@@ -246,6 +253,11 @@ private:
      * \brief Statistics before the first record in the current block.
      */
     PacketStatistics last_end_block_statistics_;
+
+    /**
+     * \brief Do we need to note the start block statistics?
+     */
+    bool need_start_block_stats_;
 
     /**
      * \brief Clear in-progress extras info.

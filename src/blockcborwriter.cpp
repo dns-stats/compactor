@@ -43,13 +43,13 @@ namespace {
 }
 
 BlockCborWriter::BlockCborWriter(const Configuration& config,
-                                     std::unique_ptr<CborBaseStreamFileEncoder> enc)
+                                 std::unique_ptr<CborBaseStreamFileEncoder> enc)
     : BaseOutputWriter(config),
       output_pattern_(config.output_pattern + enc->suggested_extension(),
                       std::chrono::seconds(config.rotation_period)),
       enc_(std::move(enc)),
       query_response_(), ext_rr_(nullptr), ext_group_(nullptr),
-      last_end_block_statistics_()
+      last_end_block_statistics_(), need_start_block_stats_(true)
 {
     block_cbor::BlockParameters bp;
     config.populate_block_parameters(bp);
@@ -81,7 +81,7 @@ void BlockCborWriter::writeAE(const std::shared_ptr<AddressEvent>& ae,
                                    ae->code(),
                                    addr_to_string(ae->address(), config_),
                                    ae->address().is_ipv6());
-    last_end_block_statistics_ = stats;
+    updateBlockStats(stats);
 }
 
 void BlockCborWriter::checkForRotation(const std::chrono::system_clock::time_point& timestamp)
@@ -130,16 +130,14 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
 
     qri.qr_flags = 0;
 
-    // If we're the first record in the block, note the time & stats.
-    if ( data_->query_response_items.size() == 0 )
-    {
+    updateBlockStats(stats);
+
+    if ( data_->query_response_items.size() == 0 ||
+         d.timestamp < data_->earliest_time )
         data_->earliest_time = d.timestamp;
-        data_->start_packet_statistics = last_end_block_statistics_;
-    } else if ( d.timestamp < data_->earliest_time )
-         data_->earliest_time = d.timestamp;
+
     if ( config_.latest_as_end_time && ( !data_->end_time || d.timestamp > *(data_->end_time) ) )
         data_->end_time = d.timestamp;
-    last_end_block_statistics_ = stats;
 
     // Basic query signature info.
     if ( !exclude.server_address )
@@ -379,4 +377,15 @@ void BlockCborWriter::writeBlock()
     data_->last_packet_statistics = last_end_block_statistics_;
     data_->writeCbor(*enc_);
     data_->clear();
+    need_start_block_stats_ = true;
+}
+
+void BlockCborWriter::updateBlockStats(const PacketStatistics& stats)
+{
+    if ( need_start_block_stats_ )
+    {
+        data_->start_packet_statistics = last_end_block_statistics_;
+        need_start_block_stats_ = false;
+    }
+    last_end_block_statistics_ = stats;
 }

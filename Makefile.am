@@ -24,7 +24,7 @@ common_doc_sources = \
         doc/user-guide/compactor-query-response-matching.adoc
 
 user_guide_sources = \
-	$(common_doc_sources) \
+        $(common_doc_sources) \
         doc/user-guide/overview.adoc \
         doc/user-guide/overview.png \
         doc/user-guide/installation.adoc \
@@ -38,7 +38,7 @@ dsconf_DATA = etc/compactor.conf \
               etc/excluded_fields.conf.sample \
               etc/default_values.conf
 dist_dsconf_DATA = etc/compactor.conf \
-	           etc/excluded_fields.conf.sample \
+                   etc/excluded_fields.conf.sample \
                    etc/default_values.conf
 dist_noinst_DATA = README.adoc \
                    doc/compactor.adoc doc/inspector.adoc \
@@ -64,6 +64,7 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/check-outputs.sh \
                 test-scripts/check-query-only.sh \
                 test-scripts/check-response-opt.sh \
+                test-scripts/check-stats.sh \
                 test-scripts/check-template.sh \
                 test-scripts/check-testcontent.sh \
                 test-scripts/check-testcontent-endtime.sh \
@@ -136,7 +137,9 @@ dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/template.pcap \
                   test-scripts/test-csv.tpl \
                   test-scripts/test-block.tpl \
-                  test-scripts/test.defaults
+                  test-scripts/test.defaults \
+                  test-scripts/teststats.info \
+                  test-scripts/teststats.pcap
 
 
 EXTRA_DIST = getversion.sh .version
@@ -161,21 +164,21 @@ check_DATA = GeoLite2-ASN.mmdb \
              knot-live.ignored.pcap
 
 CLEANFILES = $(check_DATA) $(dist_man_MANS) \
-	     $(common_doc_sources) \
-	     $(user_guide_sources) \
-	     etc/compactor.conf \
-	     doc/user-guide.html doc/user-guide.pdf \
-	     doc/overview.png doc/user-guide/compactor.conf \
-	     doc/user-guide/excluded_fields.conf.sample \
-	     doc/user-guide/default_values.conf \
-	     doc/inspector.adoc doc/compactor.adoc
+             $(common_doc_sources) \
+             $(user_guide_sources) \
+             etc/compactor.conf \
+             doc/user-guide.html doc/user-guide.pdf \
+             doc/overview.png doc/user-guide/compactor.conf \
+             doc/user-guide/excluded_fields.conf.sample \
+             doc/user-guide/default_values.conf \
+             doc/inspector.adoc doc/compactor.adoc
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
 AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
-	      -DCONFFILE=\"$(conffile)\" \
-	      -DEXCLUDESFILE=\"$(excludesfile)\" \
-	      -DDEFAULTSFILE=\"$(defaultsfile)\" \
+              -DCONFFILE=\"$(conffile)\" \
+              -DEXCLUDESFILE=\"$(excludesfile)\" \
+              -DDEFAULTSFILE=\"$(defaultsfile)\" \
               $(OPENSSL_INCLUDES) -DGEOIPDIR=\"$(geoipdir)\"
 
 doc/user-guide.html: $(user_guide_sources) doc/user-guide/compactor.conf doc/user-guide/excluded_fields.conf.sample doc/user-guide/default_values.conf doc/overview.png
@@ -238,7 +241,7 @@ libcdns_a_SOURCES = \
         src/pseudoanonymise.cpp \
         src/rotatingfilename.cpp \
         src/streamwriter.cpp \
-	src/util.cpp
+        src/util.cpp
 
 libcdns_a_CXXFLAGS = -DBOOST_LOG_DYN_LINK
 
@@ -384,7 +387,7 @@ CPPCHECK_INCLUDE_DIRS = -I$(srcdir)/src
 CPPCHECK_CMD = cppcheck \
         --std=c++11 --language=c++ \
         --xml --xml-version=2 \
-	--relative-paths=$(srcdir) \
+        --relative-paths=$(srcdir) \
         --suppressions-list=$(srcdir)/cppcheck-suppressions.txt
 CPPCHECK_FLAGS = -U DLT_PKTAP
 
