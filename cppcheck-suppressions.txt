@@ -2,8 +2,8 @@
 missingIncludeSystem
 
 // Awaiting full malformed messages implementation.
-unusedFunction:src/blockcbordata.cpp:1633
-unusedFunction:src/blockcbordata.cpp:1830
+unusedFunction:src/blockcbordata.cpp:1638
+unusedFunction:src/blockcbordata.cpp:1842
 
 // We do need/use CaptureDNS::extract_metadata() and header_size().
 // And write_serialisation() gets confused by HAVE_LIBTINS4.
@@ -19,10 +19,10 @@ unusedFunction:src/cbordecoder.cpp:196
 // Lambdas are confusing.
 variableScope:src/compactor.cpp:262
 variableScope:src/compactor.cpp:263
-variableScope:src/compactor.cpp:517
+variableScope:src/compactor.cpp:519
 unreadVariable:src/compactor.cpp:314
 unreadVariable:src/compactor.cpp:297
-unreadVariable:src/compactor.cpp:543
+unreadVariable:src/compactor.cpp:545
 
 // A bunch of variable, e.g query_qdcount, in Default::read_defaults_file()
 // are misdiagnosed as being able to have their scope reduced.
