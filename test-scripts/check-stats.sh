@@ -25,7 +25,7 @@ tmpdir=`mktemp -d -t "check-stats.XXXXXX"`
 
 cleanup()
 {
-    #rm -rf $tmpdir
+    rm -rf $tmpdir
     exit $1
 }
 
