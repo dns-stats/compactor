@@ -839,11 +839,11 @@ public:
     bool omit_sysid;
 
     /**
-     * \brief use latest data time as end time in CBOR output.
+     * \brief use data times as start & end times in CBOR output.
      *
      * This is a hidden debug parameter.
      */
-    bool latest_as_end_time;
+    bool start_end_times_from_data;
 
     /**
      * \brief set the maximum size of the inter-thread channels.

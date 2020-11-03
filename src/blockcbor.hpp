@@ -443,6 +443,7 @@ namespace block_cbor {
         block_parameters_index,
 
         compactor_end_time,
+        compactor_start_time,
 
         unknown = -1
     };
@@ -933,6 +934,7 @@ namespace block_cbor {
      */
     constexpr BlockPreambleField format_10_block_preamble_private[] = {
         BlockPreambleField::compactor_end_time,
+        BlockPreambleField::compactor_start_time,
     };
 
     /**

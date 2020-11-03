@@ -1457,6 +1457,11 @@ namespace block_cbor {
                 end_time = ts.getTimePoint(ticks_per_second);
                 break;
 
+            case BlockPreambleField::compactor_start_time:
+                ts.readCbor(dec);
+                start_time = ts.getTimePoint(ticks_per_second);
+                break;
+
             case BlockPreambleField::block_parameters_index:
                 block_parameters_index = dec.read_unsigned();
                 break;
@@ -1658,6 +1663,7 @@ namespace block_cbor {
         constexpr int tables_index = find_block_index(BlockField::tables);
         constexpr int earliest_time_index = find_block_preamble_index(BlockPreambleField::earliest_time);
         constexpr int end_time_index = find_block_preamble_index(BlockPreambleField::compactor_end_time);
+        constexpr int start_time_index = find_block_preamble_index(BlockPreambleField::compactor_start_time);
         constexpr int block_parameters_index_index = find_block_preamble_index(BlockPreambleField::block_parameters_index);
 
         uint64_t ticks_per_second = block_parameters_[block_parameters_index].storage_parameters.ticks_per_second;
@@ -1667,7 +1673,7 @@ namespace block_cbor {
 
         // Block preamble.
         enc.write(preamble_index);
-        enc.writeMapHeader(1 + (!!end_time) + (block_parameters_index > 0));
+        enc.writeMapHeader(1 + (!!end_time) + (!!start_time) + (block_parameters_index > 0));
 
         enc.write(earliest_time_index);
         Timestamp earliest_ts(earliest_time, ticks_per_second);
@@ -1677,6 +1683,12 @@ namespace block_cbor {
             enc.write(end_time_index);
             Timestamp end_ts(*end_time, ticks_per_second);
             end_ts.writeCbor(enc);
+        }
+        if ( start_time )
+        {
+            enc.write(start_time_index);
+            Timestamp start_ts(*start_time, ticks_per_second);
+            start_ts.writeCbor(enc);
         }
 
         if ( block_parameters_index > 0 )

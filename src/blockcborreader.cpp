@@ -407,11 +407,18 @@ bool BlockCborReader::readBlock()
     block_->readCbor(dec_, *fields_);
 
     // If any block does not have an end time, there is no end time.
-    // Otherwise it's the oldest of the end times.
+    // Otherwise it's the latest of the end times.
     if ( current_block_num_ == 0 ||
          !block_->end_time ||
          ( end_time_ && *end_time_ < *(block_->end_time) ) )
         end_time_ = block_->end_time;
+
+    // If any block does not have an start time, there is no start time.
+    // Otherwise it's the earliest of the start times.
+    if ( current_block_num_ == 0 ||
+         !block_->start_time ||
+         ( start_time_ && *start_time_ > *(block_->start_time) ) )
+        start_time_ = block_->start_time;
 
     // Accumulate address events counts.
     for ( auto& aeci : block_->address_event_counts )
@@ -840,11 +847,17 @@ void BlockCborReader::dump_collector(std::ostream& os)
 
 void BlockCborReader::dump_times(std::ostream& os)
 {
-    if ( !earliest_time_ && ! latest_time_ && !end_time_ )
+    if ( !earliest_time_ && ! latest_time_ && !end_time_ && !start_time_ )
         return;
 
     os << "\nTIMES:\n";
 
+    if ( start_time_ )
+    {
+        os << "  Collection started   : ";
+        output_time_point(os, *start_time_);
+        os << "\n";
+    }
     if ( earliest_time_ )
     {
         os << "  Earliest data        : ";
@@ -871,10 +884,10 @@ void BlockCborReader::dump_times(std::ostream& os)
         os << "\n";
     }
 
-    if ( earliest_time_ && end_time_ )
+    if ( start_time_ && end_time_ )
     {
         os << "  File duration        : ";
-        output_duration(os, std::chrono::duration_cast<std::chrono::microseconds>(*end_time_ - *earliest_time_));
+        output_duration(os, std::chrono::duration_cast<std::chrono::microseconds>(*end_time_ - *start_time_));
         os << "\n";
     }
 }

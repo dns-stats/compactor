@@ -200,12 +200,14 @@ malformed-messages    = 5
 BlockPreamble = {
     ? earliest-time          => Timestamp,
     ? compactor-end-time     => Timestamp,
+    ? compactor-start-time   => Timestamp,
     ? block-parameters-index => uint .default 0,
 }
 earliest-time          = 0
 block-parameters-index = 1
 
 compactor-end-time     = -1
+compactor-start-time   = -2
 
 ; Ticks are sub-second intervals.  The number of ticks in a second is
 ; file/block metadata.  Signed and unsigned tick types are defined.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -460,6 +460,7 @@ static int run_configuration(const po::variables_map& vm,
 {
     // Output channels for this run.
     OutputChannels output;
+    bool live_capture = false;
 
     // Reset signal handler record.
     signal_handler_signal = 0;
@@ -473,6 +474,7 @@ static int run_configuration(const po::variables_map& vm,
     // capture as we read from the capture at full throttle.
     if ( !vm.count("capture-file") )
     {
+        live_capture = true;
         output.raw_pcap->set_max_items(config.max_channel_size);
         output.ignored_pcap->set_max_items(config.max_channel_size);
         output.cbor->set_max_items(config.max_channel_size);
@@ -501,7 +503,7 @@ static int run_configuration(const po::variables_map& vm,
         encoder = make_unique<CborParallelStreamFileEncoder>(writer_pool);
 
         std::unique_ptr<BlockCborWriter> cbor =
-            make_unique<BlockCborWriter>(config, std::move(encoder));
+            make_unique<BlockCborWriter>(config, std::move(encoder), live_capture);
         threads.emplace_back(cbor_writer, std::move(cbor), output.cbor);
     }
 

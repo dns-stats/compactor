@@ -43,9 +43,11 @@ public:
      *
      * \param config output configuration.
      * \param enc    file encoder to use for writing output.
+     * \param live   live capture or conversion.
      */
     BlockCborWriter(const Configuration& config,
-                      std::unique_ptr<CborBaseStreamFileEncoder> enc);
+                    std::unique_ptr<CborBaseStreamFileEncoder> enc,
+                    bool live);
 
     /**
      * \brief Destructor.
@@ -208,6 +210,11 @@ private:
      * \brief the output CBOR encoder.
      */
     std::unique_ptr<CborBaseStreamFileEncoder> enc_;
+
+    /**
+     * \brief is this live capture, or file conversion?
+     */
+    bool live_;
 
     /**
      * \brief the internal block data instance.

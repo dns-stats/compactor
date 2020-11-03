@@ -1685,6 +1685,11 @@ namespace block_cbor {
         boost::optional<std::chrono::system_clock::time_point> end_time;
 
         /**
+         * \brief the start time of the period covered by the block.
+         */
+        boost::optional<std::chrono::system_clock::time_point> start_time;
+
+        /**
          * \brief the index of the parameters applicable to this block.
          */
         unsigned block_parameters_index;
@@ -1767,6 +1772,7 @@ namespace block_cbor {
         void clear()
         {
             end_time.reset();
+            start_time.reset();
             ip_addresses.clear();
             class_types.clear();
             questions.clear();

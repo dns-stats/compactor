@@ -604,6 +604,11 @@ private:
      * \brief end time of file.
      */
     boost::optional<std::chrono::system_clock::time_point> end_time_;
+
+    /**
+     * \brief start time of file.
+     */
+    boost::optional<std::chrono::system_clock::time_point> start_time_;
 };
 
 #endif

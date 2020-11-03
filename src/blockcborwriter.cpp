@@ -43,11 +43,13 @@ namespace {
 }
 
 BlockCborWriter::BlockCborWriter(const Configuration& config,
-                                 std::unique_ptr<CborBaseStreamFileEncoder> enc)
+                                 std::unique_ptr<CborBaseStreamFileEncoder> enc,
+                                 bool live)
     : BaseOutputWriter(config),
       output_pattern_(config.output_pattern + enc->suggested_extension(),
                       std::chrono::seconds(config.rotation_period)),
       enc_(std::move(enc)),
+      live_(live),
       query_response_(), ext_rr_(nullptr), ext_group_(nullptr),
       last_end_block_statistics_(), need_start_block_stats_(true)
 {
@@ -56,6 +58,8 @@ BlockCborWriter::BlockCborWriter(const Configuration& config,
     block_parameters_.push_back(bp);
 
     data_ = make_unique<block_cbor::BlockData>(block_parameters_);
+    if ( live_ )
+        data_->start_time = std::chrono::system_clock::now();
 }
 
 BlockCborWriter::~BlockCborWriter()
@@ -67,6 +71,8 @@ void BlockCborWriter::close()
 {
     if ( enc_->is_open() )
     {
+        if ( live_ && !data_->end_time )
+            data_->end_time = std::chrono::system_clock::now();
         writeBlock();
         writeFileFooter();
         enc_->close();
@@ -95,6 +101,7 @@ void BlockCborWriter::checkForRotation(const std::chrono::system_clock::time_poi
         {
             data_->end_time = timestamp;
             close();
+            data_->start_time = timestamp;
         }
         filename_ = output_pattern_.filename(timestamp, config_);
         enc_->open(filename_);
@@ -136,8 +143,13 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
          d.timestamp < data_->earliest_time )
         data_->earliest_time = d.timestamp;
 
-    if ( config_.latest_as_end_time && ( !data_->end_time || d.timestamp > *(data_->end_time) ) )
-        data_->end_time = d.timestamp;
+    if ( config_.start_end_times_from_data )
+    {
+        if ( !data_->end_time || d.timestamp > *(data_->end_time) )
+            data_->end_time = d.timestamp;
+        if ( !data_->start_time || d.timestamp < *(data_->start_time) )
+            data_->start_time = d.timestamp;
+    }
 
     // Basic query signature info.
     if ( !exclude.server_address )

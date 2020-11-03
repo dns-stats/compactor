@@ -105,7 +105,12 @@ with the following changes:
 ** _BlockPreamble_:
 *** _compactor-end-time_ (-1): if the block rolled over (i.e. a new incoming data caused
     collection to begin a new block), the timestamp of that new data is recorded as
-    the end time of the (older) block.
+    the end time of the (older) block. If collection from an interface stops, the time
+    collection stops is recorded as the end time of the block.
+*** _compactor-start-time_ (-2): if the block rolled over (i.e. a new incoming data caused
+    collection to begin a new block), the timestamp of that new data is recorded as
+    the start time of the (newer) block. If collection from an interface starts, the time
+    collection starts is recorded as the start time of the block.
 ** _BlockStatistics_:
 *** _compactor-non-dns-packets_ (-1): count of the number of received packets that
     could not be interpreted as DNS packets.

@@ -752,25 +752,32 @@ file. The reported `Data range` is the time between `Earliest data` and `Latest 
 
 ----
 TIMES:
-  Earliest data        : 2016-10-06 13h55m00s9660us UTC
-  Latest data          : 2016-10-06 13h55m28s743168us UTC
-  Collection ended     : 2016-10-06 13h55m28s744975us UTC
-  Data range           : 28s733508us
-  File duration        : 28s735315us
+  Collection started   : 2020-11-02 17h07m49s632204us UTC
+  Earliest data        : 2020-11-02 17h07m49s632204us UTC
+  Latest data          : 2020-11-02 17h07m59s637124us UTC
+  Collection ended     : 2020-11-02 17h08m23s709295us UTC
+  Data range           : 10s4920us
+  File duration        : 34s77091us
 ----
 
-If, during recording, _compactor_ rolls over a file during collection, the rollover time
-is recorded in the old file, and reported as the `Collection ended` time. The time between
-the `Earliest data` and the `Collection ended` time is reported as the `File duration`.
+When recording traffic from a network interface, _compactor_ records
+the time recording started as the `Collection started` time. When
+rolling over to a new file during recording, the timestamp of the data
+that causes the rollover is recorded as the `Collection started` time
+in the new file. Similarly, when recording is stopped, the time is
+recorded as the `Collection ended` time. When rolling over to a new
+file during recording, the timestamp of the data that causes the rollover is recorded
+as the `Collection ended` time in the old file.
 
-Note that in this version of _compactor_ if either:
+If `Collection started` and `Collection ended` times are available,
+the time between them is reported as the `File duration`.
 
-* collection is stopped (e.g., via an interrupt during command line collection), or
-* C-DNS is produced directly from a PCAP file
+If C-DNS is produced directly from a PCAP file, _compactor_ cannot know what time
+the recording started or ended, so no `Collection started` or `Collection ended`
+times are recorded or reported and therefore no `File duration` is reported.
 
-no `Collection ended` time is recorded or reported, and no `File duration` is reported.
-
-NOTE: Recording the `Collection ended` time is a _compactor_ extension to the C-DNS RFC format.
+NOTE: Recording the `Collection started` and `Collection ended` times is
+a _compactor_ extension to the C-DNS RFC format.
 
 Then follows some overall statistics on the capture.
 

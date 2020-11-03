@@ -303,7 +303,7 @@ Configuration::Configuration()
       max_output_size(0),
       report_info(false), log_network_stats_period(0),
       debug_dns(false), debug_qr(false),
-      omit_hostid(false), omit_sysid(false), latest_as_end_time(false),
+      omit_hostid(false), omit_sysid(false), start_end_times_from_data(false),
       max_channel_size(10000),
       client_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
       client_address_prefix_ipv6(DEFAULT_IPV6_PREFIX_LENGTH),
@@ -342,8 +342,8 @@ Configuration::Configuration()
         ("omit-system-id",
          po::value<bool>(&omit_sysid)->implicit_value(true),
          "omit system identifiers from CBOR outputs.")
-        ("latest-as-end-time",
-         po::value<bool>(&latest_as_end_time)->implicit_value(true),
+        ("start-end-times-from-data",
+         po::value<bool>(&start_end_times_from_data)->implicit_value(true),
          "use latest data time as end time if not present.")
         ("max-channel-size",
          po::value<unsigned int>(&max_channel_size)->default_value(300000),

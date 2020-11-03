@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
-# Check that test content C-DNS end time values are as expected.
+# Check that test content C-DNS start and end time values are as expected.
 #
 # There are problems currently with cbor2json (which crashes on the
 # strings) and cbor2yaml (which breaks binary string content into
@@ -39,7 +39,7 @@ cleanup()
 
 trap "cleanup 1" HUP INT TERM
 
-$COMP -c /dev/null --omit-system-id --latest-as-end-time -n all -o $tmpdir/out.cbor $DATAFILE
+$COMP -c /dev/null --omit-system-id --start-end-times-from-data -n all -o $tmpdir/out.cbor $DATAFILE
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
