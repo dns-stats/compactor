@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -24,6 +24,7 @@
 #include "dnsmessage.hpp"
 #include "queryresponse.hpp"
 #include "makeunique.hpp"
+#include "transporttype.hpp"
 
 #define private public
 #include "matcher.hpp"
@@ -89,7 +90,7 @@ SCENARIO("LiveQueries adds/removes QueryResponse pairs", "[matcher]")
         query1.clientPort = 12345;
         query1.serverPort = 6789;
         query1.hoplimit = 254;
-        query1.tcp = false;
+        query1.transport_type = TransportType::UDP;
         query1.dns.type(CaptureDNS::QUERY);
         query1.dns.id(54321);
 
@@ -173,7 +174,7 @@ SCENARIO("Matcher removes items from queue on posting to sink", "[matcher]")
         query.clientPort = 12345;
         query.serverPort = 6789;
         query.hoplimit = 254;
-        query.tcp = false;
+        query.transport_type = TransportType::UDP;
         query.dns.type(CaptureDNS::QUERY);
         query.dns.id(54321);
         query.dns.add_query(CaptureDNS::query("one", CaptureDNS::AAAA, CaptureDNS::IN));

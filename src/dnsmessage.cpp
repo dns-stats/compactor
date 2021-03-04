@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -28,10 +28,11 @@ DNSMessage::DNSMessage(const Tins::RawPDU& pdu,
                        const std::chrono::system_clock::time_point& tstamp,
                        const IPAddress& srcIP, const IPAddress& dstIP,
                        uint16_t srcPort, uint16_t dstPort,
-                       uint8_t hoplimit, bool tcp)
+                       uint8_t hoplimit, TransportType transport_type)
     : timestamp(tstamp), clientIP(srcIP), serverIP(dstIP),
       clientPort(srcPort), serverPort(dstPort),
-      hoplimit(hoplimit), tcp(tcp), wire_size(pdu.size())
+      hoplimit(hoplimit), transport_type(transport_type),
+      wire_size(pdu.size())
 {
     try
     {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,12 +16,15 @@
 #include <chrono>
 #include <iostream>
 
+#include <boost/optional.hpp>
+
 #include <tins/tins.h>
 
 #include "bytestring.hpp"
 #include "capturedns.hpp"
 #include "ipaddress.hpp"
 #include "packetstatistics.hpp"
+#include "transporttype.hpp"
 
 /**
  * \struct DNSMessage
@@ -34,7 +37,7 @@ struct DNSMessage
      */
     DNSMessage()
         : clientIP(), serverIP(), clientPort(0), serverPort(0),
-          hoplimit(64), tcp(false), wire_size(0) {}
+          hoplimit(64), transport_type(TransportType::UDP), wire_size(0) {}
 
     /**
      * \brief Construct a message.
@@ -46,13 +49,13 @@ struct DNSMessage
      * \param srcPort  source port.
      * \param dstPort  destination port.
      * \param hoplimit packet hoplimit.
-     * \param tcp      `true` if received via TCP.
+     * \param transport_type the transport type the message was received over.
      */
     DNSMessage(const Tins::RawPDU& pdu,
                const std::chrono::system_clock::time_point& tstamp,
                const IPAddress& srcIP, const IPAddress& dstIP,
                uint16_t srcPort, uint16_t dstPort,
-               uint8_t hoplimit, bool tcp);
+               uint8_t hoplimit, TransportType transport_type);
 
     /**
      * \brief Write basic information on the message to the output stream.
@@ -72,10 +75,14 @@ struct DNSMessage
                << "\n\tClient IP: " << msg.clientIP
                << "\n\tServer IP: " << msg.serverIP
                << "\n\tTransport: ";
-        if ( msg.tcp )
-            output << "TCP";
-        else
-            output << "UDP";
+        switch ( msg.transport_type )
+        {
+        case TransportType::DOH:  output << "DoH"; break;
+        case TransportType::DOT:  output << "DoT"; break;
+        case TransportType::DDOT: output << "DDoT"; break;
+        case TransportType::TCP:  output << "TCP"; break;
+        case TransportType::UDP:  output << "UDP"; break;
+        }
         output << "\n\tClient port: " << msg.clientPort
                << "\n\tServer port: " << msg.serverPort
                << "\n\tHop limit: " << +msg.hoplimit
@@ -157,11 +164,9 @@ struct DNSMessage
     uint8_t hoplimit;
 
     /**
-     * \brief `true` if the message is received via TCP.
-     *
-     * `false` if the message is received via UDP.
+     * \brief the transport type the message was received over.
      */
-    bool tcp;
+    TransportType transport_type;
 
     /**
      * \brief the size of the message on the wire.

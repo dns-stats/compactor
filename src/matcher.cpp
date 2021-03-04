@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -259,7 +259,7 @@ std::size_t LiveQueries::makeKey(const DNSMessage &m)
     boost::hash_combine(seed, hash_value(m.serverIP));
     boost::hash_combine(seed, m.clientPort);
     boost::hash_combine(seed, m.serverPort);
-    boost::hash_combine(seed, m.tcp);
+    boost::hash_combine(seed, m.transport_type);
     boost::hash_combine(seed, m.dns.id());
     return seed;
 }

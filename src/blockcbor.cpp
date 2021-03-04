@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017, 2019, 2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2019-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -310,8 +310,14 @@ namespace block_cbor {
         uint8_t res = 0;
         const DNSMessage& d(qr.has_query() ? qr.query() : qr.response());
 
-        if ( d.tcp )
-            res |= TCP;
+        switch ( d.transport_type )
+        {
+        case TransportType::UDP:  res |= UDP; break;
+        case TransportType::TCP:  res |= TCP; break;
+        case TransportType::DOT:  res |= TLS; break;
+        case TransportType::DDOT: res |= DTLS; break;
+        case TransportType::DOH:  res |= DOH; break;
+        }
         if ( d.clientIP.is_ipv6() )
             res |= IPV6;
 

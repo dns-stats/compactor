@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017, 2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2019, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,6 +20,7 @@
 #include "dnsmessage.hpp"
 #include "makeunique.hpp"
 #include "queryresponse.hpp"
+#include "transporttype.hpp"
 
 #include "baseoutputwriter.hpp"
 
@@ -163,7 +164,7 @@ SCENARIO("Generating output", "[output]")
         q.clientPort = 12345;
         q.serverPort = 6789;
         q.hoplimit = 254;
-        q.tcp = false;
+        q.transport_type = TransportType::UDP;
         q.dns.type(CaptureDNS::QUERY);
         q.dns.id(54321);
         q.dns.add_query(CaptureDNS::query("one", CaptureDNS::AAAA, CaptureDNS::IN));
@@ -263,7 +264,7 @@ SCENARIO("Generating output", "[output]")
         q.clientPort = 12345;
         q.serverPort = 6789;
         q.hoplimit = 254;
-        q.tcp = false;
+        q.transport_type = TransportType::UDP;
         q.dns.type(CaptureDNS::QUERY);
         q.dns.id(54321);
         q.dns.add_query(CaptureDNS::query("one", CaptureDNS::AAAA, CaptureDNS::IN));
@@ -353,7 +354,7 @@ SCENARIO("Generating output", "[output]")
         q.clientPort = 12345;
         q.serverPort = 6789;
         q.hoplimit = 254;
-        q.tcp = false;
+        q.transport_type = TransportType::UDP;
         q.dns.type(CaptureDNS::QUERY);
         q.dns.id(54321);
         q.dns.add_query(CaptureDNS::query("one", CaptureDNS::AAAA, CaptureDNS::IN));

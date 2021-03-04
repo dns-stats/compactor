@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
+ * Copyright 2018-2019, 2021 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,8 +18,32 @@
 #include "capturedns.hpp"
 #include "pcapwriter.hpp"
 #include "streamwriter.hpp"
+#include "transporttype.hpp"
 
 #include "backend.hpp"
+
+namespace {
+    /**
+     * \brief decode transport flags to transport type.
+     * \param transport_flags transport flags.
+     * \returns transport type.
+     */
+    TransportType get_transport_type(int transport_flags)
+    {
+        switch (transport_flags & (block_cbor::UDP |
+                                   block_cbor::TCP |
+                                   block_cbor::TLS |
+                                   block_cbor::DTLS |
+                                   block_cbor::DOH))
+        {
+        case block_cbor::TCP:   return TransportType::TCP;
+        case block_cbor::TLS:   return TransportType::DOT;
+        case block_cbor::DTLS:  return TransportType::DDOT;
+        case block_cbor::DOH:   return TransportType::DOH;
+        default:                return TransportType::UDP;
+        }
+    }
+}
 
 /**
  ** OutputBackend
@@ -110,11 +134,25 @@ void PcapBackend::output(const QueryResponseData& qrd, const Configuration& conf
     if ( !opts_.baseopts.write_output)
         return;
 
-    if ( ( qr->has_query() && qr->query().tcp ) ||
-         ( qr->has_response() && qr->response().tcp ) )
-        write_qr_tcp(qr);
-    else
-        write_qr_udp(qr);
+    if ( qr->has_query() || qr->has_response() )
+    {
+        TransportType tt = ( qr->has_query() )
+            ? qr->query().transport_type
+            : qr->response().transport_type;
+
+        switch(tt)
+        {
+        case TransportType::TCP:
+        case TransportType::DOT:
+        case TransportType::DOH:
+            write_qr_tcp(qr);
+            break;
+
+        default:
+            write_qr_udp(qr);
+            break;
+        }
+    }
 }
 
 void PcapBackend::report(std::ostream& os)
@@ -142,7 +180,7 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
     {
         query = make_unique<DNSMessage>();
         query->timestamp = *qrd.timestamp;
-        query->tcp = *qrd.qr_transport_flags & block_cbor::TCP;
+        query->transport_type = get_transport_type(*qrd.qr_transport_flags);
         query->clientIP = *qrd.client_address;
         query->serverIP = *qrd.server_address;
         query->clientPort = *qrd.client_port;
@@ -191,7 +229,7 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
         // If there is no query, the timestamp is the response timestamp.
         if ( ( qrd.qr_flags & block_cbor::HAS_QUERY ) && qrd.response_delay )
             response->timestamp += std::chrono::duration_cast<std::chrono::system_clock::duration>(*qrd.response_delay);
-        response->tcp = *qrd.qr_transport_flags & block_cbor::TCP;
+        response->transport_type = get_transport_type(*qrd.qr_transport_flags);
         response->clientIP = *qrd.client_address;
         response->serverIP = *qrd.server_address;
         response->clientPort = *qrd.client_port;
