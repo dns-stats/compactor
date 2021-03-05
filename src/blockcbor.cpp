@@ -351,6 +351,55 @@ namespace block_cbor {
         return res;
     }
 
+    boost::optional<uint8_t> transaction_type(const QueryResponse& qr)
+    {
+        boost::optional<uint8_t> res;
+        const DNSMessage& d(qr.has_query() ? qr.query() : qr.response());
+
+        switch ( d.transaction_type )
+        {
+        case TransactionType::AUTH_QUERY:
+        case TransactionType::AUTH_RESPONSE:
+            res = AUTHORITATIVE;
+            break;
+
+        case TransactionType::RESOLVER_QUERY:
+        case TransactionType::RESOLVER_RESPONSE:
+            res = RESOLVER;
+            break;
+
+        case TransactionType::CLIENT_QUERY:
+        case TransactionType::CLIENT_RESPONSE:
+            res = CLIENT;
+            break;
+
+        case TransactionType::FORWARDER_QUERY:
+        case TransactionType::FORWARDER_RESPONSE:
+            res = FORWARDER;
+            break;
+
+        case TransactionType::STUB_QUERY:
+        case TransactionType::STUB_RESPONSE:
+            res = STUB;
+            break;
+
+        case TransactionType::TOOL_QUERY:
+        case TransactionType::TOOL_RESPONSE:
+            res = TOOL;
+            break;
+
+        case TransactionType::UPDATE_QUERY:
+        case TransactionType::UPDATE_RESPONSE:
+            res = UPDATE;
+            break;
+
+        default:
+            break;
+        }
+
+        return res;
+    }
+
     /**
      * \brief get the number of elements in a C array.
      */

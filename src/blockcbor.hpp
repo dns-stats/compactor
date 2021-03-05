@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,6 +14,8 @@
 
 #include <string>
 #include <vector>
+
+#include <boost/optional.hpp>
 
 #include "queryresponse.hpp"
 
@@ -241,6 +243,20 @@ namespace block_cbor {
     };
 
     /**
+     * \brief Transaction types.
+     */
+    enum QueryResponseType
+    {
+        STUB = 0,
+        CLIENT = 1,
+        RESOLVER = 2,
+        AUTHORITATIVE = 3,
+        FORWARDER = 4,
+        TOOL = 5,
+        UPDATE = 6,
+    };
+
+    /**
      * \brief the known file formats.
      */
     enum class FileFormatVersion
@@ -248,19 +264,6 @@ namespace block_cbor {
         format_02,
         format_05,
         format_10
-    };
-
-    /**
-     * \brief Query/Response type.
-     */
-    enum class QueryResponseType
-    {
-        stub,
-        client,
-        resolver,
-        auth,
-        forwarder,
-        tool,
     };
 
     /**
@@ -1307,6 +1310,14 @@ namespace block_cbor {
      * \param from_version the file format version.
      */
     uint8_t convert_transport_flags(uint8_t flags, FileFormatVersion version);
+
+    /**
+     * \brief Calculate the transaction type for a Query/Response.
+     *
+     * \param qr    the Query/Response.
+     * \return transaction type value.
+     */
+    boost::optional<uint8_t> transaction_type(const QueryResponse& qr);
 
     /**
      * \class FileVersionFields

@@ -16,8 +16,6 @@
 #include <chrono>
 #include <iostream>
 
-#include <boost/optional.hpp>
-
 #include <tins/tins.h>
 
 #include "bytestring.hpp"
@@ -37,7 +35,8 @@ struct DNSMessage
      */
     DNSMessage()
         : clientIP(), serverIP(), clientPort(0), serverPort(0),
-          hoplimit(64), transport_type(TransportType::UDP), wire_size(0) {}
+          hoplimit(64), transport_type(TransportType::UDP),
+          transaction_type(TransactionType::NONE), wire_size(0) {}
 
     /**
      * \brief Construct a message.
@@ -64,61 +63,7 @@ struct DNSMessage
      * \param msg    the message.
      * \return the output stream.
      */
-    friend std::ostream& operator<<(std::ostream& output, const DNSMessage& msg)
-    {
-        std::time_t t = std::chrono::system_clock::to_time_t(msg.timestamp);
-        std::tm tm = *std::gmtime(&t);
-        char buf[40];
-        std::strftime(buf, sizeof(buf), "%Y-%m-%d %Hh%Mm%Ss", &tm);
-        double us = std::chrono::duration_cast<std::chrono::microseconds>(msg.timestamp.time_since_epoch()).count() % 1000000;
-        output << buf << us << "us UTC"
-               << "\n\tClient IP: " << msg.clientIP
-               << "\n\tServer IP: " << msg.serverIP
-               << "\n\tTransport: ";
-        switch ( msg.transport_type )
-        {
-        case TransportType::DOH:  output << "DoH"; break;
-        case TransportType::DOT:  output << "DoT"; break;
-        case TransportType::DDOT: output << "DDoT"; break;
-        case TransportType::TCP:  output << "TCP"; break;
-        case TransportType::UDP:  output << "UDP"; break;
-        }
-        output << "\n\tClient port: " << msg.clientPort
-               << "\n\tServer port: " << msg.serverPort
-               << "\n\tHop limit: " << +msg.hoplimit
-               << "\n\tDNS QR: ";
-        if  ( msg.dns.type() == CaptureDNS::RESPONSE )
-            output << "Response";
-        else
-            output << "Query";
-        output << "\n\tID: " << msg.dns.id()
-               << "\n\tOpcode: " << +msg.dns.opcode()
-               << "\n\tRcode: " << +msg.dns.rcode();
-        output << "\n\tFlags: ";
-        if ( msg.dns.authoritative_answer() )
-            output << "AA ";
-        if ( msg.dns.truncated() )
-            output << "TC ";
-        if ( msg.dns.recursion_desired() )
-            output << "RD ";
-        if ( msg.dns.recursion_available() )
-            output << "RA ";
-        if ( msg.dns.authenticated_data() )
-            output << "AD ";
-        if ( msg.dns.checking_disabled() )
-            output << "CD ";
-        output << "\n\tQdCount: " << msg.dns.questions_count()
-               << "\n\tAnCount: " << msg.dns.answers_count()
-               << "\n\tNsCount: " << msg.dns.authority_count()
-               << "\n\tArCount: " << msg.dns.additional_count();
-        for ( const auto &q : msg.dns.queries() )
-            output << "\n\tName: " << CaptureDNS::decode_domain_name(q.dname())
-                   << "\n\tType: " << static_cast<unsigned>(q.query_type())
-                   << "\n\tClass: " << static_cast<unsigned>(q.query_class());
-        output << std::endl;
-        return output;
-    }
-
+    friend std::ostream& operator<<(std::ostream& output, const DNSMessage& msg);
     /**
      * \brief Message reception timestamp.
      */
@@ -167,6 +112,11 @@ struct DNSMessage
      * \brief the transport type the message was received over.
      */
     TransportType transport_type;
+
+    /**
+     * \brief the transaction type, if available.
+     */
+    TransactionType transaction_type;
 
     /**
      * \brief the size of the message on the wire.

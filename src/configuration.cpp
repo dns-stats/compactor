@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1224,17 +1224,17 @@ namespace block_cbor {
         QueryResponseType qrt;
 
         if ( s == "query" )
-            qrt = QueryResponseType::stub;
+            qrt = QueryResponseType::STUB;
         else if ( s == "client" )
-            qrt = QueryResponseType::client;
+            qrt = QueryResponseType::CLIENT;
         else if ( s == "resolver" )
-            qrt = QueryResponseType::resolver;
+            qrt = QueryResponseType::RESOLVER;
         else if ( s == "auth" )
-            qrt = QueryResponseType::auth;
+            qrt = QueryResponseType::AUTHORITATIVE;
         else if ( s == "forwarder" )
-            qrt = QueryResponseType::forwarder;
+            qrt = QueryResponseType::FORWARDER;
         else if ( s == "tool" )
-            qrt = QueryResponseType::tool;
+            qrt = QueryResponseType::TOOL;
         else
             throw po::validation_error(po::validation_error::invalid_option_value);
 
@@ -1394,7 +1394,7 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
     uint16_t query_udp_size = 0;
     byte_string query_opt_rdata;
     unsigned query_edns_version = 0;
-    block_cbor::QueryResponseType qr_type = block_cbor::QueryResponseType::client;
+    block_cbor::QueryResponseType qr_type = block_cbor::QueryResponseType::CLIENT;
     std::string response_processing_bailiwick;
     bool response_processing_from_cache = false;
     uint16_t query_size = 0;
@@ -1551,6 +1551,7 @@ HintsExcluded::HintsExcluded()
       client_address(false), client_port(false), client_hoplimit(false),
       server_address(false), server_port(false),
       transport(false),
+      transaction_type(false),
       qr_flags(false),
       transaction_id(false),
       qr_signature(false),
@@ -1673,6 +1674,9 @@ HintsExcluded::HintsExcluded()
          po::value<bool>(&response_additional_section)->implicit_value(true)->default_value(false),
          "exclude response additional sections.")
 
+        ("dns-meta-data.qr-type",
+         po::value<bool>(&transaction_type)->implicit_value(true)->default_value(false),
+         "exclude transaction type data.")
         ("dns-meta-data.qr-sig-flags",
          po::value<bool>(&qr_flags)->implicit_value(true)->default_value(false),
          "exclude query response flags.")
@@ -1761,7 +1765,7 @@ bool HintsExcluded::read_excludes_file(const std::string& excludesfile)
     }
 
     po::notify(res);
-    qr_signature = ( server_address && server_port && transport &&
+    qr_signature = ( server_address && server_port && transport && transaction_type &&
                      qr_flags && query_opcode && dns_flags &&
                      query_rcode && query_class_type &&
                      query_qdcount && query_ancount && query_nscount &&
@@ -1842,6 +1846,8 @@ block_cbor::QueryResponseSignatureHintFlags HintsExcluded::get_query_response_si
         res |= block_cbor::SERVER_PORT;
     if ( !transport )
         res |= block_cbor::QR_TRANSPORT_FLAGS;
+    if ( !transaction_type )
+        res |= block_cbor::QR_TYPE;
     if ( !qr_flags )
         res |= block_cbor::QR_SIG_FLAGS;
     if ( !query_opcode )
@@ -1877,6 +1883,7 @@ void HintsExcluded::set_query_response_signature_hints(block_cbor::QueryResponse
     server_address = !( hints & block_cbor::SERVER_ADDRESS );
     server_port = !( hints & block_cbor::SERVER_PORT );
     transport = !( hints & block_cbor::QR_TRANSPORT_FLAGS );
+    transaction_type = !( hints & block_cbor::QR_TYPE );
     qr_flags = !(hints & block_cbor::QR_SIG_FLAGS );
     query_type = !( hints & block_cbor::QR_TYPE );
     query_opcode = !( hints & block_cbor::QUERY_OPCODE );
@@ -2012,6 +2019,8 @@ void HintsExcluded::dump_config(std::ostream& os) const
     os << "\n[dns-meta-data]\n";
     if ( qr_flags )
         os << "qr-sig-flags\n";
+    if ( transaction_type )
+        os << "qr-type\n";
     if ( query_size )
         os << "query-size\n";
     if ( response_size )

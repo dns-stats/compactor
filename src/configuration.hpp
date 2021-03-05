@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -314,6 +314,11 @@ public:
      * \brief output transport info?
      */
     bool transport;
+
+    /**
+     * \brief output transaction type?
+     */
+    bool transaction_type;
 
     /**
      * \brief output Q/R flags?

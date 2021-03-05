@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -730,6 +730,7 @@ namespace block_cbor {
         server_address.reset();
         server_port.reset();
         qr_transport_flags.reset();
+        qr_type.reset();
         qr_flags.reset();
         query_rcode.reset();
         response_rcode.reset();
@@ -766,6 +767,10 @@ namespace block_cbor {
 
                 case QueryResponseSignatureField::qr_transport_flags:
                     qr_transport_flags = dec.read_unsigned();
+                    break;
+
+                case QueryResponseSignatureField::qr_type:
+                    qr_type = dec.read_unsigned();
                     break;
 
                 case QueryResponseSignatureField::qr_dns_flags:
@@ -838,6 +843,7 @@ namespace block_cbor {
         constexpr int server_address_index = find_query_response_signature_index(QueryResponseSignatureField::server_address_index);
         constexpr int server_port_index = find_query_response_signature_index(QueryResponseSignatureField::server_port);
         constexpr int qr_transport_flags_index = find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags);
+        constexpr int qr_type_index = find_query_response_signature_index(QueryResponseSignatureField::qr_type);
         constexpr int qr_sig_flags_index = find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags);
         constexpr int query_opcode_index = find_query_response_signature_index(QueryResponseSignatureField::query_opcode);
         constexpr int qr_dns_flags_index = find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags);
@@ -853,7 +859,8 @@ namespace block_cbor {
         constexpr int response_rcode_index = find_query_response_signature_index(QueryResponseSignatureField::response_rcode);
 
         int nitems =
-            !!server_address + !!server_port + !!qr_transport_flags +
+            !!server_address + !!server_port +
+            !!qr_transport_flags + !!qr_type +
             !!dns_flags + !!qr_flags + !!qdcount + !!query_classtype +
             !!query_rcode + !!query_opcode + !!query_ancount +
             !!query_arcount + !!query_nscount + !!query_edns_version +
@@ -863,6 +870,8 @@ namespace block_cbor {
         enc.write(server_address_index, server_address);
         enc.write(server_port_index, server_port);
         enc.write(qr_transport_flags_index, qr_transport_flags);
+        if ( qr_type )
+            enc.write(qr_type_index, qr_type);
         enc.write(qr_dns_flags_index, dns_flags);
         enc.write(qr_sig_flags_index, qr_flags);
         enc.write(query_qd_index, qdcount);
@@ -886,6 +895,7 @@ namespace block_cbor {
         std::size_t seed = boost::hash_value(qs.server_address);
         boost::hash_combine(seed, qs.server_port);
         boost::hash_combine(seed, qs.qr_transport_flags);
+        boost::hash_combine(seed, qs.qr_type);
         boost::hash_combine(seed, qs.qr_flags);
         boost::hash_combine(seed, qs.dns_flags);
         boost::hash_combine(seed, qs.qr_flags);

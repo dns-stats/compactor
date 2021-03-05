@@ -11,6 +11,7 @@
 # server-address
 # server-port
 # qr-transport-flags
+# qr-type
 
 [dns-header]
 # transaction-id

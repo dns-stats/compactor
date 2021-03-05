@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -970,6 +970,7 @@ void BlockCborReader::dump_address_events(std::ostream& os)
 std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
 {
     const char* transport = NULL;
+    const char* transaction_type = NULL;
     unsigned count;
 
     if ( qr.qr_transport_flags )
@@ -985,6 +986,20 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         }
     }
 
+    if ( qr.qr_type )
+    {
+        switch (*qr.qr_type)
+        {
+        case block_cbor::STUB:          transaction_type = "Stub"; break;
+        case block_cbor::CLIENT:        transaction_type = "Client"; break;
+        case block_cbor::RESOLVER:      transaction_type = "Resolver"; break;
+        case block_cbor::AUTHORITATIVE: transaction_type = "Authoritative"; break;
+        case block_cbor::FORWARDER:     transaction_type = "Forwarder"; break;
+        case block_cbor::UPDATE :       transaction_type = "Update"; break;
+        default:                        transaction_type = "Tool"; break;
+        }
+    }
+
     output << "Query/Response:\n";
     if ( qr.qr_flags & block_cbor::HAS_QUERY )
     {
@@ -997,6 +1012,8 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
             output << "\n\tServer IP: " << *qr.server_address;
         if ( transport )
             output << "\n\tTransport: " << transport;
+        if ( transaction_type )
+            output << "\n\tType: " << transaction_type;
         if ( qr.client_port )
             output << "\n\tClient port: " << *qr.client_port;
         if ( qr.server_port )
@@ -1073,6 +1090,8 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
             output << "\n\tServer IP: " << *qr.server_address;
         if ( transport )
             output << "\n\tTransport: " << transport;
+        if ( transaction_type )
+            output << "\n\tType: " << transaction_type;
         if ( qr.client_port )
             output << "\n\tClient port: " << *qr.client_port;
         if ( qr.server_port )

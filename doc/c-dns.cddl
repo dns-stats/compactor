@@ -350,6 +350,7 @@ response-rcode        = 16
       auth      : 3,
       forwarder : 4,
       tool      : 5,
+      update    : 6,
   )
 
   QueryResponseFlagValues = &(

@@ -165,6 +165,7 @@ SCENARIO("Generating output", "[output]")
         q.serverPort = 6789;
         q.hoplimit = 254;
         q.transport_type = TransportType::UDP;
+        q.transaction_type = TransactionType::AUTH_QUERY;
         q.dns.type(CaptureDNS::QUERY);
         q.dns.id(54321);
         q.dns.add_query(CaptureDNS::query("one", CaptureDNS::AAAA, CaptureDNS::IN));
@@ -265,6 +266,7 @@ SCENARIO("Generating output", "[output]")
         q.serverPort = 6789;
         q.hoplimit = 254;
         q.transport_type = TransportType::UDP;
+        q.transaction_type = TransactionType::AUTH_QUERY;
         q.dns.type(CaptureDNS::QUERY);
         q.dns.id(54321);
         q.dns.add_query(CaptureDNS::query("one", CaptureDNS::AAAA, CaptureDNS::IN));
@@ -355,6 +357,7 @@ SCENARIO("Generating output", "[output]")
         q.serverPort = 6789;
         q.hoplimit = 254;
         q.transport_type = TransportType::UDP;
+        q.transaction_type = TransactionType::AUTH_QUERY;
         q.dns.type(CaptureDNS::QUERY);
         q.dns.id(54321);
         q.dns.add_query(CaptureDNS::query("one", CaptureDNS::AAAA, CaptureDNS::IN));

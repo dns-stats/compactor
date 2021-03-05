@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
+ * Copyright 2018-2019, 2021 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -442,6 +442,9 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
         dict.SetIntValue("transport_tcp", !!(*qr.qr_transport_flags & block_cbor::TCP));
         dict.SetIntValue("transport_ipv6", !!(*qr.qr_transport_flags & block_cbor::IPV6));
     }
+
+    if ( qr.qr_type )
+        dict.SetIntValue("transaction_type", *qr.qr_type);
 
     if ( ( qr.qr_flags & block_cbor::HAS_QUERY ) && qr.dns_flags )
     {
