@@ -493,6 +493,10 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     else
         res.server_address = defaults_.server_address;
     res.server_port = ( sig->server_port ) ? sig->server_port : defaults_.server_port;
+    if ( sig->qr_type )
+        res.qr_type = *sig->qr_type;
+    else
+        res.qr_type = defaults_.qr_type;
     res.id = ( qri.id ) ? qri.id : defaults_.transaction_id;
     if ( qri.qname )
         res.qname = block_->names_rdatas[*qri.qname].str;
