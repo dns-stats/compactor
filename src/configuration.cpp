@@ -377,6 +377,9 @@ Configuration::Configuration()
         ("interface,i",
          po::value<std::vector<std::string>>(&network_interfaces),
          "network interface from which to capture.")
+        ("dnstap,T",
+         po::value<bool>(&dnstap)->implicit_value(true),
+         "capture from DNSTAP.")
         ("server-address-hint,S",
          po::value<std::vector<std::string>>(),
          "IP addresses belonging to the server.")

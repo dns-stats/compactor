@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,11 +13,13 @@
 #include <chrono>
 #include <csignal>
 #include <exception>
-#include <iostream>
+#include <fstream>
 #include <memory>
 #include <thread>
 
 #include <boost/variant.hpp>
+
+#include <google/protobuf/stubs/common.h>
 
 #include <tins/network_interface.h>
 #include <tins/tins.h>
@@ -30,6 +32,7 @@
 #include "channel.hpp"
 #include "blockcborwriter.hpp"
 #include "configuration.hpp"
+#include "dnstap.hpp"
 #include "log.hpp"
 #include "makeunique.hpp"
 #include "matcher.hpp"
@@ -567,8 +570,30 @@ static int run_configuration(const po::variables_map& vm,
         {
             for ( const auto& fname : vm["capture-file"].as<std::vector<std::string>>() )
             {
-                FileSniffer sniffer(fname, sniff_config);
-                sniff_loop(&sniffer, matcher, output, config, stats);
+                if ( vm.count("dnstap") )
+                {
+                    auto dns_sink =
+                        [&](std::unique_ptr<DNSMessage>& dns)
+                        {
+                            if ( config.debug_dns )
+                                std::cout << *dns;
+                            matcher.add(std::move(dns));
+                        };
+
+                    std::fstream stream(fname, std::ios::binary | std::ios::in);
+                    if ( stream.is_open() )
+                    {
+                        DnsTap dnstap(stream, dns_sink);
+                        dnstap.process_stream();
+                    }
+                    else
+                        std::cerr << "Failed to open " << fname << std::endl;
+                }
+                else
+                {
+                    FileSniffer sniffer(fname, sniff_config);
+                    sniff_loop(&sniffer, matcher, output, config, stats);
+                }
                 if ( signal_handler_signal )
                     break;
             }
@@ -635,6 +660,8 @@ static int run_configuration(const po::variables_map& vm,
 
 int main(int ac, char *av[])
 {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+
     // I promise not to use C stdio in this code.
     //
     // Valgrind reports this leads to memory leaks on
@@ -750,5 +777,6 @@ int main(int ac, char *av[])
         return 1;
     }
 
+    google::protobuf::ShutdownProtobufLibrary();
     return 0;
 }

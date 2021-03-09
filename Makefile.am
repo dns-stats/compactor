@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -24,7 +24,7 @@ common_doc_sources = \
         doc/user-guide/compactor-query-response-matching.adoc
 
 user_guide_sources = \
-	$(common_doc_sources) \
+        $(common_doc_sources) \
         doc/user-guide/overview.adoc \
         doc/user-guide/overview.png \
         doc/user-guide/installation.adoc \
@@ -38,10 +38,11 @@ dsconf_DATA = etc/compactor.conf \
               etc/excluded_fields.conf.sample \
               etc/default_values.conf
 dist_dsconf_DATA = etc/compactor.conf \
-	           etc/excluded_fields.conf.sample \
+                   etc/excluded_fields.conf.sample \
                    etc/default_values.conf
 dist_noinst_DATA = README.adoc \
                    doc/compactor.adoc doc/inspector.adoc \
+                   dnstap/dnstap.proto \
                    $(user_guide_sources)
 
 conffile=$(dsconfdir)/compactor.conf
@@ -56,6 +57,8 @@ defaultsfile=$(dsconfdir)/default_values.conf
 %.pdf : %.adoc ; @ASCIIDOC@ -b pdf -d article -r asciidoctor-pdf -a appversion=$(PACKAGE_VERSION) -o $@ $<
 
 % :: test-scripts/%.xz ; xz --decompress --to-stdout $< > $@
+
+%.pb.cc %.pb.h: %.proto ; $(PROTOC) --proto_path=$(srcdir) --cpp_out=$(builddir) $<
 
 check_PROGRAMS = compactor-tests
 check_SCRIPTS = test-scripts/check-config-info.sh \
@@ -161,21 +164,25 @@ check_DATA = GeoLite2-ASN.mmdb \
              knot-live.ignored.pcap
 
 CLEANFILES = $(check_DATA) $(dist_man_MANS) \
-	     $(common_doc_sources) \
-	     $(user_guide_sources) \
-	     etc/compactor.conf \
-	     doc/user-guide.html doc/user-guide.pdf \
-	     doc/overview.png doc/user-guide/compactor.conf \
-	     doc/user-guide/excluded_fields.conf.sample \
-	     doc/user-guide/default_values.conf \
-	     doc/inspector.adoc doc/compactor.adoc
+             $(common_doc_sources) \
+             $(user_guide_sources) \
+             etc/compactor.conf \
+             doc/user-guide.html doc/user-guide.pdf \
+             doc/overview.png doc/user-guide/compactor.conf \
+             doc/user-guide/excluded_fields.conf.sample \
+             doc/user-guide/default_values.conf \
+             doc/inspector.adoc doc/compactor.adoc
+
+MOSTLYCLEANFILES = dnstap/dnstap.pb.h dnstap/dnstap.pb.cc
+
+BUILT_SOURCES = dnstap/dnstap.pb.h
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
-AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
-	      -DCONFFILE=\"$(conffile)\" \
-	      -DEXCLUDESFILE=\"$(excludesfile)\" \
-	      -DDEFAULTSFILE=\"$(defaultsfile)\" \
+AM_CPPFLAGS = -I$(srcdir)/src -I$(builddir) $(BOOST_CPPFLAGS) \
+              -DCONFFILE=\"$(conffile)\" \
+              -DEXCLUDESFILE=\"$(excludesfile)\" \
+              -DDEFAULTSFILE=\"$(defaultsfile)\" \
               $(OPENSSL_INCLUDES) -DGEOIPDIR=\"$(geoipdir)\"
 
 doc/user-guide.html: $(user_guide_sources) doc/user-guide/compactor.conf doc/user-guide/excluded_fields.conf.sample doc/user-guide/default_values.conf doc/overview.png
@@ -238,13 +245,14 @@ libcdns_a_SOURCES = \
         src/pseudoanonymise.cpp \
         src/rotatingfilename.cpp \
         src/streamwriter.cpp \
-	src/util.cpp
+        src/util.cpp
 
 libcdns_a_CXXFLAGS = -DBOOST_LOG_DYN_LINK
 
 compactor_headers = \
         src/blockcborwriter.hpp \
         src/channel.hpp \
+        src/dnstap.hpp \
         src/matcher.hpp \
         src/nocopypacket.hpp \
         src/packetstatistics.hpp \
@@ -268,8 +276,13 @@ compactor_src_with_internal_tests = \
 
 compactor_src_without_internal_tests = \
         src/blockcborwriter.cpp \
+        src/dnstap.cpp \
         src/packetstream.cpp \
         src/sniffers.cpp
+
+nodist_compactor_SOURCES = \
+        $(builddir)/dnstap/dnstap.pb.h \
+        $(builddir)/dnstap/dnstap.pb.cc
 
 compactor_SOURCES = \
         $(compactor_headers) \
@@ -277,7 +290,7 @@ compactor_SOURCES = \
         $(compactor_src_with_internal_tests) \
         src/compactor.cpp
 
-compactor_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
+compactor_CXXFLAGS = @PTHREAD_CFLAGS@ @PROTOBUF_CFLAGS@ -DBOOST_LOG_DYN_LINK
 
 compactor_LDADD = \
         libcdns.a \
@@ -288,6 +301,7 @@ compactor_LDADD = \
         $(BOOST_SYSTEM_LIB) \
         $(BOOST_THREAD_LIB) \
         $(PCAP_LIB) \
+        $(PROTOBUF_LIBS) \
         $(LZMA_LIB) \
         $(TCMALLOC_LIB) \
         @PTHREAD_LIBS@ \
@@ -323,7 +337,11 @@ compactor_tests_SOURCES += \
         tests/pseudoanonymise_test.cpp
 endif
 
-compactor_tests_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
+nodist_compactor_tests_SOURCES = \
+        $(builddir)/dnstap/dnstap.pb.h \
+        $(builddir)/dnstap/dnstap.pb.cc
+
+compactor_tests_CXXFLAGS = @PTHREAD_CFLAGS@ @PROTOBUF_CFLAGS@ -DBOOST_LOG_DYN_LINK
 compactor_tests_LDADD = \
         libcdns.a \
         $(BOOST_FILESYSTEM_LIB) \
@@ -333,6 +351,7 @@ compactor_tests_LDADD = \
         $(BOOST_SYSTEM_LIB) \
         $(BOOST_THREAD_LIB) \
         $(PCAP_LIB) \
+        $(PROTOBUF_LIBS) \
         $(LZMA_LIB) \
         $(TCMALLOC_LIB) \
         @PTHREAD_LIBS@ \
@@ -384,7 +403,7 @@ CPPCHECK_INCLUDE_DIRS = -I$(srcdir)/src
 CPPCHECK_CMD = cppcheck \
         --std=c++11 --language=c++ \
         --xml --xml-version=2 \
-	--relative-paths=$(srcdir) \
+        --relative-paths=$(srcdir) \
         --suppressions-list=$(srcdir)/cppcheck-suppressions.txt
 CPPCHECK_FLAGS = -U DLT_PKTAP
 

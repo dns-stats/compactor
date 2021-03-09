@@ -1,5 +1,5 @@
 # 
-# Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
 # 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -28,6 +28,15 @@ AC_PROG_CXX
 AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
 AC_PROG_LIBTOOL
 AC_PROG_AWK
+
+PKG_CHECK_MODULES(PROTOBUF, protobuf >= 2.4.0)
+AC_SUBST(PROTOBUF_LIBS)
+AC_SUBST(PROTOBUF_CFLAGS)
+AC_SUBST(PROTOBUF_VERSION)
+
+AC_CHECK_PROG([PROTOC], [protoc], [protoc])
+AS_IF([test "x${PROTOC}" == "x"],
+    [AC_MSG_ERROR([ProtoBuf compiler "protoc" not found.])])
 
 AC_SUBST(ASCIIDOC,[no])
 AC_PATH_PROG([ASCIIDOC],[asciidoctor],[no],[$PATH$PATH_SEPARATOR/usr/local/bin])

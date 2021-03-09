@@ -743,6 +743,11 @@ public:
     std::vector<std::string> network_interfaces;
 
     /**
+     * \brief treat input files as DNSTAP.
+     */
+    bool dnstap;
+
+    /**
      * \brief the server network addresses.
      *
      * Optional addresses for the server interfaces. Stored in C-DNS but
