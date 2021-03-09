@@ -333,15 +333,15 @@ void PcapBackend::write_qr_tcp(const std::unique_ptr<QueryResponse>& qr)
 
     if ( qr->has_query() )
     {
-        client_address = qr->query().clientIP;
-        server_address = qr->query().serverIP;
-        client_port = qr->query().clientPort;
-        server_port = qr->query().serverPort;
-        client_hoplimit = qr->query().hoplimit;
+        client_address = *qr->query().clientIP;
+        server_address = *qr->query().serverIP;
+        client_port = *qr->query().clientPort;
+        server_port = *qr->query().serverPort;
+        client_hoplimit = *qr->query().hoplimit;
         query_timestamp = qr->query().timestamp;
         if ( qr->has_response() )
         {
-            server_hoplimit = qr->response().hoplimit;
+            server_hoplimit = *qr->response().hoplimit;
             response_timestamp = qr->response().timestamp;
         }
         else
@@ -352,11 +352,11 @@ void PcapBackend::write_qr_tcp(const std::unique_ptr<QueryResponse>& qr)
     }
     else
     {
-        client_address = qr->response().clientIP;
-        server_address = qr->response().serverIP;
-        client_port = qr->response().clientPort;
-        server_port = qr->response().serverPort;
-        client_hoplimit = qr->response().hoplimit;
+        client_address = *qr->response().clientIP;
+        server_address = *qr->response().serverIP;
+        client_port = *qr->response().clientPort;
+        server_port = *qr->response().serverPort;
+        client_hoplimit = *qr->response().hoplimit;
         server_hoplimit = client_hoplimit;
         query_timestamp = qr->response().timestamp;
         response_timestamp = query_timestamp;
@@ -455,10 +455,10 @@ void PcapBackend::write_qr_udp(const std::unique_ptr<QueryResponse>& qr)
 
 void PcapBackend::write_udp_packet(const DNSMessage& dns)
 {
-    IPAddress clientIP = dns.clientIP;
-    IPAddress serverIP = dns.serverIP;
-    uint16_t clientPort = dns.clientPort;
-    uint16_t serverPort = dns.serverPort;
+    IPAddress clientIP = *dns.clientIP;
+    IPAddress serverIP = *dns.serverIP;
+    uint16_t clientPort = *dns.clientPort;
+    uint16_t serverPort = *dns.serverPort;
 
     if ( dns.dns.type() == CaptureDNS::RESPONSE )
     {
@@ -471,7 +471,7 @@ void PcapBackend::write_udp_packet(const DNSMessage& dns)
     udp.dport(serverPort);
     udp.inner_pdu(dns.dns);
 
-    write_packet(&udp, clientIP, serverIP, dns.hoplimit, dns.timestamp);
+    write_packet(&udp, clientIP, serverIP, *dns.hoplimit, dns.timestamp);
 }
 
 void PcapBackend::write_packet(Tins::PDU* pdu,

@@ -16,9 +16,10 @@
 #include <chrono>
 #include <iostream>
 
+#include <boost/optional.hpp>
+
 #include <tins/tins.h>
 
-#include "bytestring.hpp"
 #include "capturedns.hpp"
 #include "ipaddress.hpp"
 #include "packetstatistics.hpp"
@@ -34,12 +35,12 @@ struct DNSMessage
      * \brief Default constructor. Construct an empty message.
      */
     DNSMessage()
-        : clientIP(), serverIP(), clientPort(0), serverPort(0),
-          hoplimit(64), transport_type(TransportType::UDP),
-          transaction_type(TransactionType::NONE), wire_size(0) {}
+        : clientIP(), serverIP(), clientPort(), serverPort(),
+          hoplimit(), ipv6(), transport_type(TransportType::UDP),
+          transaction_type(TransactionType::NONE), wire_size() {}
 
     /**
-     * \brief Construct a message.
+     * \brief Construct a message received via PCAP.
      *
      * \param pdu      packet payload data.
      * \param tstamp   packet timestamp.
@@ -55,6 +56,20 @@ struct DNSMessage
                const IPAddress& srcIP, const IPAddress& dstIP,
                uint16_t srcPort, uint16_t dstPort,
                uint8_t hoplimit, TransportType transport_type);
+
+    /**
+     * \brief Return `true` if this message is IPv6.
+     */
+    bool is_ipv6() const {
+        if ( ipv6 )
+            return *ipv6;
+        else if ( clientIP )
+            return (*clientIP).is_ipv6();
+        else if ( serverIP )
+            return (*serverIP).is_ipv6();
+
+        return false;
+    }
 
     /**
      * \brief Write basic information on the message to the output stream.
@@ -75,7 +90,7 @@ struct DNSMessage
      * If the message is a query, the client IP is the sender IP. Otherwise
      * it is the destination IP.
      */
-    IPAddress clientIP;
+    boost::optional<IPAddress> clientIP;
 
     /**
      * \brief IP address of server.
@@ -83,7 +98,7 @@ struct DNSMessage
      * If the message is a response, the server IP is the sender IP. Otherwise
      * it is the destination IP.
      */
-    IPAddress serverIP;
+    boost::optional<IPAddress> serverIP;
 
     /**
      * \brief port used by client.
@@ -91,7 +106,7 @@ struct DNSMessage
      * If the message is a query, the client port is the sender port.
      * Otherwise it is the destination port.
      */
-    uint16_t clientPort;
+    boost::optional<uint16_t> clientPort;
 
     /**
      * \brief port used by server.
@@ -99,14 +114,19 @@ struct DNSMessage
      * If the message is a response, the server port is the sender port.
      * Otherwise it is the destination port.
      */
-    uint16_t serverPort;
+    boost::optional<uint16_t> serverPort;
 
     /**
      * \brief sender packet hop limit.
      *
      * This is the TTL in IPv4, and the hop limit in IPv6.
      */
-    uint8_t hoplimit;
+    boost::optional<uint8_t> hoplimit;
+
+    /**
+     * \brief IPv4 or IPv6?
+     */
+    boost::optional<bool> ipv6;
 
     /**
      * \brief the transport type the message was received over.
@@ -121,7 +141,7 @@ struct DNSMessage
     /**
      * \brief the size of the message on the wire.
      */
-    unsigned wire_size;
+    boost::optional<unsigned> wire_size;
 
     /**
      * \brief DNS-related contents of the DNS message.

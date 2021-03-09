@@ -318,7 +318,7 @@ namespace block_cbor {
         case TransportType::DDOT: res |= DTLS; break;
         case TransportType::DOH:  res |= DOH; break;
         }
-        if ( d.clientIP.is_ipv6() )
+        if ( d.is_ipv6() )
             res |= IPV6;
 
         if ( qr.has_query() && qr.query().dns.trailing_data_size() > 0 )

@@ -56,10 +56,12 @@ std::ostream& operator<<(std::ostream& output, const DNSMessage& msg)
     char buf[40];
     std::strftime(buf, sizeof(buf), "%Y-%m-%d %Hh%Mm%Ss", &tm);
     double us = std::chrono::duration_cast<std::chrono::microseconds>(msg.timestamp.time_since_epoch()).count() % 1000000;
-    output << buf << us << "us UTC"
-           << "\n\tClient IP: " << msg.clientIP
-           << "\n\tServer IP: " << msg.serverIP
-           << "\n\tTransport: ";
+    output << buf << us << "us UTC";
+    if ( msg.clientIP )
+        output << "\n\tClient IP: " << *msg.clientIP;
+    if ( msg.serverIP )
+        output << "\n\tServer IP: " << *msg.serverIP;
+    output << "\n\tTransport: ";
     switch ( msg.transport_type )
     {
     case TransportType::DOH:  output << "DoH"; break;
@@ -68,9 +70,12 @@ std::ostream& operator<<(std::ostream& output, const DNSMessage& msg)
     case TransportType::TCP:  output << "TCP"; break;
     case TransportType::UDP:  output << "UDP"; break;
     }
-    output << "\n\tClient port: " << msg.clientPort
-           << "\n\tServer port: " << msg.serverPort
-           << "\n\tHop limit: " << +msg.hoplimit;
+    if ( msg.clientPort )
+        output << "\n\tClient port: " << *msg.clientPort;
+    if ( msg.serverPort )
+        output << "\n\tServer port: " << *msg.serverPort;
+    if ( msg.hoplimit )
+        output << "\n\tHop limit: " << +(*msg.hoplimit);
     if ( msg.transaction_type != TransactionType::NONE )
     {
         output << "\n\tTransaction type: ";

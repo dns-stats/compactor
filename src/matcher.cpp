@@ -255,11 +255,15 @@ LiveQueries::matchResponse(const DNSMessage &m)
 
 std::size_t LiveQueries::makeKey(const DNSMessage &m)
 {
-    std::size_t seed = hash_value(m.clientIP);
-    boost::hash_combine(seed, hash_value(m.serverIP));
-    boost::hash_combine(seed, m.clientPort);
-    boost::hash_combine(seed, m.serverPort);
-    boost::hash_combine(seed, m.transport_type);
+    std::size_t seed = boost::hash_value(m.transport_type);
+    if ( m.clientIP )
+        boost::hash_combine(seed, hash_value(*m.clientIP));
+    if ( m.serverIP )
+        boost::hash_combine(seed, hash_value(*m.serverIP));
+    if ( m.clientPort )
+         boost::hash_combine(seed, *m.clientPort);
+    if ( m.serverPort )
+         boost::hash_combine(seed, *m.serverPort);
     boost::hash_combine(seed, m.dns.id());
     return seed;
 }

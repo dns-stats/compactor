@@ -142,10 +142,10 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     last_end_block_statistics_ = stats;
 
     // Basic query signature info.
-    if ( !exclude.server_address )
-        qs.server_address = data_->add_address(addr_to_string(d.serverIP, config_, false));
-    if ( !exclude.server_port )
-        qs.server_port = d.serverPort;
+    if ( !exclude.server_address && d.serverIP)
+        qs.server_address = data_->add_address(addr_to_string(*d.serverIP, config_, false));
+    if ( !exclude.server_port && d.serverPort)
+        qs.server_port = *d.serverPort;
     if ( !exclude.transport )
         qs.qr_transport_flags = block_cbor::transport_flags(*qr);
     if ( !exclude.transaction_type )
@@ -156,10 +156,10 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     // Basic query/response info.
     if ( !exclude.timestamp )
         qri.tstamp = d.timestamp;
-    if ( !exclude.client_address )
-        qri.client_address = data_->add_address(addr_to_string(d.clientIP, config_));
-    if ( !exclude.client_port )
-        qri.client_port = d.clientPort;
+    if ( !exclude.client_address && d.clientIP )
+        qri.client_address = data_->add_address(addr_to_string(*d.clientIP, config_));
+    if ( !exclude.client_port && d.clientPort )
+        qri.client_port = *d.clientPort;
     if ( !exclude.transaction_id )
         qri.id = d.dns.id();
     if ( !exclude.query_qdcount )
@@ -186,10 +186,10 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         const DNSMessage &q(qr->query());
 
         qri.qr_flags |= block_cbor::HAS_QUERY;
-        if ( !exclude.query_size )
-            qri.query_size = q.wire_size;
-        if ( !exclude.client_hoplimit )
-            qri.hoplimit = q.hoplimit;
+        if ( !exclude.query_size && q.wire_size )
+            qri.query_size = *q.wire_size;
+        if ( !exclude.client_hoplimit && q.hoplimit )
+            qri.hoplimit = *q.hoplimit;
 
         if ( !exclude.query_opcode )
             qs.query_opcode = q.dns.opcode();
@@ -222,8 +222,8 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         const DNSMessage &r(qr->response());
 
         qri.qr_flags |= block_cbor::HAS_RESPONSE;
-        if ( !exclude.response_size )
-            qri.response_size = r.wire_size;
+        if ( !exclude.response_size && r.wire_size )
+            qri.response_size = *r.wire_size;
         // Set from response if not already set.
         if ( !exclude.query_opcode && !qs.query_opcode )
             qs.query_opcode = r.dns.opcode();
