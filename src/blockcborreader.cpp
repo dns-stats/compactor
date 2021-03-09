@@ -486,7 +486,8 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     else
         res.client_address = defaults_.client_address;
     res.client_port = ( qri.client_port ) ? qri.client_port : defaults_.client_port;
-    res.hoplimit = ( qri.hoplimit ) ? qri.hoplimit : defaults_.client_hoplimit;
+    res.client_hoplimit = ( qri.hoplimit ) ? qri.hoplimit : defaults_.client_hoplimit;
+    res.server_hoplimit = defaults_.server_hoplimit;
     if ( sig->server_address )
         res.server_address = get_server_address(*sig->server_address, transport_flags);
     else
@@ -1018,8 +1019,8 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
             output << "\n\tClient port: " << *qr.client_port;
         if ( qr.server_port )
             output << "\n\tServer port: " << *qr.server_port;
-        if ( qr.hoplimit )
-            output << "\n\tHop limit: " << +*qr.hoplimit;
+        if ( qr.client_hoplimit )
+            output << "\n\tHop limit: " << +*qr.client_hoplimit;
         output << "\n\tDNS QR: Query";
         if ( qr.id )
             output << "\n\tID: " << *qr.id;
@@ -1096,8 +1097,9 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
             output << "\n\tClient port: " << *qr.client_port;
         if ( qr.server_port )
             output << "\n\tServer port: " << *qr.server_port;
-        if ( qr.hoplimit )
-            output << "\n\tHop limit: 64\n\tDNS QR: Response";
+        if ( qr.server_hoplimit )
+            output << "\n\tHop limit: " << +*qr.server_hoplimit;
+        output << "\n\tDNS QR: Response";
         if ( qr.id )
             output << "\n\tID: " << *qr.id;
         if ( qr.query_opcode )

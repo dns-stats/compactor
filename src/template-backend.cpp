@@ -466,8 +466,8 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
     if ( qr.query_edns_payload_size )
         dict.SetIntValue("query_edns_udp_payload_size", *qr.query_edns_payload_size);
 
-    if ( qr.hoplimit )
-        dict.SetIntValue("client_hoplimit", *qr.hoplimit);
+    if ( qr.client_hoplimit )
+        dict.SetIntValue("client_hoplimit", *qr.client_hoplimit);
     if ( qr.query_size )
         dict.SetIntValue("query_len", *qr.query_size);
     if ( qr.query_opcode )

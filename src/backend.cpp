@@ -185,7 +185,7 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
         query->serverIP = *qrd.server_address;
         query->clientPort = *qrd.client_port;
         query->serverPort = *qrd.server_port;
-        query->hoplimit = *qrd.hoplimit;
+        query->hoplimit = *qrd.client_hoplimit;
         query->dns.type(CaptureDNS::QRType::QUERY);
         query->dns.id(*qrd.id);
         query->dns.opcode(*qrd.query_opcode);
@@ -234,6 +234,7 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
         response->serverIP = *qrd.server_address;
         response->clientPort = *qrd.client_port;
         response->serverPort = *qrd.server_port;
+        response->hoplimit = *qrd.server_hoplimit;
         response->dns.type(CaptureDNS::QRType::RESPONSE);
         response->dns.id(*qrd.id);
         response->dns.opcode(*qrd.query_opcode);
@@ -515,6 +516,8 @@ void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
         missing.push_back("server-address");
     if ( !opts_.defaults.server_port )
         missing.push_back("server-port");
+    if ( !opts_.defaults.server_hoplimit )
+        missing.push_back("server-hoplimit");
     if ( !opts_.defaults.transport )
         missing.push_back("qr-transport-flags");
 

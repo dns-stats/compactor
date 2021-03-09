@@ -115,17 +115,22 @@ public:
     /**
      * \brief client hop limit.
      */
-    boost::optional<uint8_t> hoplimit;
+    boost::optional<uint8_t> client_hoplimit;
 
     /**
-     * \brief the client address.
+     * \brief the server address.
      */
     boost::optional<IPAddress> server_address;
 
     /**
-     * \brief client port.
+     * \brief server port.
      */
     boost::optional<uint16_t> server_port;
+
+    /**
+     * \brief server hop limit.
+     */
+    boost::optional<uint8_t> server_hoplimit;
 
     /**
      * \brief the transaction ID.

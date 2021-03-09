@@ -103,6 +103,11 @@ public:
     boost::optional<uint16_t> server_port;
 
     /**
+     * \brief default server hoplimit.
+     */
+    boost::optional<uint8_t> server_hoplimit;
+
+    /**
      * \brief default transport flags.
      */
     boost::optional<block_cbor::TransportFlags> transport;

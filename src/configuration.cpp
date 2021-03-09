@@ -1379,6 +1379,7 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
     unsigned client_hoplimit = 0;
     IPAddress server_address;
     uint16_t server_port = 0;
+    unsigned server_hoplimit = 0;
     block_cbor::TransportFlags transport;
     uint16_t transaction_id = 0;
     CaptureDNS::Opcode query_opcode;
@@ -1428,6 +1429,9 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         ("ip-header.server-port",
          po::value(&server_port),
          "server port default.")
+        ("ip-header.server-hoplimit",
+         po::value(&server_hoplimit),
+         "server hoplimit default.")
         ("ip-header.qr-transport-flags",
          po::value(&transport),
          "transport flags default.")
@@ -1493,6 +1497,8 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         this->server_address = server_address;
     if ( res.count("ip-header.server-port") )
         this->server_port = server_port;
+    if ( res.count("ip-header.server-hoplimit") )
+        this->server_hoplimit = server_hoplimit;
     if ( res.count("ip-header.qr-transport-flags") )
         this->transport = transport;
 
