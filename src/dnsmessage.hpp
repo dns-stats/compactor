@@ -58,6 +58,18 @@ struct DNSMessage
                uint8_t hoplimit, TransportType transport_type);
 
     /**
+     * \brief Construct a message received via DNSTAP.
+     *
+     * \param pdu      packet payload data.
+     * \param tstamp   packet timestamp.
+     * \param transport_type the transport type the message was received over.
+     */
+    DNSMessage(const Tins::RawPDU& pdu,
+               const std::chrono::system_clock::time_point& tstamp,
+               TransportType transport_type,
+               TransactionType transaction_type);
+
+    /**
      * \brief Return `true` if this message is IPv6.
      */
     bool is_ipv6() const {

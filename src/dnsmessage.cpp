@@ -49,6 +49,23 @@ DNSMessage::DNSMessage(const Tins::RawPDU& pdu,
     }
 }
 
+DNSMessage::DNSMessage(const Tins::RawPDU& pdu,
+                       const std::chrono::system_clock::time_point& tstamp,
+                       TransportType transport_type,
+                       TransactionType transaction_type)
+    : timestamp(tstamp), transport_type(transport_type),
+      transaction_type(transaction_type), wire_size(pdu.size())
+{
+    try
+    {
+        this->dns = (&pdu)->to<CaptureDNS>();
+    }
+    catch (const Tins::malformed_packet& e)
+    {
+        throw malformed_packet();
+    }
+}
+
 std::ostream& operator<<(std::ostream& output, const DNSMessage& msg)
 {
     std::time_t t = std::chrono::system_clock::to_time_t(msg.timestamp);

@@ -10,6 +10,14 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+#include <chrono>
+
+#include <tins/tins.h>
+
+#include "ipaddress.hpp"
+
+#include "dnstap/dnstap.pb.h"
+
 #include "dnstap.hpp"
 
 /*
@@ -176,5 +184,148 @@ void DnsTap::process_data_frame(uint32_t len)
 
     std::string data = get_buffer(len);
 
-    // TODO: Implement decoding.
+    dnstap::Dnstap dnstap;
+    if ( !dnstap.ParseFromString(data) )
+        throw invalid_dnstap();
+
+    if ( !dnstap.has_type() )
+        throw invalid_dnstap();
+
+    if ( dnstap.type() == dnstap::Dnstap_Type::Dnstap_Type_MESSAGE )
+    {
+        const dnstap::Message& message = dnstap.message();
+        if ( !message.has_type() )
+            throw invalid_dnstap();
+
+        TransactionType transaction_type;
+        TransportType transport_type(TransportType::UDP);
+
+        switch(message.type())
+        {
+        case dnstap::Message_Type::Message_Type_AUTH_QUERY:
+            transaction_type = TransactionType::AUTH_QUERY;
+            break;
+
+        case dnstap::Message_Type::Message_Type_AUTH_RESPONSE:
+            transaction_type = TransactionType::AUTH_RESPONSE;
+            break;
+
+        case dnstap::Message_Type::Message_Type_RESOLVER_QUERY:
+            transaction_type = TransactionType::RESOLVER_QUERY;
+            break;
+
+        case dnstap::Message_Type::Message_Type_RESOLVER_RESPONSE:
+            transaction_type = TransactionType::RESOLVER_RESPONSE;
+            break;
+
+        case dnstap::Message_Type::Message_Type_CLIENT_QUERY:
+            transaction_type = TransactionType::CLIENT_QUERY;
+            break;
+
+        case dnstap::Message_Type::Message_Type_CLIENT_RESPONSE:
+            transaction_type = TransactionType::CLIENT_RESPONSE;
+            break;
+
+        case dnstap::Message_Type::Message_Type_FORWARDER_QUERY:
+            transaction_type = TransactionType::FORWARDER_QUERY;
+            break;
+
+        case dnstap::Message_Type::Message_Type_FORWARDER_RESPONSE:
+            transaction_type = TransactionType::FORWARDER_RESPONSE;
+            break;
+
+        case dnstap::Message_Type::Message_Type_STUB_QUERY:
+            transaction_type = TransactionType::STUB_QUERY;
+            break;
+
+        case dnstap::Message_Type::Message_Type_STUB_RESPONSE:
+            transaction_type = TransactionType::STUB_RESPONSE;
+            break;
+
+        case dnstap::Message_Type::Message_Type_TOOL_QUERY:
+            transaction_type = TransactionType::TOOL_QUERY;
+            break;
+
+        case dnstap::Message_Type::Message_Type_TOOL_RESPONSE:
+            transaction_type = TransactionType::TOOL_RESPONSE;
+            break;
+
+        case dnstap::Message_Type::Message_Type_UPDATE_QUERY:
+            transaction_type = TransactionType::UPDATE_QUERY;
+            break;
+
+        case dnstap::Message_Type::Message_Type_UPDATE_RESPONSE:
+            transaction_type = TransactionType::UPDATE_RESPONSE;
+            break;
+        }
+
+        if ( message.has_socket_protocol() )
+            switch(message.socket_protocol())
+            {
+            case dnstap::SocketProtocol::UDP:
+                transport_type = TransportType::UDP;
+                break;
+
+            case dnstap::SocketProtocol::TCP:
+                transport_type = TransportType::TCP;
+                break;
+
+            case dnstap::SocketProtocol::DOT:
+                transport_type = TransportType::DOT;
+                break;
+
+            case dnstap::SocketProtocol::DOH:
+                transport_type = TransportType::DOH;
+                break;
+            }
+
+        std::unique_ptr<DNSMessage> dns;
+
+        if ( message.has_query_message() )
+        {
+            if ( message.has_query_time_sec() &&
+                 message.has_query_time_nsec() )
+            {
+                std::chrono::seconds s(message.query_time_sec());
+                std::chrono::nanoseconds ns(message.query_time_nsec());
+                std::chrono::system_clock::time_point t(std::chrono::duration_cast<std::chrono::system_clock::duration>(s + ns));
+
+                dns = std::make_unique<DNSMessage>(
+                    Tins::RawPDU(message.query_message()),
+                    t, transport_type, transaction_type);
+            }
+        }
+        else if ( message.has_response_message() )
+        {
+            if ( message.has_response_time_sec() &&
+                 message.has_response_time_nsec() )
+            {
+                std::chrono::seconds s(message.response_time_sec());
+                std::chrono::nanoseconds ns(message.response_time_nsec());
+                std::chrono::system_clock::time_point t(std::chrono::duration_cast<std::chrono::system_clock::duration>(s + ns));
+
+                dns = std::make_unique<DNSMessage>(
+                    Tins::RawPDU(message.response_message()),
+                    t, transport_type, transaction_type);
+            }
+        }
+
+        if ( dns )
+        {
+            if ( message.has_query_address() )
+                dns->clientIP = IPAddress(to_byte_string(message.query_address()));
+            if ( message.has_query_port() )
+                dns->clientPort = message.query_port();
+
+            if ( message.has_response_address() )
+                dns->serverIP = IPAddress(to_byte_string(message.response_address()));
+            if ( message.has_response_port() )
+                dns->serverPort = message.response_port();
+
+            if ( message.has_socket_family() )
+                dns->ipv6 = ( message.socket_family() == dnstap::SocketFamily::INET6 );
+
+            dns_sink_(dns);
+        }
+    }
 }
