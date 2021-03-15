@@ -64,9 +64,8 @@ public:
      *
      * \param stream            DNSTAP data source.
      * \param dns_sink          sink for DNS messages.
-     * \param bi                `true` if bidirectional transmission.
      */
-    DnsTap(std::iostream& stream, DNSSink dns_sink, bool bi = false);
+    DnsTap(std::iostream& stream, DNSSink dns_sink);
 
     /**
      * \brief Process input.

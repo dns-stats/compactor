@@ -97,7 +97,7 @@ namespace {
 
     enum FstrmStates
     {
-        WAIT_READY,
+        WAIT,
         WAIT_START,
         STARTED,
     };
@@ -173,14 +173,14 @@ namespace {
             return TransportType::DOH;
         }
 
-        throw invalid_dnstap("Unknown transport type");
+        throw dnstap_invalid("Unknown transport type");
     }
 }
 
-DnsTap::DnsTap(std::iostream& stream, DNSSink dns_sink, bool bi)
-    : stream_(stream), dns_sink_(dns_sink), bidirectional_(bi)
+DnsTap::DnsTap(std::iostream& stream, DNSSink dns_sink)
+    : stream_(stream), dns_sink_(dns_sink),
+      bidirectional_(false), state_(WAIT)
 {
-    state_ = bi ? WAIT_READY : WAIT_START;
     stream_.exceptions(std::ios::failbit | std::ios::badbit);
 }
 
@@ -206,22 +206,28 @@ bool DnsTap::process_control_frame(uint32_t f)
 
     switch(state_)
     {
-    case WAIT_READY:
-        if ( f != READY )
-            throw invalid_dnstap("READY expected");
-        send_control(make_accept());
-        state_ = WAIT_START;
+    case WAIT:
+        if ( f != READY && f != START )
+            throw dnstap_invalid("READY or START expected");
+        if ( f == READY )
+        {
+            bidirectional_ = true;
+            send_control(make_accept());
+            state_ = WAIT_START;
+        }
+        else
+            state_ = STARTED;
         break;
 
     case WAIT_START:
         if ( f != START )
-            throw invalid_dnstap("START expected");
+            throw dnstap_invalid("START expected");
         state_ = STARTED;
         break;
 
     case STARTED:
         if ( f != STOP )
-            throw invalid_dnstap("STOP expected");
+            throw dnstap_invalid("STOP expected");
         if ( bidirectional_ )
             send_control(make_finish(), true);
         res = false;

@@ -585,10 +585,11 @@ static int run_configuration(const po::variables_map& vm,
                 {
                     al::stream_protocol::iostream stream;
                     acceptor.accept(*stream.rdbuf());
-                    DnsTap dnstap(stream, dnstap_sink, true);
+                    DnsTap dnstap(stream, dnstap_sink);
                     dnstap.process_stream();
+                    if ( signal_handler_signal )
+                        break;
                 }
-                std::remove(config.dnstap_socket.c_str());
             }
             else
             {
