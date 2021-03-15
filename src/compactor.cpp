@@ -655,6 +655,14 @@ static int run_configuration(const po::variables_map& vm,
             std::cerr << "Error " << err.code() << ": " << err.what() << std::endl;
         res = 3;
     }
+    catch (const boost::system::system_error& err)
+    {
+        if ( log_errs )
+            LOG_ERROR << "Error " << err.code() << ": " << err.what();
+        else
+            std::cerr << "Error " << err.code() << ": " << err.what() << std::endl;
+        res = 3;
+    }
 
     switch(signal_handler_signal)
     {
