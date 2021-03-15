@@ -21,12 +21,12 @@
 #include "dnsmessage.hpp"
 
 /**
- * \exception invalid_dnstap
+ * \exception dnstap_invalid
  * \brief Signals uncompliant DNSTAP input.
  *
  * Signals that the input is not conformant DNSTAP.
  */
-class invalid_dnstap : public std::runtime_error
+class dnstap_invalid : public std::runtime_error
 {
 public:
     /**
@@ -34,7 +34,7 @@ public:
      *
      * \param what message describing the problem.
      */
-    explicit invalid_dnstap(const std::string& what)
+    explicit dnstap_invalid(const std::string& what)
         : std::runtime_error(what){};
 
     /**
@@ -42,7 +42,7 @@ public:
      *
      * \param what message describing the problem.
      */
-    explicit invalid_dnstap(const char* what)
+    explicit dnstap_invalid(const char* what)
         : std::runtime_error(what){};
 };
 

@@ -153,7 +153,7 @@ namespace {
             return TransactionType::UPDATE_RESPONSE;
         }
 
-        throw invalid_dnstap("Unknown message type");
+        throw dnstap_invalid("Unknown message type");
     }
 
     TransportType convert_transport_type(::dnstap::SocketProtocol p)
@@ -239,7 +239,7 @@ bool DnsTap::process_control_frame(uint32_t f)
 void DnsTap::process_data_frame(std::unique_ptr<DNSMessage> msg)
 {
     if ( state_ != STARTED )
-        throw invalid_dnstap("Data when not started");
+        throw dnstap_invalid("Data when not started");
 
     if ( msg )
         dns_sink_(msg);
@@ -250,7 +250,7 @@ uint32_t DnsTap::read_control_frame()
     uint32_t control_len = get_value();
 
     if ( control_len < 4 || control_len > FSTRM_CONTROL_LENGTH_MAX )
-        throw invalid_dnstap("bad control length");
+        throw dnstap_invalid("bad control length");
 
     uint32_t control_type = get_value();
     control_len -= 4;
@@ -259,7 +259,7 @@ uint32_t DnsTap::read_control_frame()
     if ( control_type == READY || control_type == START )
     {
         if ( control_len < 4 )
-            throw invalid_dnstap("Invalid control length");
+            throw dnstap_invalid("Invalid control length");
 
         uint32_t field_type = get_value();
         uint32_t field_len = get_value();
@@ -268,12 +268,12 @@ uint32_t DnsTap::read_control_frame()
         if ( field_type != CONTENT_TYPE ||
              field_len > FSTRM_CONTENT_TYPE_LENGTH_MAX ||
              control_len != field_len )
-            throw invalid_dnstap("Bad field type or length");
+            throw dnstap_invalid("Bad field type or length");
 
         std::string content_type = get_buffer(field_len);
 
         if ( content_type != CONTENT_TYPE_DNSTAP )
-            throw invalid_dnstap("unknown field");
+            throw dnstap_invalid("unknown field");
     }
 
     return control_type;
@@ -285,10 +285,10 @@ std::unique_ptr<DNSMessage> DnsTap::read_data_frame(uint32_t len)
 
     dnstap::Dnstap dnstap;
     if ( !dnstap.ParseFromString(data) )
-        throw invalid_dnstap("Data parse failed");
+        throw dnstap_invalid("Data parse failed");
 
     if ( !dnstap.has_type() )
-        throw invalid_dnstap("Data has no type");
+        throw dnstap_invalid("Data has no type");
 
     std::unique_ptr<DNSMessage> dns;
 
@@ -297,11 +297,11 @@ std::unique_ptr<DNSMessage> DnsTap::read_data_frame(uint32_t len)
         const dnstap::Message& message = dnstap.message();
 
         if ( !message.has_type() )
-            throw invalid_dnstap("Message has no type");
+            throw dnstap_invalid("Message has no type");
         TransactionType transaction_type = convert_message_type(message.type());
 
         if ( !message.has_socket_protocol() )
-            throw invalid_dnstap("Message has no protocol");
+            throw dnstap_invalid("Message has no protocol");
         TransportType transport_type = convert_transport_type(message.socket_protocol());
 
         if ( message.has_query_message() )
@@ -355,18 +355,15 @@ std::unique_ptr<DNSMessage> DnsTap::read_data_frame(uint32_t len)
 
 void DnsTap::send_control(const std::string& msg, bool ignore_err)
 {
-    if ( ignore_err )
+    try
     {
-        try
-        {
-            stream_.write(msg.c_str(), msg.size());
-        }
-        catch (std::ios::failure&)
-        {
-        }
-    }
-    else
         stream_.write(msg.c_str(), msg.size());
+    }
+    catch (std::iostream::failure&)
+    {
+        if ( !ignore_err )
+            throw;
+    }
 }
 
 uint32_t DnsTap::get_value()

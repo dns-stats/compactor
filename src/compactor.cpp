@@ -640,7 +640,7 @@ static int run_configuration(const po::variables_map& vm,
             std::cerr << "Invalid PCAP filter: " << err.what() << std::endl;
         res = 3;
     }
-    catch (const invalid_dnstap& err)
+    catch (const dnstap_invalid& err)
     {
         if ( log_errs )
             LOG_ERROR << "Invalid DNSTAP:" << err.what();
