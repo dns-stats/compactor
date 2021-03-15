@@ -23,7 +23,9 @@
 /*
  * I am indebted to NLnet Labs and the Unbound source code
  * for a cogent description of the workings of Frame Streams.
- * I reporoduce it here:
+ * I reprooduce it here:
+ *
+ * ==========
  *
  * Quick writeup for DNSTAP usage, from reading fstrm/control.h eloquent
  * comments and fstrm/control.c for some bytesize details (the content type
@@ -69,6 +71,13 @@
  * .. data frames
  * client sends STOP.
  * client waits for FINISH frame.
+ *
+ * ==========
+ *
+ * In fact, it appears that when Unbound sends STOP, it does not hang
+ * around waiting for FINISH but closes the socket immediately.
+ *
+ * Unidirectional transmission is START, data, STOP.
  */
 
 namespace {
@@ -86,14 +95,93 @@ namespace {
         CONTENT_TYPE = 1,
     };
 
+    enum FstrmStates
+    {
+        WAIT_READY,
+        WAIT_START,
+        STARTED,
+    };
+
     const unsigned FSTRM_CONTROL_LENGTH_MAX= 512;
     const unsigned FSTRM_CONTENT_TYPE_LENGTH_MAX= 256;
     const std::string CONTENT_TYPE_DNSTAP("protobuf:dnstap.Dnstap");
+
+    TransactionType convert_message_type(::dnstap::Message_Type t)
+    {
+        switch(t)
+        {
+        case dnstap::Message_Type::Message_Type_AUTH_QUERY:
+            return TransactionType::AUTH_QUERY;
+
+        case dnstap::Message_Type::Message_Type_AUTH_RESPONSE:
+            return TransactionType::AUTH_RESPONSE;
+
+        case dnstap::Message_Type::Message_Type_RESOLVER_QUERY:
+            return TransactionType::RESOLVER_QUERY;
+
+        case dnstap::Message_Type::Message_Type_RESOLVER_RESPONSE:
+            return TransactionType::RESOLVER_RESPONSE;
+
+        case dnstap::Message_Type::Message_Type_CLIENT_QUERY:
+            return TransactionType::CLIENT_QUERY;
+
+        case dnstap::Message_Type::Message_Type_CLIENT_RESPONSE:
+            return TransactionType::CLIENT_RESPONSE;
+
+        case dnstap::Message_Type::Message_Type_FORWARDER_QUERY:
+            return TransactionType::FORWARDER_QUERY;
+
+        case dnstap::Message_Type::Message_Type_FORWARDER_RESPONSE:
+            return TransactionType::FORWARDER_RESPONSE;
+
+        case dnstap::Message_Type::Message_Type_STUB_QUERY:
+            return TransactionType::STUB_QUERY;
+
+        case dnstap::Message_Type::Message_Type_STUB_RESPONSE:
+            return TransactionType::STUB_RESPONSE;
+
+        case dnstap::Message_Type::Message_Type_TOOL_QUERY:
+            return TransactionType::TOOL_QUERY;
+
+        case dnstap::Message_Type::Message_Type_TOOL_RESPONSE:
+            return TransactionType::TOOL_RESPONSE;
+
+        case dnstap::Message_Type::Message_Type_UPDATE_QUERY:
+            return TransactionType::UPDATE_QUERY;
+
+        case dnstap::Message_Type::Message_Type_UPDATE_RESPONSE:
+            return TransactionType::UPDATE_RESPONSE;
+        }
+
+        throw invalid_dnstap("Unknown message type");
+    }
+
+    TransportType convert_transport_type(::dnstap::SocketProtocol p)
+    {
+        switch(p)
+        {
+        case dnstap::SocketProtocol::UDP:
+            return TransportType::UDP;
+
+        case dnstap::SocketProtocol::TCP:
+            return TransportType::TCP;
+
+        case dnstap::SocketProtocol::DOT:
+            return TransportType::DOT;
+
+        case dnstap::SocketProtocol::DOH:
+            return TransportType::DOH;
+        }
+
+        throw invalid_dnstap("Unknown transport type");
+    }
 }
 
-DnsTap::DnsTap(std::fstream& stream, DNSSink dns_sink)
-    : stream_(stream), dns_sink_(dns_sink), started_(false)
+DnsTap::DnsTap(std::iostream& stream, DNSSink dns_sink, bool bi)
+    : stream_(stream), dns_sink_(dns_sink), bidirectional_(bi)
 {
+    state_ = bi ? WAIT_READY : WAIT_START;
+    stream_.exceptions(std::ios::failbit | std::ios::badbit);
 }
 
 void DnsTap::process_stream()
@@ -104,50 +192,68 @@ void DnsTap::process_stream()
 
         if ( len == 0 )
         {
-            if ( !process_control_frame() )
-                break;  // Received FINISH.
+            if ( !process_control_frame(read_control_frame()) )
+                break;  // Received STOP.
         }
         else
-            process_data_frame(len);
+            process_data_frame(read_data_frame(len));
     }
 }
 
-uint32_t DnsTap::get_value()
+bool DnsTap::process_control_frame(uint32_t f)
 {
-    char buf[4];
+    bool res = true;
 
-    if ( !stream_.read(buf, sizeof(buf)) )
-         throw invalid_dnstap();
+    switch(state_)
+    {
+    case WAIT_READY:
+        if ( f != READY )
+            throw invalid_dnstap("READY expected");
+        send_control(make_accept());
+        state_ = WAIT_START;
+        break;
 
-    return
-        static_cast<uint8_t>(buf[0]) << 24 |
-        static_cast<uint8_t>(buf[1]) << 16 |
-        static_cast<uint8_t>(buf[2]) << 8 |
-        static_cast<uint8_t>(buf[3]);
-}
+    case WAIT_START:
+        if ( f != START )
+            throw invalid_dnstap("START expected");
+        state_ = STARTED;
+        break;
 
-std::string DnsTap::get_buffer(uint32_t len)
-{
-    std::string res(len, '\0');
-    if ( !stream_.read(&res[0], len) )
-        throw invalid_dnstap();
+    case STARTED:
+        if ( f != STOP )
+            throw invalid_dnstap("STOP expected");
+        if ( bidirectional_ )
+            send_control(make_finish(), true);
+        res = false;
+        break;
+    }
     return res;
 }
 
-bool DnsTap::process_control_frame()
+void DnsTap::process_data_frame(std::unique_ptr<DNSMessage> msg)
+{
+    if ( state_ != STARTED )
+        throw invalid_dnstap("Data when not started");
+
+    if ( msg )
+        dns_sink_(msg);
+}
+
+uint32_t DnsTap::read_control_frame()
 {
     uint32_t control_len = get_value();
 
     if ( control_len < 4 || control_len > FSTRM_CONTROL_LENGTH_MAX )
-        throw invalid_dnstap();
+        throw invalid_dnstap("bad control length");
 
     uint32_t control_type = get_value();
     control_len -= 4;
 
+    // Read and check content type.
     if ( control_type == READY || control_type == START )
     {
-        if ( started_ || control_len < 4 )
-            throw invalid_dnstap();
+        if ( control_len < 4 )
+            throw invalid_dnstap("Invalid control length");
 
         uint32_t field_type = get_value();
         uint32_t field_len = get_value();
@@ -156,130 +262,41 @@ bool DnsTap::process_control_frame()
         if ( field_type != CONTENT_TYPE ||
              field_len > FSTRM_CONTENT_TYPE_LENGTH_MAX ||
              control_len != field_len )
-            throw invalid_dnstap();
+            throw invalid_dnstap("Bad field type or length");
 
         std::string content_type = get_buffer(field_len);
+
         if ( content_type != CONTENT_TYPE_DNSTAP )
-            throw invalid_dnstap();
-
-        if ( control_type == START )
-            started_ = true;
+            throw invalid_dnstap("unknown field");
     }
-    else if ( control_type == STOP )
-    {
-        if ( !started_ )
-            throw invalid_dnstap();
-        return false;
-    }
-    else
-        throw invalid_dnstap();
 
-    return true;
+    return control_type;
 }
 
-void DnsTap::process_data_frame(uint32_t len)
+std::unique_ptr<DNSMessage> DnsTap::read_data_frame(uint32_t len)
 {
-    if ( !started_ )
-        throw invalid_dnstap();
-
     std::string data = get_buffer(len);
 
     dnstap::Dnstap dnstap;
     if ( !dnstap.ParseFromString(data) )
-        throw invalid_dnstap();
+        throw invalid_dnstap("Data parse failed");
 
     if ( !dnstap.has_type() )
-        throw invalid_dnstap();
+        throw invalid_dnstap("Data has no type");
+
+    std::unique_ptr<DNSMessage> dns;
 
     if ( dnstap.type() == dnstap::Dnstap_Type::Dnstap_Type_MESSAGE )
     {
         const dnstap::Message& message = dnstap.message();
+
         if ( !message.has_type() )
-            throw invalid_dnstap();
+            throw invalid_dnstap("Message has no type");
+        TransactionType transaction_type = convert_message_type(message.type());
 
-        TransactionType transaction_type;
-        TransportType transport_type(TransportType::UDP);
-
-        switch(message.type())
-        {
-        case dnstap::Message_Type::Message_Type_AUTH_QUERY:
-            transaction_type = TransactionType::AUTH_QUERY;
-            break;
-
-        case dnstap::Message_Type::Message_Type_AUTH_RESPONSE:
-            transaction_type = TransactionType::AUTH_RESPONSE;
-            break;
-
-        case dnstap::Message_Type::Message_Type_RESOLVER_QUERY:
-            transaction_type = TransactionType::RESOLVER_QUERY;
-            break;
-
-        case dnstap::Message_Type::Message_Type_RESOLVER_RESPONSE:
-            transaction_type = TransactionType::RESOLVER_RESPONSE;
-            break;
-
-        case dnstap::Message_Type::Message_Type_CLIENT_QUERY:
-            transaction_type = TransactionType::CLIENT_QUERY;
-            break;
-
-        case dnstap::Message_Type::Message_Type_CLIENT_RESPONSE:
-            transaction_type = TransactionType::CLIENT_RESPONSE;
-            break;
-
-        case dnstap::Message_Type::Message_Type_FORWARDER_QUERY:
-            transaction_type = TransactionType::FORWARDER_QUERY;
-            break;
-
-        case dnstap::Message_Type::Message_Type_FORWARDER_RESPONSE:
-            transaction_type = TransactionType::FORWARDER_RESPONSE;
-            break;
-
-        case dnstap::Message_Type::Message_Type_STUB_QUERY:
-            transaction_type = TransactionType::STUB_QUERY;
-            break;
-
-        case dnstap::Message_Type::Message_Type_STUB_RESPONSE:
-            transaction_type = TransactionType::STUB_RESPONSE;
-            break;
-
-        case dnstap::Message_Type::Message_Type_TOOL_QUERY:
-            transaction_type = TransactionType::TOOL_QUERY;
-            break;
-
-        case dnstap::Message_Type::Message_Type_TOOL_RESPONSE:
-            transaction_type = TransactionType::TOOL_RESPONSE;
-            break;
-
-        case dnstap::Message_Type::Message_Type_UPDATE_QUERY:
-            transaction_type = TransactionType::UPDATE_QUERY;
-            break;
-
-        case dnstap::Message_Type::Message_Type_UPDATE_RESPONSE:
-            transaction_type = TransactionType::UPDATE_RESPONSE;
-            break;
-        }
-
-        if ( message.has_socket_protocol() )
-            switch(message.socket_protocol())
-            {
-            case dnstap::SocketProtocol::UDP:
-                transport_type = TransportType::UDP;
-                break;
-
-            case dnstap::SocketProtocol::TCP:
-                transport_type = TransportType::TCP;
-                break;
-
-            case dnstap::SocketProtocol::DOT:
-                transport_type = TransportType::DOT;
-                break;
-
-            case dnstap::SocketProtocol::DOH:
-                transport_type = TransportType::DOH;
-                break;
-            }
-
-        std::unique_ptr<DNSMessage> dns;
+        if ( !message.has_socket_protocol() )
+            throw invalid_dnstap("Message has no protocol");
+        TransportType transport_type = convert_transport_type(message.socket_protocol());
 
         if ( message.has_query_message() )
         {
@@ -324,8 +341,72 @@ void DnsTap::process_data_frame(uint32_t len)
 
             if ( message.has_socket_family() )
                 dns->ipv6 = ( message.socket_family() == dnstap::SocketFamily::INET6 );
-
-            dns_sink_(dns);
         }
     }
+
+    return dns;
+}
+
+void DnsTap::send_control(const std::string& msg, bool ignore_err)
+{
+    if ( ignore_err )
+    {
+        try
+        {
+            stream_.write(msg.c_str(), msg.size());
+        }
+        catch (std::ios::failure&)
+        {
+        }
+    }
+    else
+        stream_.write(msg.c_str(), msg.size());
+}
+
+uint32_t DnsTap::get_value()
+{
+    char buf[4];
+
+    stream_.read(buf, sizeof(buf));
+
+    return
+        static_cast<uint8_t>(buf[0]) << 24 |
+        static_cast<uint8_t>(buf[1]) << 16 |
+        static_cast<uint8_t>(buf[2]) << 8 |
+        static_cast<uint8_t>(buf[3]);
+}
+
+std::string DnsTap::get_buffer(uint32_t len)
+{
+    std::string res(len, '\0');
+    stream_.read(&res[0], len);
+    return res;
+}
+
+std::string DnsTap::make_accept()
+{
+    std::string msg(4 +    // Initial zero
+                    4 +    // Control frame length
+                    4 +    // Control type
+                    4 +    // Content field type
+                    4,     // Content field length
+                    '\0'); // Initialised to 0.
+    msg[7] = msg.size() + CONTENT_TYPE_DNSTAP.size() - 8;
+    msg[11] = ACCEPT;
+    msg[15] = CONTENT_TYPE;
+    msg[19] = CONTENT_TYPE_DNSTAP.size();
+    msg += CONTENT_TYPE_DNSTAP;
+    return msg;
+}
+
+
+std::string DnsTap::make_finish()
+{
+    std::string msg(4 +    // Initial zero
+                    4 +    // Control frame length
+                    4,     // Control type
+                    '\0'); // Initialised to 0.
+    msg[7] = msg.size() - 8;
+    msg[11] = FINISH;
+    return msg;
 }

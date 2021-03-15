@@ -753,6 +753,11 @@ public:
     bool dnstap;
 
     /**
+     * \brief DNSTAP Unix socket.
+     */
+    std::string dnstap_socket;
+
+    /**
      * \brief the server network addresses.
      *
      * Optional addresses for the server interfaces. Stored in C-DNS but

@@ -10,6 +10,7 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+#include <algorithm>
 #include <chrono>
 #include <csignal>
 #include <exception>
@@ -17,6 +18,7 @@
 #include <memory>
 #include <thread>
 
+#include <boost/asio.hpp>
 #include <boost/variant.hpp>
 
 #include <google/protobuf/stubs/common.h>
@@ -45,6 +47,7 @@
 
 const std::string PROGNAME = "compactor";
 
+namespace al = boost::asio::local;
 namespace po = boost::program_options;
 namespace cno = std::chrono;
 
@@ -551,20 +554,47 @@ static int run_configuration(const po::variables_map& vm,
     matcher.set_query_timeout(config.query_timeout);
     matcher.set_skew_timeout(config.skew_timeout);
 
-    // We assume that network capture is typically a daemon process, and
-    // log errors. File conversion, on the other hand, is typically a
-    // manual process, and so errors go to stderr.
+    // We assume that network or DNSTAP capture is typically a daemon
+    // process, and log errors. File conversion, on the other hand,
+    // is typically a manual process, and so errors go to stderr.
     bool log_errs = ( !vm.count("capture-file") );
     int res = 0;
+
+    auto dnstap_sink =
+        [&](std::unique_ptr<DNSMessage>& dns)
+        {
+            if ( config.debug_dns )
+                std::cout << *dns;
+            matcher.add(std::move(dns));
+        };
 
     try
     {
         if ( !vm.count("capture-file") )
         {
-            LOG_INFO << "Starting network capture";
-            NetworkSniffers sniffer(config.network_interfaces, sniff_config);
+            if ( vm.count("dnstap-socket") )
+            {
+                LOG_INFO << "Starting DNSTAP capture";
 
-            sniff_loop(&sniffer, matcher, output, config, stats);
+                boost::asio::io_service service;
+                al::stream_protocol::endpoint endpoint(config.dnstap_socket);
+                al::stream_protocol::acceptor acceptor(service, endpoint);
+
+                for (;;)
+                {
+                    al::stream_protocol::iostream stream;
+                    acceptor.accept(*stream.rdbuf());
+                    DnsTap dnstap(stream, dnstap_sink, true);
+                    dnstap.process_stream();
+                }
+            }
+            else
+            {
+                LOG_INFO << "Starting network capture";
+                NetworkSniffers sniffer(config.network_interfaces, sniff_config);
+
+                sniff_loop(&sniffer, matcher, output, config, stats);
+            }
         }
         else
         {
@@ -572,18 +602,10 @@ static int run_configuration(const po::variables_map& vm,
             {
                 if ( vm.count("dnstap") )
                 {
-                    auto dns_sink =
-                        [&](std::unique_ptr<DNSMessage>& dns)
-                        {
-                            if ( config.debug_dns )
-                                std::cout << *dns;
-                            matcher.add(std::move(dns));
-                        };
-
                     std::fstream stream(fname, std::ios::binary | std::ios::in);
                     if ( stream.is_open() )
                     {
-                        DnsTap dnstap(stream, dns_sink);
+                        DnsTap dnstap(stream, dnstap_sink);
                         dnstap.process_stream();
                     }
                     else
@@ -613,6 +635,22 @@ static int run_configuration(const po::variables_map& vm,
             LOG_ERROR << "Invalid PCAP filter:" << err.what();
         else
             std::cerr << "Invalid PCAP filter: " << err.what() << std::endl;
+        res = 3;
+    }
+    catch (const invalid_dnstap& err)
+    {
+        if ( log_errs )
+            LOG_ERROR << "Invalid DNSTAP:" << err.what();
+        else
+            std::cerr << "Invalid DNSTAP: " << err.what() << std::endl;
+        res = 3;
+    }
+    catch (const std::system_error& err)
+    {
+        if ( log_errs )
+            LOG_ERROR << "Error " << err.code() << ": " << err.what();
+        else
+            std::cerr << "Error " << err.code() << ": " << err.what() << std::endl;
         res = 3;
     }
 
@@ -699,11 +737,14 @@ int main(int ac, char *av[])
             return 0;
         }
 
-        if ( !vm.count("interface") && !vm.count("capture-file") )
+        if ( !!vm.count("interface") +
+             !!vm.count("dnstap-socket") +
+             !!vm.count("capture-file") != 1 )
         {
             std::cerr
-                << "Error:\tSpecify either an interface to capture from, "
-                << "or some capture files\n\tto replay. Run '"
+                << "Error:\tSpecify EITHER an interface to capture from, "
+                << "OR a DNSTAP socket,\n\t"
+                << "OR some capture files to replay. Run '"
                 << PROGNAME << " -h' for help.\n";
             return 1;
         }

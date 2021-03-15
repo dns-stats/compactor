@@ -15,14 +15,14 @@
 
 #include <cstdint>
 #include <exception>
-#include <fstream>
+#include <iostream>
 #include <string>
 
 #include "dnsmessage.hpp"
 
 /**
  * \exception invalid_dnstap
- * \brief Signals incompliant DNSTAP input.
+ * \brief Signals uncompliant DNSTAP input.
  *
  * Signals that the input is not conformant DNSTAP.
  */
@@ -30,10 +30,20 @@ class invalid_dnstap : public std::runtime_error
 {
 public:
     /**
-     * \brief Default construtor.
+     * \brief Constructor.
+     *
+     * \param what message describing the problem.
      */
-    invalid_dnstap()
-        : std::runtime_error("Invalid DNSTAP"){};
+    explicit invalid_dnstap(const std::string& what)
+        : std::runtime_error(what){};
+
+    /**
+     * \brief Constructor.
+     *
+     * \param what message describing the problem.
+     */
+    explicit invalid_dnstap(const char* what)
+        : std::runtime_error(what){};
 };
 
 /**
@@ -54,8 +64,9 @@ public:
      *
      * \param stream            DNSTAP data source.
      * \param dns_sink          sink for DNS messages.
+     * \param bi                `true` if bidirectional transmission.
      */
-    DnsTap(std::fstream& stream, DNSSink dns_sink);
+    DnsTap(std::iostream& stream, DNSSink dns_sink, bool bi = false);
 
     /**
      * \brief Process input.
@@ -66,34 +77,76 @@ public:
 
 protected:
     /**
+     * \brief process control frame.
+     *
+     * \param t the control frame type.
+     *
+     * \returns `false` if FINISH read.
+     */
+    bool process_control_frame(uint32_t t);
+
+    /**
+     * \brief process data frame contents.
+     *
+     * \param msg DNS message.
+     */
+    void process_data_frame(std::unique_ptr<DNSMessage> msg);
+
+    /**
+     * \brief read a control frame and return its type.
+     *
+     * \returns control frame type.
+     */
+    uint32_t read_control_frame();
+
+    /**
+     * \brief read DNS message from data frame.
+     *
+     * \param len length of data.
+     */
+    std::unique_ptr<DNSMessage> read_data_frame(uint32_t len);
+
+    /**
+     * \brief send a control message
+     *
+     * \param msg        the message.
+     * \param ignore_err ignore any send errors.
+     */
+    void send_control(const std::string& msg, bool ignore_err = false);
+
+    /**
      * \brief receive 4 byte bigendian value.
+     *
+     * \returns the value.
      */
     uint32_t get_value();
 
     /**
      * \brief receive buffer of given size.
+     *
+     * \returns the data buffer.
      */
     std::string get_buffer(uint32_t len);
 
     /**
-     * \brief read and process control frame.
+     * \brief make an ACCEPT frame.
      *
-     * \returns `false` if FINISH read.
+     * \returns the ACCEPT frame.
      */
-    bool process_control_frame();
+    static std::string make_accept();
 
     /**
-     * \brief read and process data frame.
+     * \brief make a FINISH frame.
      *
-     * \param len       data frame length.
+     * \returns the FINISH frame.
      */
-    void process_data_frame(uint32_t len);
+    static std::string make_finish();
 
 private:
     /**
      * \brief stream for DNSTAP data.
      */
-    std::fstream& stream_;
+    std::iostream& stream_;
 
     /**
      * \brief sink function for read DNS messages.
@@ -101,9 +154,14 @@ private:
     DNSSink dns_sink_;
 
     /**
-     * \brief have we seen a START frame?
+     * \brief use bidirectional transmission?
      */
-    bool started_;
+    bool bidirectional_;
+
+    /**
+     * \brief frame processing state
+     */
+    int state_;
 };
 
 #endif
