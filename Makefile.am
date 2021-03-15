@@ -327,6 +327,7 @@ compactor_tests_SOURCES = \
         tests/blockcbor_test.cpp \
         tests/blockcbordata_test.cpp \
         tests/dnsmessage_test.cpp \
+        tests/dnstap_test.cpp \
         tests/ipaddress_test.cpp \
         tests/matcher_test.cpp \
         tests/matcher_internal_test.cpp \
