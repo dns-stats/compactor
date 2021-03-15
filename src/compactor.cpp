@@ -576,6 +576,7 @@ static int run_configuration(const po::variables_map& vm,
             {
                 LOG_INFO << "Starting DNSTAP capture";
 
+                std::remove(config.dnstap_socket.c_str());
                 boost::asio::io_service service;
                 al::stream_protocol::endpoint endpoint(config.dnstap_socket);
                 al::stream_protocol::acceptor acceptor(service, endpoint);
@@ -587,6 +588,7 @@ static int run_configuration(const po::variables_map& vm,
                     DnsTap dnstap(stream, dnstap_sink, true);
                     dnstap.process_stream();
                 }
+                std::remove(config.dnstap_socket.c_str());
             }
             else
             {
