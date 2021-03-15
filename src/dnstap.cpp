@@ -181,11 +181,14 @@ DnsTap::DnsTap(std::iostream& stream, DNSSink dns_sink)
     : stream_(stream), dns_sink_(dns_sink),
       bidirectional_(false), state_(WAIT)
 {
-    stream_.exceptions(std::ios::failbit | std::ios::badbit);
 }
 
 void DnsTap::process_stream()
 {
+    // Throw exceptions from our code.
+    auto ex_mask = stream_.exceptions();
+    stream_.exceptions(std::ios::failbit | std::ios::badbit);
+
     for(;;)
     {
         uint32_t len = get_value();
@@ -198,6 +201,10 @@ void DnsTap::process_stream()
         else
             process_data_frame(read_data_frame(len));
     }
+
+    // Reset back to no exceptions so as not to surprise
+    // outside code when closing and cleaning up.
+    stream_.exceptions(ex_mask);
 }
 
 bool DnsTap::process_control_frame(uint32_t f)
@@ -355,14 +362,16 @@ std::unique_ptr<DNSMessage> DnsTap::read_data_frame(uint32_t len)
 
 void DnsTap::send_control(const std::string& msg, bool ignore_err)
 {
-    try
+    auto ex_mask = stream_.exceptions();
+    if ( ignore_err )
+        stream_.exceptions(std::ios::goodbit);
+    stream_.write(msg.c_str(), msg.size());
+    if ( ignore_err )
     {
-        stream_.write(msg.c_str(), msg.size());
-    }
-    catch (std::iostream::failure&)
-    {
-        if ( !ignore_err )
-            throw;
+        // Make sure we clear error bits before turning exceptions back on,
+        // or we'll throw immediately.
+        stream_.clear();
+        stream_.exceptions(ex_mask);
     }
 }
 
