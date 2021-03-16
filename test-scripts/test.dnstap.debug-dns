@@ -1,0 +1,170 @@
+2021-03-02 16h21m42s0us UTC
+	Client IP: 10.0.2.40
+	Transport: UDP
+	Client port: 48120
+	Transaction type: Auth query
+	DNS QR: Query
+	ID: 57092
+	Opcode: 0
+	Rcode: 0
+	Flags: CD 
+	QdCount: 1
+	AnCount: 0
+	NsCount: 0
+	ArCount: 1
+	Name: fred.ipv4.sinodun.com
+	Type: 2
+	Class: 1
+2021-03-02 16h21m42s0us UTC
+	Client IP: 10.0.2.40
+	Transport: UDP
+	Client port: 59215
+	Transaction type: Auth query
+	DNS QR: Query
+	ID: 14358
+	Opcode: 0
+	Rcode: 0
+	Flags: CD 
+	QdCount: 1
+	AnCount: 0
+	NsCount: 0
+	ArCount: 1
+	Name: fred.ipv4.sinodun.com
+	Type: 1
+	Class: 1
+2021-03-02 16h21m42s0us UTC
+	Client IP: 10.0.2.40
+	Transport: UDP
+	Client port: 48120
+	Transaction type: Auth response
+	DNS QR: Response
+	ID: 57092
+	Opcode: 0
+	Rcode: 3
+	Flags: AA 
+	QdCount: 1
+	AnCount: 0
+	NsCount: 1
+	ArCount: 1
+	Name: fred.ipv4.sinodun.com
+	Type: 2
+	Class: 1
+2021-03-02 16h21m42s0us UTC
+	Client IP: 10.0.2.40
+	Transport: UDP
+	Client port: 59215
+	Transaction type: Auth response
+	DNS QR: Response
+	ID: 14358
+	Opcode: 0
+	Rcode: 3
+	Flags: AA 
+	QdCount: 1
+	AnCount: 0
+	NsCount: 1
+	ArCount: 1
+	Name: fred.ipv4.sinodun.com
+	Type: 1
+	Class: 1
+2021-03-02 16h22m55s0us UTC
+	Client IP: 127.0.0.1
+	Transport: UDP
+	Client port: 53629
+	Transaction type: Auth query
+	DNS QR: Query
+	ID: 46527
+	Opcode: 0
+	Rcode: 0
+	Flags: RD AD 
+	QdCount: 1
+	AnCount: 0
+	NsCount: 0
+	ArCount: 1
+	Name: xyzzy.ipv4.sinodun.com
+	Type: 1
+	Class: 1
+2021-03-02 16h22m55s0us UTC
+	Client IP: 127.0.0.1
+	Transport: UDP
+	Client port: 53629
+	Transaction type: Auth response
+	DNS QR: Response
+	ID: 46527
+	Opcode: 0
+	Rcode: 3
+	Flags: AA RD 
+	QdCount: 1
+	AnCount: 0
+	NsCount: 1
+	ArCount: 1
+	Name: xyzzy.ipv4.sinodun.com
+	Type: 1
+	Class: 1
+2021-03-02 16h23m09s0us UTC
+	Client IP: 127.0.0.1
+	Transport: UDP
+	Client port: 56882
+	Transaction type: Auth query
+	DNS QR: Query
+	ID: 6794
+	Opcode: 0
+	Rcode: 0
+	Flags: RD AD 
+	QdCount: 1
+	AnCount: 0
+	NsCount: 0
+	ArCount: 1
+	Name: jim-dev-linux.ipv4.sinodun.com
+	Type: 1
+	Class: 1
+2021-03-02 16h23m09s0us UTC
+	Client IP: 127.0.0.1
+	Transport: UDP
+	Client port: 56882
+	Transaction type: Auth response
+	DNS QR: Response
+	ID: 6794
+	Opcode: 0
+	Rcode: 0
+	Flags: AA RD 
+	QdCount: 1
+	AnCount: 1
+	NsCount: 0
+	ArCount: 1
+	Name: jim-dev-linux.ipv4.sinodun.com
+	Type: 1
+	Class: 1
+2021-03-02 16h23m17s0us UTC
+	Client IP: 127.0.0.1
+	Transport: UDP
+	Client port: 42483
+	Transaction type: Auth query
+	DNS QR: Query
+	ID: 25884
+	Opcode: 0
+	Rcode: 0
+	Flags: RD AD 
+	QdCount: 1
+	AnCount: 0
+	NsCount: 0
+	ArCount: 1
+	Name: herbert.ipv4.sinodun.com
+	Type: 1
+	Class: 1
+2021-03-02 16h23m17s0us UTC
+	Client IP: 127.0.0.1
+	Transport: UDP
+	Client port: 42483
+	Transaction type: Auth response
+	DNS QR: Response
+	ID: 25884
+	Opcode: 0
+	Rcode: 3
+	Flags: AA RD 
+	QdCount: 1
+	AnCount: 0
+	NsCount: 1
+	ArCount: 1
+	Name: herbert.ipv4.sinodun.com
+	Type: 1
+	Class: 1

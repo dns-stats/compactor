@@ -87,6 +87,13 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/verify-cbor05.sh \
                 test-scripts/verify-cddl.sh
 
+if ENABLE_DNSTAP
+        check_SCRIPTS += test-scripts/check-dnstap.sh
+        dist_check_SCRIPTS = $(check_SCRIPTS)
+else
+        dist_check_SCRIPTS = $(check_SCRIPTS)
+        dist_check_SCRIPTS += test-scripts/check-dnstap.sh
+endif
 if ENABLE_PSEUDOANONYMISATION
         check_SCRIPTS += test-scripts/pseudoanon-tshark-output.sh \
                          test-scripts/pseudoanon-inspector-output.sh
@@ -102,6 +109,8 @@ dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/GeoLite2-City.mmdb.xz \
                   test-scripts/dns.pcap.xz \
                   test-scripts/dnscap.pcap.xz \
+                  test-scripts/test.dnstap \
+                  test-scripts/test.dnstap.debug-dns \
                   test-scripts/gold.pcap.xz \
                   test-scripts/gold.cbor.xz \
                   test-scripts/gold.cbor02.xz \
