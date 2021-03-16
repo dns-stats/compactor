@@ -759,6 +759,21 @@ public:
      * \brief DNSTAP Unix socket.
      */
     std::string dnstap_socket;
+
+    /**
+     * \brief DNSTAP Unix socket owner.
+     */
+    std::string dnstap_socket_owner;
+
+    /**
+     * \brief DNSTAP Unix socket group.
+     */
+    std::string dnstap_socket_group;
+
+    /**
+     * \brief DNSTAP Unix socket write permissions.
+     */
+    std::string dnstap_socket_write;
 #endif
 
     /**

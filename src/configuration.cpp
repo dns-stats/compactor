@@ -384,6 +384,15 @@ Configuration::Configuration()
         ("dnstap-socket",
          po::value<std::string>(&dnstap_socket),
          "Unix socket path to listen for DNSTAP.")
+        ("dnstap-socket-owner",
+         po::value<std::string>(&dnstap_socket_owner),
+         "Unix socket path owner for DNSTAP.")
+        ("dnstap-socket-group",
+         po::value<std::string>(&dnstap_socket_group),
+         "Unix socket path group for DNSTAP.")
+        ("dnstap-socket-write",
+         po::value<std::string>(&dnstap_socket_write),
+         "Unix socket write permissions for DNSTAP.")
 #endif
         ("server-address-hint,S",
          po::value<std::vector<std::string>>(),

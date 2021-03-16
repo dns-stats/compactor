@@ -582,6 +582,10 @@ static int run_configuration(const po::variables_map& vm,
                 boost::asio::io_service service;
                 al::stream_protocol::endpoint endpoint(config.dnstap_socket);
                 al::stream_protocol::acceptor acceptor(service, endpoint);
+                set_file_owner_perms(config.dnstap_socket,
+                                     config.dnstap_socket_owner,
+                                     config.dnstap_socket_group,
+                                     config.dnstap_socket_write);
 
                 for (;;)
                 {
