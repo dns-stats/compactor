@@ -560,17 +560,20 @@ static int run_configuration(const po::variables_map& vm,
     bool log_errs = ( !vm.count("capture-file") );
     int res = 0;
 
+#if ENABLE_DNSTAP
     DnsTap dnstap([&](std::unique_ptr<DNSMessage>& dns)
                   {
                       if ( config.debug_dns )
                           std::cout << *dns;
                       matcher.add(std::move(dns));
                   });
+#endif
 
     try
     {
         if ( !vm.count("capture-file") )
         {
+#if ENABLE_DNSTAP
             if ( vm.count("dnstap-socket") )
             {
                 LOG_INFO << "Starting DNSTAP capture";
@@ -590,6 +593,7 @@ static int run_configuration(const po::variables_map& vm,
                 }
             }
             else
+#endif
             {
                 LOG_INFO << "Starting network capture";
                 NetworkSniffers sniffer(config.network_interfaces, sniff_config);
@@ -601,6 +605,7 @@ static int run_configuration(const po::variables_map& vm,
         {
             for ( const auto& fname : vm["capture-file"].as<std::vector<std::string>>() )
             {
+#if ENABLE_DNSTAP
                 if ( vm.count("dnstap") )
                 {
                     std::fstream stream(fname, std::ios::binary | std::ios::in);
@@ -610,6 +615,7 @@ static int run_configuration(const po::variables_map& vm,
                         std::cerr << "Failed to open " << fname << std::endl;
                 }
                 else
+#endif
                 {
                     FileSniffer sniffer(fname, sniff_config);
                     sniff_loop(&sniffer, matcher, output, config, stats);
@@ -706,7 +712,9 @@ static int run_configuration(const po::variables_map& vm,
 
 int main(int ac, char *av[])
 {
+#if ENABLE_DNSTAP
     GOOGLE_PROTOBUF_VERIFY_VERSION;
+#endif
 
     // I promise not to use C stdio in this code.
     //
@@ -746,13 +754,17 @@ int main(int ac, char *av[])
         }
 
         if ( !!vm.count("interface") +
+#if ENABLE_DNSTAP
              !!vm.count("dnstap-socket") +
+#endif
              !!vm.count("capture-file") != 1 )
         {
             std::cerr
                 << "Error:\tSpecify EITHER an interface to capture from, "
-                << "OR a DNSTAP socket,\n\t"
-                << "OR some capture files to replay. Run '"
+#if ENABLE_DNSTAP
+                << "OR a DNSTAP socket,"
+#endif
+                << "\n\tOR some capture files to replay. Run '"
                 << PROGNAME << " -h' for help.\n";
             return 1;
         }
@@ -826,6 +838,8 @@ int main(int ac, char *av[])
         return 1;
     }
 
+#if ENABLE_DNSTAP
     google::protobuf::ShutdownProtobufLibrary();
+#endif
     return 0;
 }

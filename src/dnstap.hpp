@@ -18,7 +18,11 @@
 #include <iostream>
 #include <string>
 
+#include "config.h"
+
 #include "dnsmessage.hpp"
+
+#if ENABLE_DNSTAP
 
 /**
  * \exception dnstap_invalid
@@ -163,5 +167,7 @@ private:
      */
     int state_;
 };
+
+#endif
 
 #endif

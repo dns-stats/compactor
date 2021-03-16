@@ -377,12 +377,14 @@ Configuration::Configuration()
         ("interface,i",
          po::value<std::vector<std::string>>(&network_interfaces),
          "network interface from which to capture.")
+#if ENABLE_DNSTAP
         ("dnstap,T",
          po::value<bool>(&dnstap)->implicit_value(true),
          "treat input files as DNSTAP data.")
         ("dnstap-socket",
          po::value<std::string>(&dnstap_socket),
          "Unix socket path to listen for DNSTAP.")
+#endif
         ("server-address-hint,S",
          po::value<std::vector<std::string>>(),
          "IP addresses belonging to the server.")

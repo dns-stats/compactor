@@ -29,15 +29,6 @@ AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
 AC_PROG_LIBTOOL
 AC_PROG_AWK
 
-PKG_CHECK_MODULES(PROTOBUF, protobuf >= 2.4.0)
-AC_SUBST(PROTOBUF_LIBS)
-AC_SUBST(PROTOBUF_CFLAGS)
-AC_SUBST(PROTOBUF_VERSION)
-
-AC_CHECK_PROG([PROTOC], [protoc], [protoc])
-AS_IF([test "x${PROTOC}" == "x"],
-    [AC_MSG_ERROR([ProtoBuf compiler "protoc" not found.])])
-
 AC_SUBST(ASCIIDOC,[no])
 AC_PATH_PROG([ASCIIDOC],[asciidoctor],[no],[$PATH$PATH_SEPARATOR/usr/local/bin])
 AS_IF([test "x$ASCIIDOC" == xno], [AC_MSG_NOTICE("asciidoctor not found. Not building docs.")],[
@@ -49,6 +40,12 @@ AS_IF([test "x$ASCIIDOC" == xno], [AC_MSG_NOTICE("asciidoctor not found. Not bui
 AM_CONDITIONAL([BUILD_DOCS], [test ! $ASCIIDOC_TOO_OLD && test "x$ASCIIDOC" != "xno"])
 
 # Optional features
+AC_ARG_ENABLE([dnstap],
+        [AS_HELP_STRING([--disable-dnstap],
+                [do not include DNSTAP])],
+        [],
+        [enable_dnstap=yes])
+AM_CONDITIONAL([ENABLE_DNSTAP], [test "x$enable_dnstap" == "xyes"])
 AC_ARG_ENABLE([pseudo-anonymisation],
         [AS_HELP_STRING([--disable-pseudo-anonymisation],
                 [do not include pseudo-anonymisation])],
@@ -78,6 +75,16 @@ AC_CHECK_HEADERS([pthread_np.h])
 AC_CHECK_LIB([pthread],[pthread_setname_np],
         AC_DEFINE([HAVE_PTHREAD_SETNAME_NP], [1], [Define to 1 if you have pthread_setname_np()]))
 
+AS_IF([test "x$enable_dnstap" != xno],
+        [PKG_CHECK_MODULES(PROTOBUF, protobuf >= 2.4.0)
+         AC_SUBST(PROTOBUF_LIBS)
+         AC_SUBST(PROTOBUF_CFLAGS)
+         AC_SUBST(PROTOBUF_VERSION)
+         AC_CHECK_PROG([PROTOC], [protoc], [protoc])
+         AS_IF([test "x${PROTOC}" == "x"],
+               [AC_MSG_ERROR([ProtoBuf compiler "protoc" not found.])])
+         AC_DEFINE([ENABLE_DNSTAP], [1], [Define to 1 to enable DNSTAP])
+        ])
 AS_IF([test "x$enable_pseudo_anonymisation" != xno],
         [AX_CHECK_OPENSSL([], [AC_MSG_ERROR([pseudo-anonymisation requires OpenSSL])])
          AC_DEFINE([ENABLE_PSEUDOANONYMISATION], [1], [Define to 1 to enable pseudo-anonymisation])

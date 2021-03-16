@@ -276,13 +276,17 @@ compactor_src_with_internal_tests = \
 
 compactor_src_without_internal_tests = \
         src/blockcborwriter.cpp \
-        src/dnstap.cpp \
         src/packetstream.cpp \
         src/sniffers.cpp
+
+if ENABLE_DNSTAP
+compactor_src_without_internal_tests += \
+        src/dnstap.cpp
 
 nodist_compactor_SOURCES = \
         $(builddir)/dnstap/dnstap.pb.h \
         $(builddir)/dnstap/dnstap.pb.cc
+endif
 
 compactor_SOURCES = \
         $(compactor_headers) \
@@ -290,7 +294,7 @@ compactor_SOURCES = \
         $(compactor_src_with_internal_tests) \
         src/compactor.cpp
 
-compactor_CXXFLAGS = @PTHREAD_CFLAGS@ @PROTOBUF_CFLAGS@ -DBOOST_LOG_DYN_LINK
+compactor_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
 
 compactor_LDADD = \
         libcdns.a \
@@ -301,7 +305,6 @@ compactor_LDADD = \
         $(BOOST_SYSTEM_LIB) \
         $(BOOST_THREAD_LIB) \
         $(PCAP_LIB) \
-        $(PROTOBUF_LIBS) \
         $(LZMA_LIB) \
         $(TCMALLOC_LIB) \
         @PTHREAD_LIBS@ \
@@ -313,6 +316,12 @@ compactor_LDADD += \
         $(OPENSSL_LIBS)
 compactor_LDFLAGS += \
         $(OPENSSL_LDFLAGS)
+endif
+if ENABLE_DNSTAP
+compactor_CXXFLAGS += \
+        @PROTOBUF_CFLAGS@
+compactor_LDADD += \
+        $(PROTOBUF_LIBS)
 endif
 
 compactor_tests_SOURCES = \
@@ -327,7 +336,6 @@ compactor_tests_SOURCES = \
         tests/blockcbor_test.cpp \
         tests/blockcbordata_test.cpp \
         tests/dnsmessage_test.cpp \
-        tests/dnstap_test.cpp \
         tests/ipaddress_test.cpp \
         tests/matcher_test.cpp \
         tests/matcher_internal_test.cpp \
@@ -337,12 +345,16 @@ if ENABLE_PSEUDOANONYMISATION
 compactor_tests_SOURCES += \
         tests/pseudoanonymise_test.cpp
 endif
+if ENABLE_DNSTAP
+compactor_tests_SOURCES += \
+        tests/dnstap_test.cpp
 
 nodist_compactor_tests_SOURCES = \
         $(builddir)/dnstap/dnstap.pb.h \
         $(builddir)/dnstap/dnstap.pb.cc
+endif
 
-compactor_tests_CXXFLAGS = @PTHREAD_CFLAGS@ @PROTOBUF_CFLAGS@ -DBOOST_LOG_DYN_LINK
+compactor_tests_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
 compactor_tests_LDADD = \
         libcdns.a \
         $(BOOST_FILESYSTEM_LIB) \
@@ -364,6 +376,12 @@ compactor_tests_LDADD += \
         $(OPENSSL_LIBS)
 compactor_tests_LDFLAGS += \
         $(OPENSSL_LDFLAGS)
+endif
+if ENABLE_DNSTAP
+compactor_tests_CXXFLAGS += \
+        @PROTOBUF_CFLAGS@
+compactor_tests_LDADD += \
+        $(PROTOBUF_LIBS)
 endif
 
 inspector_SOURCES = \

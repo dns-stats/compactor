@@ -21,6 +21,8 @@
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 
+#include "config.h"
+
 #include "blockcbordata.hpp"
 #include "ipaddress.hpp"
 
@@ -747,6 +749,7 @@ public:
      */
     std::vector<std::string> network_interfaces;
 
+#if ENABLE_DNSTAP
     /**
      * \brief treat input files as DNSTAP.
      */
@@ -756,6 +759,7 @@ public:
      * \brief DNSTAP Unix socket.
      */
     std::string dnstap_socket;
+#endif
 
     /**
      * \brief the server network addresses.
