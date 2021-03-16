@@ -177,39 +177,44 @@ namespace {
     }
 }
 
-DnsTap::DnsTap(std::iostream& stream, DNSSink dns_sink)
-    : stream_(stream), dns_sink_(dns_sink),
-      bidirectional_(false), state_(WAIT)
+DnsTap::DnsTap(DNSSink dns_sink)
+    : bidirectional_(false), dns_sink_(dns_sink), state_(WAIT)
 {
 }
 
-void DnsTap::process_stream()
+void DnsTap::process_stream(std::iostream& stream)
 {
+    bidirectional_ = false;
+    state_ = WAIT;
+
     // Throw exceptions from our code.
-    auto ex_mask = stream_.exceptions();
-    stream_.exceptions(std::ios::failbit | std::ios::badbit);
+    auto ex_mask = stream.exceptions();
+    stream.exceptions(std::ios::failbit | std::ios::badbit);
 
     for(;;)
     {
-        uint32_t len = get_value();
+        uint32_t len = get_value(stream);
 
         if ( len == 0 )
         {
-            if ( !process_control_frame(read_control_frame()) )
+            if ( !process_control_frame(stream, read_control_frame(stream)) )
                 break;  // Received STOP.
         }
         else
-            process_data_frame(read_data_frame(len));
+            process_data_frame(read_data_frame(stream, len));
     }
 
     // Reset back to no exceptions so as not to surprise
     // outside code when closing and cleaning up.
-    stream_.exceptions(ex_mask);
+    stream.exceptions(ex_mask);
 }
 
-bool DnsTap::process_control_frame(uint32_t f)
+bool DnsTap::process_control_frame(std::iostream& stream, uint32_t f)
 {
     bool res = true;
+
+    if ( f < ACCEPT || f > FINISH )
+        throw dnstap_invalid("Unknown control frame type");
 
     switch(state_)
     {
@@ -219,7 +224,7 @@ bool DnsTap::process_control_frame(uint32_t f)
         if ( f == READY )
         {
             bidirectional_ = true;
-            send_control(make_accept());
+            send_control(stream, make_accept());
             state_ = WAIT_START;
         }
         else
@@ -236,7 +241,7 @@ bool DnsTap::process_control_frame(uint32_t f)
         if ( f != STOP )
             throw dnstap_invalid("STOP expected");
         if ( bidirectional_ )
-            send_control(make_finish(), true);
+            send_control(stream, make_finish(), true);
         res = false;
         break;
     }
@@ -252,14 +257,14 @@ void DnsTap::process_data_frame(std::unique_ptr<DNSMessage> msg)
         dns_sink_(msg);
 }
 
-uint32_t DnsTap::read_control_frame()
+uint32_t DnsTap::read_control_frame(std::iostream& stream)
 {
-    uint32_t control_len = get_value();
+    uint32_t control_len = get_value(stream);
 
     if ( control_len < 4 || control_len > FSTRM_CONTROL_LENGTH_MAX )
         throw dnstap_invalid("bad control length");
 
-    uint32_t control_type = get_value();
+    uint32_t control_type = get_value(stream);
     control_len -= 4;
 
     // Read and check content type.
@@ -268,8 +273,8 @@ uint32_t DnsTap::read_control_frame()
         if ( control_len < 4 )
             throw dnstap_invalid("Invalid control length");
 
-        uint32_t field_type = get_value();
-        uint32_t field_len = get_value();
+        uint32_t field_type = get_value(stream);
+        uint32_t field_len = get_value(stream);
         control_len -= 8;
 
         if ( field_type != CONTENT_TYPE ||
@@ -277,7 +282,7 @@ uint32_t DnsTap::read_control_frame()
              control_len != field_len )
             throw dnstap_invalid("Bad field type or length");
 
-        std::string content_type = get_buffer(field_len);
+        std::string content_type = get_buffer(stream, field_len);
 
         if ( content_type != CONTENT_TYPE_DNSTAP )
             throw dnstap_invalid("unknown field");
@@ -286,9 +291,9 @@ uint32_t DnsTap::read_control_frame()
     return control_type;
 }
 
-std::unique_ptr<DNSMessage> DnsTap::read_data_frame(uint32_t len)
+std::unique_ptr<DNSMessage> DnsTap::read_data_frame(std::iostream& stream, uint32_t len)
 {
-    std::string data = get_buffer(len);
+    std::string data = get_buffer(stream, len);
 
     dnstap::Dnstap dnstap;
     if ( !dnstap.ParseFromString(data) )
@@ -360,26 +365,26 @@ std::unique_ptr<DNSMessage> DnsTap::read_data_frame(uint32_t len)
     return dns;
 }
 
-void DnsTap::send_control(const std::string& msg, bool ignore_err)
+void DnsTap::send_control(std::iostream& stream, const std::string& msg, bool ignore_err)
 {
-    auto ex_mask = stream_.exceptions();
+    auto ex_mask = stream.exceptions();
     if ( ignore_err )
-        stream_.exceptions(std::ios::goodbit);
-    stream_.write(msg.c_str(), msg.size());
+        stream.exceptions(std::ios::goodbit);
+    stream.write(msg.c_str(), msg.size());
     if ( ignore_err )
     {
         // Make sure we clear error bits before turning exceptions back on,
         // or we'll throw immediately.
-        stream_.clear();
-        stream_.exceptions(ex_mask);
+        stream.clear();
+        stream.exceptions(ex_mask);
     }
 }
 
-uint32_t DnsTap::get_value()
+uint32_t DnsTap::get_value(std::iostream& stream)
 {
     char buf[4];
 
-    stream_.read(buf, sizeof(buf));
+    stream.read(buf, sizeof(buf));
 
     return
         static_cast<uint8_t>(buf[0]) << 24 |
@@ -388,10 +393,10 @@ uint32_t DnsTap::get_value()
         static_cast<uint8_t>(buf[3]);
 }
 
-std::string DnsTap::get_buffer(uint32_t len)
+std::string DnsTap::get_buffer(std::iostream& stream, uint32_t len)
 {
     std::string res(len, '\0');
-    stream_.read(&res[0], len);
+    stream.read(&res[0], len);
     return res;
 }
 

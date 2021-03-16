@@ -560,13 +560,12 @@ static int run_configuration(const po::variables_map& vm,
     bool log_errs = ( !vm.count("capture-file") );
     int res = 0;
 
-    auto dnstap_sink =
-        [&](std::unique_ptr<DNSMessage>& dns)
-        {
-            if ( config.debug_dns )
-                std::cout << *dns;
-            matcher.add(std::move(dns));
-        };
+    DnsTap dnstap([&](std::unique_ptr<DNSMessage>& dns)
+                  {
+                      if ( config.debug_dns )
+                          std::cout << *dns;
+                      matcher.add(std::move(dns));
+                  });
 
     try
     {
@@ -585,8 +584,7 @@ static int run_configuration(const po::variables_map& vm,
                 {
                     al::stream_protocol::iostream stream;
                     acceptor.accept(*stream.rdbuf());
-                    DnsTap dnstap(stream, dnstap_sink);
-                    dnstap.process_stream();
+                    dnstap.process_stream(stream);
                     if ( signal_handler_signal )
                         break;
                 }
@@ -607,10 +605,7 @@ static int run_configuration(const po::variables_map& vm,
                 {
                     std::fstream stream(fname, std::ios::binary | std::ios::in);
                     if ( stream.is_open() )
-                    {
-                        DnsTap dnstap(stream, dnstap_sink);
-                        dnstap.process_stream();
-                    }
+                        dnstap.process_stream(stream);
                     else
                         std::cerr << "Failed to open " << fname << std::endl;
                 }
@@ -640,6 +635,7 @@ static int run_configuration(const po::variables_map& vm,
             std::cerr << "Invalid PCAP filter: " << err.what() << std::endl;
         res = 3;
     }
+#if ENABLE_DNSTAP
     catch (const dnstap_invalid& err)
     {
         if ( log_errs )
@@ -648,6 +644,7 @@ static int run_configuration(const po::variables_map& vm,
             std::cerr << "Invalid DNSTAP: " << err.what() << std::endl;
         res = 3;
     }
+#endif
     catch (const std::system_error& err)
     {
         if ( log_errs )
