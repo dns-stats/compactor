@@ -20,6 +20,7 @@ endif
 common_doc_sources = \
         doc/user-guide/compactor-command-options.adoc \
         doc/user-guide/compactor-capture-from-network.adoc \
+        doc/user-guide/compactor-capture-from-dnstap.adoc \
         doc/user-guide/compactor-outputs.adoc \
         doc/user-guide/compactor-query-response-matching.adoc
 

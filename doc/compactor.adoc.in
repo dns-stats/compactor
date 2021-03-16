@@ -40,6 +40,10 @@ special privileges; see the *pcap*(3PCAP) man page for details.
 *compactor* will report an error if no input file or network interface device is
 specified.
 
+*compactor* may also be built with support for DNSTAP. In this case, *compactor*
+supports either reading data from DNSTAP capture files, or for capturing traffic
+directly from a name server over a Unix socket.
+
 == OPTIONS
 
 Options to *compactor* are command options or configuration options.
@@ -62,6 +66,8 @@ example, to set the snap length to 64, the configuration file entry must read
 The `excludesfile` option cannot be specified in the configuration file.
 
 include::user-guide/compactor-capture-from-network.adoc[]
+
+include::user-guide/compactor-capture-from-dnstap.adoc[]
 
 include::user-guide/compactor-outputs.adoc[]
 

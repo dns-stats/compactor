@@ -66,6 +66,8 @@ include::compactor.conf[]
 
 include::compactor-capture-from-network.adoc[leveloffset=+1]
 
+include::compactor-capture-from-dnstap.adoc[leveloffset=+1]
+
 include::compactor-outputs.adoc[leveloffset=+1]
 
 include::compactor-query-response-matching.adoc[leveloffset=+1]
