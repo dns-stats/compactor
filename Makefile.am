@@ -59,7 +59,7 @@ defaultsfile=$(dsconfdir)/default_values.conf
 
 % :: test-scripts/%.xz ; xz --decompress --to-stdout $< > $@
 
-%.pb.cc %.pb.h: %.proto ; $(PROTOC) --proto_path=$(srcdir) --cpp_out=$(builddir) $<
+%.pb.cc %.pb.h: %.proto ; $(PROTOC) --proto_path=$(srcdir) --cpp_out=@builddir@ $<
 
 check_PROGRAMS = compactor-tests
 check_SCRIPTS = test-scripts/check-config-info.sh \
@@ -294,8 +294,8 @@ compactor_src_without_internal_tests += \
         src/dnstap.cpp
 
 nodist_compactor_SOURCES = \
-        $(builddir)/dnstap/dnstap.pb.h \
-        $(builddir)/dnstap/dnstap.pb.cc
+        @builddir@/dnstap/dnstap.pb.h \
+        @builddir@/dnstap/dnstap.pb.cc
 endif
 
 compactor_SOURCES = \
@@ -360,8 +360,8 @@ compactor_tests_SOURCES += \
         tests/dnstap_test.cpp
 
 nodist_compactor_tests_SOURCES = \
-        $(builddir)/dnstap/dnstap.pb.h \
-        $(builddir)/dnstap/dnstap.pb.cc
+        @builddir@/dnstap/dnstap.pb.h \
+        @builddir@/dnstap/dnstap.pb.cc
 endif
 
 compactor_tests_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
