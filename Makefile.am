@@ -189,7 +189,7 @@ BUILT_SOURCES = dnstap/dnstap.pb.h
 
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
-AM_CPPFLAGS = -I$(srcdir)/src -I$(builddir) $(BOOST_CPPFLAGS) \
+AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
               -DCONFFILE=\"$(conffile)\" \
               -DEXCLUDESFILE=\"$(excludesfile)\" \
               -DDEFAULTSFILE=\"$(defaultsfile)\" \

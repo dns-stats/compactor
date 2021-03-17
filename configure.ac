@@ -77,9 +77,6 @@ AC_CHECK_LIB([pthread],[pthread_setname_np],
 
 AS_IF([test "x$enable_dnstap" != xno],
         [PKG_CHECK_MODULES(PROTOBUF, protobuf >= 2.4.0)
-         AC_SUBST(PROTOBUF_LIBS)
-         AC_SUBST(PROTOBUF_CFLAGS)
-         AC_SUBST(PROTOBUF_VERSION)
          AC_CHECK_PROG([PROTOC], [protoc], [protoc])
          AS_IF([test "x${PROTOC}" == "x"],
                [AC_MSG_ERROR([ProtoBuf compiler "protoc" not found.])])
