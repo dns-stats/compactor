@@ -11,6 +11,7 @@
  */
 
 #include <chrono>
+#include <system_error>
 
 #include <tins/tins.h>
 
@@ -102,6 +103,25 @@ namespace {
         STARTED,
     };
 
+    class StreamExceptionsWrapper
+    {
+    public:
+        StreamExceptionsWrapper(std::iostream& stream)
+            : stream_(stream), initial_(stream.exceptions())
+        {
+            stream.exceptions(std::ios::failbit | std::ios::badbit);
+        }
+
+        virtual ~StreamExceptionsWrapper()
+        {
+            stream_.exceptions(initial_);
+        }
+
+    private:
+        std::iostream& stream_;
+        std::ios_base::iostate initial_;
+    };
+
     const unsigned FSTRM_CONTROL_LENGTH_MAX= 512;
     const unsigned FSTRM_CONTENT_TYPE_LENGTH_MAX= 256;
     const std::string CONTENT_TYPE_DNSTAP("protobuf:dnstap.Dnstap");
@@ -184,29 +204,32 @@ DnsTap::DnsTap(DNSSink dns_sink)
 
 void DnsTap::process_stream(std::iostream& stream)
 {
+    // Throw exceptions from our code, but ensure we switch that
+    // off on exit for any reason.
+    StreamExceptionsWrapper ex_wrapper(stream);
+
     bidirectional_ = false;
     state_ = WAIT;
 
-    // Throw exceptions from our code.
-    auto ex_mask = stream.exceptions();
-    stream.exceptions(std::ios::failbit | std::ios::badbit);
-
     for(;;)
     {
-        uint32_t len = get_value(stream);
-
-        if ( len == 0 )
+        try
         {
-            if ( !process_control_frame(stream, read_control_frame(stream)) )
-                break;  // Received STOP.
-        }
-        else
-            process_data_frame(read_data_frame(stream, len));
-    }
+            uint32_t len = get_value(stream);
 
-    // Reset back to no exceptions so as not to surprise
-    // outside code when closing and cleaning up.
-    stream.exceptions(ex_mask);
+            if ( len == 0 )
+            {
+                if ( !process_control_frame(stream, read_control_frame(stream)) )
+                    break;  // Received STOP.
+            }
+            else
+                process_data_frame(read_data_frame(stream, len));
+        }
+        catch (std::iostream::failure& f)
+        {
+            throw std::system_error(f.code(), "DNSTAP read failed");
+        }
+    }
 }
 
 bool DnsTap::process_control_frame(std::iostream& stream, uint32_t f)
