@@ -14,6 +14,8 @@
 
 #include "catch.hpp"
 
+#include "makeunique.hpp"
+
 #define protected public
 #include "dnstap.hpp"
 #undef protected
@@ -363,7 +365,7 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
 
         AND_THEN("START must precede data")
         {
-            REQUIRE_THROWS_AS(tap.process_data_frame(std::make_unique<DNSMessage>()), dnstap_invalid);
+            REQUIRE_THROWS_AS(tap.process_data_frame(make_unique<DNSMessage>()), dnstap_invalid);
         }
 
         AND_THEN("START must precede STOP")
@@ -410,7 +412,7 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
         AND_THEN("START must precede data")
         {
             REQUIRE(tap.process_control_frame(ss, READY));
-            REQUIRE_THROWS_AS(tap.process_data_frame(std::make_unique<DNSMessage>()), dnstap_invalid);
+            REQUIRE_THROWS_AS(tap.process_data_frame(make_unique<DNSMessage>()), dnstap_invalid);
         }
     }
 }

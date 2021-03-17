@@ -16,6 +16,7 @@
 #include <tins/tins.h>
 
 #include "ipaddress.hpp"
+#include "makeunique.hpp"
 
 #include "dnstap/dnstap.pb.h"
 
@@ -348,7 +349,7 @@ std::unique_ptr<DNSMessage> DnsTap::read_data_frame(std::iostream& stream, uint3
                 std::chrono::nanoseconds ns(message.query_time_nsec());
                 std::chrono::system_clock::time_point t(std::chrono::duration_cast<std::chrono::system_clock::duration>(s + ns));
 
-                dns = std::make_unique<DNSMessage>(
+                dns = make_unique<DNSMessage>(
                     Tins::RawPDU(message.query_message()),
                     t, transport_type, transaction_type);
             }
@@ -362,7 +363,7 @@ std::unique_ptr<DNSMessage> DnsTap::read_data_frame(std::iostream& stream, uint3
                 std::chrono::nanoseconds ns(message.response_time_nsec());
                 std::chrono::system_clock::time_point t(std::chrono::duration_cast<std::chrono::system_clock::duration>(s + ns));
 
-                dns = std::make_unique<DNSMessage>(
+                dns = make_unique<DNSMessage>(
                     Tins::RawPDU(message.response_message()),
                     t, transport_type, transaction_type);
             }
