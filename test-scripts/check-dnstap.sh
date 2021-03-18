@@ -12,7 +12,7 @@ OUTPUTFILE=$srcdir/test-scripts/test.dnstap.debug-dns
 
 command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
 command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }
-command -v netcat > /dev/null 2>&1 || { echo "No netcat, skipping test." >&2; exit 77; }
+command -v nc > /dev/null 2>&1 || { echo "No nc, skipping test." >&2; exit 77; }
 
 tmpdir=`mktemp -d -t "check-dnstap.XXXXXX"`
 
@@ -43,7 +43,7 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 sleep 1
-netcat -U $tmpdir/dnstap.sock < $DATAFILE
+nc -U $tmpdir/dnstap.sock < $DATAFILE
 sleep 1
 kill %1
 
