@@ -237,6 +237,7 @@ libcdns_a_headers = \
         src/queryresponse.hpp \
         src/rotatingfilename.hpp \
         src/streamwriter.hpp \
+        src/transporttype.hpp \
         src/util.hpp
 
 libcdns_a_SOURCES = \
