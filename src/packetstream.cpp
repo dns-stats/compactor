@@ -168,7 +168,7 @@ void PacketStream::tcp_packet(Tins::TCP* tcp, Tins::PDU* ip_pdu,
     tcp_stream_follower_.process_packet(pkt);
 }
 
-void PacketStream::icmp_packet(Tins::ICMP* icmp, Tins::PDU* ip_pdu,
+void PacketStream::icmp_packet(Tins::ICMP* icmp, Tins::PDU* /* ip_pdu */,
                                PktData& pkt_data)
 {
     AddressEvent::EventType event_type;
@@ -214,7 +214,7 @@ void PacketStream::icmp_packet(Tins::ICMP* icmp, Tins::PDU* ip_pdu,
     address_event_sink_(ae);
 }
 
-void PacketStream::icmpv6_packet(Tins::ICMPv6* icmp, Tins::PDU* ip_pdu,
+void PacketStream::icmpv6_packet(Tins::ICMPv6* icmp, Tins::PDU* /* ip_pdu */,
                                  PktData& pkt_data)
 {
     AddressEvent::EventType event_type;
