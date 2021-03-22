@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -120,6 +120,8 @@ std::string RotatingFileName::baseFilename(const std::chrono::system_clock::time
         }
         sft_pattern = replace_config(sft_pattern, "interface", all_if);
     }
+    else if ( !config.dnstap_socket.empty() )
+        sft_pattern = replace_config(sft_pattern, "interface", "dnstap");
     sft_pattern = replace_config(sft_pattern, "rotate-period", config.rotation_period.count());
     sft_pattern = replace_config(sft_pattern, "snaplen", config.snaplen);
     sft_pattern = replace_config(sft_pattern, "query-timeout", config.query_timeout.count() / 1000.0);
