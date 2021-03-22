@@ -610,7 +610,7 @@ public:
          *
          * \return UDP payload size.
          */
-        const uint16_t udp_payload_size() const {
+        uint16_t udp_payload_size() const {
             return udp_payload_size_;
         }
 
@@ -619,7 +619,7 @@ public:
          *
          * \return <code>true</code> if DO bit set.
          */
-        const bool do_bit() const {
+        bool do_bit() const {
             return do_bit_;
         }
 
@@ -628,7 +628,7 @@ public:
          *
          * \returns extended RCODE.
          */
-        const uint8_t extended_rcode() const {
+        uint8_t extended_rcode() const {
             return extended_rcode_;
         }
 
@@ -637,7 +637,7 @@ public:
          *
          * \returns EDNS version.
          */
-        const uint8_t edns_version() const {
+        uint8_t edns_version() const {
             return edns_version_;
         }
 
