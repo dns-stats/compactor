@@ -1326,8 +1326,8 @@ namespace std {
             }
             else if ( suffix == "s" )
             {
-                seconds s(val);
-                v = duration_cast<nanoseconds>(s);
+                seconds secs(val);
+                v = duration_cast<nanoseconds>(secs);
             }
             else
                 throw po::validation_error(po::validation_error::invalid_option_value);

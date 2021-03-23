@@ -481,7 +481,7 @@ int main(int ac, char *av[])
 
     try
     {
-        std::unique_ptr<OutputBackend> backend;
+        std::unique_ptr<OutputBackend> output_backend;
         std::ofstream info;
         bool output_specified = false;
 
@@ -516,9 +516,9 @@ int main(int ac, char *av[])
             options.excludesfile_file_name = output_file_name + EXCLUDEHINTS_EXT;
 
             if ( template_backend )
-                backend = make_unique<TemplateBackend>(template_options, output_file_name);
+                output_backend = make_unique<TemplateBackend>(template_options, output_file_name);
             else
-                backend = make_unique<PcapBackend>(pcap_options, output_file_name);
+                output_backend = make_unique<PcapBackend>(pcap_options, output_file_name);
         }
 
         if ( !vm.count("cdns-file") )
@@ -528,7 +528,7 @@ int main(int ac, char *av[])
                 std::cerr << PROGNAME << ":  output file must be specified when reading from standard input." << std::endl;
                 return 1;
             }
-            return convert_stream_to_backend(("(stdin)"), std::cin, backend, info, options);
+            return convert_stream_to_backend(("(stdin)"), std::cin, output_backend, info, options);
         }
 
         for ( auto& fname : vm["cdns-file"].as<std::vector<std::string>>() )
@@ -548,16 +548,16 @@ int main(int ac, char *av[])
                 options.excludesfile_file_name = fname + EXCLUDEHINTS_EXT;
 
                 if ( template_backend )
-                    backend = make_unique<TemplateBackend>(template_options, out_fname);
+                    output_backend = make_unique<TemplateBackend>(template_options, out_fname);
                 else
-                    backend = make_unique<PcapBackend>(pcap_options, out_fname);
+                    output_backend = make_unique<PcapBackend>(pcap_options, out_fname);
             }
 
             if ( options.report_info )
             {
                 std::cout << " INPUT : " << fname;
                 if ( options.generate_info || options.generate_output )
-                    std::cout << "\n OUTPUT: " << backend->output_file();
+                    std::cout << "\n OUTPUT: " << output_backend->output_file();
                 std::cout << "\n\n";
             }
 
@@ -569,14 +569,14 @@ int main(int ac, char *av[])
                 return 1;
             }
 
-            if ( convert_stream_to_backend(fname, ifs, backend, info, options) != 0 )
+            if ( convert_stream_to_backend(fname, ifs, output_backend, info, options) != 0 )
                 return 1;
 
             if ( !output_specified )
             {
                 if ( options.generate_info )
                     info.close();
-                backend.reset(nullptr);
+                output_backend.reset(nullptr);
             }
 
             ifs.close();

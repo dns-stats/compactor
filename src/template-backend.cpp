@@ -209,8 +209,8 @@ namespace
             byte_string b(reinterpret_cast<const unsigned char*>(in), inlen);
             IPAddress addr(b);
             Tins::IPv6Address addr6 = addr;
-            for ( auto b : addr6 )
-                out->Emit(b);
+            for ( auto addrbyte : addr6 )
+                out->Emit(addrbyte);
         }
     };
 
