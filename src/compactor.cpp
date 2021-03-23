@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,14 +10,18 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+#include <algorithm>
 #include <chrono>
 #include <csignal>
 #include <exception>
-#include <iostream>
+#include <fstream>
 #include <memory>
 #include <thread>
 
+#include <boost/asio.hpp>
 #include <boost/variant.hpp>
+
+#include <google/protobuf/stubs/common.h>
 
 #include <tins/network_interface.h>
 #include <tins/tins.h>
@@ -30,6 +34,7 @@
 #include "channel.hpp"
 #include "blockcborwriter.hpp"
 #include "configuration.hpp"
+#include "dnstap.hpp"
 #include "log.hpp"
 #include "makeunique.hpp"
 #include "matcher.hpp"
@@ -42,6 +47,7 @@
 
 const std::string PROGNAME = "compactor";
 
+namespace al = boost::asio::local;
 namespace po = boost::program_options;
 namespace cno = std::chrono;
 
@@ -168,7 +174,7 @@ public:
     /**
      * \brief Process a query/response.
      */
-    void operator()(std::shared_ptr<QueryResponse>& qr)
+    void operator()(const std::shared_ptr<QueryResponse>& qr)
     {
         out_->writeQR(qr, *stats_);
     }
@@ -176,7 +182,7 @@ public:
     /**
      * \brief Process an address event.
      */
-    void operator()(std::shared_ptr<AddressEvent>& ae)
+    void operator()(const std::shared_ptr<AddressEvent>& ae)
     {
         out_->writeAE(ae, *stats_);
     }
@@ -228,14 +234,26 @@ static void cbor_writer(std::unique_ptr<BlockCborWriter> out,
     }
 }
 
-static BaseSniffers* signal_handler_sniffers;
+static BaseSniffers* signal_handler_sniffers = nullptr;
+static al::stream_protocol::acceptor* signal_handler_acceptor = nullptr;
+static al::stream_protocol::iostream* signal_handler_stream = nullptr;
 static int signal_handler_signal;
+
 static void signal_handler(int signo)
 {
-    if ( signal_handler_sniffers )
+    signal_handler_signal = signo;
+    try
     {
-        signal_handler_signal = signo;
-        signal_handler_sniffers->breakloop();
+        if ( signal_handler_sniffers )
+            signal_handler_sniffers->breakloop();
+        if ( signal_handler_acceptor )
+            signal_handler_acceptor->close();
+        if ( signal_handler_stream )
+            signal_handler_stream->close();
+    }
+    catch (std::exception& err)
+    {
+        LOG_ERROR << err.what();
     }
 }
 
@@ -283,7 +301,7 @@ static void sniff_loop(BaseSniffers* sniffer,
         };
 
     auto address_event_sink =
-        [&](std::shared_ptr<AddressEvent>& event)
+        [&](const std::shared_ptr<AddressEvent>& event)
         {
             if ( !config.output_pattern.empty() )
             {
@@ -301,7 +319,7 @@ static void sniff_loop(BaseSniffers* sniffer,
         };
 
     auto ignored_sink =
-        [&](std::shared_ptr<PcapItem>& pcap)
+        [&](const std::shared_ptr<PcapItem>& pcap)
         {
             if ( do_ignored_pcap )
             {
@@ -550,27 +568,80 @@ static int run_configuration(const po::variables_map& vm,
     matcher.set_query_timeout(config.query_timeout);
     matcher.set_skew_timeout(config.skew_timeout);
 
-    // We assume that network capture is typically a daemon process, and
-    // log errors. File conversion, on the other hand, is typically a
-    // manual process, and so errors go to stderr.
+    // We assume that network or DNSTAP capture is typically a daemon
+    // process, and log errors. File conversion, on the other hand,
+    // is typically a manual process, and so errors go to stderr.
     bool log_errs = ( !vm.count("capture-file") );
     int res = 0;
+
+#if ENABLE_DNSTAP
+    DnsTap dnstap([&](std::unique_ptr<DNSMessage>& dns)
+                  {
+                      if ( config.debug_dns )
+                          std::cout << *dns;
+                      matcher.add(std::move(dns));
+                  });
+#endif
 
     try
     {
         if ( !vm.count("capture-file") )
         {
-            LOG_INFO << "Starting network capture";
-            NetworkSniffers sniffer(config.network_interfaces, sniff_config);
+#if ENABLE_DNSTAP
+            if ( vm.count("dnstap-socket") )
+            {
+                LOG_INFO << "Starting DNSTAP capture";
 
-            sniff_loop(&sniffer, matcher, output, config, stats);
+                std::remove(config.dnstap_socket.c_str());
+                boost::asio::io_service service;
+                al::stream_protocol::endpoint endpoint(config.dnstap_socket);
+                al::stream_protocol::acceptor acceptor(service, endpoint);
+                set_file_owner_perms(config.dnstap_socket,
+                                     config.dnstap_socket_owner,
+                                     config.dnstap_socket_group,
+                                     config.dnstap_socket_write);
+                signal_handler_acceptor = &acceptor;
+
+                while (!signal_handler_signal)
+                {
+                    al::stream_protocol::iostream stream;
+                    acceptor.accept(*stream.rdbuf());
+                    if ( signal_handler_signal )
+                        break;
+                    signal_handler_stream = &stream;
+                    dnstap.process_stream(stream);
+                    signal_handler_stream = nullptr;
+                }
+                signal_handler_acceptor = nullptr;
+            }
+            else
+#endif
+            {
+                LOG_INFO << "Starting network capture";
+                NetworkSniffers sniffer(config.network_interfaces, sniff_config);
+
+                sniff_loop(&sniffer, matcher, output, config, stats);
+            }
         }
         else
         {
             for ( const auto& fname : vm["capture-file"].as<std::vector<std::string>>() )
             {
-                FileSniffer sniffer(fname, sniff_config);
-                sniff_loop(&sniffer, matcher, output, config, stats);
+#if ENABLE_DNSTAP
+                if ( vm.count("dnstap") )
+                {
+                    std::fstream stream(fname, std::ios::binary | std::ios::in);
+                    if ( stream.is_open() )
+                        dnstap.process_stream(stream);
+                    else
+                        std::cerr << "Failed to open " << fname << std::endl;
+                }
+                else
+#endif
+                {
+                    FileSniffer sniffer(fname, sniff_config);
+                    sniff_loop(&sniffer, matcher, output, config, stats);
+                }
                 if ( signal_handler_signal )
                     break;
             }
@@ -590,6 +661,32 @@ static int run_configuration(const po::variables_map& vm,
             LOG_ERROR << "Invalid PCAP filter:" << err.what();
         else
             std::cerr << "Invalid PCAP filter: " << err.what() << std::endl;
+        res = 3;
+    }
+#if ENABLE_DNSTAP
+    catch (const dnstap_invalid& err)
+    {
+        if ( log_errs )
+            LOG_ERROR << "Invalid DNSTAP:" << err.what();
+        else
+            std::cerr << "Invalid DNSTAP: " << err.what() << std::endl;
+        res = 3;
+    }
+#endif
+    catch (const std::system_error& err)
+    {
+        if ( log_errs )
+            LOG_ERROR << "Error " << err.code() << ": " << err.what();
+        else
+            std::cerr << "Error " << err.code() << ": " << err.what() << std::endl;
+        res = 3;
+    }
+    catch (const boost::system::system_error& err)
+    {
+        if ( log_errs )
+            LOG_ERROR << "Error " << err.code() << ": " << err.what();
+        else
+            std::cerr << "Error " << err.code() << ": " << err.what() << std::endl;
         res = 3;
     }
 
@@ -637,6 +734,10 @@ static int run_configuration(const po::variables_map& vm,
 
 int main(int ac, char *av[])
 {
+#if ENABLE_DNSTAP
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+#endif
+
     // I promise not to use C stdio in this code.
     //
     // Valgrind reports this leads to memory leaks on
@@ -674,11 +775,18 @@ int main(int ac, char *av[])
             return 0;
         }
 
-        if ( !vm.count("interface") && !vm.count("capture-file") )
+        if ( !!vm.count("interface") +
+#if ENABLE_DNSTAP
+             !!vm.count("dnstap-socket") +
+#endif
+             !!vm.count("capture-file") != 1 )
         {
             std::cerr
-                << "Error:\tSpecify either an interface to capture from, "
-                << "or some capture files\n\tto replay. Run '"
+                << "Error:\tSpecify EITHER an interface to capture from, "
+#if ENABLE_DNSTAP
+                << "OR a DNSTAP socket,"
+#endif
+                << "\n\tOR some capture files to replay. Run '"
                 << PROGNAME << " -h' for help.\n";
             return 1;
         }
@@ -752,5 +860,8 @@ int main(int ac, char *av[])
         return 1;
     }
 
+#if ENABLE_DNSTAP
+    google::protobuf::ShutdownProtobufLibrary();
+#endif
     return 0;
 }

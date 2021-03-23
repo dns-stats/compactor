@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -115,17 +115,22 @@ public:
     /**
      * \brief client hop limit.
      */
-    boost::optional<uint8_t> hoplimit;
+    boost::optional<uint8_t> client_hoplimit;
 
     /**
-     * \brief the client address.
+     * \brief the server address.
      */
     boost::optional<IPAddress> server_address;
 
     /**
-     * \brief client port.
+     * \brief server port.
      */
     boost::optional<uint16_t> server_port;
+
+    /**
+     * \brief server hop limit.
+     */
+    boost::optional<uint8_t> server_hoplimit;
 
     /**
      * \brief the transaction ID.
@@ -146,6 +151,11 @@ public:
      * \brief transport flags.
      */
     boost::optional<uint8_t> qr_transport_flags;
+
+    /**
+     * \brief transaction type.
+     */
+    boost::optional<uint8_t> qr_type;
 
     /*
      * Query-specific items.
@@ -331,7 +341,7 @@ public:
      *
      * \param os output stream.
      */
-    void dump_stats(std::ostream& os) {
+    void dump_stats(std::ostream& os) const {
         block_->last_packet_statistics.dump_stats(os);
     }
 
@@ -340,21 +350,21 @@ public:
      *
      * \param os output stream.
      */
-    void dump_collector(std::ostream& os);
+    void dump_collector(std::ostream& os) const;
 
     /**
      * \brief Dump info on file earliest/latest/end times to the stream provided
      *
      * \param os output stream.
      */
-    void dump_times(std::ostream& os);
+    void dump_times(std::ostream& os) const;
 
     /**
      * \brief Dump address event info to the stream provided.
      *
      * \param os output stream.
      */
-    void dump_address_events(std::ostream& os);
+    void dump_address_events(std::ostream& os) const;
 
 protected:
     /**

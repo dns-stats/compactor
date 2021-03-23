@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
+ * Copyright 2018-2019, 2021 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,8 +18,32 @@
 #include "capturedns.hpp"
 #include "pcapwriter.hpp"
 #include "streamwriter.hpp"
+#include "transporttype.hpp"
 
 #include "backend.hpp"
+
+namespace {
+    /**
+     * \brief decode transport flags to transport type.
+     * \param transport_flags transport flags.
+     * \returns transport type.
+     */
+    TransportType get_transport_type(int transport_flags)
+    {
+        switch (transport_flags & (block_cbor::UDP |
+                                   block_cbor::TCP |
+                                   block_cbor::TLS |
+                                   block_cbor::DTLS |
+                                   block_cbor::DOH))
+        {
+        case block_cbor::TCP:   return TransportType::TCP;
+        case block_cbor::TLS:   return TransportType::DOT;
+        case block_cbor::DTLS:  return TransportType::DDOT;
+        case block_cbor::DOH:   return TransportType::DOH;
+        default:                return TransportType::UDP;
+        }
+    }
+}
 
 /**
  ** OutputBackend
@@ -110,11 +134,25 @@ void PcapBackend::output(const QueryResponseData& qrd, const Configuration& conf
     if ( !opts_.baseopts.write_output)
         return;
 
-    if ( ( qr->has_query() && qr->query().tcp ) ||
-         ( qr->has_response() && qr->response().tcp ) )
-        write_qr_tcp(qr);
-    else
-        write_qr_udp(qr);
+    if ( qr->has_query() || qr->has_response() )
+    {
+        TransportType tt = ( qr->has_query() )
+            ? qr->query().transport_type
+            : qr->response().transport_type;
+
+        switch(tt)
+        {
+        case TransportType::TCP:
+        case TransportType::DOT:
+        case TransportType::DOH:
+            write_qr_tcp(qr);
+            break;
+
+        default:
+            write_qr_udp(qr);
+            break;
+        }
+    }
 }
 
 void PcapBackend::report(std::ostream& os)
@@ -142,12 +180,12 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
     {
         query = make_unique<DNSMessage>();
         query->timestamp = *qrd.timestamp;
-        query->tcp = *qrd.qr_transport_flags & block_cbor::TCP;
+        query->transport_type = get_transport_type(*qrd.qr_transport_flags);
         query->clientIP = *qrd.client_address;
         query->serverIP = *qrd.server_address;
         query->clientPort = *qrd.client_port;
         query->serverPort = *qrd.server_port;
-        query->hoplimit = *qrd.hoplimit;
+        query->hoplimit = *qrd.client_hoplimit;
         query->dns.type(CaptureDNS::QRType::QUERY);
         query->dns.id(*qrd.id);
         query->dns.opcode(*qrd.query_opcode);
@@ -191,11 +229,12 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
         // If there is no query, the timestamp is the response timestamp.
         if ( ( qrd.qr_flags & block_cbor::HAS_QUERY ) && qrd.response_delay )
             response->timestamp += std::chrono::duration_cast<std::chrono::system_clock::duration>(*qrd.response_delay);
-        response->tcp = *qrd.qr_transport_flags & block_cbor::TCP;
+        response->transport_type = get_transport_type(*qrd.qr_transport_flags);
         response->clientIP = *qrd.client_address;
         response->serverIP = *qrd.server_address;
         response->clientPort = *qrd.client_port;
         response->serverPort = *qrd.server_port;
+        response->hoplimit = *qrd.server_hoplimit;
         response->dns.type(CaptureDNS::QRType::RESPONSE);
         response->dns.id(*qrd.id);
         response->dns.opcode(*qrd.query_opcode);
@@ -294,15 +333,15 @@ void PcapBackend::write_qr_tcp(const std::unique_ptr<QueryResponse>& qr)
 
     if ( qr->has_query() )
     {
-        client_address = qr->query().clientIP;
-        server_address = qr->query().serverIP;
-        client_port = qr->query().clientPort;
-        server_port = qr->query().serverPort;
-        client_hoplimit = qr->query().hoplimit;
+        client_address = *qr->query().clientIP;
+        server_address = *qr->query().serverIP;
+        client_port = *qr->query().clientPort;
+        server_port = *qr->query().serverPort;
+        client_hoplimit = *qr->query().hoplimit;
         query_timestamp = qr->query().timestamp;
         if ( qr->has_response() )
         {
-            server_hoplimit = qr->response().hoplimit;
+            server_hoplimit = *qr->response().hoplimit;
             response_timestamp = qr->response().timestamp;
         }
         else
@@ -313,11 +352,11 @@ void PcapBackend::write_qr_tcp(const std::unique_ptr<QueryResponse>& qr)
     }
     else
     {
-        client_address = qr->response().clientIP;
-        server_address = qr->response().serverIP;
-        client_port = qr->response().clientPort;
-        server_port = qr->response().serverPort;
-        client_hoplimit = qr->response().hoplimit;
+        client_address = *qr->response().clientIP;
+        server_address = *qr->response().serverIP;
+        client_port = *qr->response().clientPort;
+        server_port = *qr->response().serverPort;
+        client_hoplimit = *qr->response().hoplimit;
         server_hoplimit = client_hoplimit;
         query_timestamp = qr->response().timestamp;
         response_timestamp = query_timestamp;
@@ -416,10 +455,10 @@ void PcapBackend::write_qr_udp(const std::unique_ptr<QueryResponse>& qr)
 
 void PcapBackend::write_udp_packet(const DNSMessage& dns)
 {
-    IPAddress clientIP = dns.clientIP;
-    IPAddress serverIP = dns.serverIP;
-    uint16_t clientPort = dns.clientPort;
-    uint16_t serverPort = dns.serverPort;
+    IPAddress clientIP = *dns.clientIP;
+    IPAddress serverIP = *dns.serverIP;
+    uint16_t clientPort = *dns.clientPort;
+    uint16_t serverPort = *dns.serverPort;
 
     if ( dns.dns.type() == CaptureDNS::RESPONSE )
     {
@@ -432,7 +471,7 @@ void PcapBackend::write_udp_packet(const DNSMessage& dns)
     udp.dport(serverPort);
     udp.inner_pdu(dns.dns);
 
-    write_packet(&udp, clientIP, serverIP, dns.hoplimit, dns.timestamp);
+    write_packet(&udp, clientIP, serverIP, *dns.hoplimit, dns.timestamp);
 }
 
 void PcapBackend::write_packet(Tins::PDU* pdu,
@@ -477,6 +516,8 @@ void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
         missing.push_back("server-address");
     if ( !opts_.defaults.server_port )
         missing.push_back("server-port");
+    if ( !opts_.defaults.server_hoplimit )
+        missing.push_back("server-hoplimit");
     if ( !opts_.defaults.transport )
         missing.push_back("qr-transport-flags");
 

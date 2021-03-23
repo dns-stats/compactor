@@ -78,6 +78,7 @@ most recent release branch/tag or the latest development code
 which is in 'develop'.
 
 $ git checkout <branch or tag>
+$ git submodule update --init
 $ ./autogen.sh
 $ ./configure
 $ make

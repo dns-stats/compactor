@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,12 +16,14 @@
 #include <chrono>
 #include <iostream>
 
+#include <boost/optional.hpp>
+
 #include <tins/tins.h>
 
-#include "bytestring.hpp"
 #include "capturedns.hpp"
 #include "ipaddress.hpp"
 #include "packetstatistics.hpp"
+#include "transporttype.hpp"
 
 /**
  * \struct DNSMessage
@@ -33,11 +35,12 @@ struct DNSMessage
      * \brief Default constructor. Construct an empty message.
      */
     DNSMessage()
-        : clientIP(), serverIP(), clientPort(0), serverPort(0),
-          hoplimit(64), tcp(false), wire_size(0) {}
+        : clientIP(), serverIP(), clientPort(), serverPort(),
+          hoplimit(), ipv6(), transport_type(TransportType::UDP),
+          transaction_type(TransactionType::NONE), wire_size() {}
 
     /**
-     * \brief Construct a message.
+     * \brief Construct a message received via PCAP.
      *
      * \param pdu      packet payload data.
      * \param tstamp   packet timestamp.
@@ -46,13 +49,39 @@ struct DNSMessage
      * \param srcPort  source port.
      * \param dstPort  destination port.
      * \param hoplimit packet hoplimit.
-     * \param tcp      `true` if received via TCP.
+     * \param transport_type the transport type the message was received over.
      */
     DNSMessage(const Tins::RawPDU& pdu,
                const std::chrono::system_clock::time_point& tstamp,
                const IPAddress& srcIP, const IPAddress& dstIP,
                uint16_t srcPort, uint16_t dstPort,
-               uint8_t hoplimit, bool tcp);
+               uint8_t hoplimit, TransportType transport_type);
+
+    /**
+     * \brief Construct a message received via DNSTAP.
+     *
+     * \param pdu      packet payload data.
+     * \param tstamp   packet timestamp.
+     * \param transport_type the transport type the message was received over.
+     */
+    DNSMessage(const Tins::RawPDU& pdu,
+               const std::chrono::system_clock::time_point& tstamp,
+               TransportType transport_type,
+               TransactionType transaction_type);
+
+    /**
+     * \brief Return `true` if this message is IPv6.
+     */
+    bool is_ipv6() const {
+        if ( ipv6 )
+            return *ipv6;
+        else if ( clientIP )
+            return (*clientIP).is_ipv6();
+        else if ( serverIP )
+            return (*serverIP).is_ipv6();
+
+        return false;
+    }
 
     /**
      * \brief Write basic information on the message to the output stream.
@@ -61,57 +90,7 @@ struct DNSMessage
      * \param msg    the message.
      * \return the output stream.
      */
-    friend std::ostream& operator<<(std::ostream& output, const DNSMessage& msg)
-    {
-        std::time_t t = std::chrono::system_clock::to_time_t(msg.timestamp);
-        std::tm tm = *std::gmtime(&t);
-        char buf[40];
-        std::strftime(buf, sizeof(buf), "%Y-%m-%d %Hh%Mm%Ss", &tm);
-        double us = std::chrono::duration_cast<std::chrono::microseconds>(msg.timestamp.time_since_epoch()).count() % 1000000;
-        output << buf << us << "us UTC"
-               << "\n\tClient IP: " << msg.clientIP
-               << "\n\tServer IP: " << msg.serverIP
-               << "\n\tTransport: ";
-        if ( msg.tcp )
-            output << "TCP";
-        else
-            output << "UDP";
-        output << "\n\tClient port: " << msg.clientPort
-               << "\n\tServer port: " << msg.serverPort
-               << "\n\tHop limit: " << +msg.hoplimit
-               << "\n\tDNS QR: ";
-        if  ( msg.dns.type() == CaptureDNS::RESPONSE )
-            output << "Response";
-        else
-            output << "Query";
-        output << "\n\tID: " << msg.dns.id()
-               << "\n\tOpcode: " << +msg.dns.opcode()
-               << "\n\tRcode: " << +msg.dns.rcode();
-        output << "\n\tFlags: ";
-        if ( msg.dns.authoritative_answer() )
-            output << "AA ";
-        if ( msg.dns.truncated() )
-            output << "TC ";
-        if ( msg.dns.recursion_desired() )
-            output << "RD ";
-        if ( msg.dns.recursion_available() )
-            output << "RA ";
-        if ( msg.dns.authenticated_data() )
-            output << "AD ";
-        if ( msg.dns.checking_disabled() )
-            output << "CD ";
-        output << "\n\tQdCount: " << msg.dns.questions_count()
-               << "\n\tAnCount: " << msg.dns.answers_count()
-               << "\n\tNsCount: " << msg.dns.authority_count()
-               << "\n\tArCount: " << msg.dns.additional_count();
-        for ( const auto &q : msg.dns.queries() )
-            output << "\n\tName: " << CaptureDNS::decode_domain_name(q.dname())
-                   << "\n\tType: " << static_cast<unsigned>(q.query_type())
-                   << "\n\tClass: " << static_cast<unsigned>(q.query_class());
-        output << std::endl;
-        return output;
-    }
-
+    friend std::ostream& operator<<(std::ostream& output, const DNSMessage& msg);
     /**
      * \brief Message reception timestamp.
      */
@@ -123,7 +102,7 @@ struct DNSMessage
      * If the message is a query, the client IP is the sender IP. Otherwise
      * it is the destination IP.
      */
-    IPAddress clientIP;
+    boost::optional<IPAddress> clientIP;
 
     /**
      * \brief IP address of server.
@@ -131,7 +110,7 @@ struct DNSMessage
      * If the message is a response, the server IP is the sender IP. Otherwise
      * it is the destination IP.
      */
-    IPAddress serverIP;
+    boost::optional<IPAddress> serverIP;
 
     /**
      * \brief port used by client.
@@ -139,7 +118,7 @@ struct DNSMessage
      * If the message is a query, the client port is the sender port.
      * Otherwise it is the destination port.
      */
-    uint16_t clientPort;
+    boost::optional<uint16_t> clientPort;
 
     /**
      * \brief port used by server.
@@ -147,26 +126,34 @@ struct DNSMessage
      * If the message is a response, the server port is the sender port.
      * Otherwise it is the destination port.
      */
-    uint16_t serverPort;
+    boost::optional<uint16_t> serverPort;
 
     /**
      * \brief sender packet hop limit.
      *
      * This is the TTL in IPv4, and the hop limit in IPv6.
      */
-    uint8_t hoplimit;
+    boost::optional<uint8_t> hoplimit;
 
     /**
-     * \brief `true` if the message is received via TCP.
-     *
-     * `false` if the message is received via UDP.
+     * \brief IPv4 or IPv6?
      */
-    bool tcp;
+    boost::optional<bool> ipv6;
+
+    /**
+     * \brief the transport type the message was received over.
+     */
+    TransportType transport_type;
+
+    /**
+     * \brief the transaction type, if available.
+     */
+    TransactionType transaction_type;
 
     /**
      * \brief the size of the message on the wire.
      */
-    unsigned wire_size;
+    boost::optional<unsigned> wire_size;
 
     /**
      * \brief DNS-related contents of the DNS message.

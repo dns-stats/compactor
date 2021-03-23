@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2019, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,6 +16,7 @@
 
 #include "blockcbor.hpp"
 #include "makeunique.hpp"
+#include "transporttype.hpp"
 
 using namespace block_cbor;
 
@@ -27,7 +28,7 @@ SCENARIO("DNS flags are encoded correctly", "[block flags]")
         q.timestamp = std::chrono::system_clock::time_point(std::chrono::hours(24*365*20));
         q.clientIP = IPAddress(Tins::IPv4Address("192.0.2.1"));
         q.serverIP = IPAddress(Tins::IPv4Address("192.0.2.2"));
-        q.tcp = false;
+        q.transport_type = TransportType::UDP;
         q.dns.type(CaptureDNS::QUERY);
         q.dns.id(54321);
         q.dns.add_query(CaptureDNS::query("one", CaptureDNS::AAAA, CaptureDNS::IN));
@@ -274,7 +275,7 @@ SCENARIO("Transport flags are encoded correctly", "[block flags]")
         q.timestamp = std::chrono::system_clock::time_point(std::chrono::hours(24*365*20));
         q.clientIP = IPAddress(Tins::IPv4Address("192.0.2.1"));
         q.serverIP = IPAddress(Tins::IPv4Address("192.0.2.2"));
-        q.tcp = false;
+        q.transport_type = TransportType::UDP;
         q.dns.type(CaptureDNS::QUERY);
         q.dns.id(54321);
         q.dns.add_query(CaptureDNS::query("one", CaptureDNS::AAAA, CaptureDNS::IN));
@@ -318,8 +319,8 @@ SCENARIO("Transport flags are encoded correctly", "[block flags]")
 
         AND_WHEN("Transport is TCP IPv4 with no trailing data")
         {
-            q.tcp = true;
-            r.tcp = true;
+            q.transport_type = TransportType::TCP;
+            r.transport_type = TransportType::TCP;
             QueryResponse qr(make_unique<DNSMessage>(q));
             qr.set_response(make_unique<DNSMessage>(r));
 
@@ -335,14 +336,104 @@ SCENARIO("Transport flags are encoded correctly", "[block flags]")
             q.serverIP = IPAddress(Tins::IPv6Address("2001:db8::2"));
             r.clientIP = q.serverIP;
             r.serverIP = q.clientIP;
-            q.tcp = true;
-            r.tcp = true;
+            q.transport_type = TransportType::TCP;
+            r.transport_type = TransportType::TCP;
             QueryResponse qr(make_unique<DNSMessage>(q));
             qr.set_response(make_unique<DNSMessage>(r));
 
             THEN("Flags are correct")
             {
                 REQUIRE(transport_flags(qr) == (IPV6 | TCP));
+            }
+        }
+
+        AND_WHEN("Transport is TLS IPv4 with no trailing data")
+        {
+            q.transport_type = TransportType::DOT;
+            r.transport_type = TransportType::DOT;
+            QueryResponse qr(make_unique<DNSMessage>(q));
+            qr.set_response(make_unique<DNSMessage>(r));
+
+            THEN("Flags are correct")
+            {
+                REQUIRE(transport_flags(qr) == TLS);
+            }
+        }
+
+        AND_WHEN("Transport is TLS IPv6 with no trailing data")
+        {
+            q.clientIP = IPAddress(Tins::IPv6Address("2001:db8::1"));
+            q.serverIP = IPAddress(Tins::IPv6Address("2001:db8::2"));
+            r.clientIP = q.serverIP;
+            r.serverIP = q.clientIP;
+            q.transport_type = TransportType::DOT;
+            r.transport_type = TransportType::DOT;
+            QueryResponse qr(make_unique<DNSMessage>(q));
+            qr.set_response(make_unique<DNSMessage>(r));
+
+            THEN("Flags are correct")
+            {
+                REQUIRE(transport_flags(qr) == (IPV6 | TLS));
+            }
+        }
+
+        AND_WHEN("Transport is DTLS IPv4 with no trailing data")
+        {
+            q.transport_type = TransportType::DDOT;
+            r.transport_type = TransportType::DDOT;
+            QueryResponse qr(make_unique<DNSMessage>(q));
+            qr.set_response(make_unique<DNSMessage>(r));
+
+            THEN("Flags are correct")
+            {
+                REQUIRE(transport_flags(qr) == DTLS);
+            }
+        }
+
+        AND_WHEN("Transport is DTLS IPv6 with no trailing data")
+        {
+            q.clientIP = IPAddress(Tins::IPv6Address("2001:db8::1"));
+            q.serverIP = IPAddress(Tins::IPv6Address("2001:db8::2"));
+            r.clientIP = q.serverIP;
+            r.serverIP = q.clientIP;
+            q.transport_type = TransportType::DDOT;
+            r.transport_type = TransportType::DDOT;
+            QueryResponse qr(make_unique<DNSMessage>(q));
+            qr.set_response(make_unique<DNSMessage>(r));
+
+            THEN("Flags are correct")
+            {
+                REQUIRE(transport_flags(qr) == (IPV6 | DTLS));
+            }
+        }
+
+        AND_WHEN("Transport is DOH IPv4 with no trailing data")
+        {
+            q.transport_type = TransportType::DOH;
+            r.transport_type = TransportType::DOH;
+            QueryResponse qr(make_unique<DNSMessage>(q));
+            qr.set_response(make_unique<DNSMessage>(r));
+
+            THEN("Flags are correct")
+            {
+                REQUIRE(transport_flags(qr) == DOH);
+            }
+        }
+
+        AND_WHEN("Transport is DOH IPv6 with no trailing data")
+        {
+            q.clientIP = IPAddress(Tins::IPv6Address("2001:db8::1"));
+            q.serverIP = IPAddress(Tins::IPv6Address("2001:db8::2"));
+            r.clientIP = q.serverIP;
+            r.serverIP = q.clientIP;
+            q.transport_type = TransportType::DOH;
+            r.transport_type = TransportType::DOH;
+            QueryResponse qr(make_unique<DNSMessage>(q));
+            qr.set_response(make_unique<DNSMessage>(r));
+
+            THEN("Flags are correct")
+            {
+                REQUIRE(transport_flags(qr) == (IPV6 | DOH));
             }
         }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,6 +10,7 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <sstream>
@@ -225,14 +226,12 @@ namespace {
             const auto& addrs = iface.info();
             if ( addr.is_ipv6() )
             {
-                for ( const auto& v6addr : addrs.ipv6_addrs )
-                {
-                    if ( v6addr.address == addr )
-                    {
-                        found = true;
-                        break;
-                    }
-                }
+                found = std::any_of(addrs.ipv6_addrs.begin(),
+                                    addrs.ipv6_addrs.end(),
+                                    [addr](const auto& a)
+                                    {
+                                        return a.address == addr;
+                                    });
             }
             else if ( addrs.ip_addr == addr )
             {
@@ -298,6 +297,7 @@ Configuration::Configuration()
       query_timeout(5000), skew_timeout(10),
       snaplen(65535),
       promisc_mode(false),
+      dnstap(false),
       output_options_queries(0), output_options_responses(0),
       max_block_items(5000),
       max_output_size(0),
@@ -377,6 +377,23 @@ Configuration::Configuration()
         ("interface,i",
          po::value<std::vector<std::string>>(&network_interfaces),
          "network interface from which to capture.")
+#if ENABLE_DNSTAP
+        ("dnstap,T",
+         po::value<bool>(&dnstap)->implicit_value(true),
+         "treat input files as DNSTAP data.")
+        ("dnstap-socket",
+         po::value<std::string>(&dnstap_socket),
+         "Unix socket path to listen for DNSTAP.")
+        ("dnstap-socket-owner",
+         po::value<std::string>(&dnstap_socket_owner),
+         "Unix socket path owner for DNSTAP.")
+        ("dnstap-socket-group",
+         po::value<std::string>(&dnstap_socket_group),
+         "Unix socket path group for DNSTAP.")
+        ("dnstap-socket-write",
+         po::value<std::string>(&dnstap_socket_write),
+         "Unix socket write permissions for DNSTAP.")
+#endif
         ("server-address-hint,S",
          po::value<std::vector<std::string>>(),
          "IP addresses belonging to the server.")
@@ -732,29 +749,25 @@ void Configuration::dump_output_option(std::ostream& os, bool query) const
 void Configuration::dump_OPCODEs(std::ostream& os, bool accept) const
 {
     const std::vector<unsigned>& opcodes = accept ? accept_opcodes : ignore_opcodes;
-    if ( !opcodes.empty() )
+    bool first = true;
+
+    for ( auto op_t : opcodes )
     {
-        bool first = true;
-        for ( auto op_t : opcodes )
-        {
-            if ( first )
-                first = false;
-            else
-                os << ", ";
-            // For now a brute force linear search
-            bool found = false;
-            for ( auto op : OPCODES)
-            {
-                if (op.second == op_t)
-                {
-                    os << op.first;
-                    found = true;
-                    break;
-                }
-            }
-            if ( !found )
-                os << op_t;
-        }
+        if ( first )
+            first = false;
+        else
+            os << ", ";
+
+        auto f = std::find_if(OPCODES.begin(),
+                              OPCODES.end(),
+                              [op_t](const auto& op)
+                              {
+                                  return op.second == op_t;
+                              });
+        if ( f != std::end(OPCODES) )
+            os << f->first;
+        else
+            os << std::to_string(op_t);
     }
     os << "\n";
 }
@@ -762,29 +775,25 @@ void Configuration::dump_OPCODEs(std::ostream& os, bool accept) const
 void Configuration::dump_RR_types(std::ostream& os, bool accept) const
 {
     const std::vector<unsigned>& rr_types = accept ? accept_rr_types : ignore_rr_types;
-    if ( !rr_types.empty() )
+    bool first = true;
+
+    for ( auto rr_t : rr_types )
     {
-        bool first = true;
-        for ( auto rr_t : rr_types )
-        {
-            if ( first )
-                first = false;
-            else
-                os << ", ";
-            // For now a brute force linear search
-            bool found = false;
-            for ( auto rr : RR_TYPES)
-            {
-                if (rr.second == rr_t)
-                {
-                    os << rr.first;
-                    found = true;
-                    break;
-                }
-            }
-            if ( !found )
-                os << rr_t;
-        }
+        if ( first )
+            first = false;
+        else
+            os << ", ";
+
+        auto f = std::find_if(RR_TYPES.begin(),
+                              RR_TYPES.end(),
+                              [rr_t](const auto& rr)
+                              {
+                                  return rr.second == rr_t;
+                              });
+        if ( f != std::end(RR_TYPES) )
+            os << f->first;
+        else
+            os << std::to_string(rr_t);
     }
     os << "\n";
 }
@@ -792,41 +801,25 @@ void Configuration::dump_RR_types(std::ostream& os, bool accept) const
 bool Configuration::output_opcode(CaptureDNS::Opcode opcode) const
 {
     if ( !accept_opcodes.empty() )
-    {
-        for ( auto i : accept_opcodes )
-            if ( i == opcode )
-                return true;
-
-        return false;
-    }
+        return std::find(accept_opcodes.begin(),
+                         accept_opcodes.end(),
+                         opcode) != std::end(accept_opcodes);
     else
-    {
-        for ( auto i : ignore_opcodes )
-            if ( i == opcode )
-                return false;
-
-        return true;
-    }
+        return std::find(ignore_opcodes.begin(),
+                         ignore_opcodes.end(),
+                         opcode) == std::end(ignore_opcodes);
 }
 
 bool Configuration::output_rr_type(CaptureDNS::QueryType rr_type) const
 {
     if ( !accept_rr_types.empty() )
-    {
-        for ( auto i : accept_rr_types )
-            if ( i == rr_type )
-                return true;
-
-        return false;
-    }
+        return std::find(accept_rr_types.begin(),
+                         accept_rr_types.end(),
+                         rr_type) != std::end(accept_rr_types);
     else
-    {
-        for ( auto i : ignore_rr_types )
-            if ( i == rr_type )
-                return false;
-
-        return true;
-    }
+        return std::find(ignore_rr_types.begin(),
+                         ignore_rr_types.end(),
+                         rr_type) == std::end(ignore_rr_types);
 }
 
 void Configuration::populate_block_parameters(block_cbor::BlockParameters& bp) const
@@ -924,13 +917,9 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
     server_address_prefix_ipv4 = sp.server_address_prefix_ipv4;
     server_address_prefix_ipv6 = sp.server_address_prefix_ipv6;
 
-    // List of OPCODEs recorded.
-    for ( const auto op : sp.opcodes )
-        accept_opcodes.push_back(op);
-
-    // List of RR types recorded.
-    for ( const auto rr : sp.rr_types )
-        accept_rr_types.push_back(rr);
+    // Lists of OPCODEs and RR types recorded.
+    accept_opcodes = sp.opcodes;
+    accept_rr_types = sp.rr_types;
 
     // Set collection parameter items from configuration.
     query_timeout = cp.query_timeout;
@@ -939,15 +928,9 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
     dns_port = cp.dns_port;
     promisc_mode = cp.promisc;
 
-    for ( const auto& s : cp.interfaces )
-        network_interfaces.push_back(s);
-
-    for ( const auto& a : cp.server_addresses )
-        server_addresses.push_back(a);
-
-    for ( const auto& v : cp.vlan_ids )
-        vlan_ids.push_back(v);
-
+    network_interfaces = cp.interfaces;
+    server_addresses = cp.server_addresses;
+    vlan_ids = cp.vlan_ids;
     filter = cp.filter;
 
     exclude_hints.check_config(*this);
@@ -1224,17 +1207,17 @@ namespace block_cbor {
         QueryResponseType qrt;
 
         if ( s == "query" )
-            qrt = QueryResponseType::stub;
+            qrt = QueryResponseType::STUB;
         else if ( s == "client" )
-            qrt = QueryResponseType::client;
+            qrt = QueryResponseType::CLIENT;
         else if ( s == "resolver" )
-            qrt = QueryResponseType::resolver;
+            qrt = QueryResponseType::RESOLVER;
         else if ( s == "auth" )
-            qrt = QueryResponseType::auth;
+            qrt = QueryResponseType::AUTHORITATIVE;
         else if ( s == "forwarder" )
-            qrt = QueryResponseType::forwarder;
+            qrt = QueryResponseType::FORWARDER;
         else if ( s == "tool" )
-            qrt = QueryResponseType::tool;
+            qrt = QueryResponseType::TOOL;
         else
             throw po::validation_error(po::validation_error::invalid_option_value);
 
@@ -1344,8 +1327,8 @@ namespace std {
             }
             else if ( suffix == "s" )
             {
-                seconds s(val);
-                v = duration_cast<nanoseconds>(s);
+                seconds secs(val);
+                v = duration_cast<nanoseconds>(secs);
             }
             else
                 throw po::validation_error(po::validation_error::invalid_option_value);
@@ -1376,6 +1359,7 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
     unsigned client_hoplimit = 0;
     IPAddress server_address;
     uint16_t server_port = 0;
+    unsigned server_hoplimit = 0;
     block_cbor::TransportFlags transport;
     uint16_t transaction_id = 0;
     CaptureDNS::Opcode query_opcode;
@@ -1386,15 +1370,12 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
     uint16_t query_ancount = 0;
     uint16_t query_arcount = 0;
     uint16_t query_nscount = 0;
-    byte_string query_name;
     CaptureDNS::QueryClass query_class;
     CaptureDNS::QueryType query_type;
     uint32_t rr_ttl = 0;
-    byte_string rr_rdata;
     uint16_t query_udp_size = 0;
-    byte_string query_opt_rdata;
     unsigned query_edns_version = 0;
-    block_cbor::QueryResponseType qr_type = block_cbor::QueryResponseType::client;
+    block_cbor::QueryResponseType qr_type = block_cbor::QueryResponseType::CLIENT;
     std::string response_processing_bailiwick;
     bool response_processing_from_cache = false;
     uint16_t query_size = 0;
@@ -1425,6 +1406,9 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         ("ip-header.server-port",
          po::value(&server_port),
          "server port default.")
+        ("ip-header.server-hoplimit",
+         po::value(&server_hoplimit),
+         "server hoplimit default.")
         ("ip-header.qr-transport-flags",
          po::value(&transport),
          "transport flags default.")
@@ -1490,6 +1474,8 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
         this->server_address = server_address;
     if ( res.count("ip-header.server-port") )
         this->server_port = server_port;
+    if ( res.count("ip-header.server-hoplimit") )
+        this->server_hoplimit = server_hoplimit;
     if ( res.count("ip-header.qr-transport-flags") )
         this->transport = transport;
 
@@ -1551,6 +1537,7 @@ HintsExcluded::HintsExcluded()
       client_address(false), client_port(false), client_hoplimit(false),
       server_address(false), server_port(false),
       transport(false),
+      transaction_type(false),
       qr_flags(false),
       transaction_id(false),
       qr_signature(false),
@@ -1673,6 +1660,9 @@ HintsExcluded::HintsExcluded()
          po::value<bool>(&response_additional_section)->implicit_value(true)->default_value(false),
          "exclude response additional sections.")
 
+        ("dns-meta-data.qr-type",
+         po::value<bool>(&transaction_type)->implicit_value(true)->default_value(false),
+         "exclude transaction type data.")
         ("dns-meta-data.qr-sig-flags",
          po::value<bool>(&qr_flags)->implicit_value(true)->default_value(false),
          "exclude query response flags.")
@@ -1761,7 +1751,7 @@ bool HintsExcluded::read_excludes_file(const std::string& excludesfile)
     }
 
     po::notify(res);
-    qr_signature = ( server_address && server_port && transport &&
+    qr_signature = ( server_address && server_port && transport && transaction_type &&
                      qr_flags && query_opcode && dns_flags &&
                      query_rcode && query_class_type &&
                      query_qdcount && query_ancount && query_nscount &&
@@ -1842,6 +1832,8 @@ block_cbor::QueryResponseSignatureHintFlags HintsExcluded::get_query_response_si
         res |= block_cbor::SERVER_PORT;
     if ( !transport )
         res |= block_cbor::QR_TRANSPORT_FLAGS;
+    if ( !transaction_type )
+        res |= block_cbor::QR_TYPE;
     if ( !qr_flags )
         res |= block_cbor::QR_SIG_FLAGS;
     if ( !query_opcode )
@@ -1877,6 +1869,7 @@ void HintsExcluded::set_query_response_signature_hints(block_cbor::QueryResponse
     server_address = !( hints & block_cbor::SERVER_ADDRESS );
     server_port = !( hints & block_cbor::SERVER_PORT );
     transport = !( hints & block_cbor::QR_TRANSPORT_FLAGS );
+    transaction_type = !( hints & block_cbor::QR_TYPE );
     qr_flags = !(hints & block_cbor::QR_SIG_FLAGS );
     query_type = !( hints & block_cbor::QR_TYPE );
     query_opcode = !( hints & block_cbor::QUERY_OPCODE );
@@ -2012,6 +2005,8 @@ void HintsExcluded::dump_config(std::ostream& os) const
     os << "\n[dns-meta-data]\n";
     if ( qr_flags )
         os << "qr-sig-flags\n";
+    if ( transaction_type )
+        os << "qr-type\n";
     if ( query_size )
         os << "query-size\n";
     if ( response_size )

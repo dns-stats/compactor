@@ -1,11 +1,12 @@
 /*
- * Copyright 2018-2020 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
+ * Copyright 2018-2021 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, you can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include <algorithm>
 #include <chrono>
 #include <stdexcept>
 #include <string>
@@ -208,8 +209,8 @@ namespace
             byte_string b(reinterpret_cast<const unsigned char*>(in), inlen);
             IPAddress addr(b);
             Tins::IPv6Address addr6 = addr;
-            for ( auto b : addr6 )
-                out->Emit(b);
+            for ( auto addrbyte : addr6 )
+                out->Emit(addrbyte);
         }
     };
 
@@ -443,6 +444,9 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
         dict.SetIntValue("transport_ipv6", !!(*qr.qr_transport_flags & block_cbor::IPV6));
     }
 
+    if ( qr.qr_type )
+        dict.SetIntValue("transaction_type", *qr.qr_type);
+
     if ( ( qr.qr_flags & block_cbor::HAS_QUERY ) && qr.dns_flags )
     {
         dict.SetIntValue("query_checking_disabled", !!(*qr.dns_flags & block_cbor::QUERY_CD));
@@ -463,8 +467,8 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
     if ( qr.query_edns_payload_size )
         dict.SetIntValue("query_edns_udp_payload_size", *qr.query_edns_payload_size);
 
-    if ( qr.hoplimit )
-        dict.SetIntValue("client_hoplimit", *qr.hoplimit);
+    if ( qr.client_hoplimit )
+        dict.SetIntValue("client_hoplimit", *qr.client_hoplimit);
     if ( qr.query_size )
         dict.SetIntValue("query_len", *qr.query_size);
     if ( qr.query_opcode )
@@ -564,12 +568,12 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
 
         bool response_opt = false;
         if ( qr.response_additionals )
-            for ( const auto& r : *qr.response_additionals )
-                if ( r.rtype && *r.rtype == CaptureDNS::OPT )
-                {
-                    response_opt = true;
-                    break;
-                }
+            response_opt = std::any_of((*qr.response_additionals).begin(),
+                                       (*qr.response_additionals).end(),
+                                       [](const auto& r)
+                                       {
+                                           return r.rtype && *r.rtype == CaptureDNS::OPT;
+                                       });
         dict.SetIntValue("query_response_response_has_opt", response_opt);
     }
 

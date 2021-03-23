@@ -8,6 +8,7 @@ client-port=1234
 client-hoplimit=64
 server-address=192.168.1.2
 server-port=53
+server-hoplimit=64
 qr-transport-flags=ipv4 udp
 
 [dns-header]

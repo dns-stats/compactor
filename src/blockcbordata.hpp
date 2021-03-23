@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -782,7 +782,8 @@ namespace block_cbor {
          * \brief Default constructor.
          */
         QueryResponseSignature() :
-            qr_flags(), server_address(), server_port(), qr_transport_flags(),
+            qr_flags(), server_address(), server_port(),
+            qr_transport_flags(), qr_type(),
             query_rcode(), response_rcode(), query_opcode(),
             query_edns_version(), query_edns_payload_size(),
             query_opt_rdata(), dns_flags(), query_classtype(),
@@ -807,6 +808,11 @@ namespace block_cbor {
          * \brief transport flags.
          */
         boost::optional<uint8_t> qr_transport_flags;
+
+        /**
+         * \brief query/response transaction type.
+         */
+        boost::optional<uint8_t> qr_type;
 
         /**
          * \brief query RCODE, incorporating extended RCODE.
@@ -887,6 +893,7 @@ namespace block_cbor {
                  server_address != rhs.server_address ||
                  server_port != rhs.server_port ||
                  qr_transport_flags != rhs.qr_transport_flags ||
+                 qr_type != rhs.qr_type ||
                  dns_flags != rhs.dns_flags ||
                  qdcount != rhs.qdcount ||
                  query_classtype != rhs.query_classtype ||

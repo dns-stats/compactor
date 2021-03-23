@@ -52,10 +52,11 @@ if [ $? -eq 0 ]; then
     cleanup 1
 fi
 
-# Add client address default.
+# Add client address  and server hoplimit defaults.
 cat > $tmpdir/defaults.conf <<EOF
 [ip-header]
 client-address=192.168.1.1
+server-hoplimit=64
 EOF
 
 $INSP -o $tmpdir/out.pcap --defaultsfile $tmpdir/defaults.conf $tmpdir/out.cbor
@@ -64,7 +65,7 @@ if [ $? -eq 0 ]; then
     cleanup 1
 fi
 
-# Add client address default.
+# Add transaction id default.
 cat >> $tmpdir/defaults.conf <<EOF
 [dns-header]
 transaction-id=1234
@@ -76,7 +77,7 @@ if [ $? -eq 0 ]; then
     cleanup 1
 fi
 
-# Add client address default.
+# Add query rcode default.
 cat >> $tmpdir/defaults.conf <<EOF
 query-rcode=NoError
 EOF
@@ -99,7 +100,7 @@ if [ $? -eq 0 ]; then
     cleanup 1
 fi
 
-# Add client address default.
+# Add query class default.
 cat >> $tmpdir/defaults.conf <<EOF
 query-class=IN
 EOF
@@ -110,7 +111,7 @@ if [ $? -eq 0 ]; then
     cleanup 1
 fi
 
-# Add client address default.
+# Add query type default.
 cat >> $tmpdir/defaults.conf <<EOF
 query-type=A
 EOF

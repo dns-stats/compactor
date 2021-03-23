@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,6 +18,7 @@
 #include "packetstatistics.hpp"
 #include "packetstream.hpp"
 #include "dnsmessage.hpp"
+#include "transporttype.hpp"
 
 SCENARIO("DNSMessage will report values", "[dump]")
 {
@@ -32,7 +33,7 @@ SCENARIO("DNSMessage will report values", "[dump]")
         d1.clientPort = 12345;
         d1.serverPort = 6789;
         d1.hoplimit = 254;
-        d1.tcp = false;
+        d1.transport_type = TransportType::UDP;
         d1.dns.type(CaptureDNS::QUERY);
         d1.dns.id(54321);
         d1.dns.add_query(CaptureDNS::query("one", CaptureDNS::AAAA, CaptureDNS::IN));
@@ -112,7 +113,7 @@ SCENARIO("DNSMessage correctly parses packet", "[parse]")
                        IPAddress(Tins::IPv4Address("192.168.1.2")),
                        IPAddress(Tins::IPv4Address("192.168.1.3")),
                        12345, 6789,
-                       254, false);
+                       254, TransportType::UDP);
 
         THEN("Query is interpreted correctly")
         {
@@ -170,7 +171,7 @@ SCENARIO("DNSMessage correctly parses packet", "[parse]")
                        IPAddress(Tins::IPv4Address("192.168.1.2")),
                        IPAddress(Tins::IPv4Address("192.168.1.3")),
                        12345, 6789,
-                       254, false);
+                       254, TransportType::UDP);
 
         THEN("Query is interpreted correctly")
         {
@@ -232,7 +233,7 @@ SCENARIO("DNSMessage correctly parses packet", "[parse]")
                            IPAddress(Tins::IPv4Address("192.168.1.2")),
                            IPAddress(Tins::IPv4Address("192.168.1.3")),
                            12345, 6789,
-                           254, false),
+                           254, TransportType::UDP),
                 malformed_packet);
         }
     }
@@ -256,7 +257,7 @@ SCENARIO("DNSMessage correctly parses packet", "[parse]")
                            IPAddress(Tins::IPv4Address("192.168.1.2")),
                            IPAddress(Tins::IPv4Address("192.168.1.3")),
                            12345, 6789,
-                           254, false),
+                           254, TransportType::UDP),
                 malformed_packet);
         }
     }
@@ -280,7 +281,7 @@ SCENARIO("DNSMessage correctly parses packet", "[parse]")
                            IPAddress(Tins::IPv4Address("192.168.1.2")),
                            IPAddress(Tins::IPv4Address("192.168.1.3")),
                            12345, 6789,
-                           254, false),
+                           254, TransportType::UDP),
                 malformed_packet);
         }
     }
@@ -387,7 +388,7 @@ SCENARIO("DNSMessage correctly parses packet", "[parse]")
                        IPAddress(Tins::IPv4Address("192.168.1.2")),
                        IPAddress(Tins::IPv4Address("192.168.1.3")),
                        12345, 6789,
-                       254, false);
+                       254, TransportType::UDP);
         THEN("Response is interpreted correctly")
         {
             std::ostringstream oss;
@@ -455,7 +456,7 @@ SCENARIO("DNSMessage correctly parses RDATA", "[parse]")
                        IPAddress(Tins::IPv4Address("192.168.1.2")),
                        IPAddress(Tins::IPv4Address("192.168.1.3")),
                        12345, 6789,
-                       254, false);
+                       254, TransportType::UDP);
 
         THEN("Message is interpreted correctly")
         {
@@ -544,7 +545,7 @@ SCENARIO("DNSMessage correctly parses RDATA", "[parse]")
                        IPAddress(Tins::IPv4Address("192.168.1.2")),
                        IPAddress(Tins::IPv4Address("192.168.1.3")),
                        12345, 6789,
-                       254, false);
+                       254, TransportType::UDP);
 
         THEN("Message is interpreted correctly")
         {
@@ -611,7 +612,7 @@ SCENARIO("DNSMessage correctly parses RDATA", "[parse]")
                        IPAddress(Tins::IPv4Address("192.168.1.2")),
                        IPAddress(Tins::IPv4Address("192.168.1.3")),
                        12345, 6789,
-                       254, false);
+                       254, TransportType::UDP);
 
         THEN("Message is interpreted correctly")
         {

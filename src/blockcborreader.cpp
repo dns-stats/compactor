@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -444,7 +444,7 @@ bool BlockCborReader::readBlock()
 
 QueryResponseData BlockCborReader::readQRData(bool& eof)
 {
-    QueryResponseData res;
+    QueryResponseData res{};
 
     eof = false;
     while ( need_block_ )
@@ -493,12 +493,17 @@ QueryResponseData BlockCborReader::readQRData(bool& eof)
     else
         res.client_address = defaults_.client_address;
     res.client_port = ( qri.client_port ) ? qri.client_port : defaults_.client_port;
-    res.hoplimit = ( qri.hoplimit ) ? qri.hoplimit : defaults_.client_hoplimit;
+    res.client_hoplimit = ( qri.hoplimit ) ? qri.hoplimit : defaults_.client_hoplimit;
+    res.server_hoplimit = defaults_.server_hoplimit;
     if ( sig->server_address )
         res.server_address = get_server_address(*sig->server_address, transport_flags);
     else
         res.server_address = defaults_.server_address;
     res.server_port = ( sig->server_port ) ? sig->server_port : defaults_.server_port;
+    if ( sig->qr_type )
+        res.qr_type = *sig->qr_type;
+    else
+        res.qr_type = defaults_.qr_type;
     res.id = ( qri.id ) ? qri.id : defaults_.transaction_id;
     if ( qri.qname )
         res.qname = block_->names_rdatas[*qri.qname].str;
@@ -837,7 +842,7 @@ uint8_t BlockCborReader::synthesise_qr_flags(const block_cbor::QueryResponseItem
     return res;
 }
 
-void BlockCborReader::dump_collector(std::ostream& os)
+void BlockCborReader::dump_collector(std::ostream& os) const
 {
     os << "\nCOLLECTOR:"
        << "\n  Collector ID         : " << generator_id_
@@ -845,7 +850,7 @@ void BlockCborReader::dump_collector(std::ostream& os)
        << "\n";
 }
 
-void BlockCborReader::dump_times(std::ostream& os)
+void BlockCborReader::dump_times(std::ostream& os) const
 {
     if ( !earliest_time_ && ! latest_time_ && !end_time_ && !start_time_ )
         return;
@@ -892,7 +897,7 @@ void BlockCborReader::dump_times(std::ostream& os)
     }
 }
 
-void BlockCborReader::dump_address_events(std::ostream& os)
+void BlockCborReader::dump_address_events(std::ostream& os) const
 {
     for ( unsigned event_type = AddressEvent::EventType::TCP_RESET;
           event_type <= AddressEvent::EventType::ICMPv6_PACKET_TOO_BIG;
@@ -983,6 +988,7 @@ void BlockCborReader::dump_address_events(std::ostream& os)
 std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
 {
     const char* transport = NULL;
+    const char* transaction_type = NULL;
     unsigned count;
 
     if ( qr.qr_transport_flags )
@@ -998,6 +1004,20 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         }
     }
 
+    if ( qr.qr_type )
+    {
+        switch (*qr.qr_type)
+        {
+        case block_cbor::STUB:          transaction_type = "Stub"; break;
+        case block_cbor::CLIENT:        transaction_type = "Client"; break;
+        case block_cbor::RESOLVER:      transaction_type = "Resolver"; break;
+        case block_cbor::AUTHORITATIVE: transaction_type = "Authoritative"; break;
+        case block_cbor::FORWARDER:     transaction_type = "Forwarder"; break;
+        case block_cbor::UPDATE :       transaction_type = "Update"; break;
+        default:                        transaction_type = "Tool"; break;
+        }
+    }
+
     output << "Query/Response:\n";
     if ( qr.qr_flags & block_cbor::HAS_QUERY )
     {
@@ -1010,12 +1030,14 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
             output << "\n\tServer IP: " << *qr.server_address;
         if ( transport )
             output << "\n\tTransport: " << transport;
+        if ( transaction_type )
+            output << "\n\tType: " << transaction_type;
         if ( qr.client_port )
             output << "\n\tClient port: " << *qr.client_port;
         if ( qr.server_port )
             output << "\n\tServer port: " << *qr.server_port;
-        if ( qr.hoplimit )
-            output << "\n\tHop limit: " << +*qr.hoplimit;
+        if ( qr.client_hoplimit )
+            output << "\n\tHop limit: " << +*qr.client_hoplimit;
         output << "\n\tDNS QR: Query";
         if ( qr.id )
             output << "\n\tID: " << *qr.id;
@@ -1086,12 +1108,15 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
             output << "\n\tServer IP: " << *qr.server_address;
         if ( transport )
             output << "\n\tTransport: " << transport;
+        if ( transaction_type )
+            output << "\n\tType: " << transaction_type;
         if ( qr.client_port )
             output << "\n\tClient port: " << *qr.client_port;
         if ( qr.server_port )
             output << "\n\tServer port: " << *qr.server_port;
-        if ( qr.hoplimit )
-            output << "\n\tHop limit: 64\n\tDNS QR: Response";
+        if ( qr.server_hoplimit )
+            output << "\n\tHop limit: " << +*qr.server_hoplimit;
+        output << "\n\tDNS QR: Response";
         if ( qr.id )
             output << "\n\tID: " << *qr.id;
         if ( qr.query_opcode )

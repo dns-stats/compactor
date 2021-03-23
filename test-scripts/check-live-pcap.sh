@@ -24,6 +24,9 @@ INSP=./inspector
 DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
 
 TCPDUMP=/usr/sbin/tcpdump
+if [ ! -x $TCPDUMP ]; then
+    TCPDUMP=tcpdump
+fi
 
 command -v cmp > /dev/null 2>&1 || { echo "No cmp, skipping test." >&2; exit 77; }
 command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }

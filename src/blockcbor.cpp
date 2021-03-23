@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017, 2019, 2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2019-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -310,9 +310,15 @@ namespace block_cbor {
         uint8_t res = 0;
         const DNSMessage& d(qr.has_query() ? qr.query() : qr.response());
 
-        if ( d.tcp )
-            res |= TCP;
-        if ( d.clientIP.is_ipv6() )
+        switch ( d.transport_type )
+        {
+        case TransportType::UDP:  res |= UDP; break;
+        case TransportType::TCP:  res |= TCP; break;
+        case TransportType::DOT:  res |= TLS; break;
+        case TransportType::DDOT: res |= DTLS; break;
+        case TransportType::DOH:  res |= DOH; break;
+        }
+        if ( d.is_ipv6() )
             res |= IPV6;
 
         if ( qr.has_query() && qr.query().dns.trailing_data_size() > 0 )
@@ -342,6 +348,55 @@ namespace block_cbor {
             res |= TCP;
         if ( flags & FORMAT_05_QUERY_TRAILINGDATA )
             res |= QUERY_TRAILINGDATA;
+        return res;
+    }
+
+    boost::optional<uint8_t> transaction_type(const QueryResponse& qr)
+    {
+        boost::optional<uint8_t> res;
+        const DNSMessage& d(qr.has_query() ? qr.query() : qr.response());
+
+        switch ( d.transaction_type )
+        {
+        case TransactionType::AUTH_QUERY:
+        case TransactionType::AUTH_RESPONSE:
+            res = AUTHORITATIVE;
+            break;
+
+        case TransactionType::RESOLVER_QUERY:
+        case TransactionType::RESOLVER_RESPONSE:
+            res = RESOLVER;
+            break;
+
+        case TransactionType::CLIENT_QUERY:
+        case TransactionType::CLIENT_RESPONSE:
+            res = CLIENT;
+            break;
+
+        case TransactionType::FORWARDER_QUERY:
+        case TransactionType::FORWARDER_RESPONSE:
+            res = FORWARDER;
+            break;
+
+        case TransactionType::STUB_QUERY:
+        case TransactionType::STUB_RESPONSE:
+            res = STUB;
+            break;
+
+        case TransactionType::TOOL_QUERY:
+        case TransactionType::TOOL_RESPONSE:
+            res = TOOL;
+            break;
+
+        case TransactionType::UPDATE_QUERY:
+        case TransactionType::UPDATE_RESPONSE:
+            res = UPDATE;
+            break;
+
+        default:
+            break;
+        }
+
         return res;
     }
 

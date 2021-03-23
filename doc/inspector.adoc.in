@@ -311,6 +311,9 @@ is no query question.
 | `transport_flags`
 | Transport flags value. See C-DNS definition for values.
 
+| `transaction_type`
+| Transaction type value. See C-DNS definition for values.
+
 | `transport_ipv6`
 | 1 if the IPv4 used, 0 if IPv4.
 

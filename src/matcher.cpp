@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -41,7 +41,7 @@ public:
      * \param m DNS message.
      * \param query `true` if this message is a query, `false` if a response.
      */
-    QueryResponseInProgress(std::unique_ptr<DNSMessage> m, bool query = true);
+    explicit QueryResponseInProgress(std::unique_ptr<DNSMessage> m, bool query = true);
 
     /**
      * \brief Returns `true` if this query/response pair is complete.
@@ -255,11 +255,15 @@ LiveQueries::matchResponse(const DNSMessage &m)
 
 std::size_t LiveQueries::makeKey(const DNSMessage &m)
 {
-    std::size_t seed = hash_value(m.clientIP);
-    boost::hash_combine(seed, hash_value(m.serverIP));
-    boost::hash_combine(seed, m.clientPort);
-    boost::hash_combine(seed, m.serverPort);
-    boost::hash_combine(seed, m.tcp);
+    std::size_t seed = boost::hash_value(m.transport_type);
+    if ( m.clientIP )
+        boost::hash_combine(seed, hash_value(*m.clientIP));
+    if ( m.serverIP )
+        boost::hash_combine(seed, hash_value(*m.serverIP));
+    if ( m.clientPort )
+         boost::hash_combine(seed, *m.clientPort);
+    if ( m.serverPort )
+         boost::hash_combine(seed, *m.serverPort);
     boost::hash_combine(seed, m.dns.id());
     return seed;
 }

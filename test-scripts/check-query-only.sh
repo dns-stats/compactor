@@ -13,6 +13,9 @@ INSP=./inspector
 DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
 
 TCPDUMP=/usr/sbin/tcpdump
+if [ ! -x $TCPDUMP ]; then
+    TCPDUMP=tcpdump
+fi
 
 DATAFILE=./dns.pcap
 

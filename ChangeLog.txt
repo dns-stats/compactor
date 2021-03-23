@@ -1,16 +1,28 @@
 #
-# Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
-Version 1.1.0-beta2 - 2020-11-03
+Version 1.2.0-beta1 - 2021-03-23
 --------------------------------
 
 * Add custom field of collection start time to block and to info file.
   File duration in info file is now end-start time.
+* Add capture from DNSTAP, either over Unix socket or from file.
+
+Version 1.1.0 - 2020-12-09
+--------------------------
+
+* No change from ~rc1.
+
+Version 1.1.0-rc1 - 2020-11-25
+------------------------------
+
+* No change from ~beta1.
+>>>>>>> feature/dnstap
 
 Version 1.1.0-beta1 - 2020-10-26
 --------------------------------

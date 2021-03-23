@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -855,6 +855,7 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
         qs1.server_address = 1;
         qs1.server_port = 2;
         qs1.qr_transport_flags = 3;
+        qs1.qr_type = 4;
         qs1.qr_flags = 0x1f;
         qs1.qdcount = 1;
         qs1.query_rcode = CaptureDNS::Rcode(22);
@@ -898,10 +899,11 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 16,
+                        (5 << 5) | 17,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_type), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
                         find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
@@ -932,9 +934,10 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 15,
+                        (5 << 5) | 16,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_type), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
                         find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
@@ -965,9 +968,10 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 15,
+                        (5 << 5) | 16,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_type), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
                         find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
@@ -998,10 +1002,11 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 15,
+                        (5 << 5) | 16,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_type), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
                         find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
@@ -1031,9 +1036,44 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 15,
+                        (5 << 5) | 16,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_type), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_rcode), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_opcode), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_an_count), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ar_count), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::query_ns_count), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::edns_version), 0,
+                        find_query_response_signature_index(QueryResponseSignatureField::udp_buf_size), 22,
+                        find_query_response_signature_index(QueryResponseSignatureField::opt_rdata_index), 4,
+                        find_query_response_signature_index(QueryResponseSignatureField::response_rcode), 23,
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("values are encoded, transaction type excluded")
+        {
+            TestCborEncoder tcbe;
+            qs1.qr_type.reset();
+            qs1.writeCbor(tcbe);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                constexpr uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 16,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
+                        find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
                         find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
@@ -1064,10 +1104,11 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 15,
+                        (5 << 5) | 16,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_type), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
                         find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
@@ -1100,10 +1141,11 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 12,
+                        (5 << 5) | 13,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_type), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
                         find_query_response_signature_index(QueryResponseSignatureField::query_classtype_index), 3,
@@ -1131,10 +1173,11 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 14,
+                        (5 << 5) | 15,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_type), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
                         find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
@@ -1165,10 +1208,11 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 13,
+                        (5 << 5) | 14,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_type), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
                         find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,
@@ -1197,10 +1241,11 @@ SCENARIO("QueryResponseSignatures can be compared and written", "[block]")
             {
                 constexpr uint8_t EXPECTED[] =
                     {
-                        (5 << 5) | 14,
+                        (5 << 5) | 15,
                         find_query_response_signature_index(QueryResponseSignatureField::server_address_index), 1,
                         find_query_response_signature_index(QueryResponseSignatureField::server_port), 2,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_transport_flags), 3,
+                        find_query_response_signature_index(QueryResponseSignatureField::qr_type), 4,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_dns_flags), 8,
                         find_query_response_signature_index(QueryResponseSignatureField::qr_sig_flags), (0 << 5) | 24, 0x1f,
                         find_query_response_signature_index(QueryResponseSignatureField::query_qd_count), 1,

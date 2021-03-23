@@ -1,0 +1,3 @@
+[submodule "dnstap"]
+	path = dnstap
+	url = https://github.com/dnstap/dnstap.pb

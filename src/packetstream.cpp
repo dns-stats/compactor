@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,6 +10,7 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+#include <algorithm>
 #include <functional>
 #include <iostream>
 
@@ -72,16 +73,9 @@ Tins::PDU* PacketStream::find_ip_pdu(Tins::PDU* pdu)
              !config_.vlan_ids.empty() )
         {
             const Tins::Dot1Q* dot1q = reinterpret_cast<const Tins::Dot1Q*>(pdu);
-            bool watched_vlan = false;
-
-            for ( auto vl_id : config_.vlan_ids )
-                if ( vl_id == dot1q->id() )
-                {
-                    watched_vlan = true;
-                    break;
-                }
-
-            if ( !watched_vlan )
+            if ( std::find(config_.vlan_ids.begin(),
+                           config_.vlan_ids.end(),
+                           dot1q->id()) == std::end(config_.vlan_ids) )
                 return nullptr;
         }
 
@@ -131,7 +125,7 @@ void PacketStream::udp_packet(Tins::UDP* udp, PktData& pkt_data)
 
     pkt_data.srcPort = udp->sport();
     pkt_data.dstPort = udp->dport();
-    pkt_data.tcp = false;
+    pkt_data.transport_type = TransportType::UDP;
 
     Tins::PDU* pdu = udp->inner_pdu();
     if ( !pdu || pdu->pdu_type() != Tins::PDU::RAW )
@@ -148,7 +142,7 @@ void PacketStream::tcp_packet(Tins::TCP* tcp, Tins::PDU* ip_pdu,
 
     pkt_data.srcPort = tcp->sport();
     pkt_data.dstPort = tcp->dport();
-    pkt_data.tcp = true;
+    pkt_data.transport_type = TransportType::TCP;
     last_tcp_packet_data_ = &pkt_data;
 
     if ( tcp->flags() & Tins::TCP::RST )
@@ -271,7 +265,7 @@ void PacketStream::dispatch_dns(Tins::RawPDU* pdu, PktData& pkt_data)
                                 pkt_data.timestamp,
                                 pkt_data.srcIP, pkt_data.dstIP,
                                 pkt_data.srcPort, pkt_data.dstPort,
-                                pkt_data.hoplimit, pkt_data.tcp);
+                                pkt_data.hoplimit, pkt_data.transport_type);
     dns_sink_(dns);
 }
 

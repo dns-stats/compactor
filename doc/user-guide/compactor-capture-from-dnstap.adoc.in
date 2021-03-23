@@ -1,0 +1,26 @@
+==== Capture from DNSTAP
+
+If *compactor* has been built with DNSTAP enabled, the following options control capture
+from DNSTAP.
+
+*--dnstap* [_arg_]::
+  When reading input data from file, treat the data as DNSTAP data not PCAP data
+  if _arg_ is `true` or `1`. The default is `false`.
+
+*--dnstap-socket* _arg_::
+  Capture DNSTAP traffic from Unix socket _arg_.
+
+*--dnstap-socket-owner* _arg_::
+  If specified, *compactor* will try to set the owner of the DNSTAP socket to _arg_.
+
+*--dnstap-socket-group* _arg_::
+  If specified, *compactor* will try to set the group of the DNSTAP socket to _arg_.
+
+*--dnstap-socket-write* _arg_::
+  If specified, *compactor* will try to set write permissions on the DNSTAP socket.
+  If _arg_ is *owner*, the socket owner will have write permission.
+  If _arg_ is *group*, the socket owner and group will have write permission.
+  If _arg_ is *all*, all users will have write permission.
+  No other values of _arg_ are permitted.
+
+

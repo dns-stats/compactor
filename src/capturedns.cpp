@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -467,7 +467,7 @@ namespace {
          * \param f location type.
          * \param n RR number in RR set. If in a query, use 0.
          */
-        LabelHint(LabelHintFlag f, uint16_t n = 0)
+        explicit LabelHint(LabelHintFlag f, uint16_t n = 0)
             : flag_(f), rr_no_(n) {}
 
         /**

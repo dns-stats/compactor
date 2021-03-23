@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,6 +20,7 @@ endif
 common_doc_sources = \
         doc/user-guide/compactor-command-options.adoc \
         doc/user-guide/compactor-capture-from-network.adoc \
+        doc/user-guide/compactor-capture-from-dnstap.adoc \
         doc/user-guide/compactor-outputs.adoc \
         doc/user-guide/compactor-query-response-matching.adoc
 
@@ -42,6 +43,7 @@ dist_dsconf_DATA = etc/compactor.conf \
                    etc/default_values.conf
 dist_noinst_DATA = README.adoc \
                    doc/compactor.adoc doc/inspector.adoc \
+                   dnstap/dnstap.proto \
                    $(user_guide_sources)
 
 conffile=$(dsconfdir)/compactor.conf
@@ -56,6 +58,8 @@ defaultsfile=$(dsconfdir)/default_values.conf
 %.pdf : %.adoc ; @ASCIIDOC@ -b pdf -d article -r asciidoctor-pdf -a appversion=$(PACKAGE_VERSION) -o $@ $<
 
 % :: test-scripts/%.xz ; xz --decompress --to-stdout $< > $@
+
+%.pb.cc %.pb.h: %.proto ; $(PROTOC) --proto_path=$(srcdir) --cpp_out=@builddir@ $<
 
 check_PROGRAMS = compactor-tests
 check_SCRIPTS = test-scripts/check-config-info.sh \
@@ -85,6 +89,13 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/verify-cbor05.sh \
                 test-scripts/verify-cddl.sh
 
+if ENABLE_DNSTAP
+        check_SCRIPTS += test-scripts/check-dnstap.sh
+        dist_check_SCRIPTS = $(check_SCRIPTS)
+else
+        dist_check_SCRIPTS = $(check_SCRIPTS)
+        dist_check_SCRIPTS += test-scripts/check-dnstap.sh
+endif
 if ENABLE_PSEUDOANONYMISATION
         check_SCRIPTS += test-scripts/pseudoanon-tshark-output.sh \
                          test-scripts/pseudoanon-inspector-output.sh
@@ -100,6 +111,8 @@ dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/GeoLite2-City.mmdb.xz \
                   test-scripts/dns.pcap.xz \
                   test-scripts/dnscap.pcap.xz \
+                  test-scripts/test.dnstap \
+                  test-scripts/test.dnstap.debug-dns \
                   test-scripts/gold.pcap.xz \
                   test-scripts/gold.cbor.xz \
                   test-scripts/gold.cbor02.xz \
@@ -173,6 +186,10 @@ CLEANFILES = $(check_DATA) $(dist_man_MANS) \
              doc/user-guide/default_values.conf \
              doc/inspector.adoc doc/compactor.adoc
 
+MOSTLYCLEANFILES = dnstap/dnstap.pb.h dnstap/dnstap.pb.cc
+
+BUILT_SOURCES = dnstap/dnstap.pb.h
+
 TESTS = $(check_PROGRAMS) $(check_SCRIPTS)
 
 AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
@@ -223,6 +240,7 @@ libcdns_a_headers = \
         src/queryresponse.hpp \
         src/rotatingfilename.hpp \
         src/streamwriter.hpp \
+        src/transporttype.hpp \
         src/util.hpp
 
 libcdns_a_SOURCES = \
@@ -248,6 +266,7 @@ libcdns_a_CXXFLAGS = -DBOOST_LOG_DYN_LINK
 compactor_headers = \
         src/blockcborwriter.hpp \
         src/channel.hpp \
+        src/dnstap.hpp \
         src/matcher.hpp \
         src/nocopypacket.hpp \
         src/packetstatistics.hpp \
@@ -273,6 +292,15 @@ compactor_src_without_internal_tests = \
         src/blockcborwriter.cpp \
         src/packetstream.cpp \
         src/sniffers.cpp
+
+if ENABLE_DNSTAP
+compactor_src_without_internal_tests += \
+        src/dnstap.cpp
+
+nodist_compactor_SOURCES = \
+        @builddir@/dnstap/dnstap.pb.h \
+        @builddir@/dnstap/dnstap.pb.cc
+endif
 
 compactor_SOURCES = \
         $(compactor_headers) \
@@ -303,6 +331,12 @@ compactor_LDADD += \
 compactor_LDFLAGS += \
         $(OPENSSL_LDFLAGS)
 endif
+if ENABLE_DNSTAP
+compactor_CXXFLAGS += \
+        @PROTOBUF_CFLAGS@
+compactor_LDADD += \
+        $(PROTOBUF_LIBS)
+endif
 
 compactor_tests_SOURCES = \
         tests/catch.hpp \
@@ -325,6 +359,14 @@ if ENABLE_PSEUDOANONYMISATION
 compactor_tests_SOURCES += \
         tests/pseudoanonymise_test.cpp
 endif
+if ENABLE_DNSTAP
+compactor_tests_SOURCES += \
+        tests/dnstap_test.cpp
+
+nodist_compactor_tests_SOURCES = \
+        @builddir@/dnstap/dnstap.pb.h \
+        @builddir@/dnstap/dnstap.pb.cc
+endif
 
 compactor_tests_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
 compactor_tests_LDADD = \
@@ -336,6 +378,7 @@ compactor_tests_LDADD = \
         $(BOOST_SYSTEM_LIB) \
         $(BOOST_THREAD_LIB) \
         $(PCAP_LIB) \
+        $(PROTOBUF_LIBS) \
         $(LZMA_LIB) \
         $(TCMALLOC_LIB) \
         @PTHREAD_LIBS@ \
@@ -347,6 +390,12 @@ compactor_tests_LDADD += \
         $(OPENSSL_LIBS)
 compactor_tests_LDFLAGS += \
         $(OPENSSL_LDFLAGS)
+endif
+if ENABLE_DNSTAP
+compactor_tests_CXXFLAGS += \
+        @PROTOBUF_CFLAGS@
+compactor_tests_LDADD += \
+        $(PROTOBUF_LIBS)
 endif
 
 inspector_SOURCES = \

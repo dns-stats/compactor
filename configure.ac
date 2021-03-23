@@ -1,5 +1,5 @@
 # 
-# Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
 # 
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -40,6 +40,12 @@ AS_IF([test "x$ASCIIDOC" == xno], [AC_MSG_NOTICE("asciidoctor not found. Not bui
 AM_CONDITIONAL([BUILD_DOCS], [test ! $ASCIIDOC_TOO_OLD && test "x$ASCIIDOC" != "xno"])
 
 # Optional features
+AC_ARG_ENABLE([dnstap],
+        [AS_HELP_STRING([--disable-dnstap],
+                [do not include DNSTAP])],
+        [],
+        [enable_dnstap=yes])
+AM_CONDITIONAL([ENABLE_DNSTAP], [test "x$enable_dnstap" == "xyes"])
 AC_ARG_ENABLE([pseudo-anonymisation],
         [AS_HELP_STRING([--disable-pseudo-anonymisation],
                 [do not include pseudo-anonymisation])],
@@ -69,6 +75,13 @@ AC_CHECK_HEADERS([pthread_np.h])
 AC_CHECK_LIB([pthread],[pthread_setname_np],
         AC_DEFINE([HAVE_PTHREAD_SETNAME_NP], [1], [Define to 1 if you have pthread_setname_np()]))
 
+AS_IF([test "x$enable_dnstap" != xno],
+        [PKG_CHECK_MODULES(PROTOBUF, protobuf >= 2.4.0)
+         AC_CHECK_PROG([PROTOC], [protoc], [protoc])
+         AS_IF([test "x${PROTOC}" == "x"],
+               [AC_MSG_ERROR([ProtoBuf compiler "protoc" not found.])])
+         AC_DEFINE([ENABLE_DNSTAP], [1], [Define to 1 to enable DNSTAP])
+        ])
 AS_IF([test "x$enable_pseudo_anonymisation" != xno],
         [AX_CHECK_OPENSSL([], [AC_MSG_ERROR([pseudo-anonymisation requires OpenSSL])])
          AC_DEFINE([ENABLE_PSEUDOANONYMISATION], [1], [Define to 1 to enable pseudo-anonymisation])

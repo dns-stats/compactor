@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2018-2019, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,6 +10,7 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+#include <algorithm>
 #include <cstring>
 #include <stdexcept>
 
@@ -62,17 +63,14 @@ IPAddress PseudoAnonymise::address(const IPAddress& addr) const
 
 byte_string PseudoAnonymise::edns0(const byte_string& edns0) const
 {
-    bool client_subnet_found = false;
     CaptureDNS::EDNS0 e0(CaptureDNS::INTERNET, 0, edns0);
 
-    for ( auto& opt : e0.options() )
-        if ( opt.code() == CaptureDNS::CLIENT_SUBNET )
-        {
-            client_subnet_found = true;
-            break;
-        }
-
-    if ( !client_subnet_found )
+    if ( std::none_of(e0.options().begin(),
+                      e0.options().end(),
+                      [](const auto& op)
+                      {
+                          return op.code() == CaptureDNS::CLIENT_SUBNET;
+                      }) )
         return edns0;
 
     CaptureDNS::EDNS0 res(CaptureDNS::INTERNET, 0, byte_string());

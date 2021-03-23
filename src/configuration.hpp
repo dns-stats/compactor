@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,6 +20,8 @@
 
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
+
+#include "config.h"
 
 #include "blockcbordata.hpp"
 #include "ipaddress.hpp"
@@ -101,6 +103,11 @@ public:
      * \brief default server port.
      */
     boost::optional<uint16_t> server_port;
+
+    /**
+     * \brief default server hoplimit.
+     */
+    boost::optional<uint8_t> server_hoplimit;
 
     /**
      * \brief default transport flags.
@@ -314,6 +321,11 @@ public:
      * \brief output transport info?
      */
     bool transport;
+
+    /**
+     * \brief output transaction type?
+     */
+    bool transaction_type;
 
     /**
      * \brief output Q/R flags?
@@ -736,6 +748,33 @@ public:
      * This will be operating system dependent. A Linux example is `eth0`.
      */
     std::vector<std::string> network_interfaces;
+
+#if ENABLE_DNSTAP
+    /**
+     * \brief treat input files as DNSTAP.
+     */
+    bool dnstap;
+
+    /**
+     * \brief DNSTAP Unix socket.
+     */
+    std::string dnstap_socket;
+
+    /**
+     * \brief DNSTAP Unix socket owner.
+     */
+    std::string dnstap_socket_owner;
+
+    /**
+     * \brief DNSTAP Unix socket group.
+     */
+    std::string dnstap_socket_group;
+
+    /**
+     * \brief DNSTAP Unix socket write permissions.
+     */
+    std::string dnstap_socket_write;
+#endif
 
     /**
      * \brief the server network addresses.
