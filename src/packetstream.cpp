@@ -10,6 +10,7 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+#include <algorithm>
 #include <functional>
 #include <iostream>
 
@@ -72,16 +73,9 @@ Tins::PDU* PacketStream::find_ip_pdu(Tins::PDU* pdu)
              !config_.vlan_ids.empty() )
         {
             const Tins::Dot1Q* dot1q = reinterpret_cast<const Tins::Dot1Q*>(pdu);
-            bool watched_vlan = false;
-
-            for ( auto vl_id : config_.vlan_ids )
-                if ( vl_id == dot1q->id() )
-                {
-                    watched_vlan = true;
-                    break;
-                }
-
-            if ( !watched_vlan )
+            if ( std::find(config_.vlan_ids.begin(),
+                           config_.vlan_ids.end(),
+                           dot1q->id()) == std::end(config_.vlan_ids) )
                 return nullptr;
         }
 

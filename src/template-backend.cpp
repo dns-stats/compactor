@@ -6,6 +6,7 @@
  * file, you can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include <algorithm>
 #include <chrono>
 #include <stdexcept>
 #include <string>
@@ -567,12 +568,12 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& c
 
         bool response_opt = false;
         if ( qr.response_additionals )
-            for ( const auto& r : *qr.response_additionals )
-                if ( r.rtype && *r.rtype == CaptureDNS::OPT )
-                {
-                    response_opt = true;
-                    break;
-                }
+            response_opt = std::any_of((*qr.response_additionals).begin(),
+                                       (*qr.response_additionals).end(),
+                                       [](const auto& r)
+                                       {
+                                           return r.rtype && *r.rtype == CaptureDNS::OPT;
+                                       });
         dict.SetIntValue("query_response_response_has_opt", response_opt);
     }
 
