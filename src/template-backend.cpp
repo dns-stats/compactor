@@ -570,7 +570,7 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
         if ( qr.response_additionals )
             response_opt = std::any_of((*qr.response_additionals).begin(),
                                        (*qr.response_additionals).end(),
-                                       [](const auto& r)
+                                       [](const QueryResponseData::RR& r)
                                        {
                                            return r.rtype && *r.rtype == CaptureDNS::OPT;
                                        });
