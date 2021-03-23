@@ -916,13 +916,9 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
     server_address_prefix_ipv4 = sp.server_address_prefix_ipv4;
     server_address_prefix_ipv6 = sp.server_address_prefix_ipv6;
 
-    // List of OPCODEs recorded.
-    for ( const auto op : sp.opcodes )
-        accept_opcodes.push_back(op);
-
-    // List of RR types recorded.
-    for ( const auto rr : sp.rr_types )
-        accept_rr_types.push_back(rr);
+    // Lists of OPCODEs and RR types recorded.
+    accept_opcodes = sp.opcodes;
+    accept_rr_types = sp.rr_types;
 
     // Set collection parameter items from configuration.
     query_timeout = cp.query_timeout;
@@ -931,15 +927,9 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
     dns_port = cp.dns_port;
     promisc_mode = cp.promisc;
 
-    for ( const auto& s : cp.interfaces )
-        network_interfaces.push_back(s);
-
-    for ( const auto& a : cp.server_addresses )
-        server_addresses.push_back(a);
-
-    for ( const auto& v : cp.vlan_ids )
-        vlan_ids.push_back(v);
-
+    network_interfaces = cp.interfaces;
+    server_addresses = cp.server_addresses;
+    vlan_ids = cp.vlan_ids;
     filter = cp.filter;
 
     exclude_hints.check_config(*this);
