@@ -437,7 +437,7 @@ bool BlockCborReader::readBlock()
 
 QueryResponseData BlockCborReader::readQRData(bool& eof)
 {
-    QueryResponseData res;
+    QueryResponseData res{};
 
     eof = false;
     while ( need_block_ )

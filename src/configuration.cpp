@@ -297,6 +297,7 @@ Configuration::Configuration()
       query_timeout(5000), skew_timeout(10),
       snaplen(65535),
       promisc_mode(false),
+      dnstap(false),
       output_options_queries(0), output_options_responses(0),
       max_block_items(5000),
       max_output_size(0),
