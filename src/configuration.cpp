@@ -10,6 +10,7 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <sstream>
@@ -225,14 +226,12 @@ namespace {
             const auto& addrs = iface.info();
             if ( addr.is_ipv6() )
             {
-                for ( const auto& v6addr : addrs.ipv6_addrs )
-                {
-                    if ( v6addr.address == addr )
-                    {
-                        found = true;
-                        break;
-                    }
-                }
+                found = std::any_of(addrs.ipv6_addrs.begin(),
+                                    addrs.ipv6_addrs.end(),
+                                    [addr](const auto& a)
+                                    {
+                                        return a.address == addr;
+                                    });
             }
             else if ( addrs.ip_addr == addr )
             {
