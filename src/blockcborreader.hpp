@@ -341,7 +341,7 @@ public:
      *
      * \param os output stream.
      */
-    void dump_stats(std::ostream& os) {
+    void dump_stats(std::ostream& os) const {
         block_->last_packet_statistics.dump_stats(os);
     }
 
@@ -350,21 +350,21 @@ public:
      *
      * \param os output stream.
      */
-    void dump_collector(std::ostream& os);
+    void dump_collector(std::ostream& os) const;
 
     /**
      * \brief Dump info on file earliest/latest/end times to the stream provided
      *
      * \param os output stream.
      */
-    void dump_times(std::ostream& os);
+    void dump_times(std::ostream& os) const;
 
     /**
      * \brief Dump address event info to the stream provided.
      *
      * \param os output stream.
      */
-    void dump_address_events(std::ostream& os);
+    void dump_address_events(std::ostream& os) const;
 
 protected:
     /**

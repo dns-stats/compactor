@@ -174,7 +174,7 @@ public:
     /**
      * \brief Process a query/response.
      */
-    void operator()(std::shared_ptr<QueryResponse>& qr)
+    void operator()(const std::shared_ptr<QueryResponse>& qr)
     {
         out_->writeQR(qr, *stats_);
     }
@@ -182,7 +182,7 @@ public:
     /**
      * \brief Process an address event.
      */
-    void operator()(std::shared_ptr<AddressEvent>& ae)
+    void operator()(const std::shared_ptr<AddressEvent>& ae)
     {
         out_->writeAE(ae, *stats_);
     }
@@ -290,7 +290,7 @@ static void sniff_loop(BaseSniffers* sniffer,
         };
 
     auto address_event_sink =
-        [&](std::shared_ptr<AddressEvent>& event)
+        [&](const std::shared_ptr<AddressEvent>& event)
         {
             if ( !config.output_pattern.empty() )
             {
@@ -308,7 +308,7 @@ static void sniff_loop(BaseSniffers* sniffer,
         };
 
     auto ignored_sink =
-        [&](std::shared_ptr<PcapItem>& pcap)
+        [&](const std::shared_ptr<PcapItem>& pcap)
         {
             if ( do_ignored_pcap )
             {

@@ -835,7 +835,7 @@ uint8_t BlockCborReader::synthesise_qr_flags(const block_cbor::QueryResponseItem
     return res;
 }
 
-void BlockCborReader::dump_collector(std::ostream& os)
+void BlockCborReader::dump_collector(std::ostream& os) const
 {
     os << "\nCOLLECTOR:"
        << "\n  Collector ID         : " << generator_id_
@@ -843,7 +843,7 @@ void BlockCborReader::dump_collector(std::ostream& os)
        << "\n";
 }
 
-void BlockCborReader::dump_times(std::ostream& os)
+void BlockCborReader::dump_times(std::ostream& os) const
 {
     if ( !earliest_time_ && ! latest_time_ && !end_time_ )
         return;
@@ -884,7 +884,7 @@ void BlockCborReader::dump_times(std::ostream& os)
     }
 }
 
-void BlockCborReader::dump_address_events(std::ostream& os)
+void BlockCborReader::dump_address_events(std::ostream& os) const
 {
     for ( unsigned event_type = AddressEvent::EventType::TCP_RESET;
           event_type <= AddressEvent::EventType::ICMPv6_PACKET_TOO_BIG;

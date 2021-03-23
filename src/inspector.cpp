@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -99,9 +99,9 @@ struct Options
 };
 
 static void report(std::ostream& os,
-                   Configuration& config,
-                   BlockCborReader& cbr,
-                   std::unique_ptr<OutputBackend>& backend)
+                   const Configuration& config,
+                   const BlockCborReader& cbr,
+                   const std::unique_ptr<OutputBackend>& backend)
 {
     config.dump_config(os);
     cbr.dump_collector(os);
