@@ -256,7 +256,7 @@ namespace {
  * @param val2          compiler workaround.
  */
 void validate(boost::any& v, const std::vector<std::string>& values,
-              Size* val1, int val2)
+              Size* /* val1 */, int /* val2 */)
 {
     po::validators::check_first_occurrence(v);
     std::string s = po::validators::get_single_string(values);
@@ -945,7 +945,7 @@ void Configuration::set_from_block_parameters(const block_cbor::BlockParameters&
  * @param val2          compiler workaround.
  */
 void validate(boost::any& v, const std::vector<std::string>& values,
-              IPAddress* val1, int val2)
+              IPAddress* /* val1 */, int /* val2 */)
 {
     po::validators::check_first_occurrence(v);
     std::string s = po::validators::get_single_string(values);
@@ -969,7 +969,7 @@ void validate(boost::any& v, const std::vector<std::string>& values,
  * @param val2          compiler workaround.
  */
 void validate(boost::any& v, const std::vector<std::string>& values,
-              CaptureDNS::Opcode* val1, int val2)
+              CaptureDNS::Opcode* /* val1 */, int /* val2 */)
 {
     po::validators::check_first_occurrence(v);
     std::string s = po::validators::get_single_string(values);
@@ -991,7 +991,7 @@ void validate(boost::any& v, const std::vector<std::string>& values,
  * @param val2          compiler workaround.
  */
 void validate(boost::any& v, const std::vector<std::string>& values,
-              CaptureDNS::Rcode* val1, int val2)
+              CaptureDNS::Rcode* /* val1 */, int /* val2 */)
 {
     po::validators::check_first_occurrence(v);
     std::string s = po::validators::get_single_string(values);
@@ -1013,7 +1013,7 @@ void validate(boost::any& v, const std::vector<std::string>& values,
  * @param val2          compiler workaround.
  */
 void validate(boost::any& v, const std::vector<std::string>& values,
-              CaptureDNS::QueryClass* val1, int val2)
+              CaptureDNS::QueryClass* /* val1 */, int /* val2 */)
 {
     po::validators::check_first_occurrence(v);
     std::string s = po::validators::get_single_string(values);
@@ -1035,7 +1035,7 @@ void validate(boost::any& v, const std::vector<std::string>& values,
  * @param val2          compiler workaround.
  */
 void validate(boost::any& v, const std::vector<std::string>& values,
-              CaptureDNS::QueryType* val1, int val2)
+              CaptureDNS::QueryType* /* val1 */, int /* val2 */)
 {
     po::validators::check_first_occurrence(v);
     std::string s = po::validators::get_single_string(values);
@@ -1060,7 +1060,7 @@ void validate(boost::any& v, const std::vector<std::string>& values,
  * @param val2          compiler workaround.
  */
 void validate(boost::any& v, const std::vector<std::string>& values,
-              AddressEvent::EventType* val1, int val2)
+              AddressEvent::EventType* /* val1 */, int /* val2 */)
 {
     po::validators::check_first_occurrence(v);
     std::string s = po::validators::get_single_string(values);
@@ -1101,7 +1101,7 @@ namespace block_cbor {
      * @param val2          compiler workaround.
      */
     void validate(boost::any& v, const std::vector<std::string>& values,
-                  TransportFlags* val1, int val2)
+                  TransportFlags* /* val1 */, int /* val2 */)
     {
         po::validators::check_first_occurrence(v);
         std::string s = po::validators::get_single_string(values);
@@ -1159,7 +1159,7 @@ namespace block_cbor {
      * @param val2          compiler workaround.
      */
     void validate(boost::any& v, const std::vector<std::string>& values,
-                  QueryResponseFlags* val1, int val2)
+                  QueryResponseFlags* /* val1 */, int /* val2 */)
     {
         po::validators::check_first_occurrence(v);
         std::string s = po::validators::get_single_string(values);
@@ -1198,7 +1198,7 @@ namespace block_cbor {
      * @param val2          compiler workaround.
      */
     void validate(boost::any& v, const std::vector<std::string>& values,
-                  QueryResponseType* val1, int val2)
+                  QueryResponseType* /* val1 */, int /* val2 */)
     {
         po::validators::check_first_occurrence(v);
         std::string s = po::validators::get_single_string(values);
@@ -1233,7 +1233,7 @@ namespace block_cbor {
      * @param val2          compiler workaround.
      */
     void validate(boost::any& v, const std::vector<std::string>& values,
-                  DNSFlags* val1, int val2)
+                  DNSFlags* /* val1 */, int /* val2 */)
     {
         po::validators::check_first_occurrence(v);
         std::string s = po::validators::get_single_string(values);
@@ -1297,7 +1297,7 @@ namespace std {
          * @param val2          compiler workaround.
          */
         void validate(boost::any& v, const std::vector<std::string>& values,
-                      nanoseconds* val1, int val2)
+                      nanoseconds* /* val1 */, int /* val2 */)
         {
             po::validators::check_first_occurrence(v);
             std::string s = po::validators::get_single_string(values);

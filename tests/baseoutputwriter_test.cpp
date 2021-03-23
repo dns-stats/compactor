@@ -44,8 +44,8 @@ public:
     {
     }
 
-    virtual void writeAE(const std::shared_ptr<AddressEvent>& ae,
-                         const PacketStatistics& stats)
+    virtual void writeAE(const std::shared_ptr<AddressEvent>& /* ae */,
+                         const PacketStatistics& /* stats */)
     {
         add_action("writeAE");
     }
@@ -67,7 +67,7 @@ public:
     }
 
     virtual void writeBasic(const std::shared_ptr<QueryResponse>& qr,
-                            const PacketStatistics& stats)
+                            const PacketStatistics& /* stats */)
     {
         std::ostringstream ostr;
 

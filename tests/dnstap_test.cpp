@@ -34,7 +34,7 @@ SCENARIO("DnsTap generates control frames", "[dnstap]")
     GIVEN("An ACCEPT frame as input")
     {
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::string accept = DnsTap::make_accept();
@@ -51,7 +51,7 @@ SCENARIO("DnsTap generates control frames", "[dnstap]")
     GIVEN("A FINISH frame as input")
     {
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::string finish = DnsTap::make_finish();
@@ -78,7 +78,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
             "protobuf:dnstap.Dnstap";
 
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::string accept(accept_raw, sizeof(accept_raw));
@@ -101,7 +101,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
             "protobuf:dnstap.Dnstap";
 
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::string start(start_raw, sizeof(start_raw));
@@ -124,7 +124,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
             "protobuf:dnstap.Dnstap";
 
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::string ready(ready_raw, sizeof(ready_raw));
@@ -145,7 +145,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
             };
 
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::string stop(stop_raw, sizeof(stop_raw));
@@ -166,7 +166,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
             };
 
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::string finish(finish_raw, sizeof(finish_raw));
@@ -187,7 +187,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
             };
 
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::string frame(frame_raw, sizeof(frame_raw));
@@ -213,7 +213,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
             "protobuf:dnstap.Dnstap";
 
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::string ready(ready_raw, sizeof(ready_raw));
@@ -236,7 +236,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
             "protobuf:dnsxxx.Dnstap";
 
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::string ready(ready_raw, sizeof(ready_raw));
@@ -273,7 +273,7 @@ SCENARIO("DnsTap parses data frames", "[dnstap]")
             };
 
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::string data(reinterpret_cast<const char*>(data_raw), sizeof(data_raw));
@@ -330,7 +330,7 @@ SCENARIO("DnsTap parses data frames", "[dnstap]")
             };
 
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::string data(reinterpret_cast<const char*>(data_raw), sizeof(data_raw));
@@ -350,7 +350,7 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
     GIVEN("A unidirectional control sequence")
     {
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::stringstream ss;
@@ -383,7 +383,7 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
     GIVEN("A bidirectional control sequence")
     {
         auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& dns)
+            [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::stringstream ss;

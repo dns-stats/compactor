@@ -236,14 +236,25 @@ static void cbor_writer(std::unique_ptr<BlockCborWriter> out,
 
 static BaseSniffers* signal_handler_sniffers = nullptr;
 static al::stream_protocol::acceptor* signal_handler_acceptor = nullptr;
+static al::stream_protocol::iostream* signal_handler_stream = nullptr;
 static int signal_handler_signal;
+
 static void signal_handler(int signo)
 {
     signal_handler_signal = signo;
-    if ( signal_handler_sniffers )
-        signal_handler_sniffers->breakloop();
-    if ( signal_handler_acceptor )
-        signal_handler_acceptor->close();
+    try
+    {
+        if ( signal_handler_sniffers )
+            signal_handler_sniffers->breakloop();
+        if ( signal_handler_acceptor )
+            signal_handler_acceptor->close();
+        if ( signal_handler_stream )
+            signal_handler_stream->close();
+    }
+    catch (std::exception& err)
+    {
+        LOG_ERROR << err.what();
+    }
 }
 
 /**
@@ -595,7 +606,9 @@ static int run_configuration(const po::variables_map& vm,
                     acceptor.accept(*stream.rdbuf());
                     if ( signal_handler_signal )
                         break;
+                    signal_handler_stream = &stream;
                     dnstap.process_stream(stream);
+                    signal_handler_stream = nullptr;
                 }
                 signal_handler_acceptor = nullptr;
             }

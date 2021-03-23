@@ -465,7 +465,7 @@ namespace block_cbor {
 
     FileVersionFields::FileVersionFields(unsigned major_version,
                                          unsigned minor_version,
-                                         unsigned private_version)
+                                         unsigned /* private_version */)
         : FileVersionFields()
     {
         // If the current version, we're done.
