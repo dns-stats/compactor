@@ -800,41 +800,25 @@ void Configuration::dump_RR_types(std::ostream& os, bool accept) const
 bool Configuration::output_opcode(CaptureDNS::Opcode opcode) const
 {
     if ( !accept_opcodes.empty() )
-    {
-        for ( auto i : accept_opcodes )
-            if ( i == opcode )
-                return true;
-
-        return false;
-    }
+        return std::find(accept_opcodes.begin(),
+                         accept_opcodes.end(),
+                         opcode) != std::end(accept_opcodes);
     else
-    {
-        for ( auto i : ignore_opcodes )
-            if ( i == opcode )
-                return false;
-
-        return true;
-    }
+        return std::find(ignore_opcodes.begin(),
+                         ignore_opcodes.end(),
+                         opcode) == std::end(ignore_opcodes);
 }
 
 bool Configuration::output_rr_type(CaptureDNS::QueryType rr_type) const
 {
     if ( !accept_rr_types.empty() )
-    {
-        for ( auto i : accept_rr_types )
-            if ( i == rr_type )
-                return true;
-
-        return false;
-    }
+        return std::find(accept_rr_types.begin(),
+                         accept_rr_types.end(),
+                         rr_type) != std::end(accept_rr_types);
     else
-    {
-        for ( auto i : ignore_rr_types )
-            if ( i == rr_type )
-                return false;
-
-        return true;
-    }
+        return std::find(ignore_rr_types.begin(),
+                         ignore_rr_types.end(),
+                         rr_type) == std::end(ignore_rr_types);
 }
 
 void Configuration::populate_block_parameters(block_cbor::BlockParameters& bp) const
