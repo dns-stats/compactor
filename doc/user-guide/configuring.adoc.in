@@ -33,14 +33,14 @@ but is otherwise configured to collect traffic:
 
 * Recording all DNS additional sections
 * Writing C-DNS output compressed with `xz` compression
-* Naming output files named with the date, time, rotating period and capture interface. 
+* Naming output files named with the date, time, rotating period and capture interface.
 * A new output file is commenced every 5 minutes.
 * The 'raw' traffic is also recorded to a PCAP output file
 * The 'ignored' traffic is also recorded to a PCAP output file
 * The output files are stored under `@VARLIBPATH@/dns-stats-compactor`
 in subdirectories `cdns`, `pcap/raw` and `pcap/ignored`.
 
-All configuration items can also be specified on the command line. 
+All configuration items can also be specified on the command line.
 
 IMPORTANT: If an option appears in the configuration file and on the command line, the
 command line setting overrides the configuration file.
@@ -155,7 +155,8 @@ interface, `interface3` the third and so on.
 | `eth0`
 
 | `%{interface}`
-| The names of all configured interfaces separated by `-`.
+| The names of all configured network interfaces separated by `-`, or `dnstap`
+  if capturing with DNSTAP.
 | `eth0-eth1`
 
 | `%{rotate-period}`

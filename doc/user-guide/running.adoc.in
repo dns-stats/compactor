@@ -29,8 +29,11 @@ manual request for restarting capture. See
 [[command-line]]
 === Running _compactor_  from the command line
 
-_compactor_  can be run from the command line to either perform
-ad-hoc captures from network interfaces or to convert already captured PCAP files.
+_compactor_  can be run from the command line to either:
+
+* perform ad-hoc captures from one or more network interfaces, or
+* perform ad-hoc captures from DNSTAP, or
+* convert already captured PCAP files.
 
 Full details of available command options are in _compactor_  manual page,
 *compactor*(1). A summary is available:
@@ -59,7 +62,8 @@ Configuration:
 ...(rest of output omitted for brevity)...
 ----
 
-Specifying capture files _and_ a capture interface on the command line is an error.
+Specifying a combination of capture files, network interfaces or DNSTAP capture
+on the command line is an error.
 
 [TIP]
 ====
@@ -71,7 +75,7 @@ to verify operation.
 ==== Capturing network traffic
 
 If at least one network interface is specified
-and _compactor_  has permission to read from the network, 
+and _compactor_  has permission to read from the network,
 _compactor_ will start recording network traffic.
 
 For example, to capture traffic on `eth0` to output `capture.cdns`, capturing all
@@ -95,9 +99,38 @@ more details, see <<C-DNS output compression>>.
 This behaviour is under review.
 ====
 
+==== Capturing DNSTAP traffic
+
+If a DNSTAP Unix socket is specified, and _compactor_ has permission to create
+the socket, and a local nameserver is configured to write DNSTAP to that socket, 
+_compactor_ will start recording network traffic via DNSTAP.
+
+For example, to capture traffic on `/run/unbound-dnstap.sock` to output
+`capture.cdns`, capturing all DNS sections and automatically `xz` compressing
+the output:
+
+----
+$ compactor -x -o capture.cdns -n all --dnstap-socket /run/unbound-dnstap.sock
+----
+
+_compactor_  will capture traffic until interrupted by a signal, for example
+the user typing Control-C. If the -r option is used then _compactor_ will report
+summary information on exit (configuration and basic statistics).
+
+[WARNING]
+====
+If C-DNS compression is enabled, interrupting _compactor_ causes the
+current output C-DNS to be lost. For this reason you are recommended
+to have C-DNS output file rotation enabled when using compression. For
+more details, see <<C-DNS output compression>>.
+
+This behaviour is under review.
+====
+
 ==== Capturing from PCAP files
 
-Any non-option parameters on the command line are assumed to be PCAP files
+Unless DNSTAP input files are specified, any non-option parameters on the command
+line are assumed to be PCAP files
 to be used for input to _compactor_ . In this case, any capture interface specified
 in the configuration file is ignored and the PCAP files used as input.
 
@@ -132,9 +165,48 @@ In this case, the option argument must be given explicitly.
 $ compactor -o capture.cdns -x true capture.pcap
 ----
 
-==== Capture permissions
+==== Capturing from DNSTAP files
 
-If performing an ad-hoc capture, _compactor_  must have the necessary
+
+If DNSTAP input is specified by using the `-T`/`--dnstap` option,
+any non-option parameters on the command line are assumed to be DNSTAP files
+to be used for input to _compactor_ . In this case, any capture interface specified
+in the configuration file is ignored and the DNSTAP files used as input.
+
+So, to convert input DNSTAP file `capture.dnstap` to output `capture.cdns`, capturing
+all DNS sections and automatically `xz` compressing the output:
+
+----
+$ compactor -T -x -o capture.cdns -n all capture.dnstap
+----
+
+or, using the longer option forms,
+
+----
+$ compactor --dnstap --xz-output --output capture.cdns --include all capture.dnstap
+----
+
+As with other command line options, `--dnstap`
+can optionally be followed by an explicit value; if none
+is present then `true` is assumed. This does mean that if it
+is the last option before the DNSTAP file arguments, the
+compactor can't tell that the DNSTAP file argument is not a (probably
+incorrect) value for the option.
+
+----
+$ compactor -o capture.cdns -x -T capture.dnstap
+Error: the argument ('capture.dnstap') for option '--output' is invalid. Valid choices are 'on|off', 'yes|no', '1|0' and 'true|false'
+----
+
+In this case, the `--dnstap` argument must be given explicitly.
+
+----
+$ compactor -o capture.cdns -x -T true capture.dnstap
+----
+
+==== Network capture permissions
+
+If performing an ad-hoc network capture, _compactor_  must have the necessary
 permissions to allow it to capture traffic from the specified network
 ports. These permissions are operating system dependent, and a full
 discussion is beyond the scope of this guide. The documentation for
@@ -143,9 +215,24 @@ https://wiki.wireshark.org/CaptureSetup/CapturePrivileges[when
 discussing permissions for `dumpcap`]. For the impatient who have the
 necessary permission, just run _compactor_  as `root`.
 
+==== DNSTAP capture permissions
+
+When capturing DNSTAP over a socket, _compactor_ is responsible for
+the creation of that socket. It will also be necessary to ensure that the
+local nameserver has permissions allowing it to write to the socket.
+
+As a convenience, _compactor_ provides options to set the socket
+owner, group and write permissions.
+
+* `--dnstap-socket-owner`. Set the socket owner to the named user.
+* `--dnstap-socket-group`. Set the socket group to the named group.
+* `--dnstap-socket-write`. Give write permission to owner, owner+group or all.
+
+Obviously, _compactor_ must itself have permission to make the changes.
+
 ==== Restarting capture with modified configuration
 
-If _compactor_  is performing a capture from the network, it is possible to
+If _compactor_  is performing a capture from the network or from DNSTAP, it is possible to
 modify settings in the configuration file and have _compactor_  re-read the
 configuration file. To do so, send the `HUP` signal to the _compactor_  process.
 This will stop the current capture, re-read the configuration file, and restart
@@ -157,12 +244,12 @@ for those options.
 
 The process of stopping the current capture, re-reading configuration
 and restarting capture will mean that _compactor_  will miss some
-network traffic. The amount of time taken to stop, write queued data
+traffic. The amount of time taken to stop, write queued data
 and then restart is heavily dependent on the load on the network at
 the time.
 
 If you send a `HUP` signal to _compactor_  while it is doing a capture
-from a PCAP file rather than a network capture, the conversion is stopped
+from a file rather than a network capture, the conversion is stopped
 immediately and _compactor_  exits.
 
 [WARNING]
