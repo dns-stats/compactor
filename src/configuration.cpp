@@ -1369,13 +1369,10 @@ void Defaults::read_defaults_file(const std::string& defaultsfile)
     uint16_t query_ancount = 0;
     uint16_t query_arcount = 0;
     uint16_t query_nscount = 0;
-    byte_string query_name;
     CaptureDNS::QueryClass query_class;
     CaptureDNS::QueryType query_type;
     uint32_t rr_ttl = 0;
-    byte_string rr_rdata;
     uint16_t query_udp_size = 0;
-    byte_string query_opt_rdata;
     unsigned query_edns_version = 0;
     block_cbor::QueryResponseType qr_type = block_cbor::QueryResponseType::CLIENT;
     std::string response_processing_bailiwick;
