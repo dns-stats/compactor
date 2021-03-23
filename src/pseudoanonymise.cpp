@@ -67,7 +67,7 @@ byte_string PseudoAnonymise::edns0(const byte_string& edns0) const
 
     if ( std::none_of(e0.options().begin(),
                       e0.options().end(),
-                      [](const auto& op)
+                      [](const CaptureDNS::EDNS0_option& op)
                       {
                           return op.code() == CaptureDNS::CLIENT_SUBNET;
                       }) )

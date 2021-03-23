@@ -228,7 +228,7 @@ namespace {
             {
                 found = std::any_of(addrs.ipv6_addrs.begin(),
                                     addrs.ipv6_addrs.end(),
-                                    [addr](const auto& a)
+                                    [addr](const Tins::NetworkInterface::IPv6Prefix& a)
                                     {
                                         return a.address == addr;
                                     });
@@ -760,7 +760,7 @@ void Configuration::dump_OPCODEs(std::ostream& os, bool accept) const
 
         auto f = std::find_if(OPCODES.begin(),
                               OPCODES.end(),
-                              [op_t](const auto& op)
+                              [op_t](const std::pair<std::string, unsigned>& op)
                               {
                                   return op.second == op_t;
                               });
@@ -786,7 +786,7 @@ void Configuration::dump_RR_types(std::ostream& os, bool accept) const
 
         auto f = std::find_if(RR_TYPES.begin(),
                               RR_TYPES.end(),
-                              [rr_t](const auto& rr)
+                              [rr_t](const std::pair<std::string, unsigned>& rr)
                               {
                                   return rr.second == rr_t;
                               });
