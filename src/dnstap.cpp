@@ -107,7 +107,7 @@ namespace {
     class StreamExceptionsWrapper
     {
     public:
-        StreamExceptionsWrapper(std::iostream& stream)
+        explicit StreamExceptionsWrapper(std::iostream& stream)
             : stream_(stream), initial_(stream.exceptions())
         {
             stream.exceptions(std::ios::failbit | std::ios::badbit);

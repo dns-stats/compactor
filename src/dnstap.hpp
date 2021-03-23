@@ -68,7 +68,7 @@ public:
      *
      * \param dns_sink          sink for DNS messages.
      */
-    DnsTap(DNSSink dns_sink);
+    explicit DnsTap(DNSSink dns_sink);
 
     /**
      * \brief Process input.

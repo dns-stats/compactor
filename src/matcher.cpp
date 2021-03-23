@@ -41,7 +41,7 @@ public:
      * \param m DNS message.
      * \param query `true` if this message is a query, `false` if a response.
      */
-    QueryResponseInProgress(std::unique_ptr<DNSMessage> m, bool query = true);
+    explicit QueryResponseInProgress(std::unique_ptr<DNSMessage> m, bool query = true);
 
     /**
      * \brief Returns `true` if this query/response pair is complete.
