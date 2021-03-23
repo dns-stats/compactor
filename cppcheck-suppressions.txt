@@ -1,14 +1,17 @@
 // On Xenial I get loads of errors about missing system includes.
 missingIncludeSystem
 
+// 2.3 gives a LOT of invalid missingOverride.
+missingOverride
+
 // Awaiting full malformed messages implementation.
-unusedFunction:src/blockcbordata.cpp:1633
-unusedFunction:src/blockcbordata.cpp:1830
+unusedFunction:src/blockcbordata.cpp:1643
+unusedFunction:src/blockcbordata.cpp:1840
 
 // We do need/use CaptureDNS::extract_metadata() and header_size().
 // And write_serialisation() gets confused by HAVE_LIBTINS4.
 unusedFunction:src/capturedns.cpp:179
-unusedFunction:src/capturedns.cpp:1152
+unusedFunction:src/capturedns.cpp:1154
 unusedFunction:src/capturedns.cpp:1169
 
 // Some CBOR decoder functions are present for completeness but not used.
@@ -17,9 +20,9 @@ unusedFunction:src/cbordecoder.cpp:181
 unusedFunction:src/cbordecoder.cpp:196
 
 // Lambdas are confusing.
-variableScope:src/compactor.cpp:262
-variableScope:src/compactor.cpp:263
-variableScope:src/compactor.cpp:517
+variableScope:src/compactor.cpp:269
+variableScope:src/compactor.cpp:270
+variableScope:src/compactor.cpp:524
 unreadVariable:src/compactor.cpp:314
 unreadVariable:src/compactor.cpp:297
 unreadVariable:src/compactor.cpp:543
@@ -29,7 +32,16 @@ unreadVariable:src/compactor.cpp:543
 variableScope:src/configuration.cpp
 
 // validate() for Size is definitely used.
-unusedFunction:src/configuration.cpp:259
+unusedFunction:src/configuration.cpp:258
 
 // No obvious reason why CStringModifier::Modify should be thought to be unused.
-unusedFunction:src/template-backend.cpp:33
+unusedFunction:src/template-backend.cpp:34
+
+// Perhaps not a place for a STL algorithm. And confusion over what
+// is a member variable.
+uninitMemberVar:src/capturedns.cpp:186
+useStlAlgorithm:src/capturedns.cpp:1183
+
+// cppcheck doesn't see the potential move in add_response() that means
+// that the null check is necessary.
+nullPointerRedundantCheck:src/matcher.cpp:368
