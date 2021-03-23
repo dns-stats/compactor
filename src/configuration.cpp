@@ -748,29 +748,25 @@ void Configuration::dump_output_option(std::ostream& os, bool query) const
 void Configuration::dump_OPCODEs(std::ostream& os, bool accept) const
 {
     const std::vector<unsigned>& opcodes = accept ? accept_opcodes : ignore_opcodes;
-    if ( !opcodes.empty() )
+    bool first = true;
+
+    for ( auto op_t : opcodes )
     {
-        bool first = true;
-        for ( auto op_t : opcodes )
-        {
-            if ( first )
-                first = false;
-            else
-                os << ", ";
-            // For now a brute force linear search
-            bool found = false;
-            for ( auto op : OPCODES)
-            {
-                if (op.second == op_t)
-                {
-                    os << op.first;
-                    found = true;
-                    break;
-                }
-            }
-            if ( !found )
-                os << op_t;
-        }
+        if ( first )
+            first = false;
+        else
+            os << ", ";
+
+        auto f = std::find_if(OPCODES.begin(),
+                              OPCODES.end(),
+                              [op_t](const auto& op)
+                              {
+                                  return op.second == op_t;
+                              });
+        if ( f != std::end(OPCODES) )
+            os << f->first;
+        else
+            os << std::to_string(op_t);
     }
     os << "\n";
 }
@@ -778,29 +774,25 @@ void Configuration::dump_OPCODEs(std::ostream& os, bool accept) const
 void Configuration::dump_RR_types(std::ostream& os, bool accept) const
 {
     const std::vector<unsigned>& rr_types = accept ? accept_rr_types : ignore_rr_types;
-    if ( !rr_types.empty() )
+    bool first = true;
+
+    for ( auto rr_t : rr_types )
     {
-        bool first = true;
-        for ( auto rr_t : rr_types )
-        {
-            if ( first )
-                first = false;
-            else
-                os << ", ";
-            // For now a brute force linear search
-            bool found = false;
-            for ( auto rr : RR_TYPES)
-            {
-                if (rr.second == rr_t)
-                {
-                    os << rr.first;
-                    found = true;
-                    break;
-                }
-            }
-            if ( !found )
-                os << rr_t;
-        }
+        if ( first )
+            first = false;
+        else
+            os << ", ";
+
+        auto f = std::find_if(RR_TYPES.begin(),
+                              RR_TYPES.end(),
+                              [rr_t](const auto& rr)
+                              {
+                                  return rr.second == rr_t;
+                              });
+        if ( f != std::end(RR_TYPES) )
+            os << f->first;
+        else
+            os << std::to_string(rr_t);
     }
     os << "\n";
 }
