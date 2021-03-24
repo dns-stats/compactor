@@ -6,7 +6,7 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
-Version 1.2.0-beta1 - 2021-03-23
+Version 1.2.0-beta1 - 2021-03-24
 --------------------------------
 
 * Add custom field of collection start time to block and to info file.
