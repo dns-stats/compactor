@@ -36,7 +36,7 @@ public:
     /**
      * \brief Constructor.
      *
-     * \param what message describing the problem.
+     * \param what      message describing the problem.
      */
     explicit dnstap_invalid(const std::string& what)
         : std::runtime_error(what){};
@@ -44,7 +44,7 @@ public:
     /**
      * \brief Constructor.
      *
-     * \param what message describing the problem.
+     * \param what      message describing the problem.
      */
     explicit dnstap_invalid(const char* what)
         : std::runtime_error(what){};
@@ -83,8 +83,8 @@ protected:
     /**
      * \brief process control frame.
      *
-     * \param stream DNSTAP data source.
-     * \param t the control frame type.
+     * \param stream    DNSTAP data source.
+     * \param t         the control frame type.
      * \returns `false` if FINISH read.
      */
     bool process_control_frame(std::iostream& stream, uint32_t t);
@@ -99,7 +99,7 @@ protected:
     /**
      * \brief read a control frame and return its type.
      *
-     * \param stream DNSTAP data source.
+     * \param stream    DNSTAP data source.
      * \returns control frame type.
      */
     uint32_t read_control_frame(std::iostream& stream);
@@ -107,8 +107,8 @@ protected:
     /**
      * \brief read DNS message from data frame.
      *
-     * \param stream DNSTAP data source.
-     * \param len length of data.
+     * \param stream    DNSTAP data source.
+     * \param len       length of data.
      */
     std::unique_ptr<DNSMessage> read_data_frame(std::iostream& stream, uint32_t len);
 
@@ -124,7 +124,7 @@ protected:
     /**
      * \brief receive 4 byte bigendian value.
      *
-     * \param stream DNSTAP data source.
+     * \param stream    DNSTAP data source.
      * \returns the value.
      */
     uint32_t get_value(std::iostream& stream);
