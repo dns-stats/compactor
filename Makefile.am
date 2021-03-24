@@ -186,7 +186,7 @@ CLEANFILES = $(check_DATA) $(dist_man_MANS) \
              doc/user-guide/default_values.conf \
              doc/inspector.adoc doc/compactor.adoc
 
-MOSTLYCLEANFILES = dnstap/dnstap.pb.h dnstap/dnstap.pb.cc
+MOSTLYCLEANFILES = dnstap/dnstap.pb.h dnstap/dnstap.pb.cc $(DX_CLEANFILES)
 
 BUILT_SOURCES = dnstap/dnstap.pb.h
 
