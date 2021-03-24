@@ -132,7 +132,8 @@ protected:
     /**
      * \brief receive buffer of given size.
      *
-     * \param stream DNSTAP data source.
+     * \param stream    DNSTAP data source.
+     * \param len       length of buffer to receive.
      * \returns the data buffer.
      */
     std::string get_buffer(std::iostream& stream, uint32_t len);

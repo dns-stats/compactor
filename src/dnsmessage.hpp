@@ -63,6 +63,7 @@ struct DNSMessage
      * \param pdu      packet payload data.
      * \param tstamp   packet timestamp.
      * \param transport_type the transport type the message was received over.
+     * \param transaction_type the transaction type of the message.
      */
     DNSMessage(const Tins::RawPDU& pdu,
                const std::chrono::system_clock::time_point& tstamp,

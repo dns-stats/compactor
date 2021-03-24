@@ -111,7 +111,7 @@ public:
      * \param exclude_hints the exclude hints.
      * \throws backend_error on problems.
      */
-    virtual void check_exclude_hints(const HintsExcluded& /* exclude_hints */) {}
+    virtual void check_exclude_hints(const HintsExcluded& exclude_hints) {}
 
     /**
      * \brief Output a QueryResponse.
@@ -126,7 +126,7 @@ public:
      *
      * \param os        stream to which to write report.
      */
-    virtual void report(std::ostream& /* os */) {}
+    virtual void report(std::ostream& os) {}
 
     /**
      * \brief the output file path.
