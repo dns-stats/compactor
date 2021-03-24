@@ -67,13 +67,13 @@ struct CborItem
     /**
      * \brief Constructor for query/response.
      */
-    CborItem(std::shared_ptr<QueryResponse> qr, const PacketStatistics& stats)
+    CborItem(const std::shared_ptr<QueryResponse>& qr, const PacketStatistics& stats)
         : payload(qr), stats(stats) {}
 
     /**
      * \brief Constructor for address event.
      */
-    CborItem(std::shared_ptr<AddressEvent> ae, const PacketStatistics& stats)
+    CborItem(const std::shared_ptr<AddressEvent>& ae, const PacketStatistics& stats)
         : payload(ae), stats(stats) {}
 
     /**
