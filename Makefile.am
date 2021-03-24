@@ -432,10 +432,11 @@ endif
 .PHONY: cppcheck
 
 CPPCHECK_DIRS = $(srcdir)/src
-CPPCHECK_INCLUDE_DIRS = -I$(srcdir)/src
+CPPCHECK_INCLUDE_DIRS = -I$(srcdir)/src -I.
 CPPCHECK_CMD = cppcheck \
         --std=c++11 --language=c++ \
         --xml --xml-version=2 \
+        -D CPPCHECK --force \
         --relative-paths=$(srcdir) \
         --suppressions-list=$(srcdir)/cppcheck-suppressions.txt
 CPPCHECK_FLAGS = -U DLT_PKTAP

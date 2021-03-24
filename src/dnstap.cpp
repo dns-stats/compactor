@@ -18,7 +18,10 @@
 #include "ipaddress.hpp"
 #include "makeunique.hpp"
 
+#ifndef CPPCHECK
+// Cppcheck can't cope with this header.
 #include "dnstap/dnstap.pb.h"
+#endif
 
 #include "dnstap.hpp"
 

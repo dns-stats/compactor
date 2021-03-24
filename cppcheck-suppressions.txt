@@ -11,7 +11,7 @@ unusedFunction:src/blockcbordata.cpp:1852
 // We do need/use CaptureDNS::extract_metadata() and header_size().
 // And write_serialisation() gets confused by HAVE_LIBTINS4.
 unusedFunction:src/capturedns.cpp:179
-unusedFunction:src/capturedns.cpp:1154
+unusedFunction:src/capturedns.cpp:1152
 unusedFunction:src/capturedns.cpp:1169
 
 // Some CBOR decoder functions are present for completeness but not used.
