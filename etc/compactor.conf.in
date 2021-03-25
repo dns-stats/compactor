@@ -9,20 +9,8 @@
 # Interface on which to capture traffic.
 # interface=
 
-# Optional hints about the server addresses. These do not affect collection,
-# but are stored in the C-DNS output and may be useful for downstream
-# analysis. If specified, and capture is from one or more interfaces,
-# the address must be present on a capture interface.
-# server-address-hint=
-
 # VLAN IDs to capture. If none specified, all are captured.
 # vlan-id=
-
-# RR type to ignore. Type name in UPPER CASE e.g. AAAA, RRSIG.
-# ignore-rr-type=
-
-# RR type to accept. Type name in UPPER CASE e.g. AAAA, RRSIG.
-# accept-rr-type=
 
 # DNS port - only traffic to or from this port is captured.
 # dns-port=53
@@ -35,6 +23,35 @@
 
 # Enable promiscuous mode.
 # promiscuous-mode=false
+
+# DNSTAP capture options.
+
+# Unix socket to create for traffic capture.
+# dnstap-socket=
+
+# Attempt to set owner of Unix socket to this user.
+# dnstap-socket-owner=
+
+# Attempt to set group of Unix socket to this group.
+# dnstap-socket-group=
+
+# Attempt to set write permission of Unix socket to user only ('user'),
+# user+group ('group') or all users ('all').
+# dnstap-socket-write=
+
+# Other capture options.
+
+# Optional hints about the server addresses. These do not affect collection,
+# but are stored in the C-DNS output and may be useful for downstream
+# analysis. If specified, and capture is from one or more interfaces,
+# the address must be present on a capture interface.
+# server-address-hint=
+
+# RR type to ignore. Type name in UPPER CASE e.g. AAAA, RRSIG.
+# ignore-rr-type=
+
+# RR type to accept. Type name in UPPER CASE e.g. AAAA, RRSIG.
+# accept-rr-type=
 
 # Log basic collection stats to syslog every n seconds. 0 (default) == never.
 # log-network-stats-period=0
