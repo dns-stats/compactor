@@ -27,7 +27,6 @@ common_doc_sources = \
 user_guide_sources = \
         $(common_doc_sources) \
         doc/user-guide/overview.adoc \
-        doc/user-guide/overview.png \
         doc/user-guide/installation.adoc \
         doc/user-guide/configuring.adoc \
         doc/user-guide/running.adoc \
@@ -43,6 +42,7 @@ dist_dsconf_DATA = etc/compactor.conf \
                    etc/default_values.conf
 dist_noinst_DATA = README.adoc \
                    doc/compactor.adoc doc/inspector.adoc \
+                   doc/user-guide/overview.png \
                    dnstap/dnstap.proto \
                    $(user_guide_sources)
 
