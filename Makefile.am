@@ -13,25 +13,34 @@ bin_PROGRAMS = compactor inspector
 dist_doc_DATA = LICENSE.txt ChangeLog.txt KNOWN_ISSUES.txt
 
 if BUILD_DOCS
-        dist_man_MANS = doc/compactor.1 doc/inspector.1
-        dist_doc_DATA += doc/user-guide.html doc/overview.png README.html
+        man_MANS = doc/compactor.1 doc/inspector.1
+        doc_DATA = doc/user-guide.html doc/overview.png README.html
 endif
 
 common_doc_sources = \
-        doc/user-guide/compactor-command-options.adoc \
-        doc/user-guide/compactor-capture-from-network.adoc \
-        doc/user-guide/compactor-capture-from-dnstap.adoc \
-        doc/user-guide/compactor-outputs.adoc \
-        doc/user-guide/compactor-query-response-matching.adoc
+        doc/user-guide/compactor-command-options.adoc.in \
+        doc/user-guide/compactor-capture-from-network.adoc.in \
+        doc/user-guide/compactor-capture-from-dnstap.adoc.in \
+        doc/user-guide/compactor-outputs.adoc.in \
+        doc/user-guide/compactor-query-response-matching.adoc.in
+common_doc_gen_sources = $(common_doc_sources:.adoc.in=.adoc)
+
+man_sources = \
+        doc/compactor.adoc.in doc/inspector.adoc.in
+man_gen_sources = \
+        $(common_doc_gen_sources) \
+        $(man_sources:.adoc.in=.adoc)
 
 user_guide_sources = \
-        $(common_doc_sources) \
-        doc/user-guide/overview.adoc \
-        doc/user-guide/overview.png \
-        doc/user-guide/installation.adoc \
-        doc/user-guide/configuring.adoc \
-        doc/user-guide/running.adoc \
-        doc/user-guide/appendices.adoc
+        doc/user-guide.adoc.in \
+        doc/user-guide/overview.adoc.in \
+        doc/user-guide/installation.adoc.in \
+        doc/user-guide/configuring.adoc.in \
+        doc/user-guide/running.adoc.in \
+        doc/user-guide/appendices.adoc.in
+user_guide_gen_sources = \
+        $(common_doc_gen_sources) \
+        $(user_guide_sources:.adoc.in=.adoc)
 
 dslocalstatedir=$(localstatedir)/lib/$(PACKAGE)
 dsconfdir=$(sysconfdir)/$(PACKAGE)
@@ -42,8 +51,10 @@ dist_dsconf_DATA = etc/compactor.conf \
                    etc/excluded_fields.conf.sample \
                    etc/default_values.conf
 dist_noinst_DATA = README.adoc \
-                   doc/compactor.adoc doc/inspector.adoc \
+                   doc/user-guide/overview.png \
                    dnstap/dnstap.proto \
+                   $(common_doc_sources) \
+                   $(man_sources) \
                    $(user_guide_sources)
 
 conffile=$(dsconfdir)/compactor.conf
@@ -177,8 +188,7 @@ check_DATA = GeoLite2-ASN.mmdb \
              knot-live.ignored.pcap
 
 CLEANFILES = $(check_DATA) $(dist_man_MANS) \
-             $(common_doc_sources) \
-             $(user_guide_sources) \
+             $(user_guide_gen_sources) \
              etc/compactor.conf \
              doc/user-guide.html doc/user-guide.pdf \
              doc/overview.png doc/user-guide/compactor.conf \
@@ -198,16 +208,16 @@ AM_CPPFLAGS = -I$(srcdir)/src $(BOOST_CPPFLAGS) \
               -DDEFAULTSFILE=\"$(defaultsfile)\" \
               $(OPENSSL_INCLUDES) -DGEOIPDIR=\"$(geoipdir)\"
 
-doc/user-guide.html: $(user_guide_sources) doc/user-guide/compactor.conf doc/user-guide/excluded_fields.conf.sample doc/user-guide/default_values.conf doc/overview.png
-doc/user-guide.pdf: $(user_guide_sources) doc/user-guide/compactor.conf doc/user-guide/excluded_fields.conf.sample doc/user-guide/default_values.conf doc/overview.png
+doc/user-guide.html: $(user_guide_gen_sources) doc/user-guide/compactor.conf doc/user-guide/excluded_fields.conf.sample doc/user-guide/default_values.conf doc/overview.png
+doc/user-guide.pdf: $(user_guide_gen_sources) doc/user-guide/compactor.conf doc/user-guide/excluded_fields.conf.sample doc/user-guide/default_values.conf doc/overview.png
 
 doc/user-guide/compactor.conf: etc/compactor.conf ; cp $< $@
 doc/user-guide/excluded_fields.conf.sample: etc/excluded_fields.conf.sample ; cp $< $@
 doc/user-guide/default_values.conf: etc/default_values.conf ; cp $< $@
 doc/overview.png: doc/user-guide/overview.png ; cp $< $@
 
-doc/compactor.1: $(common_doc_sources)
-doc/inspector.1: $(common_doc_sources)
+doc/compactor.1: $(common_doc_gen_sources)
+doc/inspector.1: $(common_doc_gen_sources)
 
 README.html: README.adoc ; @ASCIIDOC@ -b html5 -d article -o $@ $<
 
