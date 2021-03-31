@@ -21,14 +21,16 @@
 #include <boost/asio.hpp>
 #include <boost/variant.hpp>
 
-#include <google/protobuf/stubs/common.h>
-
 #include <tins/network_interface.h>
 #include <tins/tins.h>
 
 #include <pcap/pcap.h>
 
 #include "config.h"
+
+#if ENABLE_DNSTAP
+#include <google/protobuf/stubs/common.h>
+#endif
 
 #include "addressevent.hpp"
 #include "channel.hpp"
