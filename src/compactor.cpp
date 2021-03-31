@@ -577,8 +577,14 @@ static int run_configuration(const po::variables_map& vm,
     int res = 0;
 
 #if ENABLE_DNSTAP
+    cno::system_clock::time_point last_timestamp;
+
     DnsTap dnstap([&](std::unique_ptr<DNSMessage>& dns)
                   {
+                      ++stats.raw_packet_count;
+                      if ( last_timestamp > dns->timestamp )
+                          ++stats.out_of_order_packet_count;
+                      last_timestamp = dns->timestamp;
                       if ( config.debug_dns )
                           std::cout << *dns;
                       matcher.add(std::move(dns));
