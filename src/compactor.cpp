@@ -260,7 +260,8 @@ static void signal_handler(int signo)
 }
 
 /**
- * \brief The main loop. Read packets from the sniffer and process them.
+ * \brief The main network capture loop. Read packets from the sniffer
+ * and process them.
  *
  * Outputs are sent down one of the output channels.
  *
@@ -438,6 +439,67 @@ static void sniff_loop(BaseSniffers* sniffer,
     }
 }
 
+#if ENABLE_DNSTAP
+/**
+ * \brief The main DNSTAP loop. Read packets from the input stream
+ * and process them.
+ *
+ * Received DNS messages are sent to the matcher.
+ *
+ * The loop continues until the stream reports EOF.
+ *
+ * \param stream  the input stream to read.
+ * \param matcher the query/response matcher to use.
+ * \param config  the current configuration.
+ * \param stats   collect packet statistics here.
+ */
+static void tap_loop(std::iostream& stream,
+                     QueryResponseMatcher& matcher,
+                     const Configuration& config,
+                     PacketStatistics& stats)
+{
+    cno::system_clock::time_point last_timestamp;
+    cno::system_clock::time_point next_stats_log;
+    cno::system_clock::time_point last_stats_log_timestamp;
+    PacketStatistics last_stats = stats;
+
+    DnsTap dnstap([&](std::unique_ptr<DNSMessage>& dns)
+                  {
+                      ++stats.raw_packet_count;
+                      if ( last_timestamp > dns->timestamp )
+                          ++stats.out_of_order_packet_count;
+                      last_timestamp = dns->timestamp;
+                      if ( config.debug_dns )
+                          std::cout << *dns;
+                      matcher.add(std::move(dns));
+
+                      if ( config.log_network_stats_period > 0 )
+                      {
+                          if ( next_stats_log.time_since_epoch().count() == 0 )
+                          {
+                              next_stats_log = last_timestamp + std::chrono::seconds(config.log_network_stats_period);
+                              last_stats_log_timestamp = last_timestamp;
+                          }
+                          else if ( next_stats_log <= last_timestamp )
+                          {
+                              cno::seconds period = cno::duration_cast<cno::seconds>(last_timestamp - last_stats_log_timestamp);
+
+                              LOG_INFO <<
+                                  "Total " << stats.raw_packet_count - last_stats.raw_packet_count <<
+                                  " (" << (stats.raw_packet_count - last_stats.raw_packet_count) / period.count() << " pkt/s), " <<
+                                  "Dropped C-DNS packets " <<
+                                  stats.output_cbor_drop_count - last_stats.output_cbor_drop_count;
+                              next_stats_log = last_timestamp + cno::seconds(config.log_network_stats_period);
+                              last_stats_log_timestamp = last_timestamp;
+                              last_stats = stats;
+                          }
+                      }
+                  });
+
+    dnstap.process_stream(stream);
+}
+#endif
+
 /**
  * \brief Create an output PCAP writer with configured compression options.
  *
@@ -576,21 +638,6 @@ static int run_configuration(const po::variables_map& vm,
     bool log_errs = ( !vm.count("capture-file") );
     int res = 0;
 
-#if ENABLE_DNSTAP
-    cno::system_clock::time_point last_timestamp;
-
-    DnsTap dnstap([&](std::unique_ptr<DNSMessage>& dns)
-                  {
-                      ++stats.raw_packet_count;
-                      if ( last_timestamp > dns->timestamp )
-                          ++stats.out_of_order_packet_count;
-                      last_timestamp = dns->timestamp;
-                      if ( config.debug_dns )
-                          std::cout << *dns;
-                      matcher.add(std::move(dns));
-                  });
-#endif
-
     try
     {
         if ( !vm.count("capture-file") )
@@ -599,7 +646,6 @@ static int run_configuration(const po::variables_map& vm,
             if ( vm.count("dnstap-socket") )
             {
                 LOG_INFO << "Starting DNSTAP capture";
-
                 std::remove(config.dnstap_socket.c_str());
                 boost::asio::io_service service;
                 al::stream_protocol::endpoint endpoint(config.dnstap_socket);
@@ -617,7 +663,7 @@ static int run_configuration(const po::variables_map& vm,
                     if ( signal_handler_signal )
                         break;
                     signal_handler_stream = &stream;
-                    dnstap.process_stream(stream);
+                    tap_loop(stream, matcher, config, stats);
                     signal_handler_stream = nullptr;
                 }
                 signal_handler_acceptor = nullptr;
@@ -640,7 +686,7 @@ static int run_configuration(const po::variables_map& vm,
                 {
                     std::fstream stream(fname, std::ios::binary | std::ios::in);
                     if ( stream.is_open() )
-                        dnstap.process_stream(stream);
+                        tap_loop(stream, matcher, config, stats);
                     else
                         std::cerr << "Failed to open " << fname << std::endl;
                 }
