@@ -243,7 +243,7 @@ namespace {
         }
 
         if ( !found )
-            LOG_ERROR << addr << " is not configured on any interface.";
+            LOG_WARN << addr << " is not configured on any interface.";
     }
 }
 
