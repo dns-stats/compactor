@@ -43,9 +43,9 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 sleep 1
-nc -UN $tmpdir/dnstap.sock < $DATAFILE
+nc -U $tmpdir/dnstap.sock < $DATAFILE &
 sleep 1
-kill %1
+kill %1 %2
 
 diff -i $OUTPUTFILE $tmpdir/debug2.out
 cleanup $?
