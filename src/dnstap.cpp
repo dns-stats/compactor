@@ -281,7 +281,7 @@ bool DnsTap::process_control_frame(std::iostream& stream, uint32_t f)
     return res;
 }
 
-void DnsTap::process_data_frame(std::unique_ptr<DNSMessage> msg, DNSSink& sink)
+void DnsTap::process_data_frame(std::unique_ptr<DNSMessage> msg, const DNSSink& sink)
 {
     if ( state_ != STARTED )
         throw dnstap_invalid("Data when not started");

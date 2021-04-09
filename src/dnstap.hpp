@@ -100,7 +100,7 @@ protected:
      *
      * \param msg DNS message.
      */
-    void process_data_frame(std::unique_ptr<DNSMessage> msg, DNSSink& sink);
+    void process_data_frame(std::unique_ptr<DNSMessage> msg, const DNSSink& sink);
 
     /**
      * \brief read a control frame and return its type.
