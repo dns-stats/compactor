@@ -282,6 +282,7 @@ compactor_headers = \
         src/packetstatistics.hpp \
         src/packetstream.hpp \
         src/pcapwriter.hpp \
+        src/signalhandler.hpp \
         src/sniffers.hpp
 
 inspector_headers = \
@@ -301,6 +302,7 @@ compactor_src_with_internal_tests = \
 compactor_src_without_internal_tests = \
         src/blockcborwriter.cpp \
         src/packetstream.cpp \
+        src/signalhandler.cpp \
         src/sniffers.cpp
 
 if ENABLE_DNSTAP
@@ -318,7 +320,7 @@ compactor_SOURCES = \
         $(compactor_src_with_internal_tests) \
         src/compactor.cpp
 
-compactor_CXXFLAGS = @PTHREAD_CFLAGS@ -DBOOST_LOG_DYN_LINK
+compactor_CXXFLAGS = $(PTHREAD_CFLAGS) -DBOOST_LOG_DYN_LINK
 
 compactor_LDADD = \
         libcdns.a \
@@ -331,7 +333,7 @@ compactor_LDADD = \
         $(PCAP_LIB) \
         $(LZMA_LIB) \
         $(TCMALLOC_LIB) \
-        @PTHREAD_LIBS@ \
+        $(PTHREAD_LIBS) \
         $(libtins_LIBS)
 compactor_LDFLAGS = \
         $(BOOST_LDFLAGS)
@@ -343,7 +345,7 @@ compactor_LDFLAGS += \
 endif
 if ENABLE_DNSTAP
 compactor_CXXFLAGS += \
-        @PROTOBUF_CFLAGS@
+        $(PROTOBUF_CFLAGS)
 compactor_LDADD += \
         $(PROTOBUF_LIBS)
 endif
@@ -391,7 +393,7 @@ compactor_tests_LDADD = \
         $(PROTOBUF_LIBS) \
         $(LZMA_LIB) \
         $(TCMALLOC_LIB) \
-        @PTHREAD_LIBS@ \
+        $(PTHREAD_LIBS) \
         $(libtins_LIBS)
 compactor_tests_LDFLAGS = \
         $(BOOST_LDFLAGS)
@@ -403,7 +405,7 @@ compactor_tests_LDFLAGS += \
 endif
 if ENABLE_DNSTAP
 compactor_tests_CXXFLAGS += \
-        @PROTOBUF_CFLAGS@
+        $(PROTOBUF_CFLAGS)
 compactor_tests_LDADD += \
         $(PROTOBUF_LIBS)
 endif
@@ -426,7 +428,7 @@ inspector_LDADD = \
         $(BOOST_SYSTEM_LIB) \
         $(BOOST_THREAD_LIB) \
         $(LZMA_LIB) \
-        @PTHREAD_LIBS@ \
+        $(PTHREAD_LIBS) \
         $(libtins_LIBS) \
         $(CTEMPLATE_LIB) \
         $(MAXMINDDB_LIB)

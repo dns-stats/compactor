@@ -33,13 +33,9 @@ SCENARIO("DnsTap generates control frames", "[dnstap]")
 {
     GIVEN("An ACCEPT frame as input")
     {
-        auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& /* dns */)
-            {
-            };
         std::string accept = DnsTap::make_accept();
         std::stringstream str(accept);
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("ACCEPT frame is correct")
         {
@@ -50,13 +46,9 @@ SCENARIO("DnsTap generates control frames", "[dnstap]")
 
     GIVEN("A FINISH frame as input")
     {
-        auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& /* dns */)
-            {
-            };
         std::string finish = DnsTap::make_finish();
         std::stringstream str(finish);
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("FINISH frame is correct")
         {
@@ -77,13 +69,9 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
             "\0\0\0\x16" // control field length
             "protobuf:dnstap.Dnstap";
 
-        auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& /* dns */)
-            {
-            };
         std::string accept(accept_raw, sizeof(accept_raw));
         std::stringstream str(accept);
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("ACCEPT frame is correct")
         {
@@ -100,13 +88,9 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
             "\0\0\0\x16" // control field length
             "protobuf:dnstap.Dnstap";
 
-        auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& /* dns */)
-            {
-            };
         std::string start(start_raw, sizeof(start_raw));
         std::stringstream str(start);
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("START frame is correct")
         {
@@ -123,13 +107,9 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
             "\0\0\0\x16" // control field length
             "protobuf:dnstap.Dnstap";
 
-        auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& /* dns */)
-            {
-            };
         std::string ready(ready_raw, sizeof(ready_raw));
         std::stringstream str(ready);
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("READY frame is correct")
         {
@@ -144,13 +124,9 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
               0x00, 0x00, 0x00, 0x03
             };
 
-        auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& /* dns */)
-            {
-            };
         std::string stop(stop_raw, sizeof(stop_raw));
         std::stringstream str(stop);
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("STOP frame is correct")
         {
@@ -165,13 +141,9 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
               0x00, 0x00, 0x00, 0x05
             };
 
-        auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& /* dns */)
-            {
-            };
         std::string finish(finish_raw, sizeof(finish_raw));
         std::stringstream str(finish);
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("FINISH frame is correct")
         {
@@ -186,13 +158,9 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
               0x00, 0x00, 0x00, 0x06
             };
 
-        auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& /* dns */)
-            {
-            };
         std::string frame(frame_raw, sizeof(frame_raw));
         std::stringstream str(frame);
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("Frame is read but rejected")
         {
@@ -212,13 +180,9 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
             "\0\0\0\x16" // control field length
             "protobuf:dnstap.Dnstap";
 
-        auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& /* dns */)
-            {
-            };
         std::string ready(ready_raw, sizeof(ready_raw));
         std::stringstream str(ready);
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("READY frame is correct")
         {
@@ -235,13 +199,9 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
             "\0\0\0\x16" // control field length
             "protobuf:dnsxxx.Dnstap";
 
-        auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& /* dns */)
-            {
-            };
         std::string ready(ready_raw, sizeof(ready_raw));
         std::stringstream str(ready);
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("READY frame is correct")
         {
@@ -272,13 +232,9 @@ SCENARIO("DnsTap parses data frames", "[dnstap]")
               0x00, 0x00, 0x00, 0x78, 0x01
             };
 
-        auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& /* dns */)
-            {
-            };
         std::string data(reinterpret_cast<const char*>(data_raw), sizeof(data_raw));
         std::stringstream str(data, std::ios_base::in);
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("Data frame is correct")
         {
@@ -329,13 +285,9 @@ SCENARIO("DnsTap parses data frames", "[dnstap]")
               0x00, 0x00, 0x00, 0x78, 0x01
             };
 
-        auto dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& /* dns */)
-            {
-            };
         std::string data(reinterpret_cast<const char*>(data_raw), sizeof(data_raw));
         std::stringstream str(data);
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("Data frame is rejected")
         {
@@ -349,12 +301,12 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
 {
     GIVEN("A unidirectional control sequence")
     {
-        auto dnstap_sink =
+        DnsTap::DNSSink dnstap_sink =
             [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::stringstream ss;
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("Correct unidirectional sequence is processed as expected")
         {
@@ -365,7 +317,7 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
 
         AND_THEN("START must precede data")
         {
-            REQUIRE_THROWS_AS(tap.process_data_frame(make_unique<DNSMessage>()), dnstap_invalid);
+            REQUIRE_THROWS_AS(tap.process_data_frame(make_unique<DNSMessage>(), dnstap_sink), dnstap_invalid);
         }
 
         AND_THEN("START must precede STOP")
@@ -382,12 +334,12 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
 
     GIVEN("A bidirectional control sequence")
     {
-        auto dnstap_sink =
+        DnsTap::DNSSink dnstap_sink =
             [&](std::unique_ptr<DNSMessage>& /* dns */)
             {
             };
         std::stringstream ss;
-        DnsTap tap(dnstap_sink);
+        DnsTap tap;
 
         THEN("Correct bidirectional sequence is processed as expected")
         {
@@ -412,7 +364,7 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
         AND_THEN("START must precede data")
         {
             REQUIRE(tap.process_control_frame(ss, READY));
-            REQUIRE_THROWS_AS(tap.process_data_frame(make_unique<DNSMessage>()), dnstap_invalid);
+            REQUIRE_THROWS_AS(tap.process_data_frame(make_unique<DNSMessage>(), dnstap_sink), dnstap_invalid);
         }
     }
 }

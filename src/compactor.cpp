@@ -43,6 +43,7 @@
 #include "packetstream.hpp"
 #include "pcapwriter.hpp"
 #include "queryresponse.hpp"
+#include "signalhandler.hpp"
 #include "sniffers.hpp"
 #include "streamwriter.hpp"
 #include "util.hpp"
@@ -236,29 +237,6 @@ static void cbor_writer(std::unique_ptr<BlockCborWriter> out,
     }
 }
 
-static BaseSniffers* signal_handler_sniffers = nullptr;
-static al::stream_protocol::acceptor* signal_handler_acceptor = nullptr;
-static al::stream_protocol::iostream* signal_handler_stream = nullptr;
-static int signal_handler_signal;
-
-static void signal_handler(int signo)
-{
-    signal_handler_signal = signo;
-    try
-    {
-        if ( signal_handler_sniffers )
-            signal_handler_sniffers->breakloop();
-        if ( signal_handler_acceptor )
-            signal_handler_acceptor->close();
-        if ( signal_handler_stream )
-            signal_handler_stream->close();
-    }
-    catch (std::exception& err)
-    {
-        LOG_ERROR << err.what();
-    }
-}
-
 /**
  * \brief The main network capture loop. Read packets from the sniffer
  * and process them.
@@ -337,8 +315,6 @@ static void sniff_loop(BaseSniffers* sniffer,
                 }
             }
         };
-
-    signal_handler_sniffers = sniffer;
 
     PacketStream packet_stream(config, dns_sink, address_event_sink);
 
@@ -427,8 +403,6 @@ static void sniff_loop(BaseSniffers* sniffer,
         }
     }
 
-    signal_handler_sniffers = nullptr;
-
     // Retrieve PCAP stats, if available.
     struct pcap_stat pcap_stat;
     if ( sniffer->stats(pcap_stat) )
@@ -448,12 +422,14 @@ static void sniff_loop(BaseSniffers* sniffer,
  *
  * The loop continues until the stream reports EOF.
  *
+ * \param dnstap  the DNSTAP processor.
  * \param stream  the input stream to read.
  * \param matcher the query/response matcher to use.
  * \param config  the current configuration.
  * \param stats   collect packet statistics here.
  */
-static void tap_loop(std::iostream& stream,
+static void tap_loop(DnsTap& dnstap,
+                     std::iostream& stream,
                      QueryResponseMatcher& matcher,
                      const Configuration& config,
                      PacketStatistics& stats)
@@ -463,40 +439,40 @@ static void tap_loop(std::iostream& stream,
     cno::system_clock::time_point last_stats_log_timestamp;
     PacketStatistics last_stats = stats;
 
-    DnsTap dnstap([&](std::unique_ptr<DNSMessage>& dns)
-                  {
-                      ++stats.raw_packet_count;
-                      if ( last_timestamp > dns->timestamp )
-                          ++stats.out_of_order_packet_count;
-                      last_timestamp = dns->timestamp;
-                      if ( config.debug_dns )
-                          std::cout << *dns;
-                      matcher.add(std::move(dns));
+    auto sink = [&](std::unique_ptr<DNSMessage>& dns)
+    {
+        ++stats.raw_packet_count;
+        if ( last_timestamp > dns->timestamp )
+            ++stats.out_of_order_packet_count;
+        last_timestamp = dns->timestamp;
+        if ( config.debug_dns )
+            std::cout << *dns;
+        matcher.add(std::move(dns));
 
-                      if ( config.log_network_stats_period > 0 )
-                      {
-                          if ( next_stats_log.time_since_epoch().count() == 0 )
-                          {
-                              next_stats_log = last_timestamp + std::chrono::seconds(config.log_network_stats_period);
-                              last_stats_log_timestamp = last_timestamp;
-                          }
-                          else if ( next_stats_log <= last_timestamp )
-                          {
-                              cno::seconds period = cno::duration_cast<cno::seconds>(last_timestamp - last_stats_log_timestamp);
+        if ( config.log_network_stats_period > 0 )
+        {
+            if ( next_stats_log.time_since_epoch().count() == 0 )
+            {
+                next_stats_log = last_timestamp + std::chrono::seconds(config.log_network_stats_period);
+                last_stats_log_timestamp = last_timestamp;
+            }
+            else if ( next_stats_log <= last_timestamp )
+            {
+                cno::seconds period = cno::duration_cast<cno::seconds>(last_timestamp - last_stats_log_timestamp);
 
-                              LOG_INFO <<
-                                  "Total " << stats.raw_packet_count - last_stats.raw_packet_count <<
-                                  " (" << (stats.raw_packet_count - last_stats.raw_packet_count) / period.count() << " pkt/s), " <<
-                                  "Dropped C-DNS packets " <<
-                                  stats.output_cbor_drop_count - last_stats.output_cbor_drop_count;
-                              next_stats_log = last_timestamp + cno::seconds(config.log_network_stats_period);
-                              last_stats_log_timestamp = last_timestamp;
-                              last_stats = stats;
-                          }
-                      }
-                  });
+                LOG_INFO <<
+                    "Total " << stats.raw_packet_count - last_stats.raw_packet_count <<
+                    " (" << (stats.raw_packet_count - last_stats.raw_packet_count) / period.count() << " pkt/s), " <<
+                    "Dropped C-DNS packets " <<
+                    stats.output_cbor_drop_count - last_stats.output_cbor_drop_count;
+                next_stats_log = last_timestamp + cno::seconds(config.log_network_stats_period);
+                last_stats_log_timestamp = last_timestamp;
+                last_stats = stats;
+            }
+        }
+    };
 
-    dnstap.process_stream(stream);
+    dnstap.process_stream(stream, sink);
 }
 #endif
 
@@ -544,12 +520,9 @@ static int run_configuration(const po::variables_map& vm,
     OutputChannels output;
     bool live_capture = false;
 
-    // Reset signal handler record.
-    signal_handler_signal = 0;
-    std::signal(SIGINT, signal_handler);
-    std::signal(SIGPIPE, signal_handler);
-    std::signal(SIGTERM, signal_handler);
-    std::signal(SIGHUP, signal_handler);
+    // Signal handling.
+    SignalHandler signal_handler({SIGPIPE, SIGINT, SIGTERM, SIGHUP});
+    int signal_received = 0;
 
     // Set output limits only when we're capturing. If we set them
     // when reading from a capture, we'll just lose items from the
@@ -637,6 +610,9 @@ static int run_configuration(const po::variables_map& vm,
     // is typically a manual process, and so errors go to stderr.
     bool log_errs = ( !vm.count("capture-file") );
     int res = 0;
+#if ENABLE_DNSTAP
+    DnsTap dnstap;
+#endif
 
     try
     {
@@ -654,26 +630,33 @@ static int run_configuration(const po::variables_map& vm,
                                      config.dnstap_socket_owner,
                                      config.dnstap_socket_group,
                                      config.dnstap_socket_write);
-                signal_handler_acceptor = &acceptor;
+                al::stream_protocol::iostream stream;
+                signal_handler.add_handler(
+                    [&](int signal)
+                    {
+                        signal_received = signal;
+                        acceptor.close();
+                        dnstap.breakloop();
+                    });
 
-                while (!signal_handler_signal)
+                while ( signal_received == 0 )
                 {
-                    al::stream_protocol::iostream stream;
                     acceptor.accept(*stream.rdbuf());
-                    if ( signal_handler_signal )
-                        break;
-                    signal_handler_stream = &stream;
-                    tap_loop(stream, matcher, config, stats);
-                    signal_handler_stream = nullptr;
+                    if ( signal_received == 0 )
+                        tap_loop(dnstap, stream, matcher, config, stats);
                 }
-                signal_handler_acceptor = nullptr;
             }
             else
 #endif
             {
                 LOG_INFO << "Starting network capture";
                 NetworkSniffers sniffer(config.network_interfaces, sniff_config);
-
+                signal_handler.add_handler(
+                    [&](int signal)
+                    {
+                        signal_received = signal;
+                        sniffer.breakloop();
+                    });
                 sniff_loop(&sniffer, matcher, output, config, stats);
             }
         }
@@ -686,7 +669,15 @@ static int run_configuration(const po::variables_map& vm,
                 {
                     std::fstream stream(fname, std::ios::binary | std::ios::in);
                     if ( stream.is_open() )
-                        tap_loop(stream, matcher, config, stats);
+                    {
+                        signal_handler.add_handler(
+                            [&](int signal)
+                            {
+                                signal_received = signal;
+                                dnstap.breakloop();
+                            });
+                        tap_loop(dnstap, stream, matcher, config, stats);
+                    }
                     else
                         std::cerr << "Failed to open " << fname << std::endl;
                 }
@@ -694,9 +685,15 @@ static int run_configuration(const po::variables_map& vm,
 #endif
                 {
                     FileSniffer sniffer(fname, sniff_config);
+                    signal_handler.add_handler(
+                        [&](int signal)
+                        {
+                            signal_received = signal;
+                            sniffer.breakloop();
+                        });
                     sniff_loop(&sniffer, matcher, output, config, stats);
                 }
-                if ( signal_handler_signal )
+                if ( signal_received != 0 )
                     break;
             }
         }
@@ -744,7 +741,8 @@ static int run_configuration(const po::variables_map& vm,
         res = 3;
     }
 
-    switch(signal_handler_signal)
+    signal_handler.wait_for_signals();
+    switch(signal_received)
     {
     case 0:
         // Normal termination.

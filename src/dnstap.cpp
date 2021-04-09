@@ -201,12 +201,12 @@ namespace {
     }
 }
 
-DnsTap::DnsTap(DNSSink dns_sink)
-    : bidirectional_(false), dns_sink_(dns_sink), state_(WAIT)
+DnsTap::DnsTap()
+    : bidirectional_(false), state_(WAIT)
 {
 }
 
-void DnsTap::process_stream(std::iostream& stream)
+void DnsTap::process_stream(std::iostream& stream, DNSSink sink)
 {
     // Throw exceptions from our code, but ensure we switch that
     // off on exit for any reason.
@@ -214,8 +214,9 @@ void DnsTap::process_stream(std::iostream& stream)
 
     bidirectional_ = false;
     state_ = WAIT;
+    break_ = false;
 
-    for(;;)
+    while ( !break_.load() )
     {
         try
         {
@@ -227,13 +228,18 @@ void DnsTap::process_stream(std::iostream& stream)
                     break;  // Received STOP.
             }
             else
-                process_data_frame(read_data_frame(stream, len));
+                process_data_frame(read_data_frame(stream, len), sink);
         }
         catch (std::iostream::failure& f)
         {
             throw std::system_error(f.code(), "DNSTAP read failed");
         }
     }
+}
+
+void DnsTap::breakloop()
+{
+    break_ = true;
 }
 
 bool DnsTap::process_control_frame(std::iostream& stream, uint32_t f)
@@ -275,13 +281,13 @@ bool DnsTap::process_control_frame(std::iostream& stream, uint32_t f)
     return res;
 }
 
-void DnsTap::process_data_frame(std::unique_ptr<DNSMessage> msg)
+void DnsTap::process_data_frame(std::unique_ptr<DNSMessage> msg, DNSSink& sink)
 {
     if ( state_ != STARTED )
         throw dnstap_invalid("Data when not started");
 
     if ( msg )
-        dns_sink_(msg);
+        sink(msg);
 }
 
 uint32_t DnsTap::read_control_frame(std::iostream& stream)

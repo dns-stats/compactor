@@ -13,8 +13,10 @@
 #ifndef DNSTAP_HPP
 #define DNSTAP_HPP
 
+#include <atomic>
 #include <cstdint>
 #include <exception>
+#include <functional>
 #include <iostream>
 #include <string>
 
@@ -65,10 +67,8 @@ public:
 
     /**
      * \brief Constructor.
-     *
-     * \param dns_sink          sink for DNS messages.
      */
-    explicit DnsTap(DNSSink dns_sink);
+    explicit DnsTap();
 
     /**
      * \brief Process input.
@@ -76,8 +76,14 @@ public:
      * Receive and process DNSTAP until end of file.
      *
      * \param stream            DNSTAP data source.
+     * \param dns_sink          sink for DNS messages.
      */
-    void process_stream(std::iostream& stream);
+    void process_stream(std::iostream& stream, DNSSink dns_sink);
+
+    /**
+     * \brief Break input processing.
+     */
+    void breakloop();
 
 protected:
     /**
@@ -94,7 +100,7 @@ protected:
      *
      * \param msg DNS message.
      */
-    void process_data_frame(std::unique_ptr<DNSMessage> msg);
+    void process_data_frame(std::unique_ptr<DNSMessage> msg, DNSSink& sink);
 
     /**
      * \brief read a control frame and return its type.
@@ -159,14 +165,14 @@ private:
     bool bidirectional_;
 
     /**
-     * \brief sink function for read DNS messages.
-     */
-    DNSSink dns_sink_;
-
-    /**
      * \brief frame processing state
      */
     int state_;
+
+    /**
+     * \brief break processing?
+     */
+    std::atomic<bool> break_;
 };
 
 #endif
