@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -43,7 +43,7 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 sleep 1
-nc -U $tmpdir/dnstap.sock < $DATAFILE
+nc -UN $tmpdir/dnstap.sock < $DATAFILE
 sleep 1
 kill %1
 
