@@ -6,6 +6,17 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.2.0-beta4 - 2021-04-08
+--------------------------------
+
+* Add raw packet count and out of order count to statistics when
+  collecting through DNSTAP. Also optionally periodically log statistics
+  during collection as with PCAP.
+* Revise signal handling for better reliability with DNSTAP.
+* Catch malformed packets in DNSTAP collection and count them.
+* If configured service address does not exist on any interface
+  log a warning not an error.
+
 Version 1.2.0-beta3 - 2021-03-30
 --------------------------------
 
