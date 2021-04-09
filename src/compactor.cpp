@@ -484,6 +484,7 @@ static void tap_loop(DnsTap& dnstap,
     };
 
     dnstap.process_stream(stream, sink);
+    stats.malformed_packet_count += dnstap.malformed_packet_count();
 }
 #endif
 

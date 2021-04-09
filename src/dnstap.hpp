@@ -85,6 +85,14 @@ public:
      */
     void breakloop();
 
+    /**
+     * \brief Count of malformed packets in stream so far.
+     */
+    uint64_t malformed_packet_count()
+    {
+        return malformed_packet_count_;
+    }
+
 protected:
     /**
      * \brief process control frame.
@@ -173,6 +181,11 @@ private:
      * \brief break processing?
      */
     std::atomic<bool> break_;
+
+    /**
+     * \brief count of malformed DNS packets received
+     */
+    uint64_t malformed_packet_count_;
 };
 
 #endif

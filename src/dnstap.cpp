@@ -17,6 +17,7 @@
 
 #include "ipaddress.hpp"
 #include "makeunique.hpp"
+#include "packetstream.hpp"
 
 #ifndef CPPCHECK
 // Cppcheck can't cope with this header.
@@ -202,7 +203,7 @@ namespace {
 }
 
 DnsTap::DnsTap()
-    : bidirectional_(false), state_(WAIT)
+    : bidirectional_(false), state_(WAIT), malformed_packet_count_(0)
 {
 }
 
@@ -215,6 +216,7 @@ void DnsTap::process_stream(std::iostream& stream, DNSSink sink)
     bidirectional_ = false;
     state_ = WAIT;
     break_ = false;
+    malformed_packet_count_ = 0;
 
     while ( !break_.load() )
     {
@@ -349,33 +351,40 @@ std::unique_ptr<DNSMessage> DnsTap::read_data_frame(std::iostream& stream, uint3
             throw dnstap_invalid("Message has no protocol");
         TransportType transport_type = convert_transport_type(message.socket_protocol());
 
-        if ( message.has_query_message() )
+        try
         {
-            if ( message.has_query_time_sec() &&
-                 message.has_query_time_nsec() )
+            if ( message.has_query_message() )
             {
-                std::chrono::seconds s(message.query_time_sec());
-                std::chrono::nanoseconds ns(message.query_time_nsec());
-                std::chrono::system_clock::time_point t(std::chrono::duration_cast<std::chrono::system_clock::duration>(s + ns));
+                if ( message.has_query_time_sec() &&
+                     message.has_query_time_nsec() )
+                {
+                    std::chrono::seconds s(message.query_time_sec());
+                    std::chrono::nanoseconds ns(message.query_time_nsec());
+                    std::chrono::system_clock::time_point t(std::chrono::duration_cast<std::chrono::system_clock::duration>(s + ns));
 
-                dns = make_unique<DNSMessage>(
-                    Tins::RawPDU(message.query_message()),
-                    t, transport_type, transaction_type);
+                    dns = make_unique<DNSMessage>(
+                        Tins::RawPDU(message.query_message()),
+                        t, transport_type, transaction_type);
+                }
+            }
+            else if ( message.has_response_message() )
+            {
+                if ( message.has_response_time_sec() &&
+                     message.has_response_time_nsec() )
+                {
+                    std::chrono::seconds s(message.response_time_sec());
+                    std::chrono::nanoseconds ns(message.response_time_nsec());
+                    std::chrono::system_clock::time_point t(std::chrono::duration_cast<std::chrono::system_clock::duration>(s + ns));
+
+                    dns = make_unique<DNSMessage>(
+                        Tins::RawPDU(message.response_message()),
+                        t, transport_type, transaction_type);
+                }
             }
         }
-        else if ( message.has_response_message() )
+        catch (const malformed_packet& e)
         {
-            if ( message.has_response_time_sec() &&
-                 message.has_response_time_nsec() )
-            {
-                std::chrono::seconds s(message.response_time_sec());
-                std::chrono::nanoseconds ns(message.response_time_nsec());
-                std::chrono::system_clock::time_point t(std::chrono::duration_cast<std::chrono::system_clock::duration>(s + ns));
-
-                dns = make_unique<DNSMessage>(
-                    Tins::RawPDU(message.response_message()),
-                    t, transport_type, transaction_type);
-            }
+            ++malformed_packet_count_;
         }
 
         if ( dns )
