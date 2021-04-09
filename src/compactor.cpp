@@ -631,20 +631,25 @@ static int run_configuration(const po::variables_map& vm,
                                      config.dnstap_socket_group,
                                      config.dnstap_socket_write);
                 al::stream_protocol::iostream stream;
+
                 signal_handler.add_handler(
                     [&](int signal)
                     {
                         signal_received = signal;
-                        acceptor.close();
                         dnstap.breakloop();
+                        acceptor.cancel();
+                        service.stop();
                     });
 
-                while ( signal_received == 0 )
+                std::function<void (const boost::system::error_code&)> handle_accept = [&](const boost::system::error_code&)
                 {
-                    acceptor.accept(*stream.rdbuf());
                     if ( signal_received == 0 )
                         tap_loop(dnstap, stream, matcher, config, stats);
-                }
+                    acceptor.async_accept(*stream.rdbuf(), handle_accept);
+                };
+                acceptor.async_accept(*stream.rdbuf(), handle_accept);
+                while ( signal_received == 0 )
+                    service.run_one();
             }
             else
 #endif
