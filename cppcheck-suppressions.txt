@@ -20,9 +20,9 @@ unusedFunction:src/cbordecoder.cpp:181
 unusedFunction:src/cbordecoder.cpp:196
 
 // Lambdas are confusing.
-variableScope:src/compactor.cpp:280
-variableScope:src/compactor.cpp:281
-variableScope:src/compactor.cpp:537
+variableScope:src/compactor.cpp:272
+variableScope:src/compactor.cpp:273
+variableScope:src/compactor.cpp:585
 unreadVariable:src/compactor.cpp:314
 unreadVariable:src/compactor.cpp:297
 unreadVariable:src/compactor.cpp:545
