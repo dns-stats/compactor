@@ -18,6 +18,8 @@
 #include <memory>
 #include <thread>
 
+#include <pthread.h>
+
 #include <boost/asio.hpp>
 #include <boost/variant.hpp>
 
@@ -53,6 +55,15 @@ const std::string PROGNAME = "compactor";
 namespace al = boost::asio::local;
 namespace po = boost::program_options;
 namespace cno = std::chrono;
+
+/**
+ * \brief A do-nothing signal handler.
+ *
+ * \param sig   the signal.
+ */
+static void sighandler_empty(int /* sig */)
+{
+}
 
 /**
  * \typedef CborItemPayload
@@ -632,6 +643,12 @@ static int run_configuration(const po::variables_map& vm,
                                      config.dnstap_socket_write);
                 al::stream_protocol::iostream stream;
 
+                // To stop any ongoing reads blocked waiting for the network,
+                // signal this thread with SIGUSR2, handled with an empty
+                // handler.
+                pthread_t my_thread = ::pthread_self();
+                std::signal(SIGUSR2, sighandler_empty);
+
                 signal_handler.add_handler(
                     [&](int signal)
                     {
@@ -639,6 +656,7 @@ static int run_configuration(const po::variables_map& vm,
                         dnstap.breakloop();
                         acceptor.cancel();
                         service.stop();
+                        ::pthread_kill(my_thread, SIGUSR2);
                     });
 
                 std::function<void (const boost::system::error_code&)> handle_accept = [&](const boost::system::error_code&)
