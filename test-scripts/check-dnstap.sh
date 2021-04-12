@@ -18,7 +18,7 @@ tmpdir=`mktemp -d -t "check-dnstap.XXXXXX"`
 
 cleanup()
 {
-    #rm -rf $tmpdir
+    rm -rf $tmpdir
     exit $1
 }
 
