@@ -124,6 +124,7 @@ dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/dnscap.pcap.xz \
                   test-scripts/test.dnstap \
                   test-scripts/test.dnstap.debug-dns \
+                  test-scripts/test.dnstap.debug-dns-reportinfo \
                   test-scripts/gold.pcap.xz \
                   test-scripts/gold.cbor.xz \
                   test-scripts/gold.cbor02.xz \
