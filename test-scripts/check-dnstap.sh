@@ -9,6 +9,7 @@
 COMP=./compactor
 DATAFILE=$srcdir/test-scripts/test.dnstap
 OUTPUTFILE=$srcdir/test-scripts/test.dnstap.debug-dns
+OUTPUTFILE_REPORTINFO=$srcdir/test-scripts/test.dnstap.debug-dns-reportinfo
 
 command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
 command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }
@@ -31,14 +32,15 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-diff -i $OUTPUTFILE $tmpdir/debug.out
+diff -i $OUTPUTFILE_REPORTINFO $tmpdir/debug.out
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
 # Run the compactor with debug-dns, read from socket, and verify it
-# produces the expected output.
-$COMP -c /dev/null --report-info --debug-dns -n all --dnstap-socket $tmpdir/dnstap.sock > $tmpdir/debug2.out &
+# produces the expected output. --reportinfo may not produced when
+# compactor is interrupted, so don't use it.
+$COMP -c /dev/null --debug-dns -n all --dnstap-socket $tmpdir/dnstap.sock > $tmpdir/debug2.out &
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
