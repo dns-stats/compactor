@@ -455,6 +455,7 @@ static void tap_loop(DnsTap& dnstap,
         ++stats.raw_packet_count;
         if ( last_timestamp > dns->timestamp )
             ++stats.out_of_order_packet_count;
+        stats.malformed_packet_count = dnstap.malformed_packet_count();
         last_timestamp = dns->timestamp;
         if ( config.debug_dns )
             std::cout << *dns;
@@ -484,7 +485,9 @@ static void tap_loop(DnsTap& dnstap,
     };
 
     dnstap.process_stream(stream, sink);
-    stats.malformed_packet_count += dnstap.malformed_packet_count();
+
+    // In case last packet was malformed, ensure count is correct.
+    stats.malformed_packet_count = dnstap.malformed_packet_count();
 }
 #endif
 

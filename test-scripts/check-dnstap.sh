@@ -18,7 +18,7 @@ tmpdir=`mktemp -d -t "check-dnstap.XXXXXX"`
 
 cleanup()
 {
-    rm -rf $tmpdir
+    #rm -rf $tmpdir
     exit $1
 }
 
@@ -26,7 +26,7 @@ trap "cleanup 1" HUP INT TERM
 
 # Run the compactor with debug-dns, read from file, and verify it succeeds
 # and produces the expected output.
-$COMP -c /dev/null --debug-dns -n all --dnstap on $DATAFILE > $tmpdir/debug.out
+$COMP -c /dev/null --report-info --debug-dns -n all --dnstap on $DATAFILE > $tmpdir/debug.out
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
@@ -38,7 +38,7 @@ fi
 
 # Run the compactor with debug-dns, read from socket, and verify it
 # produces the expected output.
-$COMP -c /dev/null --debug-dns -n all --dnstap-socket $tmpdir/dnstap.sock > $tmpdir/debug2.out &
+$COMP -c /dev/null --report-info --debug-dns -n all --dnstap-socket $tmpdir/dnstap.sock > $tmpdir/debug2.out &
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
