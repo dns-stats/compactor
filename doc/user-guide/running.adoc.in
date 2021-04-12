@@ -127,6 +127,14 @@ more details, see <<C-DNS output compression>>.
 This behaviour is under review.
 ====
 
+[WARNING]
+====
+When capturing traffic over DNSTAP, output of raw or ignored packets to PCAP
+is not currently supported. Any related _compactor_ options specified will be ignored.
+
+This behaviour is under review.
+====
+
 ==== Capturing from PCAP files
 
 Unless DNSTAP input files are specified, any non-option parameters on the command

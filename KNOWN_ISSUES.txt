@@ -1,6 +1,6 @@
 #
-# Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
-# 
+# Copyright 2016-2019, 2021 Internet Corporation for Assigned Names and Numbers.
+#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
@@ -11,7 +11,11 @@ KNOWN ISSUES/LIMITATIONS:
 
 * Malformed packet recording as described in the implemented C-DNS draft
   is not supported. However, the compactor can record malformed
-  packets in a separate PCAP file with the `--ignored-pcap` option.
+  packets in a separate PCAP file with the `--ignored-pcap` option
+  when capturing from network interfaces.
+
+* Output of raw or ignored packets to PCAP is not currently supported
+  during capture via DNSTAP.
 
 * File rotation period reported by the inspector is calculated as the
   difference in seconds between the first and last items read from the

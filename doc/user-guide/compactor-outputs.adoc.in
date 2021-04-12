@@ -31,13 +31,15 @@
   `1` or more.  If not specified, the default number of threads is `2`.
 
 *-w, --raw-pcap* _PATTERN_::
-  Use _PATTERN_ as the template for a file path for output of all packets captured to
-  file in PCAP format. If no pattern is given, no raw packet output is written.
+  Use _PATTERN_ as the template for a file path for output of all packets captured
+  via network capture to file in PCAP format. If no pattern is given, no raw packet
+  output is written. This option is currently ignored when capturing via DNSTAP.
 
 *-m, --ignored-pcap* _PATTERN_::
-  Use _PATTERN_ as the template for a file path for output of all packets captured that
-  were not to the configured DNS ports, or were not validly formed DNS packets.
-  If no pattern is given, no ignored packet output is written.
+  Use _PATTERN_ as the template for a file path for output of all packets captured
+  vai network capture that were not to the configured DNS ports, or were not validly
+  formed DNS packets. If no pattern is given, no ignored packet output is written.
+  This option is currently ignored when capturing via DNSTAP.
 
 *-Z, --gzip-pcap* [_arg_]::
   Compress data in the PCAP output files using gzip(1) format. _arg_ may be
