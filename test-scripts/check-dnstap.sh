@@ -38,16 +38,17 @@ if [ $? -ne 0 ]; then
 fi
 
 # Run the compactor with debug-dns, read from socket, and verify it
-# produces the expected output. --reportinfo may not produced when
-# compactor is interrupted, so don't use it.
+# produces the expected output.
 $COMP -c /dev/null --debug-dns -n all --dnstap-socket $tmpdir/dnstap.sock > $tmpdir/debug2.out &
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
 sleep 1
 nc -U $tmpdir/dnstap.sock < $DATAFILE &
+sleep 2
+kill %2
 sleep 1
-kill %1 %2
+kill %1
 
 diff -i $OUTPUTFILE $tmpdir/debug2.out
 cleanup $?
