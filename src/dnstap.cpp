@@ -203,7 +203,7 @@ namespace {
 }
 
 DnsTap::DnsTap()
-    : bidirectional_(false), state_(WAIT), malformed_packet_count_(0)
+    : bidirectional_(false), state_(WAIT), malformed_message_count_(0)
 {
 }
 
@@ -216,7 +216,7 @@ void DnsTap::process_stream(std::iostream& stream, DNSSink sink)
     bidirectional_ = false;
     state_ = WAIT;
     break_ = false;
-    malformed_packet_count_ = 0;
+    malformed_message_count_ = 0;
 
     while ( !break_.load() )
     {
@@ -384,7 +384,7 @@ std::unique_ptr<DNSMessage> DnsTap::read_data_frame(std::iostream& stream, uint3
         }
         catch (const malformed_packet& e)
         {
-            ++malformed_packet_count_;
+            ++malformed_message_count_;
         }
 
         if ( dns )

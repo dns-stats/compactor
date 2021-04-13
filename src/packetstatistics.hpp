@@ -32,11 +32,6 @@ using PacketStatistics = struct PacketStatistics_s
     uint64_t raw_packet_count;
 
     /**
-     * \brief count of malformed DNS packets received.
-     */
-    uint64_t malformed_packet_count;
-
-    /**
      * \brief count of DNS packets received out of time order.
      */
     uint64_t out_of_order_packet_count;
@@ -47,19 +42,46 @@ using PacketStatistics = struct PacketStatistics_s
     uint64_t unhandled_packet_count;
 
     /**
+     * \brief count of well-formed DNS messages received.
+     *
+     * C-DNS standard quantity.
+     */
+    uint64_t processed_message_count;
+
+    /**
      * \brief count of total query/response pairs output.
+     *
+     * C-DNS standard quantity.
      */
     uint64_t qr_pair_count;
 
     /**
      * \brief count of queries with no matching response.
+     *
+     * C-DNS standard quantity.
      */
     uint64_t query_without_response_count;
 
     /**
      * \brief count of responses with no matching query.
+     *
+     * C-DNS standard quantity.
      */
     uint64_t response_without_query_count;
+
+    /**
+     * \brief cout of discarded messages due to OPCODE not in collection list.
+     *
+     * C-DNS standard quantity.
+     */
+    uint64_t discarded_opcode_count;
+
+    /**
+     * \brief count of malformed DNS packets received.
+     *
+     * C-DNS standard quantity.
+     */
+    uint64_t malformed_message_count;
 
     /**
      * \brief count from PCAP of packets received.
@@ -99,10 +121,12 @@ using PacketStatistics = struct PacketStatistics_s
     void dump_stats(std::ostream& os) {
         os << "\nSTATISTICS:\n"
            << "  Total Packets processed                  : " << raw_packet_count << "\n"
+           << "  Processed DNS messages           (C-DNS) : " << processed_message_count << "\n"
            << "  Matched DNS query/response pairs (C-DNS) : " << qr_pair_count << "\n"
            << "  Unmatched DNS queries            (C-DNS) : " << query_without_response_count << "\n"
            << "  Unmatched DNS responses          (C-DNS) : " << response_without_query_count << "\n"
-           << "  Malformed DNS packets                    : " << malformed_packet_count << "\n"
+           << "  Discarded OPCODE DNS messages    (C-DNS) : " << discarded_opcode_count << "\n"
+           << "  Malformed DNS messages           (C-DNS) : " << malformed_message_count << "\n"
            << "  Non-DNS packets                          : " << unhandled_packet_count  << "\n"
            << "  Out-of-order DNS query/responses         : " << out_of_order_packet_count << "\n"
            << "  Dropped C-DNS items (overload)           : " << output_cbor_drop_count << "\n"

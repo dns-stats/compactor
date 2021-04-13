@@ -86,11 +86,11 @@ public:
     void breakloop();
 
     /**
-     * \brief Count of malformed packets in stream so far.
+     * \brief Count of malformed messages in stream so far.
      */
-    uint64_t malformed_packet_count()
+    uint64_t malformed_message_count()
     {
-        return malformed_packet_count_;
+        return malformed_message_count_;
     }
 
 protected:
@@ -183,9 +183,9 @@ private:
     std::atomic<bool> break_;
 
     /**
-     * \brief count of malformed DNS packets received
+     * \brief count of malformed DNS messages received
      */
-    uint64_t malformed_packet_count_;
+    uint64_t malformed_message_count_;
 };
 
 #endif

@@ -469,6 +469,7 @@ namespace block_cbor {
         compactor_missing_pairs,
         compactor_missing_packets,
         compactor_missing_non_dns,
+        compactor_packets,
 
         // Obsolete
         partially_malformed_packets,
@@ -979,6 +980,7 @@ namespace block_cbor {
         BlockStatisticsField::compactor_missing_pairs,
         BlockStatisticsField::compactor_missing_packets,
         BlockStatisticsField::compactor_missing_non_dns,
+        BlockStatisticsField::compactor_packets,
     };
 
     /**
