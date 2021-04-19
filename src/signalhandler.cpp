@@ -18,6 +18,8 @@
 #include <string>
 #include <thread>
 
+#include <sched.h>
+
 #include "log.hpp"
 #include "util.hpp"
 
@@ -65,7 +67,7 @@ namespace {
     bool is_sigset_empty(const sigset_t& set)
     {
         for ( int i = FIRST_SIGNAL; i <= LAST_SIGNAL; ++i )
-            if ( ::sigismember(&set, i) )
+            if ( sigismember(&set, i) )
                 return false;
 
         return true;
@@ -86,7 +88,8 @@ namespace {
 
         for (;;)
         {
-            int sig = ::sigwaitinfo(&signals, nullptr);
+            int sig = 0;
+            sigwait(&signals, &sig);
             if ( sig > 0 )
             {
                 if ( sig == active_cancel_signal )
@@ -114,8 +117,8 @@ namespace {
     void update_signal_set()
     {
         sigset_t set, inverse_set;
-        ::sigemptyset(&set);
-        ::sigfillset(&inverse_set);
+        sigemptyset(&set);
+        sigfillset(&inverse_set);
 
         // Stop old signal thread, if active.
         if ( signal_thread.joinable() )
@@ -135,10 +138,10 @@ namespace {
             {
                 sigset_t handler_set = h->signals();
                 for ( int i = FIRST_SIGNAL; i <= LAST_SIGNAL; ++i )
-                    if ( ::sigismember(&handler_set, i) )
+                    if ( sigismember(&handler_set, i) )
                     {
-                        ::sigaddset(&set, i);
-                        ::sigdelset(&inverse_set, i);
+                        sigaddset(&set, i);
+                        sigdelset(&inverse_set, i);
                         cancel_signal = i;
                     }
             }
@@ -162,9 +165,9 @@ SignalHandler::SignalHandler(std::initializer_list<int> signals)
     if ( signals.size() == 0 )
         throw signal_handler_error("no signals specified");
 
-    ::sigemptyset(&signals_);
+    sigemptyset(&signals_);
     for ( int i : signals )
-        if ( ::sigaddset(&signals_, i) != 0 )
+        if ( sigaddset(&signals_, i) != 0 )
             throw signal_handler_error("Bad signal " + std::to_string(i));
 
     {
@@ -203,13 +206,13 @@ sigset_t SignalHandler::signals() const
 
 void SignalHandler::wait_for_signals()
 {
-    struct timespec ts;
-    ts.tv_sec = 0;
-    ts.tv_nsec = 0;
+    sigset_t set;
 
-    sigset_t full_set;
-    ::sigfillset(&full_set);
-
-    while ( ::sigtimedwait(&full_set, nullptr, &ts) > 0 )
-        ::pthread_yield();
+    for(;;)
+    {
+        sigpending(&set);
+        if ( is_sigset_empty(set) )
+            break;
+        sched_yield();
+    }
 }

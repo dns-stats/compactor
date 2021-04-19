@@ -1580,7 +1580,11 @@ namespace block_cbor {
             switch(fields.block_statistics_field(dec.read_signed()))
             {
             case BlockStatisticsField::malformed_items:
-                last_packet_statistics.malformed_packet_count += dec.read_unsigned();
+                last_packet_statistics.malformed_message_count += dec.read_unsigned();
+                break;
+
+            case BlockStatisticsField::discarded_opcode:
+                last_packet_statistics.discarded_opcode_count += dec.read_unsigned();
                 break;
 
             case BlockStatisticsField::compactor_non_dns_packets:
@@ -1592,7 +1596,7 @@ namespace block_cbor {
                 break;
 
             case BlockStatisticsField::processed_messages:
-                last_packet_statistics.raw_packet_count += dec.read_unsigned();
+                last_packet_statistics.processed_message_count += dec.read_unsigned();
                 break;
 
             case BlockStatisticsField::compactor_missing_pairs:
@@ -1617,6 +1621,10 @@ namespace block_cbor {
 
             case BlockStatisticsField::compactor_missing_non_dns:
                 last_packet_statistics.output_ignored_pcap_drop_count += dec.read_unsigned();
+                break;
+
+            case BlockStatisticsField::compactor_packets:
+                last_packet_statistics.raw_packet_count += dec.read_unsigned();
                 break;
 
             default:
@@ -1800,24 +1808,28 @@ namespace block_cbor {
         constexpr int qr_data_items_index = find_block_statistics_index(BlockStatisticsField::qr_data_items);
         constexpr int unmatched_queries_index = find_block_statistics_index(BlockStatisticsField::unmatched_queries);
         constexpr int unmatched_responses_index = find_block_statistics_index(BlockStatisticsField::unmatched_responses);
+        constexpr int discarded_opcode_index = find_block_statistics_index(BlockStatisticsField::discarded_opcode);
         constexpr int malformed_items_index = find_block_statistics_index(BlockStatisticsField::malformed_items);
         constexpr int non_dns_packets_index = find_block_statistics_index(BlockStatisticsField::compactor_non_dns_packets);
         constexpr int out_of_order_packets_index = find_block_statistics_index(BlockStatisticsField::compactor_out_of_order_packets);
         constexpr int missing_pairs_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_pairs);
         constexpr int missing_packets_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_packets);
         constexpr int missing_non_dns_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_non_dns);
+        constexpr int packets_index = find_block_statistics_index(BlockStatisticsField::compactor_packets);
 
         enc.writeMapHeader();
         enc.write(processed_messages_index);
-        enc.write(last_packet_statistics.raw_packet_count - start_packet_statistics.raw_packet_count);
+        enc.write(last_packet_statistics.processed_message_count - start_packet_statistics.processed_message_count);
         enc.write(qr_data_items_index);
         enc.write(last_packet_statistics.qr_pair_count - start_packet_statistics.qr_pair_count);
         enc.write(unmatched_queries_index);
         enc.write(last_packet_statistics.query_without_response_count - start_packet_statistics.query_without_response_count);
         enc.write(unmatched_responses_index);
         enc.write(last_packet_statistics.response_without_query_count - start_packet_statistics.response_without_query_count);
+        enc.write(discarded_opcode_index);
+        enc.write(last_packet_statistics.discarded_opcode_count - start_packet_statistics.discarded_opcode_count);
         enc.write(malformed_items_index);
-        enc.write(last_packet_statistics.malformed_packet_count - start_packet_statistics.malformed_packet_count);
+        enc.write(last_packet_statistics.malformed_message_count - start_packet_statistics.malformed_message_count);
         enc.write(non_dns_packets_index);
         enc.write(last_packet_statistics.unhandled_packet_count - start_packet_statistics.unhandled_packet_count);
         enc.write(out_of_order_packets_index);
@@ -1828,6 +1840,8 @@ namespace block_cbor {
         enc.write(last_packet_statistics.output_raw_pcap_drop_count - start_packet_statistics.output_raw_pcap_drop_count);
         enc.write(missing_non_dns_index);
         enc.write(last_packet_statistics.output_ignored_pcap_drop_count - start_packet_statistics.output_ignored_pcap_drop_count);
+        enc.write(packets_index);
+        enc.write(last_packet_statistics.raw_packet_count - start_packet_statistics.raw_packet_count);
         enc.writeBreak();
     }
 

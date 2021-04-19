@@ -285,6 +285,8 @@ static void sniff_loop(BaseSniffers* sniffer,
     auto dns_sink =
         [&](std::unique_ptr<DNSMessage>& dns)
         {
+            ++stats.processed_message_count;
+
             if ( config.debug_dns )
                 std::cout << *dns;
 
@@ -374,7 +376,7 @@ static void sniff_loop(BaseSniffers* sniffer,
             catch (const malformed_packet& e)
             {
                 ignored = true;
-                ++stats.malformed_packet_count;
+                ++stats.malformed_message_count;
             }
 
             if ( ignored )
@@ -453,9 +455,10 @@ static void tap_loop(DnsTap& dnstap,
     auto sink = [&](std::unique_ptr<DNSMessage>& dns)
     {
         ++stats.raw_packet_count;
+        ++stats.processed_message_count;
         if ( last_timestamp > dns->timestamp )
             ++stats.out_of_order_packet_count;
-        stats.malformed_packet_count = dnstap.malformed_packet_count();
+        stats.malformed_message_count = dnstap.malformed_message_count();
         last_timestamp = dns->timestamp;
         if ( config.debug_dns )
             std::cout << *dns;
@@ -486,8 +489,8 @@ static void tap_loop(DnsTap& dnstap,
 
     dnstap.process_stream(stream, sink);
 
-    // In case last packet was malformed, ensure count is correct.
-    stats.malformed_packet_count = dnstap.malformed_packet_count();
+    // In case last message was malformed, ensure count is correct.
+    stats.malformed_message_count = dnstap.malformed_message_count();
 }
 #endif
 
