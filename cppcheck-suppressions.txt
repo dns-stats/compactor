@@ -22,7 +22,7 @@ unusedFunction:src/cbordecoder.cpp:196
 // Lambdas are confusing.
 variableScope:src/compactor.cpp:272
 variableScope:src/compactor.cpp:273
-variableScope:src/compactor.cpp:585
+variableScope:src/compactor.cpp:589
 unreadVariable:src/compactor.cpp:314
 unreadVariable:src/compactor.cpp:297
 unreadVariable:src/compactor.cpp:545
