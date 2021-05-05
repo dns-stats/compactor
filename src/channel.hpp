@@ -41,8 +41,6 @@
  * can either be fixed or will expand indefinitely as items are added.
  *
  * This class requires C++11 threading, mutexes etc.
- *
- * TODO: Implement maximum capacity limit.
  */
 template<class item>
 class Channel
