@@ -39,6 +39,7 @@ Required tools:
 * A C++ compiler and build chain that supports the 2011 ISO standard,
   otherwise C++11.
 * GNU autoconf, automake, libtool
+* protofbuf compiler (https://developers.google.com/protocol-buffers)
 
 Optional tools:
 
@@ -57,7 +58,7 @@ Required libraries:
 * openssl (http://www.openssl.org/)
 * libctemplate (https://github.com/OlafvdSpek/ctemplate)
 * libmaxminddb (https://github.com/maxmind/libmaxminddb)
-* libtcmalloc (http://goog-perftools.sourceforge.net/doc/tcmalloc.html)
+* protobuf (https://developers.google.com/protocol-buffers)
 
 Optional libraries:
 
