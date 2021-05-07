@@ -136,6 +136,7 @@ most recent release branch/tag or the latest development code which is in 'devel
 
 ----
 $ git checkout <branch or tag>
+$ git submodule update --init
 ----
 
 The code uses https://en.wikipedia.org/wiki/GNU_Build_System[GNU Autotools].
