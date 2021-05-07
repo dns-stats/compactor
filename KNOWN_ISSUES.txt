@@ -38,3 +38,7 @@ KNOWN ISSUES/LIMITATIONS:
   if presented with such a file. Currently it will only display
   configuration and storage hints from the first set of parameters.
   PCAP writing may work correctly but is untested.
+
+* We are observing that, when run inside a virtual machine, compactor
+  can sustain without dropping packets only a fraction of the traffic levels
+  it can manage when run directly on the host. We are investigating.
