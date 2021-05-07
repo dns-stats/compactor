@@ -7,15 +7,15 @@
 #
 
 Version 1.2.0 - 2021-05-07
---------------------------------
+--------------------------
 
-* Fix build issue when using --disable-dnstap
+* Fix build issue when using --disable-dnstap.
 * Add KNOWN ISSUE about the observed performance on VMs being much lower than
   expected, which is under investigation.
-* Minor documentation updates
+* Minor documentation updates.
 
 Version 1.2.0-rc1 - 2021-04-19
---------------------------------
+------------------------------
 
 * Get revised signal handling building on Mac as well as Linux and FreeBSD.
 * Correct stats reporting processed message count to RFC8618. Retain
