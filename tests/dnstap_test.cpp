@@ -40,7 +40,7 @@ SCENARIO("DnsTap generates control frames", "[dnstap]")
         THEN("ACCEPT frame is correct")
         {
             REQUIRE(tap.get_value(str) == 0);
-            REQUIRE(tap.read_control_frame(str) == ACCEPT);
+            REQUIRE(tap.read_control_type(str) == ACCEPT);
         }
     }
 
@@ -53,7 +53,7 @@ SCENARIO("DnsTap generates control frames", "[dnstap]")
         THEN("FINISH frame is correct")
         {
             REQUIRE(tap.get_value(str) == 0);
-            REQUIRE(tap.read_control_frame(str) == FINISH);
+            REQUIRE(tap.read_control_type(str) == FINISH);
         }
     }
 }
@@ -75,7 +75,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
 
         THEN("ACCEPT frame is correct")
         {
-            REQUIRE(tap.read_control_frame(str) == ACCEPT);
+            REQUIRE(tap.read_control_type(str) == ACCEPT);
         }
     }
 
@@ -94,7 +94,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
 
         THEN("START frame is correct")
         {
-            REQUIRE(tap.read_control_frame(str) == START);
+            REQUIRE(tap.read_control_type(str) == START);
         }
     }
 
@@ -113,7 +113,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
 
         THEN("READY frame is correct")
         {
-            REQUIRE(tap.read_control_frame(str) == READY);
+            REQUIRE(tap.read_control_type(str) == READY);
         }
     }
 
@@ -130,7 +130,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
 
         THEN("STOP frame is correct")
         {
-            REQUIRE(tap.read_control_frame(str) == STOP);
+            REQUIRE(tap.read_control_type(str) == STOP);
         }
     }
 
@@ -147,7 +147,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
 
         THEN("FINISH frame is correct")
         {
-            REQUIRE(tap.read_control_frame(str) == FINISH);
+            REQUIRE(tap.read_control_type(str) == FINISH);
         }
     }
 
@@ -164,7 +164,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
 
         THEN("Frame is read but rejected")
         {
-            REQUIRE(tap.read_control_frame(str) == 6);
+            REQUIRE(tap.read_control_type(str) == 6);
             REQUIRE_THROWS_AS(
                 tap.process_control_frame(str, 6),
                 dnstap_invalid);
@@ -186,7 +186,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
 
         THEN("READY frame is correct")
         {
-            REQUIRE_THROWS_AS(tap.read_control_frame(str), dnstap_invalid);
+            REQUIRE_THROWS_AS(tap.read_control_type(str), dnstap_invalid);
         }
     }
 
@@ -205,7 +205,7 @@ SCENARIO("DnsTap parses control frames", "[dnstap]")
 
         THEN("READY frame is correct")
         {
-            REQUIRE_THROWS_AS(tap.read_control_frame(str), dnstap_invalid);
+            REQUIRE_THROWS_AS(tap.read_control_type(str), dnstap_invalid);
         }
     }
 }
@@ -239,7 +239,14 @@ SCENARIO("DnsTap parses data frames", "[dnstap]")
         THEN("Data frame is correct")
         {
             REQUIRE(tap.get_value(str) == 0x6d);
-            std::unique_ptr<DNSMessage> dns = tap.read_data_frame(str, 0x6d);
+            std::unique_ptr<DNSMessage> dns;
+            std::stringstream ss;
+            REQUIRE(tap.process_control_frame(ss, START));
+            tap.process_data_frame(str, 0x6d,
+                                   [&dns](std::unique_ptr<DNSMessage>& m)
+                                   {
+                                       dns = std::move(m);
+                                   });
             std::ostringstream oss;
             oss << *dns;
             std::string expected =
@@ -292,7 +299,9 @@ SCENARIO("DnsTap parses data frames", "[dnstap]")
         THEN("Data frame is rejected")
         {
             REQUIRE(tap.get_value(str) == 0x6d);
-            REQUIRE_THROWS_AS(tap.read_data_frame(str, 0x6d), dnstap_invalid);
+            REQUIRE_THROWS_AS(tap.process_data_frame(str, 0x6d,
+                                                     [](std::unique_ptr<DNSMessage>& m)
+                                                     {}), dnstap_invalid);
         }
     }
 }
@@ -317,7 +326,7 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
 
         AND_THEN("START must precede data")
         {
-            REQUIRE_THROWS_AS(tap.process_data_frame(make_unique<DNSMessage>(), dnstap_sink), dnstap_invalid);
+            REQUIRE_THROWS_AS(tap.process_data_frame(ss, 0, dnstap_sink), dnstap_invalid);
         }
 
         AND_THEN("START must precede STOP")
@@ -364,7 +373,7 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
         AND_THEN("START must precede data")
         {
             REQUIRE(tap.process_control_frame(ss, READY));
-            REQUIRE_THROWS_AS(tap.process_data_frame(make_unique<DNSMessage>(), dnstap_sink), dnstap_invalid);
+            REQUIRE_THROWS_AS(tap.process_data_frame(ss, 0, dnstap_sink), dnstap_invalid);
         }
     }
 }

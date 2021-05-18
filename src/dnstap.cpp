@@ -226,11 +226,11 @@ void DnsTap::process_stream(std::iostream& stream, DNSSink sink)
 
             if ( len == 0 )
             {
-                if ( !process_control_frame(stream, read_control_frame(stream)) )
+                if ( !process_control_frame(stream, read_control_type(stream)) )
                     break;  // Received STOP.
             }
             else
-                process_data_frame(read_data_frame(stream, len), sink);
+                process_data_frame(stream, len, sink);
         }
         catch (std::iostream::failure& f)
         {
@@ -244,19 +244,19 @@ void DnsTap::breakloop()
     break_ = true;
 }
 
-bool DnsTap::process_control_frame(std::iostream& stream, uint32_t f)
+bool DnsTap::process_control_frame(std::iostream& stream, uint32_t control_type)
 {
     bool res = true;
 
-    if ( f < ACCEPT || f > FINISH )
+    if ( control_type < ACCEPT || control_type > FINISH )
         throw dnstap_invalid("Unknown control frame type");
 
     switch(state_)
     {
     case WAIT:
-        if ( f != READY && f != START )
+        if ( control_type != READY && control_type != START )
             throw dnstap_invalid("READY or START expected");
-        if ( f == READY )
+        if ( control_type == READY )
         {
             bidirectional_ = true;
             send_control(stream, make_accept());
@@ -267,13 +267,13 @@ bool DnsTap::process_control_frame(std::iostream& stream, uint32_t f)
         break;
 
     case WAIT_START:
-        if ( f != START )
+        if ( control_type != START )
             throw dnstap_invalid("START expected");
         state_ = STARTED;
         break;
 
     case STARTED:
-        if ( f != STOP )
+        if ( control_type != STOP )
             throw dnstap_invalid("STOP expected");
         if ( bidirectional_ )
             send_control(stream, make_finish(), true);
@@ -283,16 +283,7 @@ bool DnsTap::process_control_frame(std::iostream& stream, uint32_t f)
     return res;
 }
 
-void DnsTap::process_data_frame(std::unique_ptr<DNSMessage> msg, const DNSSink& sink)
-{
-    if ( state_ != STARTED )
-        throw dnstap_invalid("Data when not started");
-
-    if ( msg )
-        sink(msg);
-}
-
-uint32_t DnsTap::read_control_frame(std::iostream& stream)
+uint32_t DnsTap::read_control_type(std::iostream& stream)
 {
     uint32_t control_len = get_value(stream);
 
@@ -326,8 +317,11 @@ uint32_t DnsTap::read_control_frame(std::iostream& stream)
     return control_type;
 }
 
-std::unique_ptr<DNSMessage> DnsTap::read_data_frame(std::iostream& stream, uint32_t len)
+void DnsTap::process_data_frame(std::iostream& stream, uint32_t len, const DNSSink& dns_sink)
 {
+    if ( state_ != STARTED )
+        throw dnstap_invalid("Data when not started");
+
     std::string data = get_buffer(stream, len);
 
     dnstap::Dnstap dnstap;
@@ -342,6 +336,9 @@ std::unique_ptr<DNSMessage> DnsTap::read_data_frame(std::iostream& stream, uint3
     if ( dnstap.type() == dnstap::Dnstap_Type::Dnstap_Type_MESSAGE )
     {
         const dnstap::Message& message = dnstap.message();
+        std::chrono::seconds secs;
+        std::chrono::nanoseconds nsecs;
+        std::unique_ptr<Tins::RawPDU> pdu;
 
         if ( !message.has_type() )
             throw dnstap_invalid("Message has no type");
@@ -351,44 +348,36 @@ std::unique_ptr<DNSMessage> DnsTap::read_data_frame(std::iostream& stream, uint3
             throw dnstap_invalid("Message has no protocol");
         TransportType transport_type = convert_transport_type(message.socket_protocol());
 
+        if ( message.has_query_message() )
+        {
+            if ( message.has_query_time_sec() &&
+                 message.has_query_time_nsec() )
+            {
+                secs = std::chrono::seconds(message.query_time_sec());
+                nsecs = std::chrono::nanoseconds(message.query_time_nsec());
+                pdu = make_unique<Tins::RawPDU>(Tins::RawPDU(message.query_message()));
+            }
+        }
+        else if ( message.has_response_message() )
+        {
+            if ( message.has_response_time_sec() &&
+                 message.has_response_time_nsec() )
+            {
+                secs = std::chrono::seconds(message.response_time_sec());
+                nsecs = std::chrono::nanoseconds(message.response_time_nsec());
+                pdu = make_unique<Tins::RawPDU>(Tins::RawPDU(message.response_message()));
+            }
+        }
+
+        if ( !pdu )
+            return;
+
+        std::chrono::system_clock::time_point t(std::chrono::duration_cast<std::chrono::system_clock::duration>(secs + nsecs));
+
         try
         {
-            if ( message.has_query_message() )
-            {
-                if ( message.has_query_time_sec() &&
-                     message.has_query_time_nsec() )
-                {
-                    std::chrono::seconds s(message.query_time_sec());
-                    std::chrono::nanoseconds ns(message.query_time_nsec());
-                    std::chrono::system_clock::time_point t(std::chrono::duration_cast<std::chrono::system_clock::duration>(s + ns));
+            dns = make_unique<DNSMessage>(*pdu, t, transport_type, transaction_type);
 
-                    dns = make_unique<DNSMessage>(
-                        Tins::RawPDU(message.query_message()),
-                        t, transport_type, transaction_type);
-                }
-            }
-            else if ( message.has_response_message() )
-            {
-                if ( message.has_response_time_sec() &&
-                     message.has_response_time_nsec() )
-                {
-                    std::chrono::seconds s(message.response_time_sec());
-                    std::chrono::nanoseconds ns(message.response_time_nsec());
-                    std::chrono::system_clock::time_point t(std::chrono::duration_cast<std::chrono::system_clock::duration>(s + ns));
-
-                    dns = make_unique<DNSMessage>(
-                        Tins::RawPDU(message.response_message()),
-                        t, transport_type, transaction_type);
-                }
-            }
-        }
-        catch (const malformed_packet& e)
-        {
-            ++malformed_message_count_;
-        }
-
-        if ( dns )
-        {
             if ( message.has_query_address() )
                 dns->clientIP = IPAddress(to_byte_string(message.query_address()));
             if ( message.has_query_port() )
@@ -401,10 +390,18 @@ std::unique_ptr<DNSMessage> DnsTap::read_data_frame(std::iostream& stream, uint3
 
             if ( message.has_socket_family() )
                 dns->ipv6 = ( message.socket_family() == dnstap::SocketFamily::INET6 );
+
+            dns_sink(dns);
+        }
+        catch (const malformed_packet& e)
+        {
+            const Tins::Packet::own_pdu DONT_COPY_PDU = {};
+
+            std::unique_ptr<Tins::Packet> pkt = make_unique<Tins::Packet>(pdu.release(), t.time_since_epoch(), DONT_COPY_PDU);
+
+            ++malformed_message_count_;
         }
     }
-
-    return dns;
 }
 
 void DnsTap::send_control(std::iostream& stream, const std::string& msg, bool ignore_err)

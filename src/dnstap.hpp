@@ -97,18 +97,20 @@ protected:
     /**
      * \brief process control frame.
      *
-     * \param stream    DNSTAP data source.
-     * \param t         the control frame type.
+     * \param stream       DNSTAP data source.
+     * \param control_type the control frame type.
      * \returns `false` if FINISH read.
      */
-    bool process_control_frame(std::iostream& stream, uint32_t t);
+    bool process_control_frame(std::iostream& stream, uint32_t control_type);
 
     /**
      * \brief process data frame contents.
      *
-     * \param msg DNS message.
+     * \param stream    DNSTAP data source.
+     * \param len       length of data.
+     * \param dns_sink  sink for DNS messages.
      */
-    void process_data_frame(std::unique_ptr<DNSMessage> msg, const DNSSink& sink);
+    void process_data_frame(std::iostream& stream, uint32_t len, const DNSSink& dns_sink);
 
     /**
      * \brief read a control frame and return its type.
@@ -116,15 +118,7 @@ protected:
      * \param stream    DNSTAP data source.
      * \returns control frame type.
      */
-    uint32_t read_control_frame(std::iostream& stream);
-
-    /**
-     * \brief read DNS message from data frame.
-     *
-     * \param stream    DNSTAP data source.
-     * \param len       length of data.
-     */
-    std::unique_ptr<DNSMessage> read_data_frame(std::iostream& stream, uint32_t len);
+    uint32_t read_control_type(std::iostream& stream);
 
     /**
      * \brief send a control message
