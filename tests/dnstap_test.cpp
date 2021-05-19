@@ -240,13 +240,18 @@ SCENARIO("DnsTap parses data frames", "[dnstap]")
         {
             REQUIRE(tap.get_value(str) == 0x6d);
             std::unique_ptr<DNSMessage> dns;
+            DnsTap::DNSSink dnstap_sink =
+                [&dns](std::unique_ptr<DNSMessage>& m)
+                {
+                    dns = std::move(m);
+                };
+            DnsTap::MalformedMessageSink malformed_sink =
+                [](std::unique_ptr<Tins::Packet>&, const DnsTap::PacketInfo&)
+                {
+                };
             std::stringstream ss;
             REQUIRE(tap.process_control_frame(ss, START));
-            tap.process_data_frame(str, 0x6d,
-                                   [&dns](std::unique_ptr<DNSMessage>& m)
-                                   {
-                                       dns = std::move(m);
-                                   });
+            tap.process_data_frame(str, 0x6d, dnstap_sink, malformed_sink);
             std::ostringstream oss;
             oss << *dns;
             std::string expected =
@@ -298,10 +303,17 @@ SCENARIO("DnsTap parses data frames", "[dnstap]")
 
         THEN("Data frame is rejected")
         {
+            DnsTap::DNSSink dnstap_sink =
+                [](std::unique_ptr<DNSMessage>& /* dns */)
+                {
+                };
+            DnsTap::MalformedMessageSink malformed_sink =
+                [](std::unique_ptr<Tins::Packet>& /* pkt */, const DnsTap::PacketInfo& /* pkt_info */)
+                {
+                };
+
             REQUIRE(tap.get_value(str) == 0x6d);
-            REQUIRE_THROWS_AS(tap.process_data_frame(str, 0x6d,
-                                                     [](std::unique_ptr<DNSMessage>& m)
-                                                     {}), dnstap_invalid);
+            REQUIRE_THROWS_AS(tap.process_data_frame(str, 0x6d, dnstap_sink, malformed_sink), dnstap_invalid);
         }
     }
 }
@@ -310,10 +322,6 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
 {
     GIVEN("A unidirectional control sequence")
     {
-        DnsTap::DNSSink dnstap_sink =
-            [&](std::unique_ptr<DNSMessage>& /* dns */)
-            {
-            };
         std::stringstream ss;
         DnsTap tap;
 
@@ -326,7 +334,15 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
 
         AND_THEN("START must precede data")
         {
-            REQUIRE_THROWS_AS(tap.process_data_frame(ss, 0, dnstap_sink), dnstap_invalid);
+            DnsTap::DNSSink dnstap_sink =
+                [&](std::unique_ptr<DNSMessage>& /* dns */)
+                {
+                };
+            DnsTap::MalformedMessageSink malformed_sink =
+                [](std::unique_ptr<Tins::Packet>& /* pkt */, const DnsTap::PacketInfo& /* pkt_info */)
+                {
+                };
+            REQUIRE_THROWS_AS(tap.process_data_frame(ss, 0, dnstap_sink, malformed_sink), dnstap_invalid);
         }
 
         AND_THEN("START must precede STOP")
@@ -345,6 +361,10 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
     {
         DnsTap::DNSSink dnstap_sink =
             [&](std::unique_ptr<DNSMessage>& /* dns */)
+            {
+            };
+        DnsTap::MalformedMessageSink malformed_sink =
+            [](std::unique_ptr<Tins::Packet>& /* pkt */, const DnsTap::PacketInfo& /* pkt_info */)
             {
             };
         std::stringstream ss;
@@ -373,7 +393,7 @@ SCENARIO("DnsTap control sequence", "[dnstap]")
         AND_THEN("START must precede data")
         {
             REQUIRE(tap.process_control_frame(ss, READY));
-            REQUIRE_THROWS_AS(tap.process_data_frame(ss, 0, dnstap_sink), dnstap_invalid);
+            REQUIRE_THROWS_AS(tap.process_data_frame(ss, 0, dnstap_sink, malformed_sink), dnstap_invalid);
         }
     }
 }

@@ -203,11 +203,12 @@ namespace {
 }
 
 DnsTap::DnsTap()
-    : bidirectional_(false), state_(WAIT), malformed_message_count_(0)
+    : bidirectional_(false), state_(WAIT)
 {
 }
 
-void DnsTap::process_stream(std::iostream& stream, DNSSink sink)
+void DnsTap::process_stream(std::iostream& stream, DNSSink dns_sink,
+                            MalformedMessageSink malformed_sink)
 {
     // Throw exceptions from our code, but ensure we switch that
     // off on exit for any reason.
@@ -216,7 +217,6 @@ void DnsTap::process_stream(std::iostream& stream, DNSSink sink)
     bidirectional_ = false;
     state_ = WAIT;
     break_ = false;
-    malformed_message_count_ = 0;
 
     while ( !break_.load() )
     {
@@ -230,7 +230,7 @@ void DnsTap::process_stream(std::iostream& stream, DNSSink sink)
                     break;  // Received STOP.
             }
             else
-                process_data_frame(stream, len, sink);
+                process_data_frame(stream, len, dns_sink, malformed_sink);
         }
         catch (std::iostream::failure& f)
         {
@@ -317,7 +317,9 @@ uint32_t DnsTap::read_control_type(std::iostream& stream)
     return control_type;
 }
 
-void DnsTap::process_data_frame(std::iostream& stream, uint32_t len, const DNSSink& dns_sink)
+void DnsTap::process_data_frame(std::iostream& stream, uint32_t len,
+                                const DNSSink& dns_sink,
+                                const MalformedMessageSink& malformed_sink)
 {
     if ( state_ != STARTED )
         throw dnstap_invalid("Data when not started");
@@ -339,6 +341,7 @@ void DnsTap::process_data_frame(std::iostream& stream, uint32_t len, const DNSSi
         std::chrono::seconds secs;
         std::chrono::nanoseconds nsecs;
         std::unique_ptr<Tins::RawPDU> pdu;
+        struct PacketInfo pkt_info;
 
         if ( !message.has_type() )
             throw dnstap_invalid("Message has no type");
@@ -356,6 +359,7 @@ void DnsTap::process_data_frame(std::iostream& stream, uint32_t len, const DNSSi
                 secs = std::chrono::seconds(message.query_time_sec());
                 nsecs = std::chrono::nanoseconds(message.query_time_nsec());
                 pdu = make_unique<Tins::RawPDU>(Tins::RawPDU(message.query_message()));
+                pkt_info.response = false;
             }
         }
         else if ( message.has_response_message() )
@@ -366,6 +370,7 @@ void DnsTap::process_data_frame(std::iostream& stream, uint32_t len, const DNSSi
                 secs = std::chrono::seconds(message.response_time_sec());
                 nsecs = std::chrono::nanoseconds(message.response_time_nsec());
                 pdu = make_unique<Tins::RawPDU>(Tins::RawPDU(message.response_message()));
+                pkt_info.response = true;
             }
         }
 
@@ -374,32 +379,35 @@ void DnsTap::process_data_frame(std::iostream& stream, uint32_t len, const DNSSi
 
         std::chrono::system_clock::time_point t(std::chrono::duration_cast<std::chrono::system_clock::duration>(secs + nsecs));
 
+        if ( message.has_query_address() )
+            pkt_info.clientIP = IPAddress(to_byte_string(message.query_address()));
+        if ( message.has_query_port() )
+            pkt_info.clientPort = message.query_port();
+
+        if ( message.has_response_address() )
+            pkt_info.serverIP = IPAddress(to_byte_string(message.response_address()));
+        if ( message.has_response_port() )
+            pkt_info.serverPort = message.response_port();
+
+        if ( message.has_socket_family() )
+            pkt_info.ipv6 = ( message.socket_family() == dnstap::SocketFamily::INET6 );
+
         try
         {
             dns = make_unique<DNSMessage>(*pdu, t, transport_type, transaction_type);
-
-            if ( message.has_query_address() )
-                dns->clientIP = IPAddress(to_byte_string(message.query_address()));
-            if ( message.has_query_port() )
-                dns->clientPort = message.query_port();
-
-            if ( message.has_response_address() )
-                dns->serverIP = IPAddress(to_byte_string(message.response_address()));
-            if ( message.has_response_port() )
-                dns->serverPort = message.response_port();
-
-            if ( message.has_socket_family() )
-                dns->ipv6 = ( message.socket_family() == dnstap::SocketFamily::INET6 );
-
+            dns->clientIP = pkt_info.clientIP;
+            dns->clientPort = pkt_info.clientPort;
+            dns->serverIP = pkt_info.serverIP;
+            dns->serverPort = pkt_info.serverPort;
+            dns->ipv6 = pkt_info.ipv6;
             dns_sink(dns);
         }
         catch (const malformed_packet& e)
         {
             const Tins::Packet::own_pdu DONT_COPY_PDU = {};
 
-            std::unique_ptr<Tins::Packet> pkt = make_unique<Tins::Packet>(pdu.release(), t.time_since_epoch(), DONT_COPY_PDU);
-
-            ++malformed_message_count_;
+            std::unique_ptr<Tins::Packet> pkt(make_unique<Tins::Packet>(pdu.release(), t.time_since_epoch(), DONT_COPY_PDU));
+            malformed_sink(pkt, pkt_info);
         }
     }
 }

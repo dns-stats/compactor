@@ -340,7 +340,6 @@ static void sniff_loop(BaseSniffers* sniffer,
         // Get the PDU controlled by a shared_ptr. This will avoid the need
         // to copy it.
         std::shared_ptr<PcapItem> pcap = std::make_shared<PcapItem>(pkt);
-
         ++stats.raw_packet_count;
 
         if ( last_timestamp > pcap->timestamp )
@@ -428,6 +427,66 @@ static void sniff_loop(BaseSniffers* sniffer,
 
 #if ENABLE_DNSTAP
 /**
+ * \brief Fake up an EthernetII UDP packet from a malformed message.
+ *
+ * \param pkt           the malformed message PDU and timestamp.
+ * \param pkt_info      meta-info about the PDU.
+ * \returns shared pointer to faked packet.
+ */
+static std::shared_ptr<PcapItem> fake_malformed_packet(std::unique_ptr<Tins::Packet>& pkt,
+                                                       const DnsTap::PacketInfo& pkt_info)
+{
+    Tins::EthernetII::address_type eth_addr;
+    IPAddress src_addr;
+    IPAddress dest_addr;
+    uint16_t src_port = 53;
+    uint16_t dest_port = 53;
+    Tins::EthernetII eth;
+
+    if ( pkt_info.response )
+    {
+        if ( pkt_info.clientIP )
+            src_addr = *pkt_info.clientIP;
+        if ( pkt_info.serverIP )
+            dest_addr = *pkt_info.serverIP;
+        if ( pkt_info.clientPort )
+            src_port = *pkt_info.clientPort;
+        if ( pkt_info.serverPort )
+            dest_port = *pkt_info.serverPort;
+    }
+    else
+    {
+        if ( pkt_info.clientIP )
+            dest_addr = *pkt_info.clientIP;
+        if ( pkt_info.serverIP )
+            src_addr = *pkt_info.serverIP;
+        if ( pkt_info.clientPort )
+            dest_port = *pkt_info.clientPort;
+        if ( pkt_info.serverPort )
+            src_port = *pkt_info.serverPort;
+    }
+
+    if ( ( pkt_info.ipv6 && *pkt_info.ipv6 ) ||
+         dest_addr.is_ipv6() || src_addr.is_ipv6() )
+    {
+        eth = Tins::EthernetII(eth_addr, eth_addr) /
+            Tins::IPv6(dest_addr, src_addr) /
+            Tins::UDP(dest_port, src_port);
+    }
+    else
+    {
+        eth = Tins::EthernetII(eth_addr, eth_addr) /
+            Tins::IP(dest_addr, src_addr) /
+            Tins::UDP(dest_port, src_port);
+    }
+
+    Tins::UDP* udp = eth.find_pdu<Tins::UDP>();
+    udp->inner_pdu(pkt->release_pdu());
+    Tins::Packet res_pkt(eth, pkt->timestamp());
+    return std::make_shared<PcapItem>(res_pkt);
+}
+
+/**
  * \brief The main DNSTAP loop. Read packets from the input stream
  * and process them.
  *
@@ -438,27 +497,31 @@ static void sniff_loop(BaseSniffers* sniffer,
  * \param dnstap  the DNSTAP processor.
  * \param stream  the input stream to read.
  * \param matcher the query/response matcher to use.
+ * \param output  the output channels.
  * \param config  the current configuration.
  * \param stats   collect packet statistics here.
  */
 static void tap_loop(DnsTap& dnstap,
                      std::iostream& stream,
                      QueryResponseMatcher& matcher,
+                     OutputChannels& output,
                      const Configuration& config,
                      PacketStatistics& stats)
 {
+    bool seen_ignored_overflow = false;
+    bool do_ignored_pcap = !config.ignored_pcap_pattern.empty();
+
     cno::system_clock::time_point last_timestamp;
     cno::system_clock::time_point next_stats_log;
     cno::system_clock::time_point last_stats_log_timestamp;
     PacketStatistics last_stats = stats;
 
-    auto sink = [&](std::unique_ptr<DNSMessage>& dns)
+    auto dns_sink = [&](std::unique_ptr<DNSMessage>& dns)
     {
         ++stats.raw_packet_count;
         ++stats.processed_message_count;
         if ( last_timestamp > dns->timestamp )
             ++stats.out_of_order_packet_count;
-        stats.malformed_message_count = dnstap.malformed_message_count();
         last_timestamp = dns->timestamp;
         if ( config.debug_dns )
             std::cout << *dns;
@@ -487,10 +550,28 @@ static void tap_loop(DnsTap& dnstap,
         }
     };
 
-    dnstap.process_stream(stream, sink);
+    auto malformed_sink =  [&](std::unique_ptr<Tins::Packet>& pkt, const DnsTap::PacketInfo& pkt_info)
+    {
+        ++stats.raw_packet_count;
+        ++stats.malformed_message_count;
 
-    // In case last message was malformed, ensure count is correct.
-    stats.malformed_message_count = dnstap.malformed_message_count();
+        if ( do_ignored_pcap )
+        {
+            std::shared_ptr<PcapItem> pcap = fake_malformed_packet(pkt, pkt_info);
+
+            if ( !output.ignored_pcap->put(pcap, false) )
+            {
+                ++stats.output_ignored_pcap_drop_count;
+                if ( !seen_ignored_overflow )
+                {
+                    LOG_ERROR << "Ignored PCAP overflow. Dropping packet(s)";
+                    seen_ignored_overflow = true;
+                }
+            }
+        }
+    };
+
+    dnstap.process_stream(stream, dns_sink, malformed_sink);
 }
 #endif
 
@@ -669,7 +750,7 @@ static int run_configuration(const po::variables_map& vm,
                 std::function<void (const boost::system::error_code&)> handle_accept = [&](const boost::system::error_code&)
                 {
                     if ( signal_received == 0 )
-                        tap_loop(dnstap, stream, matcher, config, stats);
+                        tap_loop(dnstap, stream, matcher, output, config, stats);
                     acceptor.async_accept(*stream.rdbuf(), handle_accept);
                 };
                 acceptor.async_accept(*stream.rdbuf(), handle_accept);
@@ -706,7 +787,7 @@ static int run_configuration(const po::variables_map& vm,
                                 signal_received = signal;
                                 dnstap.breakloop();
                             });
-                        tap_loop(dnstap, stream, matcher, config, stats);
+                        tap_loop(dnstap, stream, matcher, output, config, stats);
                     }
                     else
                         std::cerr << "Failed to open " << fname << std::endl;

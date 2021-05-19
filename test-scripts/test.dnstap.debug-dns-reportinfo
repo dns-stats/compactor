@@ -169,7 +169,7 @@ CONFIGURATION:
   Accept RR types      : 
 
 STATISTICS:
-  Total Packets processed                  : 9
+  Total Packets processed                  : 10
   Processed DNS messages           (C-DNS) : 9
   Matched DNS query/response pairs (C-DNS) : 4
   Unmatched DNS queries            (C-DNS) : 1

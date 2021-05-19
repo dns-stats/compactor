@@ -20,6 +20,8 @@
 #include <iostream>
 #include <string>
 
+#include <boost/optional.hpp>
+
 #include "config.h"
 
 #include "dnsmessage.hpp"
@@ -66,6 +68,61 @@ public:
     using DNSSink = std::function<void (std::unique_ptr<DNSMessage>&)>;
 
     /**
+     * \struct PacketInfo
+     * \brief Additional info on a malformed message.
+     */
+    struct PacketInfo
+    {
+        /**
+         * \brief IP address of client.
+         *
+         * If the message is a query, the client IP is the sender IP. Otherwise
+         * it is the destination IP.
+         */
+        boost::optional<IPAddress> clientIP;
+
+        /**
+         * \brief IP address of server.
+         *
+         * If the message is a response, the server IP is the sender IP. Otherwise
+         * it is the destination IP.
+         */
+        boost::optional<IPAddress> serverIP;
+
+        /**
+         * \brief port used by client.
+         *
+         * If the message is a query, the client port is the sender port.
+         * Otherwise it is the destination port.
+         */
+        boost::optional<uint16_t> clientPort;
+
+        /**
+         * \brief port used by server.
+         *
+         * If the message is a response, the server port is the sender port.
+         * Otherwise it is the destination port.
+         */
+        boost::optional<uint16_t> serverPort;
+
+        /**
+         * \brief IPv4 or IPv6?
+         */
+        boost::optional<bool> ipv6;
+
+        /**
+         * \brief `true` if response.
+         */
+        bool response;
+    };
+
+    /**
+     * \typedef MalformedMessageSink
+     * \brief Sink function for malformed messages.
+     */
+    using MalformedMessageSink = std::function<void (std::unique_ptr<Tins::Packet>&, const PacketInfo&)>;
+
+    /**
      * \brief Constructor.
      */
     explicit DnsTap();
@@ -77,21 +134,15 @@ public:
      *
      * \param stream            DNSTAP data source.
      * \param dns_sink          sink for DNS messages.
+     * \param malformed_sink    sink for malformed messages.
      */
-    void process_stream(std::iostream& stream, DNSSink dns_sink);
+    void process_stream(std::iostream& stream, DNSSink dns_sink,
+                        MalformedMessageSink malformed_sink);
 
     /**
      * \brief Break input processing.
      */
     void breakloop();
-
-    /**
-     * \brief Count of malformed messages in stream so far.
-     */
-    uint64_t malformed_message_count()
-    {
-        return malformed_message_count_;
-    }
 
 protected:
     /**
@@ -106,11 +157,14 @@ protected:
     /**
      * \brief process data frame contents.
      *
-     * \param stream    DNSTAP data source.
-     * \param len       length of data.
-     * \param dns_sink  sink for DNS messages.
+     * \param stream            DNSTAP data source.
+     * \param len               length of data.
+     * \param dns_sink          sink for DNS messages.
+     * \param malformed_sink    sink for malformed messages.
      */
-    void process_data_frame(std::iostream& stream, uint32_t len, const DNSSink& dns_sink);
+    void process_data_frame(std::iostream& stream, uint32_t len,
+                            const DNSSink& dns_sink,
+                            const MalformedMessageSink& malformed_sink);
 
     /**
      * \brief read a control frame and return its type.
@@ -175,11 +229,6 @@ private:
      * \brief break processing?
      */
     std::atomic<bool> break_;
-
-    /**
-     * \brief count of malformed DNS messages received
-     */
-    uint64_t malformed_message_count_;
 };
 
 #endif
