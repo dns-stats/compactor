@@ -247,6 +247,7 @@ libcdns_a_headers = \
         src/log.hpp \
         src/makeunique.hpp \
         src/no-register-warning.hpp \
+        src/parallelwriter.hpp \
         src/pseudoanonymise.hpp \
         src/queryresponse.hpp \
         src/rotatingfilename.hpp \
@@ -267,6 +268,7 @@ libcdns_a_SOURCES = \
         src/dnsmessage.cpp \
         src/ipaddress.cpp \
         src/log.cpp \
+        src/parallelwriter.cpp \
         src/pseudoanonymise.cpp \
         src/rotatingfilename.cpp \
         src/streamwriter.cpp \
