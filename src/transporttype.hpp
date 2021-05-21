@@ -10,6 +10,11 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file transporttype.hpp
+ * \brief DNSTAP transaction and transport types.
+ */
+
 #ifndef TRANSPORTTYPE_HPP
 #define TRANSPORTTYPE_HPP
 

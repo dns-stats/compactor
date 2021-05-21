@@ -10,6 +10,13 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file blockcbordata.hpp
+ * \brief Interfaces for reading and writing C-DNS structures from/to CBOR.
+ *
+ * This module also handles constructing the C-DNS index arrays.
+ */
+
 #ifndef BLOCKEDCBORDATA_HPP
 #define BLOCKEDCBORDATA_HPP
 

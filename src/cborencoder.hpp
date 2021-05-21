@@ -10,6 +10,11 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file cborencoder.hpp
+ * \brief Encode basic data types to CBOR.
+ */
+
 #ifndef CBORENCODER_HPP
 #define CBORENCODER_HPP
 

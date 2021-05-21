@@ -10,6 +10,11 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file util.hpp
+ * \brief Miscellaneous utility functions.
+ */
+
 #ifndef UTIL_HPP
 #define UTIL_HPP
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,13 @@
 
 /*
  * Developed by Sinodun IT (www.sinodun.com)
+ */
+
+/**
+ * \file addressevent.hpp
+ * \brief Address events record IP related events related to an IP address.
+ *
+ * These events are mostly ICMP/ICMPv6.
  */
 
 #ifndef ADDRESSEVENT_HPP
@@ -19,7 +26,7 @@
 
 /**
  * \class AddressEvent
- * \brief An event related to a particular address.
+ * \brief An event related to a particular IP address.
  */
 class AddressEvent
 {

@@ -10,6 +10,11 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file blockcborreader.hpp
+ * \brief Read query/response pairs from a C-DNS file.
+ */
+
 #ifndef BLOCKEDCBORREADER_HPP
 #define BLOCKEDCBORREADER_HPP
 

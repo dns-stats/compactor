@@ -10,6 +10,11 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file matcher.hpp
+ * \brief Query and response matching.
+ */
+
 #ifndef MATCHER_HPP
 #define MATCHER_HPP
 

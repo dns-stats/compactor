@@ -10,6 +10,11 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file configuration.hpp
+ * \brief Compactor configuration and defaults.
+ */
+
 #ifndef CONFIGURATION_HPP
 #define CONFIGURATION_HPP
 

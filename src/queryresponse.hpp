@@ -10,6 +10,11 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file queryresponse.hpp
+ * \brief A single Query/Response item.
+ */
+
 #ifndef QUERYRESPONSE_HPP
 #define QUERYRESPONSE_HPP
 

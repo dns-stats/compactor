@@ -1,9 +1,14 @@
 /*
- * Copyright 2018, 2019 Sinodun IT.
+ * Copyright 2018-2019, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, you can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+/**
+ * \file template-backend.hpp
+ * \brief Inspector output backend, templated text output.
  */
 
 #ifndef TEMPLATE_BACKEND_HPP

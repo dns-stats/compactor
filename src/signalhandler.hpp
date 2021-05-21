@@ -10,6 +10,11 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file signalhandler.hpp
+ * \brief The statistics kept on packet/message processing.
+ */
+
 #ifndef SIGNALHANDLER_HPP
 #define SIGNALHANDLER_HPP
 

@@ -14,6 +14,11 @@
  * LICENSE.txt.
  */
 
+/**
+ * \file capturedns.hpp
+ * \brief A DNS PDU for use with libtins, but specialised for compactor use.
+ */
+
 #ifndef CAPTUREDNS_HPP
 #define CAPTUREDNS_HPP
 

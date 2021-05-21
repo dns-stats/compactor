@@ -10,6 +10,11 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file dnsmessage.hpp
+ * \brief A single DNS message.
+ */
+
 #ifndef DNSMESSAGE_HPP
 #define DNSMESSAGE_HPP
 

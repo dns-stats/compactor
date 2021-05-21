@@ -10,6 +10,11 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file packetstream.hpp
+ * \brief Receive incoming network packets and decode them.
+ */
+
 #ifndef PACKETSTREAM_HPP
 #define PACKETSTREAM_HPP
 

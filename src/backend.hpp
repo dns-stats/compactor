@@ -1,9 +1,20 @@
 /*
- * Copyright 2018-2020 Sinodun IT.
+ * Copyright 2018-2021 Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, you can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+/*
+ * Developed by Sinodun IT (www.sinodun.com)
+ */
+
+/**
+ * \file backend.hpp
+ * \brief Inspector output backend interface.
+ *
+ * This module also includes the default PCAP writing backend.
  */
 
 #ifndef BACKEND_HPP

@@ -18,6 +18,7 @@
 #include "ipaddress.hpp"
 #include "makeunique.hpp"
 #include "packetstream.hpp"
+#include "util.hpp"
 
 #ifndef CPPCHECK
 // Cppcheck can't cope with this header.
@@ -406,7 +407,7 @@ void DnsTap::process_data_frame(std::iostream& stream, uint32_t len,
         {
             const Tins::Packet::own_pdu DONT_COPY_PDU = {};
 
-            std::unique_ptr<Tins::Packet> pkt(make_unique<Tins::Packet>(pdu.release(), t.time_since_epoch(), DONT_COPY_PDU));
+            std::unique_ptr<Tins::Packet> pkt(make_unique<Tins::Packet>(pdu.release(), tsToTins(t), DONT_COPY_PDU));
             malformed_sink(pkt, pkt_info);
         }
     }

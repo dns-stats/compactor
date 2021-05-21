@@ -10,6 +10,11 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file parallelwriter.hpp
+ * \brief A pool of threads writing input files to compressing StreamWriters.
+ */
+
 #ifndef PARALLELWRITER_HPP
 #define PARALLELWRITER_HPP
 

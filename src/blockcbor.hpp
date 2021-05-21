@@ -9,6 +9,12 @@
 /*
  * Developed by Sinodun IT (www.sinodun.com)
  */
+
+/**
+ * \file blockcbor.hpp
+ * \brief Basic C-DNS structures.
+ */
+
 #ifndef BLOCKCBOR_HPP
 #define BLOCKCBOR_HPP
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,11 @@
 
 /*
  * Developed by Sinodun IT (www.sinodun.com)
+ */
+
+/**
+ * \file cbordecoder.hpp
+ * \brief Decode basic data types from CBOR.
  */
 
 #ifndef CBORDECODER_HPP

@@ -10,6 +10,12 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file rotatingfilename.hpp
+ * \brief A filename that may have time-dependent compoents
+ *        and change periodically.
+ */
+
 #ifndef ROTATINGFILENAME_HPP
 #define ROTATINGFILENAME_HPP
 

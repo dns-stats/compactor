@@ -10,6 +10,11 @@
  * Developed by Sinodun IT (www.sinodun.com)
  */
 
+/**
+ * \file dnstap.hpp
+ * \brief DNSTAP reception.
+ */
+
 #ifndef DNSTAP_HPP
 #define DNSTAP_HPP
 
