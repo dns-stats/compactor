@@ -16,7 +16,7 @@
 
 #include "dnsmessage.hpp"
 #include "makeunique.hpp"
-#include "nocopypacket.hpp"
+#include "util.hpp"
 
 #include "packetstream.hpp"
 
@@ -158,7 +158,7 @@ void PacketStream::tcp_packet(Tins::TCP* tcp, Tins::PDU* ip_pdu,
     // of the packet. What we see especially is zero length TCP packets
     // at the first data packet in a transaction. So copy the packet before
     // feeding the copy into the stream follower.
-    Tins::Packet pkt(ip_pdu, NoCopyPacket::tsToTins(pkt_data.timestamp));
+    Tins::Packet pkt(ip_pdu, tsToTins(pkt_data.timestamp));
     tcp_stream_follower_.process_packet(pkt);
 }
 

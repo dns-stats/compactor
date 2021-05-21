@@ -99,3 +99,9 @@ void set_thread_name(const char* name)
     (void) name;
 #endif
 }
+
+Tins::Timestamp tsToTins(const std::chrono::system_clock::time_point& t)
+{
+    Tins::Timestamp res(std::chrono::duration_cast<std::chrono::microseconds>(t.time_since_epoch()));
+    return res;
+}

@@ -13,7 +13,10 @@
 #ifndef UTIL_HPP
 #define UTIL_HPP
 
+#include <chrono>
 #include <string>
+
+#include <tins/tins.h>
 
 /**
  * \brief Set file ownership and write permissions.
@@ -42,5 +45,13 @@ void set_file_owner_perms(const std::string& path,
  * \param name  the name to set.
  */
 void set_thread_name(const char* name);
+
+/**
+ * \brief Convert a standard C++ time point to a Tins::Timestamp.
+ *
+ * \param t     timestamp to convert.
+ * \returns timestamp in Tins form.
+ */
+Tins::Timestamp tsToTins(const std::chrono::system_clock::time_point& t);
 
 #endif
