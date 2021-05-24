@@ -24,7 +24,6 @@
 // C++14 or a C++11 filler. See https://herbsutter.com/gotw/_102/.
 
 /**
- * \fn make_unique
  * \brief An equivalent of C++14 `std::make_unique()`.
  *
  * This imports `std::make_unique()` to the current namespace if
