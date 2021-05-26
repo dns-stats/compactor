@@ -367,6 +367,9 @@ e.g. `{{client_address:x-ipaddr}}`.
 | `x-date`
 | Output timestamp in seconds as a UTC date in ISO601 format (YYYY-MM-DD).
 
+| `x-datefmt=<fmt>`
+| Output timestamp in seconds as a UTC date and time in user-specified format. The string `<fmt>` must be a valid *strftime(3)* format string.
+
 | `x-datetime`
 | Output timestamp in seconds as a UTC date and time in ISO601 format (YYYY-MM-DD HH:MM:SS).
 

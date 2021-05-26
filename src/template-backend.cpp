@@ -26,6 +26,30 @@
  ** Modifiers
  **/
 
+/**
+ * \exception modifier_error
+ * \brief Signals a modifier runtime error.
+ */
+class modifier_error : public std::runtime_error
+{
+public:
+    /**
+     * \brief Constructor.
+     *
+     * \param what message detailing the problem.
+     */
+    explicit modifier_error(std::string const & what)
+        : std::runtime_error(what) {}
+
+    /**
+     * \brief Constructor.
+     *
+     * \param what message detailing the problem.
+     */
+    explicit modifier_error(char const *  what)
+        : std::runtime_error(what) {}
+};
+
 namespace
 {
     class CStringModifier : public ctemplate::TemplateModifier
@@ -332,6 +356,27 @@ namespace
         }
     };
 
+    class DateTimeFormatModifier : public ctemplate::TemplateModifier
+    {
+    public:
+        virtual void Modify(const char* in, size_t inlen,
+                            const ctemplate::PerExpandData* per_expand_data,
+                            ctemplate::ExpandEmitter* out,
+                            const std::string& arg) const
+        {
+            std::string s(in, inlen);
+            std::time_t t = static_cast<std::time_t>(std::stoll(s));
+            std::tm tm = *std::gmtime(&t);
+            char buf[128];
+            // arg always starts '=', if present. If it doesn't,
+            // that's an error - probably no format supplied.
+            if ( arg.length() < 2 || arg[0] != '=' )
+                throw modifier_error("x-datefmt: format missing.");
+            std::strftime(buf, sizeof(buf), arg.c_str() + 1, &tm);
+            out->Emit(buf);
+        }
+    };
+
     CStringModifier cStringModifier;
     HexStringModifier hexStringModifier;
     CSVEscapeModifier csvEscapeModifier;
@@ -340,6 +385,7 @@ namespace
     IP6AddrBinModifier ip6addrBinModifier;
     DateModifier dateModifier;
     DateTimeModifier dateTimeModifier;
+    DateTimeFormatModifier dateTimeFormatModifier;
 
     std::unique_ptr<GeoIPContext> geoip;
     std::unique_ptr<IPAddrGeoLocationModifier> ipaddr_geoloc;
@@ -357,6 +403,7 @@ namespace
         ctemplate::AddModifier("x-ip6addr-bin", &ip6addrBinModifier);
         ctemplate::AddModifier("x-date", &dateModifier);
         ctemplate::AddModifier("x-datetime", &dateTimeModifier);
+        ctemplate::AddModifier("x-datefmt=", &dateTimeFormatModifier);
 
         try
         {
