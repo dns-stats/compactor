@@ -4,9 +4,10 @@
 
 Binary install packages are available from a
 https://launchpad.net[Launchpad] PPA (Personal Package Archive)
-`ppa:dns-stats/compactor` for
+for
 
-* http://releases.ubuntu.com/16.04/[Ubuntu 16.04 LTS 'Xenial Xerus']
+* http://releases.ubuntu.com/16.04/ [Ubuntu 16.04 LTS 'Xenial Xerus'] - `ppa:dns-stats/compactor`
+* http://releases.ubuntu.com/18.04/ [Ubuntu 18.04 LTS 'Bionic Beaver'] - `ppa:dns-stats/compactor-bionic`
 
 ==== Ubuntu 16.04 LTS 'Xenial Xerus'
 
@@ -53,7 +54,62 @@ Whenever the _compactor_ package is installed, the system will attempt
 to start _compactor_ as a service.
 
 The first time the _compactor_ package is installed, it installs a
-default configuration file `@ETCPATH@/compactor.conf`. This
+default configuration file `/etc/dns-stats-compactor/compactor.conf`. This
+default configuration does not specify a capture interface, so the
+attempt at starting _compactor_ as a service will fail.  Before
+using _compactor_ as a service, you need to edit the default
+configuration and at minimum specify a capture interface.
+
+When the _compactor_ package is upgraded, any running service is
+stopped for the upgrade and restarted immediately the upgrade is
+complete.
+
+==== Ubuntu 18.04 LTS 'Bionic Beaver'
+
+_compactor_ and  _inspector_  are supplied in separate packages named
+`dns-stats-compactor` and `dns-stats-inspector`.
+
+[[libtins-bionic]]
+===== Pre-requisites
+
+Both _compactor_ and _inspector_ use
+https://libtins.github.io/[libtins] for various network related
+functions. There is no suitable pre-packaged version for Ubuntu Bionic, so
+a package is supplied along with the DNS-STATS packages. It will be installed
+as a pre-requisite package automatically.
+
+===== Installing
+
+You need first to add the DNS-STATS PPA to your system's Software Sources:
+
+----
+sudo add-apt-repository ppa:dns-stats/compactor-bionic
+sudo apt update
+----
+
+You can then install either both of the `dns-stats-compactor` or
+`dns-stats-inspector` packages. Their pre-requisite packages will be
+downloaded and installed automatically.
+
+----
+$ sudo apt install dns-stats-compactor
+$ sudo apt install dns-stats-inspector
+----
+
+===== Post-installation
+
+[TIP]
+====
+After installation _compactor_ can be used <<running.adoc#command-line,from the
+command line>>, for example for ad-hoc captures or converting PCAP
+capture files.
+====
+
+Whenever the _compactor_ package is installed, the system will attempt
+to start _compactor_ as a service.
+
+The first time the _compactor_ package is installed, it installs a
+default configuration file `/etc/dns-stats-compactor/compactor.conf`. This
 default configuration does not specify a capture interface, so the
 attempt at starting _compactor_ as a service will fail.  Before
 using _compactor_ as a service, you need to edit the default
