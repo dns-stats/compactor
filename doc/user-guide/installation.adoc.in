@@ -79,16 +79,24 @@ source, see the documentation for those items.
 [cols=".^,.^",frame=none,grid=none]
 |===
 
-| `{cpp} compiler` | _compactor_ and _inspector_ are written in
+| `{cpp} compiler`
+| _compactor_ and _inspector_ are written in
   {cpp}. Building them requires a {cpp} compiler and tool chain compatible
   with the 2011 ISO standard, otherwise {cpp}11.
 
-| `boost-log`
-.5+| Several libraries from http://www.boost.org[Boost
+| GNU `autoconf`, `automake`, `libtool`
+|
+
+| `boost-filesystem`
+.6+| Several libraries from http://www.boost.org[Boost
   {cpp}] are required. Depending on your system, it may be possible to
   install just the build requirements for individual libraries, or it
   may be more convenient to install all the Boost libraries.
   NOTE: _compactor_ and _inspector_ require Boost 1.54 or later.
+
+| `boost-iostreams`
+
+| `boost-log`
 
 | `boost-program-options`
 
@@ -96,28 +104,34 @@ source, see the documentation for those items.
 
 | `boost-thread`
 
-| `boost-iostreams`
+| `liblzma`
+| The compression library from http://tukaani.org/xz/[XZ utils].
 
-| `liblzma`| The compression library from http://tukaani.org/xz/[XZ utils].
+| `libpcap`
+| Library for capturing network traffic http://www.tcpdump.org/.
 
-| `libpcap`| Library for capturing network traffic http://www.tcpdump.org/.
-
-| `libtcmalloc-minimal4`| Optionally, on systems such as Linux where
-  it's available, `tcmalloc` from the
+| `libtcmalloc-minimal4`
+| Optionally, on systems such as Linux where it's available, `tcmalloc` from the
   http://goog-perftools.sourceforge.net/doc/tcmalloc.html[Google
-  performance tools] gives a notable performance boost over standard
+   performance tools] gives a notable performance boost over standard
   `glibc` `malloc`. If not present, the build will use the standard
   system `malloc`.
 
-| `libtins` | Networking functions library. http://libtins.github.io/.
-See  <<libtins>> if there is no package for your OS.
+| `libtins`
+| Networking functions library. http://libtins.github.io/. See  <<libtins>> if there is no
+  package for your OS.
 
-| `openssl` | Cryptography library, used in pseudo-anonymisation.
-http://www.openssl.org/.
+| `openssl`
+| Cryptography library, used in pseudo-anonymisation. http://www.openssl.org/.
 
-| `libctemplate` | Text templating system. https://github.com/OlafvdSpek/ctemplate.
+| `libctemplate`
+| Text templating system. https://github.com/OlafvdSpek/ctemplate.
 
-| `libmaxminddb` | MaxMind GeoIP reader. https://github.com/maxmind/libmaxminddb.
+| `libmaxminddb`
+| MaxMind GeoIP reader. https://github.com/maxmind/libmaxminddb.
+
+| `protobuf`
+| Google Protocol Buffers library. https://developers.google.com/protocol-buffers.
 |===
 
 ==== Optionally building documentation
