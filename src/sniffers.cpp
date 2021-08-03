@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019, 2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -131,8 +131,9 @@ namespace {
     }
 }
 
-BaseSniffers::BaseSniffers(unsigned chan_max_size)
-    : max_fd_(0), select_timeout_(1000), packets_(chan_max_size)
+BaseSniffers::BaseSniffers(unsigned chan_max_size, bool block)
+    : max_fd_(0), select_timeout_(1000), packets_(chan_max_size),
+      block_put_(block), packets_sniffed_(0), packets_dropped_(0)
 {
     FD_ZERO(&fdset_);
 }
@@ -157,7 +158,14 @@ Tins::Packet BaseSniffers::next_packet()
         return Tins::Packet();
 }
 
-bool BaseSniffers::stats(struct pcap_stat& stats)
+void BaseSniffers::sniffer_stats(struct Stats& stats)
+{
+    stats.pkts_sniffed   = packets_sniffed_;
+    stats.pkts_dropped   = packets_dropped_;
+    stats.channel_length = packets_.get_length();
+}
+
+bool BaseSniffers::pcap_stats(struct pcap_stat& stats)
 {
     bool res = true;
     std::unique_lock<std::mutex> lock(m_);
@@ -168,7 +176,7 @@ bool BaseSniffers::stats(struct pcap_stat& stats)
     {
         struct pcap_stat istat;
 
-        if ( pcap_stats(h, &istat) == 0 )
+        if ( ::pcap_stats(h, &istat) == 0 )
         {
             stats.ps_recv += istat.ps_recv;
             stats.ps_drop += istat.ps_drop;
@@ -232,9 +240,11 @@ void BaseSniffers::packet_read_thread()
                 {
                 case 1:
                     read_one = true;
+                    ++packets_sniffed_;
                     try
                     {
-                        packets_.put(make_packet(h, hdr, data));
+                        if ( !packets_.put(make_packet(h, hdr, data), block_put_) )
+                            ++packets_dropped_;
                     }
                     catch (Tins::exception_base&)
                     {
@@ -242,7 +252,8 @@ void BaseSniffers::packet_read_thread()
                         // packets - packets where transport level decode fails -
                         // back to the application as RawPDU. There they will be
                         // treated as ignored and logged if appropriate.
-                        packets_.put(Tins::Packet(new Tins::RawPDU(reinterpret_cast<const uint8_t*>(data), hdr->caplen), hdr->ts, DONT_COPY_PDU));
+                        if ( !packets_.put(Tins::Packet(new Tins::RawPDU(reinterpret_cast<const uint8_t*>(data), hdr->caplen), hdr->ts, DONT_COPY_PDU), block_put_) )
+                            ++packets_dropped_;
                     }
                     break;
 
@@ -348,7 +359,7 @@ NetworkSniffers::NetworkSniffers(const std::vector<std::string>& interfaces,
 
 FileSniffer::FileSniffer(const std::string& fname,
                          const SniffersConfiguration& config)
-    : BaseSniffers(config.chan_max_size())
+    : BaseSniffers(config.chan_max_size(), true)
 {
     char errbuf[PCAP_ERRBUF_SIZE];
     pcap_t* handle = pcap_open_offline(fname.c_str(), errbuf);

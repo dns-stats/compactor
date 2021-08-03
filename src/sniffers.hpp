@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -226,12 +226,35 @@ class BaseSniffers
 {
 public:
     /**
+     * \struct Stats
+     * \brief Statistics on sniffing.
+     */
+    struct Stats
+    {
+        /**
+         * \brief Total number of packets sniffed.
+         */
+        uint64_t pkts_sniffed;
+
+        /**
+         * \brief Total number of packets dropped.
+         */
+        uint64_t pkts_dropped;
+
+       /**
+        * \brief Snapshot channel length
+        */
+       unsigned channel_length;
+    };
+
+    /**
      * \brief The default constructor.
      *
      * \param chan_max_size maximum size of channel delivering packets.
+     * \param block block when adding packets to processing queue.
      */
-    explicit BaseSniffers(unsigned chan_max_size = 1000);
-
+    // SAMPLING
+    explicit BaseSniffers(unsigned chan_max_size = 1000, bool block = false);
     /**
      * \brief Destructor.
      */
@@ -246,12 +269,19 @@ public:
     Tins::Packet next_packet();
 
     /**
-     * \brief Get stats on the sniffers.
+     * \brief Get sniffer stats.
+     *
+     * \param stats a sniffer stats structure.
+     */
+    void sniffer_stats(struct Stats& stats);
+
+    /**
+     * \brief Get PCAP stats on the sniffers.
      *
      * \param stats a PCAP stats structure.
      * \returns `true` if stats updated.
      */
-    bool stats(struct pcap_stat& stats);
+    bool pcap_stats(struct pcap_stat& stats);
 
     /**
      * \brief Break out of the collection loop.
@@ -324,6 +354,21 @@ private:
      * \brief background thread collecting packets.
      */
     std::thread t_;
+
+    /**
+     * \brief block when adding sniffed packet to processing queue.
+     */
+    bool block_put_;
+
+    /**
+     * \brief count of packets sniffed.
+     */
+    std::atomic<uint64_t> packets_sniffed_;
+
+    /**
+     * \brief count of packets dropped.
+     */
+    std::atomic<uint64_t> packets_dropped_;
 };
 
 

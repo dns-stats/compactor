@@ -17,6 +17,7 @@
 #include <fstream>
 #include <memory>
 #include <thread>
+#include <iomanip>
 
 #include <pthread.h>
 
@@ -270,17 +271,31 @@ static void sniff_loop(BaseSniffers* sniffer,
 {
     bool seen_raw_overflow = false;
     bool seen_ignored_overflow = false;
-    bool seen_ae_overflow = false;
 
     bool do_raw_pcap = !config.raw_pcap_pattern.empty();
     bool do_ignored_pcap = !config.ignored_pcap_pattern.empty();
     bool do_decode = config.debug_qr || config.debug_dns || config.report_info  || !config.output_pattern.empty();
     bool do_match = config.debug_qr || config.report_info || !config.output_pattern.empty();
 
-    cno::system_clock::time_point last_timestamp;
-    cno::system_clock::time_point next_stats_log;
-    cno::system_clock::time_point last_stats_log_timestamp;
+    cno::system_clock::time_point last_recv_timestamp;       // timestamp of last recieved packet
+    cno::system_clock::time_point next_statslog_timestamp;   // time when next log output of stats is due
+    cno::system_clock::time_point last_statslog_timestamp;   // time when last log output of stats was done
+    cno::system_clock::time_point next_drop_check_timestamp; // next time we should inspect the drop stats
+    cno::system_clock::time_point sampling_end_timestamp;    // next time sampling should be stopped 
+
     PacketStatistics last_stats = stats;
+    PacketStatistics last_drop_check_stats = stats;
+
+    struct pcap_stat last_pcap_stats;
+    sniffer->pcap_stats(last_pcap_stats);
+
+    BaseSniffers::Stats sniffer_stats;
+    BaseSniffers::Stats last_sniffer_stats;
+    sniffer->sniffer_stats(last_sniffer_stats);
+    BaseSniffers::Stats last_drop_check_sniffer_stats = last_sniffer_stats;
+
+    bool drops_last_check = false;
+    bool sampling = false;
 
     auto dns_sink =
         [&](std::unique_ptr<DNSMessage>& dns)
@@ -303,11 +318,6 @@ static void sniff_loop(BaseSniffers* sniffer,
                 if ( !output.cbor->put(cbi, false) )
                 {
                     ++stats.output_cbor_drop_count;
-                    if ( !seen_ae_overflow )
-                    {
-                        LOG_ERROR << "C-DNS overflow. Dropping address event(s)";
-                        seen_ae_overflow = true;
-                    }
                 }
             }
         };
@@ -322,7 +332,7 @@ static void sniff_loop(BaseSniffers* sniffer,
                     ++stats.output_ignored_pcap_drop_count;
                     if ( !seen_ignored_overflow )
                     {
-                        LOG_ERROR << "Ignored PCAP overflow. Dropping packet(s)";
+                        LOG_ERROR << "Ignored PCAP channel overflow. Dropping packet(s)";
                         seen_ignored_overflow = true;
                     }
                 }
@@ -343,9 +353,9 @@ static void sniff_loop(BaseSniffers* sniffer,
 
         ++stats.raw_packet_count;
 
-        if ( last_timestamp > pcap->timestamp )
+        if ( last_recv_timestamp > pcap->timestamp )
             ++stats.out_of_order_packet_count;
-        last_timestamp = pcap->timestamp;
+        last_recv_timestamp = pcap->timestamp;
 
         if ( do_raw_pcap )
         {
@@ -354,71 +364,150 @@ static void sniff_loop(BaseSniffers* sniffer,
                 ++stats.output_raw_pcap_drop_count;
                 if ( !seen_raw_overflow )
                 {
-                    LOG_ERROR << "Raw PCAP overflow. Dropping packet(s)";
+                    LOG_ERROR << "Raw PCAP channel overflow. Dropping packet(s)";
                     seen_raw_overflow = true;
                 }
             }
         }
 
-        if ( do_decode )
-        {
-            bool ignored = false;
+        // If we're dropping packets, respond by sampling. 
+        if ( sampling && (stats.raw_packet_count % config.sampling_rate) != 0 ) {
+            ++stats.discarded_cbor_count;
+        } 
+        else {
+            if ( do_decode )
+            {
+                bool ignored = false;
 
-            try
-            {
-                packet_stream.process_packet(pcap);
-            }
-            catch (const unhandled_packet& e)
-            {
-                ignored = true;
-                ++stats.unhandled_packet_count;
-            }
-            catch (const malformed_packet& e)
-            {
-                ignored = true;
-                ++stats.malformed_message_count;
-            }
+                try
+                {
+                    packet_stream.process_packet(pcap);
+                }
+                catch (const unhandled_packet& e)
+                {
+                    ignored = true;
+                    ++stats.unhandled_packet_count;
+                }
+                catch (const malformed_packet& e)
+                {
+                    ignored = true;
+                    ++stats.malformed_message_count;
+                }
 
-            if ( ignored )
-                ignored_sink(pcap);
+                if ( ignored )
+                    ignored_sink(pcap);
+            }
         }
 
+        // SAMPLING - check for drops or timeout on sampling mode very second
+        if ( next_drop_check_timestamp <= last_recv_timestamp )
+        {
+            next_drop_check_timestamp = last_recv_timestamp + std::chrono::seconds(1);
+            sniffer->sniffer_stats(sniffer_stats);
+            seen_raw_overflow = seen_ignored_overflow = false;
+
+            uint64_t new_sniffs       = sniffer_stats.pkts_sniffed   - last_drop_check_sniffer_stats.pkts_sniffed;
+            uint64_t new_raw          = stats.raw_packet_count       - last_drop_check_stats.raw_packet_count;
+            uint64_t new_sniff_drops  = sniffer_stats.pkts_dropped   - last_drop_check_sniffer_stats.pkts_dropped;
+            uint64_t new_cbor_drops   = stats.output_cbor_drop_count - last_drop_check_stats.output_cbor_drop_count;
+            bool sniff_dropping = new_sniff_drops > new_sniffs * (config.sampling_threshold/100.0);
+            bool cbor_dropping  = new_cbor_drops  > new_raw    * (config.sampling_threshold/100.0);
+
+            // If seeing drops, only trigger off these two queues for now
+            if ( new_sniff_drops > 0 || new_cbor_drops > 0 )
+            {             
+                LOG_ERROR << "Dropping on these channels: " << (new_sniff_drops!=0?"Sniffer ":"")
+                                                            << (new_cbor_drops!=0?"C-DNS":"");
+            }
+            if ( sniff_dropping || cbor_dropping ) {
+                if (config.sampling_rate > 0) {
+                    if ( !sampling ) {
+                        if (!drops_last_check ) {
+                            // register the drops and wait for next check
+                            drops_last_check = true;
+                        } else {
+                            sampling = true;
+                            sampling_end_timestamp = last_recv_timestamp + std::chrono::seconds(config.sampling_time);
+                            LOG_WARN << "Sampling mode switched on for " << config.sampling_time 
+                                     << "s with rate of 1 in " << config.sampling_rate;
+                        }
+                    }
+                    // sampling but still dropping, push the end of the timer out
+                    else if ( sampling_end_timestamp <= last_recv_timestamp ) {
+                        sampling_end_timestamp = last_recv_timestamp + std::chrono::seconds(config.sampling_time);
+                        LOG_WARN << "Sampling mode extended as drops still occurring";
+                    } 
+                }
+            } else if ( sampling && sampling_end_timestamp <= last_recv_timestamp ) {
+                sampling = false;
+                drops_last_check = false;
+                LOG_WARN << "Sampling mode switched off because time limit expired and not dropping above threshold.";
+            }
+
+            // Add the number of drops in the sniffer to the raw packet count.
+            stats.raw_packet_count += new_sniff_drops;
+            last_drop_check_sniffer_stats = sniffer_stats;
+            last_drop_check_stats = last_stats;
+        }
+
+
+        // Output interval stats to log
         if ( config.log_network_stats_period > 0 )
         {
-            if ( next_stats_log.time_since_epoch().count() == 0 )
+            if ( next_statslog_timestamp.time_since_epoch().count() == 0 )
             {
-                next_stats_log = last_timestamp + std::chrono::seconds(config.log_network_stats_period);
-                last_stats_log_timestamp = last_timestamp;
+                next_statslog_timestamp = last_recv_timestamp + std::chrono::seconds(config.log_network_stats_period);
+                last_statslog_timestamp = last_recv_timestamp;
             }
-            else if ( next_stats_log <= last_timestamp )
+            else if ( next_statslog_timestamp <= last_recv_timestamp )
             {
-                cno::seconds period = cno::duration_cast<cno::seconds>(last_timestamp - last_stats_log_timestamp);
+                int w = 10; //output width, big enough for interval numbers up to 5 billion pps
+                cno::seconds period = cno::duration_cast<cno::seconds>(last_recv_timestamp - last_statslog_timestamp);
 
-                LOG_INFO <<
-                    "Total " << stats.raw_packet_count - last_stats.raw_packet_count <<
-                    " (" << (stats.raw_packet_count - last_stats.raw_packet_count) / period.count() << " pkt/s), " <<
-                    "Dropped raw/ignored/C-DNS packets " <<
-                    stats.output_raw_pcap_drop_count -last_stats.output_raw_pcap_drop_count << "/" <<
-                    stats.output_ignored_pcap_drop_count - last_stats.output_ignored_pcap_drop_count << "/" <<
-                    stats.output_cbor_drop_count - last_stats.output_cbor_drop_count;
+                struct pcap_stat pcap_stats;
+                sniffer->pcap_stats(pcap_stats);
+                LOG_INFO << "*Stats interval: average rate     " << std::setw(w) 
+                     << (stats.raw_packet_count        - last_stats.raw_packet_count) / period.count() << " pps  over  "
+                     << config.log_network_stats_period << "s";
 
-                struct pcap_stat pcap_stat;
-                if ( sniffer->stats(pcap_stat) )
-                {
-                    LOG_INFO << "PCAP recv " << pcap_stat.ps_recv <<
-                        " drop " << pcap_stat.ps_drop <<
-                        " drop at iface " << pcap_stat.ps_ifdrop;
-                }
-                next_stats_log = last_timestamp + cno::seconds(config.log_network_stats_period);
-                last_stats_log_timestamp = last_timestamp;
-                last_stats = stats;
+                // Output stats directly from libpcap
+                LOG_INFO << " LIBPCAP : recv/OS drop/IF drop   "                  << std::setw(w)
+                         << pcap_stats.ps_recv   - last_pcap_stats.ps_recv << "/" << std::setw(w)
+                         << pcap_stats.ps_drop   - last_pcap_stats.ps_drop << "/" << std::setw(w)
+                         << pcap_stats.ps_ifdrop - last_pcap_stats.ps_ifdrop;
+                // Output info from PacketStatists and the sniffer for this interval
+                sniffer->sniffer_stats(sniffer_stats);
+                LOG_INFO << " Sniffer : recv/dropped/queue     "                                 << std::setw(w)
+                         << sniffer_stats.pkts_sniffed - last_sniffer_stats.pkts_sniffed << "/"  << std::setw(w)
+                         << sniffer_stats.pkts_dropped - last_sniffer_stats.pkts_dropped << "/"  << std::setw(w)
+                         << sniffer_stats.channel_length;
+                if (config.sampling_rate > 0) {
+                    LOG_INFO << " Sampling: recv/discard           "                                      << std::setw(w)
+                             << (stats.raw_packet_count     - last_stats.raw_packet_count) -
+                                (sniffer_stats.pkts_dropped - last_sniffer_stats.pkts_dropped)     << "/" << std::setw(w)
+                             << stats.discarded_cbor_count    - last_stats.discarded_cbor_count;                }
+                LOG_INFO << " C-DNS   : recv/dropped/queue     "                                       << std::setw(w)
+                         << stats.processed_message_count - last_stats.processed_message_count  << "/" << std::setw(w)
+                         << stats.output_cbor_drop_count  - last_stats.output_cbor_drop_count   << "/" << std::setw(w)
+                         << output.cbor->get_length();
+                LOG_INFO << " PCAP out: raw drop/ignored drop  "                                                     << std::setw(w)
+                         << stats.output_raw_pcap_drop_count     - last_stats.output_raw_pcap_drop_count     << "/"  << std::setw(w)
+                         << stats.output_ignored_pcap_drop_count - last_stats.output_ignored_pcap_drop_count << "/"  << std::setw(w);
+                LOG_INFO << "";
+
+                // Update time/state
+                next_statslog_timestamp = last_recv_timestamp + cno::seconds(config.log_network_stats_period);
+                last_statslog_timestamp = last_recv_timestamp;
+                last_stats          = stats;
+                last_pcap_stats     = pcap_stats;
+                last_sniffer_stats = sniffer_stats;
             }
         }
     }
 
     // Retrieve PCAP stats, if available.
     struct pcap_stat pcap_stat;
-    if ( sniffer->stats(pcap_stat) )
+    if ( sniffer->pcap_stats(pcap_stat) )
     {
         stats.pcap_recv_count += pcap_stat.ps_recv;
         stats.pcap_drop_count += pcap_stat.ps_drop;
@@ -447,41 +536,42 @@ static void tap_loop(DnsTap& dnstap,
                      const Configuration& config,
                      PacketStatistics& stats)
 {
-    cno::system_clock::time_point last_timestamp;
-    cno::system_clock::time_point next_stats_log;
-    cno::system_clock::time_point last_stats_log_timestamp;
+    cno::system_clock::time_point last_recv_timestamp;
+    cno::system_clock::time_point next_statslog_timestamp;
+    cno::system_clock::time_point last_statslog_timestamp;
     PacketStatistics last_stats = stats;
 
     auto sink = [&](std::unique_ptr<DNSMessage>& dns)
     {
         ++stats.raw_packet_count;
         ++stats.processed_message_count;
-        if ( last_timestamp > dns->timestamp )
+        if ( last_recv_timestamp > dns->timestamp )
             ++stats.out_of_order_packet_count;
         stats.malformed_message_count = dnstap.malformed_message_count();
-        last_timestamp = dns->timestamp;
+        last_recv_timestamp = dns->timestamp;
         if ( config.debug_dns )
             std::cout << *dns;
         matcher.add(std::move(dns));
 
         if ( config.log_network_stats_period > 0 )
         {
-            if ( next_stats_log.time_since_epoch().count() == 0 )
+            if ( next_statslog_timestamp.time_since_epoch().count() == 0 )
             {
-                next_stats_log = last_timestamp + std::chrono::seconds(config.log_network_stats_period);
-                last_stats_log_timestamp = last_timestamp;
+                next_statslog_timestamp = last_recv_timestamp + std::chrono::seconds(config.log_network_stats_period);
+                last_statslog_timestamp = last_recv_timestamp;
             }
-            else if ( next_stats_log <= last_timestamp )
+            else if ( next_statslog_timestamp <= last_recv_timestamp )
             {
-                cno::seconds period = cno::duration_cast<cno::seconds>(last_timestamp - last_stats_log_timestamp);
+                cno::seconds period = cno::duration_cast<cno::seconds>(last_recv_timestamp - last_statslog_timestamp);
 
-                LOG_INFO <<
-                    "Total " << stats.raw_packet_count - last_stats.raw_packet_count <<
-                    " (" << (stats.raw_packet_count - last_stats.raw_packet_count) / period.count() << " pkt/s), " <<
-                    "Dropped C-DNS packets " <<
-                    stats.output_cbor_drop_count - last_stats.output_cbor_drop_count;
-                next_stats_log = last_timestamp + cno::seconds(config.log_network_stats_period);
-                last_stats_log_timestamp = last_timestamp;
+                LOG_INFO << "*Stats interval: average rate  " << std::setw(10) 
+                     << (stats.raw_packet_count        - last_stats.raw_packet_count) / period.count() << " pps  over  "
+                     << config.log_network_stats_period << "s";
+                LOG_INFO << " C-DNS   : recv/dropped        "                                          << std::setw(10)   
+                         << stats.processed_message_count - last_stats.processed_message_count  << "/" << std::setw(10)   
+                         << stats.output_cbor_drop_count  - last_stats.output_cbor_drop_count   << "/" << std::setw(10);
+                next_statslog_timestamp = last_recv_timestamp + cno::seconds(config.log_network_stats_period);
+                last_statslog_timestamp = last_recv_timestamp;
                 last_stats = stats;
             }
         }
@@ -612,11 +702,6 @@ static int run_configuration(const po::variables_map& vm,
                 if ( !output.cbor->put(cbi, false) )
                 {
                     ++stats.output_cbor_drop_count;
-                    if ( !seen_qr_overflow )
-                    {
-                        LOG_ERROR << "C-DNS overflow. Dropping query/response(s)";
-                        seen_qr_overflow = true;
-                    }
                 }
             }
         });
@@ -811,6 +896,7 @@ static int run_configuration(const po::variables_map& vm,
         stats.dump_stats(std::cout);
     }
 
+    LOG_INFO << "Compactor shutdown complete";
     return res;
 }
 
@@ -888,6 +974,24 @@ int main(int ac, char *av[])
                 << "Error:\tIPv6 prefix length must be in range 0 to 128.\n";
             return 1;
         }
+        if ( configuration.sampling_threshold > 100 || configuration.sampling_threshold == 0 )
+        {
+            std::cerr
+                << "Error:\tSampling threshold must be in range 1 to 100.\n";
+            return 1;
+        }
+        if ( configuration.sampling_rate == 1 ) 
+        {
+            std::cerr
+                << "Error:\tSampling rate cannot be set to 1.\n";
+            return 1;
+        }
+        if ( configuration.sampling_time < 10 ) 
+        {
+            std::cerr
+                << "Error:\tSampling time must be greater than 10.\n";
+            return 1;
+        }
 
         // Disable collection stats logging and disable logging
         // the hostname if reading from file.
@@ -896,6 +1000,7 @@ int main(int ac, char *av[])
             configuration.log_network_stats_period = 0;
             configuration.omit_hostid = true;
         }
+        LOG_INFO << "Compactor initializing...";
 
         // To enable a SIGHUP to not lose data, file compression
         // must survive the restart. That means compression
@@ -945,5 +1050,6 @@ int main(int ac, char *av[])
 #if ENABLE_DNSTAP
     google::protobuf::ShutdownProtobufLibrary();
 #endif
+    LOG_INFO << "Compactor shutdown complete";
     return 0;
 }

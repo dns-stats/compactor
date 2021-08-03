@@ -6,6 +6,18 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.2.1-beta1 - 2021-08-23
+--------------------------
+
+* Change behaviour of internal sniffer channel when overloaded to better
+  report and manage dropping/sampling of packets
+  * This fixes a bug where the 'Total Packets processed' statistic did not
+    include any packets dropped during overload
+* Improve `log-interval` statistics and packet drop logging
+* EXPERIMENTAL: New sampling mode option (disabled by default)
+  * sampling can be enabled at a specified rate for a specified time
+    when packet drops exceed a specified threshold (see config options)
+
 Version 1.2.0 - 2021-05-07
 --------------------------
 
