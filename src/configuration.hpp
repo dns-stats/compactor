@@ -852,6 +852,21 @@ public:
      */
     unsigned int log_network_stats_period;
 
+   /**
+    * \brief sampling threshold above which to enable sampling
+    */
+   unsigned int sampling_threshold;
+
+   /**
+    * \brief sampling rate to use if enabled
+    */
+   unsigned int sampling_rate;
+
+    /**
+     * \brief minimum time to apply sampling for
+     */
+    unsigned int sampling_time;
+
     /**
      * \brief output text summary of individual DNS messages.
      */

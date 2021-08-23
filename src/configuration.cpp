@@ -304,9 +304,10 @@ Configuration::Configuration()
       max_block_items(5000),
       max_output_size(0),
       report_info(false), log_network_stats_period(0),
+      sampling_threshold(10), sampling_rate(0), sampling_time(100),
       debug_dns(false), debug_qr(false),
       omit_hostid(false), omit_sysid(false), start_end_times_from_data(false),
-      max_channel_size(10000),
+      max_channel_size(300000),
       client_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
       client_address_prefix_ipv6(DEFAULT_IPV6_PREFIX_LENGTH),
       server_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
@@ -477,6 +478,15 @@ Configuration::Configuration()
         ("log-network-stats-period,L",
          po::value<unsigned int>(&log_network_stats_period)->default_value(0),
          "log network collection stats period.")
+         ("sampling-threshold",
+         po::value<unsigned int>(&sampling_threshold)->default_value(10),
+         "sampling threshold - percentage of traffic dropped.")
+         ("sampling-rate",
+         po::value<unsigned int>(&sampling_rate)->default_value(0),
+         "sampling rate applied when dropping packets.")
+         ("sampling-time",
+         po::value<unsigned int>(&sampling_time)->default_value(100),
+         "time to sample for before checking for drops.")
         ;
 }
 
