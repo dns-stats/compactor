@@ -679,7 +679,6 @@ static int run_configuration(const po::variables_map& vm,
     sniff_config.set_chan_max_size(config.max_channel_size);
 
     PacketStatistics stats{};
-    bool seen_qr_overflow = false;
 
     QueryResponseMatcher matcher(
         [&](std::shared_ptr<QueryResponse> qr)
