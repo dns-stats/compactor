@@ -56,6 +56,16 @@
 # Log basic collection stats to syslog every n seconds. 0 (default) == never.
 # log-network-stats-period=0
 
+# (Sampling is an experimental feature)
+# Sampling threshold is percentage of traffic dropped above which sampling will be enabled. Default is 10.
+# sampling-threshold=10
+
+# Sampling rate (1 in n) to be applied if packets dropped internally. 0 (default) == none.
+# sampling-rate=0
+
+# Apply sampling for n seconds for before re-checking for dropped packets. Default is 100.
+# sampling-time=100
+
 # Output options.
 
 # Output file rotation period, in seconds.

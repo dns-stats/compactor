@@ -37,3 +37,18 @@
 *-L, --log-network-stats-period* _arg_::
   Every _arg_ seconds, log basic statistics on packet collection to the system log. The
   default value of 0 disables this logging.
+
+*--sampling-threshold* _arg_::
+  A threshold for the percentage of traffic dropped on the internal channels above which
+  sampling will be enabled (if *sampling-rate* is greater than 0). The
+  default value is 10.
+
+*--sampling-rate* _arg_::
+  The rate (1 in _arg_ packets) to be applied when sampling mode is enabled (this is an 
+  experimental feature). The rate is applied for *sampling-time* seconds and then sampling
+  is disabled. After this, depending on the traffic rate, sampling may be enabled again if the drops rise
+  above the *sampling-threshold*. The default value of 0 disables this option.
+
+*--sampling-time* _arg_::
+  The period of time to apply sampling mode for. To avoid accidentally setting a low value
+  that could result in instability this must be at least 10s. The default value is 100.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,57 +27,57 @@
 using PacketStatistics = struct PacketStatistics_s
 {
     /**
-     * \brief count of packets received.
+     * \brief count of packets received (sniffed and dropped by sniffer).
      */
     uint64_t raw_packet_count;
 
     /**
-     * \brief count of DNS packets received out of time order.
+     * \brief count of DNS packets received out of time order (after any sampling applied).
      */
     uint64_t out_of_order_packet_count;
 
     /**
-     * \brief count of unhandled packets received.
+     * \brief count of unhandled packets received (after any sampling applied).
      */
     uint64_t unhandled_packet_count;
 
     /**
-     * \brief count of well-formed DNS messages received.
+     * \brief count of well-formed DNS messages received (after any sampling applied).
      *
      * C-DNS standard quantity.
      */
     uint64_t processed_message_count;
 
     /**
-     * \brief count of total query/response pairs output.
+     * \brief count of total query/response pairs output (after any sampling applied).
      *
      * C-DNS standard quantity.
      */
     uint64_t qr_pair_count;
 
     /**
-     * \brief count of queries with no matching response.
+     * \brief count of queries with no matching response (after any sampling applied).
      *
      * C-DNS standard quantity.
      */
     uint64_t query_without_response_count;
 
     /**
-     * \brief count of responses with no matching query.
+     * \brief count of responses with no matching query (after any sampling applied).
      *
      * C-DNS standard quantity.
      */
     uint64_t response_without_query_count;
 
     /**
-     * \brief cout of discarded messages due to OPCODE not in collection list.
+     * \brief cout of discarded messages due to OPCODE not in collection list (after any sampling applied).
      *
      * C-DNS standard quantity.
      */
     uint64_t discarded_opcode_count;
 
     /**
-     * \brief count of malformed DNS packets received.
+     * \brief count of malformed DNS packets received (after any sampling applied).
      *
      * C-DNS standard quantity.
      */
@@ -112,6 +112,11 @@ using PacketStatistics = struct PacketStatistics_s
      * \brief count of CBOR items dropped by output.
      */
     uint64_t output_cbor_drop_count;
+
+   /**
+    * \brief count of CBOR items discarded due to sampling.
+    */
+   uint64_t discarded_cbor_count;
 
     /**
      * \brief Dump the stats to the stream provided

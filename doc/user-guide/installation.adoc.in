@@ -4,11 +4,14 @@
 
 Binary install packages are available from a
 https://launchpad.net[Launchpad] PPA (Personal Package Archive)
-`ppa:dns-stats/compactor` for
+`ppa:dns-stats/compactor-bionic` for
 
-* http://releases.ubuntu.com/16.04/[Ubuntu 16.04 LTS 'Xenial Xerus']
+* http://releases.ubuntu.com/18.04/[Ubuntu 18.04 LTS 'Bionic Beaver']
 
-==== Ubuntu 16.04 LTS 'Xenial Xerus'
+Experimental packages for Ubuntu 20.04 are also available for early testing
+from `ppa:dns-stats/compactor-focal`.
+
+==== Ubuntu packages
 
 _compactor_ and  _inspector_  are supplied in separate packages named
 `dns-stats-compactor` and `dns-stats-inspector`.
