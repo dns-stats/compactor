@@ -113,6 +113,11 @@ using PacketStatistics = struct PacketStatistics_s
      */
     uint64_t output_cbor_drop_count;
 
+    /**
+    * \brief count of items dropped in sniffer.
+    */
+    uint64_t sniffer_drop_count;
+
    /**
     * \brief count of CBOR items discarded due to sampling.
     */
@@ -125,7 +130,10 @@ using PacketStatistics = struct PacketStatistics_s
      */
     void dump_stats(std::ostream& os) {
         os << "\nSTATISTICS:\n"
+           << "  Total Packets received                   : " << raw_packet_count + sniffer_drop_count << "\n"
+           << "  Dropped packets       (sniffer overload) : " << sniffer_drop_count << "\n"
            << "  Total Packets processed                  : " << raw_packet_count << "\n"
+           << "  Discarded C-DNS messages      (sampling) : " << discarded_cbor_count << "\n"
            << "  Processed DNS messages           (C-DNS) : " << processed_message_count << "\n"
            << "  Matched DNS query/response pairs (C-DNS) : " << qr_pair_count << "\n"
            << "  Unmatched DNS queries            (C-DNS) : " << query_without_response_count << "\n"
@@ -134,9 +142,13 @@ using PacketStatistics = struct PacketStatistics_s
            << "  Malformed DNS messages           (C-DNS) : " << malformed_message_count << "\n"
            << "  Non-DNS packets                          : " << unhandled_packet_count  << "\n"
            << "  Out-of-order DNS query/responses         : " << out_of_order_packet_count << "\n"
-           << "  Dropped C-DNS items (overload)           : " << output_cbor_drop_count << "\n"
-           << "  Dropped raw PCAP packets (overload)      : " << output_raw_pcap_drop_count << "\n"
-           << "  Dropped non-DNS packets (overload)       : " << output_ignored_pcap_drop_count << "\n\n";
+           << "  Dropped C-DNS items           (overload) : " << output_cbor_drop_count << "\n"
+           << "  Dropped raw PCAP packets      (overload) : " << output_raw_pcap_drop_count << "\n"
+           << "  Dropped non-DNS packets       (overload) : " << output_ignored_pcap_drop_count << "\n\n";
+        os << "\nPCAP STATISTICS:\n"
+           << "  Packets received               (libpcap) : " << pcap_recv_count << "\n"
+           << "  Packets dropped at i/f         (libpcap) : " << pcap_ifdrop_count << "\n"
+           << "  Packets dropped in kernel      (libpcap) : " << pcap_drop_count << "\n";
     }
 };
 

@@ -400,6 +400,7 @@ static void sniff_loop(BaseSniffers* sniffer,
         }
 
         // SAMPLING - check for drops or timeout on sampling mode very second
+        // Also update the stats from sniffer/pcap here from sniffer thread.
         if ( next_drop_check_timestamp <= last_recv_timestamp )
         {
             next_drop_check_timestamp = last_recv_timestamp + std::chrono::seconds(1);
@@ -444,8 +445,16 @@ static void sniff_loop(BaseSniffers* sniffer,
                 LOG_WARN << "Sampling mode switched off because time limit expired and not dropping above threshold.";
             }
 
-            // Add the number of drops in the sniffer to the raw packet count.
-            stats.raw_packet_count += new_sniff_drops;
+            // Retrieve PCAP stats, if available.
+            struct pcap_stat pcap_stat;
+            if ( sniffer->pcap_stats(pcap_stat) )
+            {
+                stats.pcap_recv_count = pcap_stat.ps_recv;
+                stats.pcap_drop_count = pcap_stat.ps_drop;
+                stats.pcap_ifdrop_count = pcap_stat.ps_ifdrop;
+            }
+            // Update the number of drops in the sniffer to the stats
+            stats.sniffer_drop_count += new_sniff_drops;
             last_drop_check_sniffer_stats = sniffer_stats;
             last_drop_check_stats = last_stats;
         }
@@ -508,14 +517,6 @@ static void sniff_loop(BaseSniffers* sniffer,
         }
     }
 
-    // Retrieve PCAP stats, if available.
-    struct pcap_stat pcap_stat;
-    if ( sniffer->pcap_stats(pcap_stat) )
-    {
-        stats.pcap_recv_count += pcap_stat.ps_recv;
-        stats.pcap_drop_count += pcap_stat.ps_drop;
-        stats.pcap_ifdrop_count += pcap_stat.ps_ifdrop;
-    }
 }
 
 #if ENABLE_DNSTAP

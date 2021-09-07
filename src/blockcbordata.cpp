@@ -1627,6 +1627,14 @@ namespace block_cbor {
                 last_packet_statistics.raw_packet_count += dec.read_unsigned();
                 break;
 
+            case BlockStatisticsField::compactor_missing_received:
+                last_packet_statistics.sniffer_drop_count += dec.read_unsigned();
+                break;
+
+            case BlockStatisticsField::compactor_discarded_packets:
+                last_packet_statistics.discarded_cbor_count += dec.read_unsigned();
+                break;
+
             default:
                 dec.skip();
                 break;
@@ -1816,6 +1824,8 @@ namespace block_cbor {
         constexpr int missing_packets_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_packets);
         constexpr int missing_non_dns_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_non_dns);
         constexpr int packets_index = find_block_statistics_index(BlockStatisticsField::compactor_packets);
+        constexpr int missing_received_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_received);
+        constexpr int discarded_packets_index = find_block_statistics_index(BlockStatisticsField::compactor_discarded_packets);
 
         enc.writeMapHeader();
         enc.write(processed_messages_index);
@@ -1842,6 +1852,10 @@ namespace block_cbor {
         enc.write(last_packet_statistics.output_ignored_pcap_drop_count - start_packet_statistics.output_ignored_pcap_drop_count);
         enc.write(packets_index);
         enc.write(last_packet_statistics.raw_packet_count - start_packet_statistics.raw_packet_count);
+        enc.write(missing_received_index);
+        enc.write(last_packet_statistics.sniffer_drop_count - start_packet_statistics.sniffer_drop_count);
+        enc.write(discarded_packets_index);
+        enc.write(last_packet_statistics.discarded_cbor_count - start_packet_statistics.discarded_cbor_count);
         enc.writeBreak();
     }
 

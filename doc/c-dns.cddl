@@ -236,6 +236,8 @@ BlockStatistics = {
     ? compactor-missing-packets      => uint,
     ? compactor-missing-non-dns      => uint,
     ? compactor-packets              => uint,
+    ? compactor-missing-received     => uint,
+    ? compactor-discarded-packets    => uint,
 }
 processed-messages  = 0
 qr-data-items       = 1
@@ -250,6 +252,8 @@ compactor-missing-pairs          = -3
 compactor-missing-packets        = -4
 compactor-missing-non-dns        = -5
 compactor-packets                = -6
+compactor-missing-received       = -7
+compactor-discarded-packets      = -8,
 
 ;
 ; Tables of common data referenced from records in a Block.
