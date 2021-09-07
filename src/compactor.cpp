@@ -332,7 +332,7 @@ static void sniff_loop(BaseSniffers* sniffer,
                     ++stats.output_ignored_pcap_drop_count;
                     if ( !seen_ignored_overflow )
                     {
-                        LOG_ERROR << "Ignored PCAP channel overflow. Dropping packet(s)";
+                        LOG_ERROR << "Dropping on these channels: Ignored PCAP";
                         seen_ignored_overflow = true;
                     }
                 }
@@ -364,7 +364,7 @@ static void sniff_loop(BaseSniffers* sniffer,
                 ++stats.output_raw_pcap_drop_count;
                 if ( !seen_raw_overflow )
                 {
-                    LOG_ERROR << "Raw PCAP channel overflow. Dropping packet(s)";
+                    LOG_ERROR << "Dropping on these channels: Raw PCAP";
                     seen_raw_overflow = true;
                 }
             }
@@ -481,11 +481,14 @@ static void sniff_loop(BaseSniffers* sniffer,
                          << sniffer_stats.pkts_sniffed - last_sniffer_stats.pkts_sniffed << "/"  << std::setw(w)
                          << sniffer_stats.pkts_dropped - last_sniffer_stats.pkts_dropped << "/"  << std::setw(w)
                          << sniffer_stats.channel_length;
+                const char* sampling_text = sampling? "ON":"OFF";
                 if (config.sampling_rate > 0) {
-                    LOG_INFO << " Sampling: recv/discard           "                                      << std::setw(w)
+                    LOG_INFO << " Sampling: recv/discard/state     "                             << std::setw(w)
                              << (stats.raw_packet_count     - last_stats.raw_packet_count) -
-                                (sniffer_stats.pkts_dropped - last_sniffer_stats.pkts_dropped)     << "/" << std::setw(w)
-                             << stats.discarded_cbor_count    - last_stats.discarded_cbor_count;                }
+                                (sniffer_stats.pkts_dropped - last_sniffer_stats.pkts_dropped)   << "/" << std::setw(w)
+                             << stats.discarded_cbor_count  - last_stats.discarded_cbor_count    << "/" << std::setw(w)
+                             << sampling_text;
+                }
                 LOG_INFO << " C-DNS   : recv/dropped/queue     "                                       << std::setw(w)
                          << stats.processed_message_count - last_stats.processed_message_count  << "/" << std::setw(w)
                          << stats.output_cbor_drop_count  - last_stats.output_cbor_drop_count   << "/" << std::setw(w)
