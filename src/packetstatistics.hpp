@@ -145,10 +145,10 @@ using PacketStatistics = struct PacketStatistics_s
            << "  Dropped C-DNS items           (overload) : " << output_cbor_drop_count << "\n"
            << "  Dropped raw PCAP packets      (overload) : " << output_raw_pcap_drop_count << "\n"
            << "  Dropped non-DNS packets       (overload) : " << output_ignored_pcap_drop_count << "\n\n";
-        os << "\nPCAP STATISTICS:\n"
+        os << "PCAP STATISTICS:\n"
            << "  Packets received               (libpcap) : " << pcap_recv_count << "\n"
            << "  Packets dropped at i/f         (libpcap) : " << pcap_ifdrop_count << "\n"
-           << "  Packets dropped in kernel      (libpcap) : " << pcap_drop_count << "\n";
+           << "  Packets dropped in kernel      (libpcap) : " << pcap_drop_count << "\n\n";
     }
 };
 

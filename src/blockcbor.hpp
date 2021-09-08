@@ -472,6 +472,9 @@ namespace block_cbor {
         compactor_packets,
         compactor_missing_received,
         compactor_discarded_packets,
+        pcap_packets,
+        pcap_missing_if,
+        pcap_missing_os,
 
         // Obsolete
         partially_malformed_packets,
@@ -985,6 +988,9 @@ namespace block_cbor {
         BlockStatisticsField::compactor_packets,
         BlockStatisticsField::compactor_missing_received,
         BlockStatisticsField::compactor_discarded_packets,
+        BlockStatisticsField::pcap_packets,
+        BlockStatisticsField::pcap_missing_if,
+        BlockStatisticsField::pcap_missing_os,
     };
 
     /**

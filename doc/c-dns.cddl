@@ -238,6 +238,9 @@ BlockStatistics = {
     ? compactor-packets              => uint,
     ? compactor-missing-received     => uint,
     ? compactor-discarded-packets    => uint,
+    ? pcap-packets                   => uint,
+    ? pcap-missing-if                => uint,
+    ? pcap-missing-os                => uint,
 }
 processed-messages  = 0
 qr-data-items       = 1
@@ -254,6 +257,9 @@ compactor-missing-non-dns        = -5
 compactor-packets                = -6
 compactor-missing-received       = -7
 compactor-discarded-packets      = -8,
+pcap-packets                     = -9,
+pcap-missing-if                  = -10,
+pcap-missing-os                  => -11,
 
 ;
 ; Tables of common data referenced from records in a Block.
