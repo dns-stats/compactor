@@ -347,6 +347,15 @@ void QueryResponseMatcher::add(std::unique_ptr<DNSMessage> m)
     write(true);
 }
 
+void QueryResponseMatcher::poke(std::chrono::system_clock::time_point now)
+{
+    
+    timeout_queries(now);
+    timeout_responses(now);
+    write(true);
+}
+
+
 void QueryResponseMatcher::add_query(std::unique_ptr<DNSMessage>& m)
 {
     std::shared_ptr<QueryResponseInProgress> qr = std::make_shared<QueryResponseInProgress>(std::move(m));
@@ -438,3 +447,9 @@ void QueryResponseMatcher::write(bool complete_only)
         sink_(front->query_response());
     }
 }
+
+unsigned QueryResponseMatcher::get_length()
+{
+    return data_->output.size();
+}
+

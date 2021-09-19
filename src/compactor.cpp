@@ -370,9 +370,14 @@ static void sniff_loop(BaseSniffers* sniffer,
             }
         }
 
+
+        if (matcher.get_length() > (config.max_channel_size * 2)) {
+            ++stats.matcher_drop_count;
+            matcher.poke(pcap->timestamp);
+        }
         // If we're dropping packets, respond by sampling. 
-        if ( sampling && (stats.raw_packet_count % config.sampling_rate) != 0 ) {
-            ++stats.discarded_cbor_count;
+        else if ( sampling && (stats.raw_packet_count % config.sampling_rate) != 0 ) {
+            ++stats.discarded_sampling_count;
         } 
         else {
             if ( do_decode )
@@ -430,7 +435,8 @@ static void sniff_loop(BaseSniffers* sniffer,
                             sampling = true;
                             sampling_end_timestamp = last_recv_timestamp + std::chrono::seconds(config.sampling_time);
                             LOG_WARN << "Sampling mode switched on for " << config.sampling_time 
-                                     << "s with rate of 1 in " << config.sampling_rate;
+                                     << "s with rate of 1 in " << config.sampling_rate << " as dropping above threshold % of "
+                                     << config.sampling_threshold;
                         }
                     }
                     // sampling but still dropping, push the end of the timer out
@@ -476,7 +482,7 @@ static void sniff_loop(BaseSniffers* sniffer,
                 struct pcap_stat pcap_stats;
                 sniffer->pcap_stats(pcap_stats);
                 LOG_INFO << "*Stats interval: average rate     " << std::setw(w) 
-                     << (stats.raw_packet_count        - last_stats.raw_packet_count) / period.count() << " pps  over  "
+                     << (pcap_stats.ps_recv   - last_pcap_stats.ps_recv) / period.count() << " pps  over  "
                      << config.log_network_stats_period << "s";
 
                 // Output stats directly from libpcap
@@ -490,18 +496,28 @@ static void sniff_loop(BaseSniffers* sniffer,
                          << sniffer_stats.pkts_sniffed - last_sniffer_stats.pkts_sniffed << "/"  << std::setw(w)
                          << sniffer_stats.pkts_dropped - last_sniffer_stats.pkts_dropped << "/"  << std::setw(w)
                          << sniffer_stats.channel_length;
+                LOG_INFO << " Matcher : recv/dropped/queue     "                         << std::setw(w)
+                         << (stats.raw_packet_count  - last_stats.raw_packet_count)      << "/" << std::setw(w)
+                         << stats.matcher_drop_count - last_stats.matcher_drop_count     << "/" << std::setw(w)
+                         << matcher.get_length();
                 const char* sampling_text = sampling? "ON":"OFF";
                 if (config.sampling_rate > 0) {
-                    LOG_INFO << " Sampling: recv/discard/state     "                             << std::setw(w)
-                             << (stats.raw_packet_count     - last_stats.raw_packet_count) -
-                                (sniffer_stats.pkts_dropped - last_sniffer_stats.pkts_dropped)   << "/" << std::setw(w)
-                             << stats.discarded_cbor_count  - last_stats.discarded_cbor_count    << "/" << std::setw(w)
+                    LOG_INFO << " Sampling: recv/discard/state     "                                   << std::setw(w)
+                             << (stats.raw_packet_count         - last_stats.raw_packet_count)         << "/" << std::setw(w)
+                             << stats.discarded_sampling_count  - last_stats.discarded_sampling_count  << "/" << std::setw(w)
                              << sampling_text;
                 }
-                LOG_INFO << " C-DNS   : recv/dropped/queue     "                                       << std::setw(w)
+                LOG_INFO << " CDNS    : recv/dropped/queue     "                                       << std::setw(w)
                          << stats.processed_message_count - last_stats.processed_message_count  << "/" << std::setw(w)
                          << stats.output_cbor_drop_count  - last_stats.output_cbor_drop_count   << "/" << std::setw(w)
                          << output.cbor->get_length();
+                uint64_t cdns_written = (stats.processed_message_count - last_stats.processed_message_count) -
+                                        (stats.output_cbor_drop_count  - last_stats.output_cbor_drop_count);
+                int tp = std::lround(cdns_written * 100.0 / (pcap_stats.ps_recv   - last_pcap_stats.ps_recv));
+                LOG_INFO << " CDNS out: writ/% traffic         "                                       << std::setw(w)
+                         << cdns_written        << "/" << std::setw(w)
+                         << std::min(tp, 100)   << "/" << std::setw(w)
+                         << "";
                 LOG_INFO << " PCAP out: raw drop/ignored drop  "                                                     << std::setw(w)
                          << stats.output_raw_pcap_drop_count     - last_stats.output_raw_pcap_drop_count     << "/"  << std::setw(w)
                          << stats.output_ignored_pcap_drop_count - last_stats.output_ignored_pcap_drop_count << "/"  << std::setw(w);

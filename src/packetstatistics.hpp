@@ -121,7 +121,13 @@ using PacketStatistics = struct PacketStatistics_s
    /**
     * \brief count of CBOR items discarded due to sampling.
     */
-   uint64_t discarded_cbor_count;
+   uint64_t discarded_sampling_count;
+
+  /**
+   * \brief count of items dropped due to matcher max size.
+   */
+
+   uint64_t matcher_drop_count;
 
     /**
      * \brief Dump the stats to the stream provided
@@ -131,9 +137,10 @@ using PacketStatistics = struct PacketStatistics_s
     void dump_stats(std::ostream& os) {
         os << "\nSTATISTICS:\n"
            << "  Total Packets received                   : " << raw_packet_count + sniffer_drop_count << "\n"
-           << "  Dropped packets       (sniffer overload) : " << sniffer_drop_count << "\n"
+           << "  Dropped packets at sniffer    (overload) : " << sniffer_drop_count << "\n"
            << "  Total Packets processed                  : " << raw_packet_count << "\n"
-           << "  Discarded C-DNS messages      (sampling) : " << discarded_cbor_count << "\n"
+           << "  Dropped Matcher messages      (overload) : " << matcher_drop_count << "\n"
+           << "  Discarded C-DNS messages      (sampling) : " << discarded_sampling_count << "\n"
            << "  Processed DNS messages           (C-DNS) : " << processed_message_count << "\n"
            << "  Matched DNS query/response pairs (C-DNS) : " << qr_pair_count << "\n"
            << "  Unmatched DNS queries            (C-DNS) : " << query_without_response_count << "\n"
@@ -142,7 +149,6 @@ using PacketStatistics = struct PacketStatistics_s
            << "  Malformed DNS messages           (C-DNS) : " << malformed_message_count << "\n"
            << "  Non-DNS packets                          : " << unhandled_packet_count  << "\n"
            << "  Out-of-order DNS query/responses         : " << out_of_order_packet_count << "\n"
-           << "  Dropped C-DNS items           (overload) : " << output_cbor_drop_count << "\n"
            << "  Dropped raw PCAP packets      (overload) : " << output_raw_pcap_drop_count << "\n"
            << "  Dropped non-DNS packets       (overload) : " << output_ignored_pcap_drop_count << "\n\n";
         os << "PCAP STATISTICS:\n"

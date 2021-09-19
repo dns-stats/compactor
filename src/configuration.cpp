@@ -307,7 +307,7 @@ Configuration::Configuration()
       sampling_threshold(10), sampling_rate(0), sampling_time(100),
       debug_dns(false), debug_qr(false),
       omit_hostid(false), omit_sysid(false), start_end_times_from_data(false),
-      max_channel_size(300000),
+      max_channel_size(30000),
       client_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
       client_address_prefix_ipv6(DEFAULT_IPV6_PREFIX_LENGTH),
       server_address_prefix_ipv4(DEFAULT_IPV4_PREFIX_LENGTH),
@@ -349,7 +349,7 @@ Configuration::Configuration()
          po::value<bool>(&start_end_times_from_data)->implicit_value(true),
          "use latest data time as end time if not present.")
         ("max-channel-size",
-         po::value<unsigned int>(&max_channel_size)->default_value(300000),
+         po::value<unsigned int>(&max_channel_size)->default_value(30000),
          "maximum number of items in inter-thread queue.")
         ("capture-file",
          po::value<std::vector<std::string>>(),
@@ -715,6 +715,8 @@ void Configuration::set_config_items(const po::variables_map& vm)
         query_timeout = std::chrono::milliseconds(std::lround(vm["query-timeout"].as<float>() * 1000));
     if ( vm.count("skew-timeout") )
         skew_timeout = std::chrono::microseconds(vm["skew-timeout"].as<unsigned int>());
+    if (skew_timeout > query_timeout)
+        throw po::error("query-timeout must be greater than skew-timeout.");
 
     for ( const auto& ifname : network_interfaces )
         check_network_interface(ifname);

@@ -97,6 +97,9 @@ public:
      */
     void set_skew_timeout(std::chrono::microseconds t);
 
+    unsigned get_length();
+    void poke(std::chrono::system_clock::time_point now);
+
 protected:
     /**
      * \brief add a new query message to the outstanding queries.
