@@ -238,6 +238,7 @@ BlockStatistics = {
     ? compactor-packets              => uint,
     ? compactor-missing-received     => uint,
     ? compactor-discarded-packets    => uint,
+    ? compactor-missing_matcher      => uint,
     ? pcap-packets                   => uint,
     ? pcap-missing-if                => uint,
     ? pcap-missing-os                => uint,
@@ -257,9 +258,10 @@ compactor-missing-non-dns        = -5
 compactor-packets                = -6
 compactor-missing-received       = -7
 compactor-discarded-packets      = -8,
-pcap-packets                     = -9,
-pcap-missing-if                  = -10,
-pcap-missing-os                  => -11,
+compactor-discarded-packets      = -9,
+pcap-packets                     = -10,
+pcap-missing-if                  = -11,
+pcap-missing-os                  = -12,
 
 ;
 ; Tables of common data referenced from records in a Block.

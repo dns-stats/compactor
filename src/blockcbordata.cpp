@@ -1635,6 +1635,10 @@ namespace block_cbor {
                 last_packet_statistics.discarded_sampling_count += dec.read_unsigned();
                 break;
 
+            case BlockStatisticsField::compactor_missing_matcher:
+                last_packet_statistics.matcher_drop_count += dec.read_unsigned();
+                break;
+
             case BlockStatisticsField::pcap_packets:
                 last_packet_statistics.pcap_recv_count += dec.read_unsigned();
                 break;
@@ -1838,6 +1842,7 @@ namespace block_cbor {
         constexpr int packets_index = find_block_statistics_index(BlockStatisticsField::compactor_packets);
         constexpr int missing_received_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_received);
         constexpr int discarded_packets_index = find_block_statistics_index(BlockStatisticsField::compactor_discarded_packets);
+        constexpr int missing_matcher_index = find_block_statistics_index(BlockStatisticsField::compactor_missing_matcher);
         constexpr int pcap_packets_index = find_block_statistics_index(BlockStatisticsField::pcap_packets);
         constexpr int pcap_missing_if_index = find_block_statistics_index(BlockStatisticsField::pcap_missing_if);
         constexpr int pcap_missing_os_index = find_block_statistics_index(BlockStatisticsField::pcap_missing_os);
@@ -1871,6 +1876,8 @@ namespace block_cbor {
         enc.write(last_packet_statistics.sniffer_drop_count - start_packet_statistics.sniffer_drop_count);
         enc.write(discarded_packets_index);
         enc.write(last_packet_statistics.discarded_sampling_count - start_packet_statistics.discarded_sampling_count);
+        enc.write(missing_matcher_index);
+        enc.write(last_packet_statistics.matcher_drop_count - start_packet_statistics.matcher_drop_count);
         enc.write(pcap_packets_index);
         enc.write(last_packet_statistics.pcap_recv_count - start_packet_statistics.pcap_recv_count);
         enc.write(pcap_missing_if_index);

@@ -416,16 +416,19 @@ static void sniff_loop(BaseSniffers* sniffer,
             uint64_t new_raw          = stats.raw_packet_count       - last_drop_check_stats.raw_packet_count;
             uint64_t new_sniff_drops  = sniffer_stats.pkts_dropped   - last_drop_check_sniffer_stats.pkts_dropped;
             uint64_t new_cbor_drops   = stats.output_cbor_drop_count - last_drop_check_stats.output_cbor_drop_count;
+            uint64_t new_match_drops  = stats.matcher_drop_count     - last_drop_check_stats.matcher_drop_count;
             bool sniff_dropping = new_sniff_drops > new_sniffs * (config.sampling_threshold/100.0);
             bool cbor_dropping  = new_cbor_drops  > new_raw    * (config.sampling_threshold/100.0);
+            bool match_dropping = new_match_drops > new_raw    * (config.sampling_threshold/100.0);
 
-            // If seeing drops, only trigger off these two queues for now
-            if ( new_sniff_drops > 0 || new_cbor_drops > 0 )
+            // If seeing drops, only trigger off these two queues and the matcher
+            if ( new_sniff_drops > 0 || new_cbor_drops > 0 || new_match_drops > 0 )
             {             
                 LOG_ERROR << "Dropping on these channels: " << (new_sniff_drops!=0?"Sniffer ":"")
+                                                            << (new_match_drops!=0?"Matcher ":"")
                                                             << (new_cbor_drops!=0?"C-DNS":"");
             }
-            if ( sniff_dropping || cbor_dropping ) {
+            if ( sniff_dropping || cbor_dropping || match_dropping) {
                 if (config.sampling_rate > 0) {
                     if ( !sampling ) {
                         if (!drops_last_check ) {

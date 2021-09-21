@@ -127,9 +127,11 @@ with the following changes:
     by _compactor_ because they could not be processed quickly enough.
 *** _compactor-discarded-packets_ (-8): count of packets actively discarded by compactor due
     to some processing threshold, e.g. sampling.
-*** _pcap-packets_ (-9): informational only report from pcap library - count of packets received
-*** _pcap-missing-if_ (-10): informational only report from pcap library - count of packets dropped at the interface
-*** _pcap-missing-os_ (-11): informational only report from pcap library - count of packets dropped in the kernel
+*** _compactor-missing_matcher_ (-9): count of packets unmatched packets not written
+    by _compactor_ because they could not be processed for matching quickly enough.
+*** _pcap-packets_ (-10): informational only report from pcap library - count of packets received
+*** _pcap-missing-if_ (-11): informational only report from pcap library - count of packets dropped at the interface
+*** _pcap-missing-os_ (-12): informational only report from pcap library - count of packets dropped in the kernel
 
 [IMPORTANT]
 ====

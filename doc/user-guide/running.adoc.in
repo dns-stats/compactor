@@ -299,7 +299,7 @@ messages.
 | Comment
 
 | ERROR
-| Dropping on these channels: Sniffer C-DNS
+| Dropping on these channels: Sniffer Matcher C-DNS 
 | Packets are arriving faster than _compactor_  can
 process them, so packets are being dropped internally on the specified
 channels. More information is available via the *--log-network-stats-period* logging output.
