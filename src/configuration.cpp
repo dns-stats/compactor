@@ -303,7 +303,7 @@ Configuration::Configuration()
       output_options_queries(0), output_options_responses(0),
       max_block_items(5000),
       max_output_size(0),
-      report_info(false), log_network_stats_period(0),
+      report_info(false), relaxed_mode(false), log_network_stats_period(0),
       sampling_threshold(10), sampling_rate(0), sampling_time(100),
       debug_dns(false), debug_qr(false),
       omit_hostid(false), omit_sysid(false), start_end_times_from_data(false),
@@ -332,6 +332,9 @@ Configuration::Configuration()
         ("report-info,r",
          po::value<bool>(&report_info)->implicit_value(true),
          "report info (config and stats summary) on exit.")
+        ("relaxed-mode,D",
+         po::value<bool>(&relaxed_mode)->implicit_value(false),
+         "parse command line allowing unrecognized options but warning.")
         ("debug-dns",
          po::value<bool>(&debug_dns)->implicit_value(true),
          "print DNS packet details.")
@@ -497,7 +500,16 @@ po::variables_map Configuration::parse_command_line(int ac, char *av[])
     po::options_description all("Options");
     all.add(cmdline_options_).add(cmdline_hidden_options_).add(config_file_options_);
 
-    po::store(po::command_line_parser(ac, av).options(all).positional(positional_options_).run(), cmdline_vars_);
+    po::parsed_options parsed = po::command_line_parser(ac, av).options(all).positional(positional_options_).allow_unregistered().run();
+    po::store(parsed, cmdline_vars_);
+    if (!cmdline_vars_.count("relaxed-mode")) {
+        po::store(po::command_line_parser(ac, av).options(all).positional(positional_options_).run(), cmdline_vars_);
+    } else {
+        std::vector<std::string> unrecognised = collect_unrecognized(parsed.options, po::include_positional);
+        for(auto i : unrecognised) {
+            LOG_WARN << "Unrecognized command line option: " << i; 
+        } 
+    }
 
     // If you specify a config file, it must exist.
     if ( cmdline_vars_.count("configfile") )
@@ -538,7 +550,17 @@ po::variables_map Configuration::reread_config_file()
         std::ifstream conf(config_file_);
         if ( conf.fail() )
             throw po::error("Can't open configuration file " + config_file_);
-        po::store(po::parse_config_file(conf, config_file_options_), res);
+        
+        po::parsed_options parsed = po::parse_config_file(conf, config_file_options_, true);
+        po::store(parsed, res);
+        for (const auto& o : parsed.options) {
+            if (o.unregistered == true) {
+                if (!cmdline_vars_.count("relaxed-mode")) {
+                    boost::throw_exception(po::unknown_option(o.string_key));
+                }
+                LOG_WARN << "Unrecognized config file option: " << o.string_key; 
+            }
+        }
     }
 
     po::notify(res);

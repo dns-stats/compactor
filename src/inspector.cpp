@@ -253,6 +253,8 @@ int main(int ac, char *av[])
          "write only query messages to output.")
         ("report-info,r",
          "report info (config and stats summary) on exit.")
+        ("relaxed-mode,D",
+         "parse command line allowing unrecognized options but warning.")
         ("no-output,N",
          "do not output PCAP or template files, only ancillary files, e.g. info files, for each input.")
         ("no-info,O",
@@ -295,7 +297,9 @@ int main(int ac, char *av[])
     po::variables_map vm;
 
     try {
-        po::store(po::command_line_parser(ac, av).options(all).positional(positional).run(), vm);
+        po::store(po::command_line_parser(ac, av).options(all).positional(positional).allow_unregistered().run(), vm);
+        if (!vm.count("relaxed-mode"))
+            po::store(po::command_line_parser(ac, av).options(all).positional(positional).run(), vm);
 
         if ( vm.count("help") )
         {

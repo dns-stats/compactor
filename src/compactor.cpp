@@ -332,7 +332,7 @@ static void sniff_loop(BaseSniffers* sniffer,
                     ++stats.output_ignored_pcap_drop_count;
                     if ( !seen_ignored_overflow )
                     {
-                        LOG_ERROR << "Dropping on these channels: Ignored PCAP";
+                        LOG_ERROR << "Dropping on these channels: Ignored-PCAP";
                         seen_ignored_overflow = true;
                     }
                 }
@@ -364,7 +364,7 @@ static void sniff_loop(BaseSniffers* sniffer,
                 ++stats.output_raw_pcap_drop_count;
                 if ( !seen_raw_overflow )
                 {
-                    LOG_ERROR << "Dropping on these channels: Raw PCAP";
+                    LOG_ERROR << "Dropping on these channels: Raw-PCAP";
                     seen_raw_overflow = true;
                 }
             }
