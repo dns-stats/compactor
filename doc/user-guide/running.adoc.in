@@ -44,15 +44,17 @@ Usage: compactor  [options] [capture-file ...]
 Options:
 
 Command options:
-  -h [ --help ]                   show this help message.
-  -v [ --version ]                show version information.
-  -c [ --configfile ] arg         configuration file.
-  --excludesfile arg              exclude hints file.
-  -r [ --report-info ] [=arg(=1)] report info (config and stats summary) on 
-                                  exit.
-  --debug-dns [=arg(=1)]          print DNS packet details.
-  --debug-qr [=arg(=1)]           print Query/Response match details.
-  -l [ --list-interfaces ]        list all network interfaces.
+  -h [ --help ]                    show this help message.
+  -v [ --version ]                 show version information.
+  -c [ --configfile ] arg          configuration file.
+  --excludesfile arg               exclude hints file.
+  -r [ --report-info ] [=arg(=1)]  report info (config and stats summary) on 
+                                   exit.
+  -D [ --relaxed-mode ] [=arg(=1)] parse command line allowing 
+                                   unrecognized options but warning.
+  --debug-dns [=arg(=1)]           print DNS packet details.
+  --debug-qr [=arg(=1)]            print Query/Response match details.
+  -l [ --list-interfaces ]         list all network interfaces.
 
 Configuration:
   -t [ --rotation-period ] arg (=300)   rotation period for all outputs, in 
@@ -303,14 +305,14 @@ process them, so packets are being dropped internally on the specified
 channels. More information is available via the *--log-network-stats-period* logging output.
 
 | ERROR
-| Ignored PCAP channel overflow. Dropping packet(s).
+| Dropping on these channels: Ignored-PCAP
 | More ignored packets - that is, packets that do not appear to be DNS
 related or which are malformed - are arriving than can be processed
 and recorded to the ignored PCAP output. At least one has been
 dropped.
 
 | ERROR
-| Raw PCAP channel overflow. Dropping packet(s).
+| Dropping on these channels: Raw-PCAP
 | More input packets are arriving than can be processed and recorded
 to the raw PCAP output. At least one has been dropped.
 
@@ -348,18 +350,31 @@ time limit.
   stopping collection.
 |===
 
+Other error messages are reporting an internal error.
+
 Example statistics produced by enabling the *log-network-stats-period* option:
 
 ----
-*Stats interval: average rate         480027 pps  over  1s
- LIBPCAP : recv/OS drop/IF drop       481002/         0/         0
- Sniffer : recv/dropped/queue         480701/         0/       917
- Sampling: recv/discard               480027/         0
- C-DNS   : recv/dropped/queue         480027/         0/         0
+*Stats interval: average rate           1896 pps  over  1s
+ LIBPCAP : recv/OS drop/IF drop         1896/         0/         0
+ Sniffer : recv/dropped/queue           1896/         0/         1
+ Matcher : recv/dropped/queue           1896/         0/         0
+ CDNS    : recv/dropped/queue           1896/         0/         0
+ CDNS out: writ/% traffic               1896/       100/          
  PCAP out: raw drop/ignored drop           0/         0/
+
 ----
 
-Other error messages are reporting an internal error.
+These statistics provide detail about the internal components of compactor that
+may need to drop packets under heavy load. If sampling is enabled, an additional 
+line outputs data on sampling:
+
+----
+ Sampling: recv/discard/state            1896/         0/       OFF
+----
+
+Note that the LIBPCAP statistics provided here are information only and may not be
+reliable, particularly at high load.
 
 === _compactor_  performance considerations
 
@@ -478,6 +493,8 @@ Options:
   -q [ --query-only ]                   write only query messages to output.
   -r [ --report-info ]                  report info (config and stats summary)
                                         on exit.
+  -D [ --relaxed-mode ]                 parse command line allowing 
+                                        unrecognized options but warning.
   -N [ --no-output ]                    do not output PCAP or template files,
                                         only ancillary files, e.g. info files,
                                         for each input.
@@ -899,7 +916,11 @@ Then follows some overall statistics on the capture.
 
 ----
 STATISTICS:
+  Total Packets received                   : 17493
+  Dropped packets at sniffer    (overload) : 0
   Total Packets processed                  : 17493
+  Dropped Matcher messages      (overload) : 0
+  Discarded C-DNS messages      (sampling) : 0
   Processed DNS messages           (C-DNS) : 16529
   Matched DNS query/response pairs (C-DNS) : 8263
   Unmatched DNS queries            (C-DNS) : 2
@@ -908,13 +929,19 @@ STATISTICS:
   Malformed DNS messages           (C-DNS) : 2
   Non-DNS packets                          : 161
   Out-of-order DNS query/responses         : 0
-  Dropped C-DNS items (overload)           : 0
-  Dropped raw PCAP packets (overload)      : 0
-  Dropped non-DNS packets (overload)       : 0
+  Dropped raw PCAP packets      (overload) : 0
+  Dropped non-DNS packets       (overload) : 0
+
+PCAP STATISTICS:
+  Packets received               (libpcap) : 17493
+  Packets dropped at i/f         (libpcap) : 0
+  Packets dropped in kernel      (libpcap) : 0
 ----
 
 NOTE: The above counts are based on traffic as reported to _compactor_ by the
 underlying _libpcap_ library. When under load, this may not reflect actual traffic.
+
+When processing from capture files, the `PCAP STATISTICS` will all be 0.
 
 And finally counts of occurrences of various events recorded, and associated
 addresses.
