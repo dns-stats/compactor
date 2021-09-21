@@ -297,9 +297,16 @@ int main(int ac, char *av[])
     po::variables_map vm;
 
     try {
-        po::store(po::command_line_parser(ac, av).options(all).positional(positional).allow_unregistered().run(), vm);
+        po::parsed_options parsed = po::command_line_parser(ac, av).options(all).positional(positional).allow_unregistered().run();
+        po::store(parsed, vm);
         if (!vm.count("relaxed-mode"))
             po::store(po::command_line_parser(ac, av).options(all).positional(positional).run(), vm);
+        else {
+            std::vector<std::string> unrecognised = collect_unrecognized(parsed.options, po::include_positional);
+            for(auto i : unrecognised) {
+                LOG_WARN << "Unrecognized command line option: " << i; 
+            } 
+        }
 
         if ( vm.count("help") )
         {

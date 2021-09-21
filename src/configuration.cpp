@@ -333,7 +333,7 @@ Configuration::Configuration()
          po::value<bool>(&report_info)->implicit_value(true),
          "report info (config and stats summary) on exit.")
         ("relaxed-mode,D",
-         po::value<bool>(&relaxed_mode)->implicit_value(false),
+         po::value<bool>(&relaxed_mode)->implicit_value(true),
          "parse command line allowing unrecognized options but warning.")
         ("debug-dns",
          po::value<bool>(&debug_dns)->implicit_value(true),
@@ -502,7 +502,7 @@ po::variables_map Configuration::parse_command_line(int ac, char *av[])
 
     po::parsed_options parsed = po::command_line_parser(ac, av).options(all).positional(positional_options_).allow_unregistered().run();
     po::store(parsed, cmdline_vars_);
-    if (!cmdline_vars_.count("relaxed-mode")) {
+    if (!cmdline_vars_.count("relaxed-mode") || !cmdline_vars_["relaxed-mode"].as<bool>()) {
         po::store(po::command_line_parser(ac, av).options(all).positional(positional_options_).run(), cmdline_vars_);
     } else {
         std::vector<std::string> unrecognised = collect_unrecognized(parsed.options, po::include_positional);
@@ -555,7 +555,7 @@ po::variables_map Configuration::reread_config_file()
         po::store(parsed, res);
         for (const auto& o : parsed.options) {
             if (o.unregistered == true) {
-                if (!cmdline_vars_.count("relaxed-mode")) {
+                if (!cmdline_vars_.count("relaxed-mode")  || !cmdline_vars_["relaxed-mode"].as<bool>()) {
                     boost::throw_exception(po::unknown_option(o.string_key));
                 }
                 LOG_WARN << "Unrecognized config file option: " << o.string_key; 
