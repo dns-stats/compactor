@@ -561,6 +561,7 @@ po::variables_map Configuration::reread_config_file()
                 LOG_WARN << "Unrecognized config file option: " << o.string_key; 
             }
         }
+        LOG_INFO << "Loaded config from " << config_file_;
     }
 
     po::notify(res);

@@ -1022,7 +1022,7 @@ int main(int ac, char *av[])
             configuration.log_network_stats_period = 0;
             configuration.omit_hostid = true;
         }
-        LOG_INFO << "Compactor initializing...";
+        LOG_INFO << "Compactor v" << PACKAGE_VERSION << " initializing...";
 
         // To enable a SIGHUP to not lose data, file compression
         // must survive the restart. That means compression
