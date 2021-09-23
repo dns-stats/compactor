@@ -116,6 +116,7 @@ void BlockCborWriter::startRecord(const std::shared_ptr<QueryResponse>& qr)
         const DNSMessage &d(qr->has_query() ? qr->query() : qr->response());
         data_->end_time = d.timestamp;
         writeBlock();
+        data_->start_time = d.timestamp;
     }
     query_response_.clear();
     clear_in_progress_extra_info();

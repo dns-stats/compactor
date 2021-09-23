@@ -847,6 +847,11 @@ public:
      */
     bool report_info;
 
+   /**
+    * \brief only warn (not error) on unrecognised command options
+    */
+    bool relaxed_mode;
+
     /**
      * \brief log stats periodically during packet collection
      */

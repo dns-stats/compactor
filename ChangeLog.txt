@@ -6,6 +6,19 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.2.1-beta2 -
+--------------------------
+* Bump the private version because schema extended with new stats.
+* Add new stats to C-DNS: sniffer drops, matcher drops and sampling discards,
+  and 3 libpcap stats. The libpcap stats should not be considered reliable and 
+  provided for information only. 
+* Fix file durations for files with more than one C-DNS block in them so high
+  traffic rates can be correctly calculated from the statistics.
+* Constrain size of matcher queue to reduce memory consumption when 
+  dropping/sampling.
+* Add `-D` option (--relaxed-mode). With this option a warning (not an error) is 
+  issued for unrecognized command line and config file options. 
+
 Version 1.2.1-beta1 - 2021-08-23
 --------------------------
 

@@ -29,9 +29,9 @@ namespace sinks = boost::log::sinks;
 namespace keywords = boost::log::keywords;
 namespace expr = boost::log::expressions;
 
-#ifdef __APPLE__
-void init_logging() {}
-#else
+// #ifdef __APPLE__
+// void init_logging() {}
+// #else
 void init_logging()
 {
     using sink_t = sinks::synchronous_sink<sinks::syslog_backend>;
@@ -65,4 +65,4 @@ void init_logging()
     core->add_sink(frontend);
  
 }
-#endif
+//#endif
