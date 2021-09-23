@@ -8,10 +8,15 @@ Command options are given on the command line.
 *-v, --version*::
   Print the version number of *compactor* to the standard output stream and then exit.
 
-*-r. --report-info* [_arg_]::
+*-r, --report-info* [_arg_]::
   Report info (config and statistics summary) on exit. _arg_ may be
   `true` or `1` to enable promiscuous mode, `false` or `0` to disable
   promiscuous mode. If _arg_ is omitted, it defaults to `true`.
+
+*-D, --relaxed-mode* [_arg_]::
+  Warn (instead of error) if unrecognized command line or config file options are found.
+  _arg_ may be `true` or `1` to enable promiscuous mode, `false` or `0` to disable
+   promiscuous mode. If _arg_ is omitted, it defaults to `true`.
 
 *-l, --list-interfaces*::
   List all network interfaces from which DNS traffic may be captured.

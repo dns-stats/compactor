@@ -95,7 +95,7 @@ _compactor_ 1.0 and later writes C-DNS as described in
 https://tools.ietf.org/html/rfc8618[RFC8618],
 with the following changes:
 
-* A private version ID of 2 is present.
+* A private version ID of 3 is present.
 * Some _compactor_ implementation-specific entries are added
   to several C-DNS maps (see RFC section 7.1). They are listed below
   with their _compactor_ key values in parenthesis.
@@ -123,6 +123,15 @@ with the following changes:
 *** _compactor-missing-non-dns_ (-5): count of output ignored PCAP packets not written
     by _compactor_ because they could not be processed quickly enough.
 *** _compactor-packets_ (-6): total packets received by compactor
+*** _compactor-missing-received_ (-7): count of packets sniffed from the network not processed
+    by _compactor_ because they could not be processed quickly enough.
+*** _compactor-discarded-packets_ (-8): count of packets actively discarded by compactor due
+    to some processing threshold, e.g. sampling.
+*** _compactor-missing_matcher_ (-9): count of packets unmatched packets not written
+    by _compactor_ because they could not be processed for matching quickly enough.
+*** _pcap-packets_ (-10): informational only report from pcap library - count of packets received
+*** _pcap-missing-if_ (-11): informational only report from pcap library - count of packets dropped at the interface
+*** _pcap-missing-os_ (-12): informational only report from pcap library - count of packets dropped in the kernel
 
 [IMPORTANT]
 ====

@@ -24,7 +24,11 @@ TIMES:
   Data range           : 9s980082us
 
 STATISTICS:
+  Total Packets received                   : 1998
+  Dropped packets at sniffer    (overload) : 0
   Total Packets processed                  : 1998
+  Dropped Matcher messages      (overload) : 0
+  Discarded C-DNS messages      (sampling) : 0
   Processed DNS messages           (C-DNS) : 1998
   Matched DNS query/response pairs (C-DNS) : 999
   Unmatched DNS queries            (C-DNS) : 0
@@ -33,7 +37,11 @@ STATISTICS:
   Malformed DNS messages           (C-DNS) : 0
   Non-DNS packets                          : 0
   Out-of-order DNS query/responses         : 1
-  Dropped C-DNS items (overload)           : 0
-  Dropped raw PCAP packets (overload)      : 0
-  Dropped non-DNS packets (overload)       : 0
+  Dropped raw PCAP packets      (overload) : 0
+  Dropped non-DNS packets       (overload) : 0
+
+PCAP STATISTICS:
+  Packets received               (libpcap) : 0
+  Packets dropped at i/f         (libpcap) : 0
+  Packets dropped in kernel      (libpcap) : 0
 

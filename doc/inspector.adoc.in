@@ -85,6 +85,9 @@ output file must be specified with the *--output* option.
 *-r. --report-info*::
   Report info (config and statistics summary) to standard output on exit.
 
+*-D. --relaxed-mode*::
+  Warn (instead of error) if unrecognized command line options are found.
+
 *-N, --no-output*::
   Don't write any output PCAP or template files, just generate any requested ancillary
   outputs e.g. `.info` files.
