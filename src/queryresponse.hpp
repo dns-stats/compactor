@@ -127,19 +127,7 @@ public:
      * \param qr     the pair.
      * \return the output stream.
      */
-    friend std::ostream& operator<<(std::ostream& output, const QueryResponse& qr)
-    {
-        output << "Query/Response:\n";
-        if ( qr.query_ )
-            output << "Query: " << *(qr.query_);
-        else
-            output << "No Query\n";
-        if ( qr.response_ )
-            output << "Response: " << *(qr.response_);
-        else
-            output << "No Response\n";
-        return output;
-    }
+    friend std::ostream& operator<<(std::ostream& output, const QueryResponse& qr);
 
 private:
     /**

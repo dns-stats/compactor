@@ -1025,6 +1025,30 @@ public:
      */
     void set_from_block_parameters(const block_cbor::BlockParameters& bp);
 
+   /**
+    * \brief Return a string for OPCODE if found
+    *
+    * \param opcode        OPCODE numeric value
+    * \returns a string with the OPCODE name if found or the value if not
+    */
+    static const std::string find_opcode_string(unsigned opcode);
+
+   /**
+    * \brief Return a string for RCODE if found
+    *
+    * \param opcode        RCODE numeric value
+    * \returns a string with the RCODE name if found or the value if not
+    */
+    static const std::string find_rcode_string(unsigned rcode);
+
+   /**
+    * \brief Return a string for RRTYPE if found
+    *
+    * \param opcode        RRTYPE numeric value
+    * \returns a string with the RRTYPE name if found or the value if not
+    */
+    static const std::string find_rrtype_string(unsigned rrtype);
+
 protected:
     /**
      * \brief Set configuration items that aren't directly set by Boost.

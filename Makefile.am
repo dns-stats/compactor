@@ -268,6 +268,7 @@ libcdns_a_SOURCES = \
         src/ipaddress.cpp \
         src/log.cpp \
         src/pseudoanonymise.cpp \
+        src/queryresponse.cpp \
         src/rotatingfilename.cpp \
         src/streamwriter.cpp \
         src/util.cpp

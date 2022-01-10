@@ -83,7 +83,7 @@ std::ostream& operator<<(std::ostream& output, const DNSMessage& msg)
     {
     case TransportType::DOH:  output << "DoH"; break;
     case TransportType::DOT:  output << "DoT"; break;
-    case TransportType::DDOT: output << "DDoT"; break;
+    case TransportType::DDOT: output << "DoD"; break;
     case TransportType::TCP:  output << "TCP"; break;
     case TransportType::UDP:  output << "UDP"; break;
     }
