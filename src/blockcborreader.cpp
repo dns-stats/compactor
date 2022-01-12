@@ -1016,7 +1016,9 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         case block_cbor::UPDATE :       transaction_type = "Update"; break;
         default:                        transaction_type = "Tool"; break;
         }
-    }
+    } 
+    else
+        transaction_type = "Unknown";
 
     bool query    = qr.qr_flags & block_cbor::HAS_QUERY;
     bool response = qr.qr_flags & block_cbor::HAS_RESPONSE;
@@ -1079,7 +1081,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
     else
         output << "           ";
     if ( qr.id )
-        output << "   " << std::setw(5) << *qr.id;
+        output << "   " << std::left << std::setw(5) << *qr.id;
     else
         output << "          ";
     if (query) {
@@ -1124,13 +1126,16 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         else
             output << "         ";
         if ( transaction_type )
-            output << "        " << transaction_type;
+            output << "    " << transaction_type;
         output << "\n";
     }
     else
         output << "\n";
     if (response) {
-        output << "                                     1 ";
+        output << "                           ";
+        if ( qr.id )
+            output << "   " << std::left << std::setw(5) << *qr.id;
+        output << "  1 ";
         if ( qr.query_opcode ) 
             output << std::left <<  std::setw(6) << Configuration::find_opcode_string(*qr.query_opcode) << "       " ;
         else
@@ -1170,7 +1175,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         else
             output << "         ";
         if ( transaction_type )
-            output << "        " << transaction_type;
+            output << "    " << transaction_type;
         output << "\n";
     }
     else

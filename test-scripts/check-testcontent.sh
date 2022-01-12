@@ -56,6 +56,6 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-cmp $tmpdir/out.debugqr $DATAQR &&
+diff -i $tmpdir/out.debugqr $DATAQR &&
     diff -i $tmpdir/out.diag $DATADIAG
 cleanup $?

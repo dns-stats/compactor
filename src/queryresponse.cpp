@@ -90,7 +90,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponse& qr)
             output << "     ";
         if (!qr.query_->dns.queries().empty()) {
             const auto &q = qr.query_->dns.queries().begin();
-            output << CaptureDNS::decode_domain_name(q->dname());
+            output << "  " << CaptureDNS::decode_domain_name(q->dname());
         }
         else
             output << " no QNAME present";
@@ -119,7 +119,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponse& qr)
             output << "     ";
         if (!qr.response_->dns.queries().empty()) {
             const auto &q = qr.response_->dns.queries().begin();
-            output << CaptureDNS::decode_domain_name(q->dname());
+            output << "  " << CaptureDNS::decode_domain_name(q->dname());
         }
         else
             output << " no QNAME present";
@@ -137,7 +137,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponse& qr)
             output << "       " << std::left << std::setw(4) << +*(qr.query_->hoplimit);
         else
             output << "           ";
-        output << "   " << std::setw(5) << qr.query_->dns.id();
+        output << "   " << std::left << std::setw(5) << qr.query_->dns.id();
         output << "  0 ";
         output << std::left <<  std::setw(6) << Configuration::find_opcode_string(qr.query_->dns.opcode()) << "       " ;
         output <<  (qr.query_->dns.authoritative_answer() ? " 1 " : " 0 ") ;
@@ -166,7 +166,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponse& qr)
 
     if (response) {
         output << "                           ";
-        output << "   " << std::setw(5) << qr.response_->dns.id();
+        output << "   " << std::left << std::setw(5) << qr.response_->dns.id();
         output << "  1 ";
         output << std::left <<  std::setw(6) << Configuration::find_opcode_string(qr.response_->dns.opcode()) << "       " ;
         output <<  (qr.response_->dns.authoritative_answer() ? " 1 " : " 0 ") ;
@@ -193,22 +193,6 @@ std::ostream& operator<<(std::ostream& output, const QueryResponse& qr)
     else
         output << "\n";
 
-    // if (response)
-    // {
-    //    if ( qr.response_answers ) {
-    //         output << "          Response Answers:    Type    Class    Name\n";
-    //         for ( const auto& r : *qr.response_answers )
-    //         {
-    //             if ( r.rtype )
-    //                 output << "\t\t             " << std::right << std::setw(6) << Configuration::find_rrtype_string(*r.rtype);
-    //             if ( r.rclass )
-    //                 output << "      "<< static_cast<unsigned>(*r.rclass);
-    //             if ( r.name )
-    //                 output << "      " << CaptureDNS::decode_domain_name(*r.name) << "\n";
-    //         }
-    //     }
-    //
-    //}
     output << "\n";
     return output;
 
