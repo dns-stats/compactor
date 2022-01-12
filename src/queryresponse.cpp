@@ -23,7 +23,6 @@ std::ostream& operator<<(std::ostream& output, const QueryResponse& qr)
 {
     const char* transport = NULL;
     const char* transaction_type = NULL;
-    unsigned count;
     bool query = false;
     bool response = false;
     

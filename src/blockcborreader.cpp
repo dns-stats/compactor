@@ -888,8 +888,10 @@ void BlockCborReader::dump_times(std::ostream& os) const
         output_duration(os, std::chrono::duration_cast<std::chrono::microseconds>(*latest_time_ - *earliest_time_));
         os << "\n";
     }
-
-    if ( start_time_ && end_time_ )
+    // A bug allowed start_time_ to be set to later than end_time_ giving a
+    // negative file duration.... We need a sanity check here becuase this
+    // value is used to calculate average rates downstream.
+    if ( start_time_ && end_time_ && end_time_ > start_time_)
     {
         os << "  File duration        : ";
         output_duration(os, std::chrono::duration_cast<std::chrono::microseconds>(*end_time_ - *start_time_));
