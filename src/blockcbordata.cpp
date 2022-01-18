@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2022 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1726,7 +1726,11 @@ namespace block_cbor {
             Timestamp end_ts(*end_time, ticks_per_second);
             end_ts.writeCbor(enc);
         }
-        if ( start_time )
+        // There is a rare case where a 'live' capture is fed old data (e.g.
+        // via a DNSTAP socket) and in this case the start time can be later
+        // than the earliest data. Don't write the start time if this is the
+        // case
+        if ( start_time  && start_time <= earliest_time )
         {
             enc.write(start_time_index);
             Timestamp start_ts(*start_time, ticks_per_second);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018, 2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018, 2021, 2022 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -83,7 +83,7 @@ std::ostream& operator<<(std::ostream& output, const DNSMessage& msg)
     {
     case TransportType::DOH:  output << "DoH"; break;
     case TransportType::DOT:  output << "DoT"; break;
-    case TransportType::DDOT: output << "DDoT"; break;
+    case TransportType::DDOT: output << "DoD"; break;
     case TransportType::TCP:  output << "TCP"; break;
     case TransportType::UDP:  output << "UDP"; break;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2022 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1024,6 +1024,30 @@ public:
      * \param bp        block parameters.
      */
     void set_from_block_parameters(const block_cbor::BlockParameters& bp);
+
+   /**
+    * \brief Return a string for OPCODE if found
+    *
+    * \param opcode        OPCODE numeric value
+    * \returns a string with the OPCODE name if found or the value if not
+    */
+    static const std::string find_opcode_string(unsigned opcode);
+
+   /**
+    * \brief Return a string for RCODE if found
+    *
+    * \param opcode        RCODE numeric value
+    * \returns a string with the RCODE name if found or the value if not
+    */
+    static const std::string find_rcode_string(unsigned rcode);
+
+   /**
+    * \brief Return a string for RRTYPE if found
+    *
+    * \param opcode        RRTYPE numeric value
+    * \returns a string with the RRTYPE name if found or the value if not
+    */
+    static const std::string find_rrtype_string(unsigned rrtype);
 
 protected:
     /**

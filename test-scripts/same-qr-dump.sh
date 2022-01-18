@@ -39,5 +39,5 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-cmp -s $tmpdir/compactor-qr.txt $tmpdir/inspector-qr.txt
+diff -i $tmpdir/compactor-qr.txt $tmpdir/inspector-qr.txt
 cleanup $?

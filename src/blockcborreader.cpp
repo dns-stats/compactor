@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2022 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -888,8 +888,10 @@ void BlockCborReader::dump_times(std::ostream& os) const
         output_duration(os, std::chrono::duration_cast<std::chrono::microseconds>(*latest_time_ - *earliest_time_));
         os << "\n";
     }
-
-    if ( start_time_ && end_time_ )
+    // A bug allowed start_time_ to be set to later than end_time_ giving a
+    // negative file duration.... We need a sanity check here becuase this
+    // value is used to calculate average rates downstream.
+    if ( start_time_ && end_time_ && end_time_ > start_time_)
     {
         os << "  File duration        : ";
         output_duration(os, std::chrono::duration_cast<std::chrono::microseconds>(*end_time_ - *start_time_));
@@ -997,8 +999,8 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         {
         case 0: transport = "UDP"; break;
         case 1: transport = "TCP"; break;
-        case 2: transport = "TLS"; break;
-        case 3: transport = "DTLS"; break;
+        case 2: transport = "DoT"; break;
+        case 3: transport = "DoD"; break;
         case 4: transport = "DOH"; break;
         default: transport = "Unknown"; break;
         }
@@ -1016,164 +1018,187 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         case block_cbor::UPDATE :       transaction_type = "Update"; break;
         default:                        transaction_type = "Tool"; break;
         }
-    }
+    } 
+    else
+        transaction_type = "Unknown";
 
-    output << "Query/Response:\n";
-    if ( qr.qr_flags & block_cbor::HAS_QUERY )
-    {
-        output << "Query: ";
-        if ( qr.timestamp )
+    bool query    = qr.qr_flags & block_cbor::HAS_QUERY;
+    bool response = qr.qr_flags & block_cbor::HAS_RESPONSE;
+
+    output << "-----------------------------------------------------------------------------------------------------------------------------------\n" ;
+    output << "                  Timestamp                   Client IP/port      Server IP/port          QNAME";
+    if (query) {
+        output << "\nQuery     ";
+        if (qr.timestamp)
             output_time_point(output, *qr.timestamp);
+        else
+            output << "No timestamp available          ";
         if ( qr.client_address )
-            output << "\n\tClient IP: " << *qr.client_address;
-        if ( qr.server_address )
-            output << "\n\tServer IP: " << *qr.server_address;
-        if ( transport )
-            output << "\n\tTransport: " << transport;
-        if ( transaction_type )
-            output << "\n\tType: " << transaction_type;
+            output << "    " << *qr.client_address << ":";
         if ( qr.client_port )
-            output << "\n\tClient port: " << *qr.client_port;
+            output << std::left << std::setw(5) << *qr.client_port;
+        else 
+            output << "     ";
+        if ( qr.server_address )
+            output <<  "  " <<  *qr.server_address  << ":";
         if ( qr.server_port )
-            output << "\n\tServer port: " << *qr.server_port;
-        if ( qr.client_hoplimit )
-            output << "\n\tHop limit: " << +*qr.client_hoplimit;
-        output << "\n\tDNS QR: Query";
-        if ( qr.id )
-            output << "\n\tID: " << *qr.id;
-        if ( qr.query_opcode )
-            output << "\n\tOpcode: " << static_cast<unsigned>(*qr.query_opcode);
-        if ( qr.query_rcode )
-            output << "\n\tRcode: " << static_cast<unsigned>(*qr.query_rcode);
+            output << std::left << std::setw(5) << *qr.server_port << "  ";
+        else 
+            output << "     ";
+        output << (qr.qname ? CaptureDNS::decode_domain_name(*qr.qname): " no QNAME present");
+    }
+    else
+        output << "\nQuery not present";
+    if (response) {
+        output << "\nResponse  ";
+        if ( qr.timestamp && qr.response_delay )
+            output_time_point(output, *qr.timestamp + std::chrono::duration_cast<std::chrono::system_clock::duration>(*qr.response_delay));
+        else
+            output << "No timestamp available.         ";
+        if ( qr.client_address )
+            output << "    " << *qr.client_address << ":";
+        if ( qr.client_port )
+            output << std::left << std::setw(5) << *qr.client_port;
+        else 
+            output << "     ";
+        if ( qr.server_address )
+            output <<  "  " <<  *qr.server_address  << ":";
+        if ( qr.server_port )
+            output << std::left << std::setw(5) << *qr.server_port << "  ";
+        else 
+            output << "     ";
+        output << (qr.qname ? CaptureDNS::decode_domain_name(*qr.qname): " no QNAME present");
+    }
+    else
+        output << "\nResponse not present";
+
+    output << "\n          Transport Hop-limit MsgID QR OPCODE FLAGS(AA/TC/RD/RA/AD/CD)   RCODE  COUNTS(QD/AN/NS/AD)  Query-type  Class Trans-type\n";
+
+    if ( transport )
+        output << "             " << transport;
+    else
+        output << "                ";
+    if ( qr.client_hoplimit )
+        output << std::left << "       " << std::setw(4) << +*qr.client_hoplimit;
+    else
+        output << "           ";
+    if ( qr.id )
+        output << "   " << std::left << std::setw(5) << *qr.id;
+    else
+        output << "          ";
+    if (query) {
+        output << "  0 ";
+        if ( qr.query_opcode ) 
+            output << std::left <<  std::setw(6) << Configuration::find_opcode_string(*qr.query_opcode) << "       " ;
+        else
+            output << "             ";
         if ( qr.dns_flags )
         {
-            output << "\n\tFlags: ";
-            if ( *qr.dns_flags & block_cbor::QUERY_AA )
-                output << "AA ";
-            if ( *qr.dns_flags & block_cbor::QUERY_TC )
-                output << "TC ";
-            if ( *qr.dns_flags & block_cbor::QUERY_RD )
-                output << "RD ";
-            if ( *qr.dns_flags & block_cbor::QUERY_RA )
-                output << "RA ";
-            if ( *qr.dns_flags & block_cbor::QUERY_AD )
-                output << "AD ";
-            if ( *qr.dns_flags & block_cbor::QUERY_CD )
-                output << "CD ";
-        }
+            output <<  ((*qr.dns_flags & block_cbor::QUERY_AA ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::QUERY_TC ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::QUERY_RD ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::QUERY_RA ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::QUERY_AD ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::QUERY_CD ) ? " 1 " : " 0 ") ;
+        } else 
+            output << "                  ";
+        if ( qr.query_rcode )
+            output << "  " << std::left <<  std::setw(11) << Configuration::find_rcode_string(*qr.query_rcode) << "    " ;
+        else
+            output << "                 ";
         count = (qr.query_questions) ? (*qr.query_questions).size() : 0;
         if ( !(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION) )
             count += 1;
-        output << "\n\tQdCount: " << count;
+        output << std::right << std::setw(2) << count;
         count = ( qr.query_answers ) ? (*qr.query_answers).size() : 0;
-        output << "\n\tAnCount: " << count;
+        output << " " << std::right << std::setw(2) << count;
         count = ( qr.query_authorities ) ? (*qr.query_authorities).size() : 0;
-        output << "\n\tNsCount: " << count;
+        output << " " << std::right << std::setw(2) << count;
         count = ( qr.query_additionals ) ? (*qr.query_additionals).size() : 0;
         if ( qr.qr_flags & block_cbor::QUERY_HAS_OPT )
             count += 1;
-        output << "\n\tArCount: " << count;
+        output << " " << std::right << std::setw(2) << count;
 
-        if ( qr.qname )
-            output << "\n\tName: " << CaptureDNS::decode_domain_name(*qr.qname);
         if ( qr.query_type )
-            output << "\n\tType: " << static_cast<unsigned>(*qr.query_type);
+            output << "   " << std::setw(6) << Configuration::find_rrtype_string(*qr.query_type);
+        else
+            output << "         ";
         if ( qr.query_class )
-            output << "\n\tClass: " << static_cast<unsigned>(*qr.query_class);
-
-        if ( qr.query_questions )
-            for ( const auto& q : *qr.query_questions )
-            {
-                if ( q.qname )
-                    output << "\n\tName: " << CaptureDNS::decode_domain_name(*q.qname);
-                if ( q.qtype )
-                    output << "\n\tType: " << static_cast<unsigned>(*q.qtype);
-                if ( q.qclass )
-                    output << "\n\tClass: " << static_cast<unsigned>(*q.qclass);
-            }
-
+            output << "        " << static_cast<unsigned>(*qr.query_class);
+        else
+            output << "         ";
+        if ( transaction_type )
+            output << "    " << transaction_type;
         output << "\n";
     }
     else
-        output << "No Query\n";
-
-    if ( qr.qr_flags & block_cbor::HAS_RESPONSE )
-    {
-        output << "Response: ";
-        if ( qr.timestamp && qr.response_delay )
-            output_time_point(output, *qr.timestamp + std::chrono::duration_cast<std::chrono::system_clock::duration>(*qr.response_delay));
-        if ( qr.client_address )
-            output << "\n\tClient IP: " << *qr.client_address;
-        if ( qr.server_address )
-            output << "\n\tServer IP: " << *qr.server_address;
-        if ( transport )
-            output << "\n\tTransport: " << transport;
-        if ( transaction_type )
-            output << "\n\tType: " << transaction_type;
-        if ( qr.client_port )
-            output << "\n\tClient port: " << *qr.client_port;
-        if ( qr.server_port )
-            output << "\n\tServer port: " << *qr.server_port;
-        if ( qr.server_hoplimit )
-            output << "\n\tHop limit: " << +*qr.server_hoplimit;
-        output << "\n\tDNS QR: Response";
+        output << "\n";
+    if (response) {
+        output << "                           ";
         if ( qr.id )
-            output << "\n\tID: " << *qr.id;
-        if ( qr.query_opcode )
-            output << "\n\tOpcode: " << static_cast<unsigned>(*qr.query_opcode);
-        if ( qr.response_rcode )
-            output << "\n\tRcode: " << static_cast<unsigned>(*qr.response_rcode);
+            output << "   " << std::left << std::setw(5) << *qr.id;
+        output << "  1 ";
+        if ( qr.query_opcode ) 
+            output << std::left <<  std::setw(6) << Configuration::find_opcode_string(*qr.query_opcode) << "       " ;
+        else
+            output << "             ";
+
         if ( qr.dns_flags )
         {
-            output << "\n\tFlags: ";
-            if ( *qr.dns_flags & block_cbor::RESPONSE_AA )
-                output << "AA ";
-            if ( *qr.dns_flags & block_cbor::RESPONSE_TC )
-                output << "TC ";
-            if ( *qr.dns_flags & block_cbor::RESPONSE_RD )
-                output << "RD ";
-            if ( *qr.dns_flags & block_cbor::RESPONSE_RA )
-                output << "RA ";
-            if ( *qr.dns_flags & block_cbor::RESPONSE_AD )
-                output << "AD ";
-            if ( *qr.dns_flags & block_cbor::RESPONSE_CD )
-                output << "CD ";
+            output <<  ((*qr.dns_flags & block_cbor::RESPONSE_AA ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::RESPONSE_TC ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::RESPONSE_RD ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::RESPONSE_RA ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::RESPONSE_AD ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::RESPONSE_CD ) ? " 1 " : " 0 ") ;
         }
+        if ( qr.response_rcode )
+            output << "  " << std::left <<  std::setw(11)  << Configuration::find_rcode_string(*qr.response_rcode) << "    " ;
+        else
+                        output << "                 ";
         count = 0;
         if ( !(qr.qr_flags & block_cbor::QUERY_HAS_NO_QUESTION) )
             count = 1;
         if ( qr.response_questions )
             count += (*qr.response_questions).size();
-        output << "\n\tQdCount: " << count;
+        output << std::right << std::setw(2) << count;
         count = ( qr.response_answers ) ? (*qr.response_answers).size() : 0;
-        output << "\n\tAnCount: " << count;
+        output << " " << std::right << std::setw(2) << count;
         count = ( qr.response_authorities ) ? (*qr.response_authorities).size() : 0;
-        output << "\n\tNsCount: " << count;
+        output << " " << std::right << std::setw(2) << count;
         count = ( qr.response_additionals ) ? (*qr.response_additionals).size() : 0;
-        output << "\n\tArCount: " << count;
-
-        if ( qr.qname )
-            output << "\n\tName: " << CaptureDNS::decode_domain_name(*qr.qname);
+        output << " " << std::right << std::setw(2) << count;
         if ( qr.query_type )
-            output << "\n\tType: " << static_cast<unsigned>(*qr.query_type);
+            output << "   " << std::setw(6) << Configuration::find_rrtype_string(*qr.query_type);
+        else
+            output << "         ";
         if ( qr.query_class )
-            output << "\n\tClass: " << static_cast<unsigned>(*qr.query_class);
-
-        if ( qr.response_questions )
-            for ( const auto& q : *qr.response_questions )
-            {
-                if ( q.qname )
-                    output << "\n\tName: " << CaptureDNS::decode_domain_name(*q.qname);
-                if ( q.qtype )
-                    output << "\n\tType: " << static_cast<unsigned>(*q.qtype);
-                if ( q.qclass )
-                    output << "\n\tClass: " << static_cast<unsigned>(*q.qclass);
-            }
-
+            output << "        " << static_cast<unsigned>(*qr.query_class);
+        else
+            output << "         ";
+        if ( transaction_type )
+            output << "    " << transaction_type;
         output << "\n";
     }
     else
-        output << "No Response\n";
+        output << "\n";
 
+    if (response)
+    {
+       if ( qr.response_answers ) {
+            output << "          Response Answers:    Type    Class    Name\n";
+            for ( const auto& r : *qr.response_answers )
+            {
+                if ( r.rtype )
+                    output << "\t\t             " << std::right << std::setw(6) << Configuration::find_rrtype_string(*r.rtype);
+                if ( r.rclass )
+                    output << "      "<< static_cast<unsigned>(*r.rclass);
+                if ( r.name )
+                    output << "      " << CaptureDNS::decode_domain_name(*r.name) << "\n";
+            }
+        }
+
+    }
+    output << "\n";
     return output;
 }

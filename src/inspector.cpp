@@ -330,7 +330,7 @@ int main(int ac, char *av[])
                 << "Run '" << PROGNAME << " -h' for help.\n";
             return 1;
         }
-
+#if ENABLE_PSEUDOANONYMISATION
         if ( vm.count("pseudo-anonymisation-key") != 0 &&
              vm.count("pseudo-anonymisation-passphrase") != 0 )
         {
@@ -339,7 +339,7 @@ int main(int ac, char *av[])
                 "or passphrase, but not both.\n";
             return 1;
         }
-
+#endif
         po::notify(vm);
 
         if ( vm.count("output-format") != 0 )
@@ -382,7 +382,7 @@ int main(int ac, char *av[])
                     return 1;
                 }
         }
-
+#if ENABLE_PSEUDOANONYMISATION
         if ( vm.count("pseudo-anonymisation-key") != 0 &&
              pseudo_anon_key.size() != 16 )
         {
@@ -401,7 +401,7 @@ int main(int ac, char *av[])
                 " a passphrase or key.\n";
             return 1;
         }
-
+#endif
         pcap_options.baseopts.gzip_output = ( vm.count("gzip-output") != 0 );
         pcap_options.baseopts.xz_output = ( vm.count("xz-output") != 0 );
         pcap_options.query_only = ( vm.count("query-only") != 0 );

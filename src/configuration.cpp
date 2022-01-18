@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2022 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -783,6 +783,48 @@ void Configuration::dump_output_option(std::ostream& os, bool query) const
     os << "\n";
 }
 
+const std::string Configuration::find_opcode_string(unsigned opcode)
+{
+    auto f = std::find_if(OPCODES.begin(),
+                          OPCODES.end(),
+                          [opcode](const std::pair<std::string, unsigned>& op)
+                          {
+                              return op.second == opcode;
+                          });
+    if ( f != std::end(OPCODES) )
+        return f->first;
+    else
+        return std::to_string(opcode);
+}
+
+const std::string Configuration::find_rcode_string(unsigned rcode)
+{
+    auto f = std::find_if(RCODES.begin(),
+                          RCODES.end(),
+                          [rcode](const std::pair<std::string, unsigned>& r)
+                          {
+                              return r.second == rcode;
+                          });
+    if ( f != std::end(RCODES) )
+        return f->first;
+    else
+        return std::to_string(rcode);
+}
+
+const std::string Configuration::find_rrtype_string(unsigned rrtype)
+{
+    auto f = std::find_if(RR_TYPES.begin(),
+                          RR_TYPES.end(),
+                          [rrtype](const std::pair<std::string, unsigned>& rr)
+                          {
+                              return rr.second == rrtype;
+                          });
+    if ( f != std::end(RR_TYPES) )
+        return f->first;
+    else
+        return std::to_string(rrtype);
+}
+
 void Configuration::dump_OPCODEs(std::ostream& os, bool accept) const
 {
     const std::vector<unsigned>& opcodes = accept ? accept_opcodes : ignore_opcodes;
@@ -795,16 +837,8 @@ void Configuration::dump_OPCODEs(std::ostream& os, bool accept) const
         else
             os << ", ";
 
-        auto f = std::find_if(OPCODES.begin(),
-                              OPCODES.end(),
-                              [op_t](const std::pair<std::string, unsigned>& op)
-                              {
-                                  return op.second == op_t;
-                              });
-        if ( f != std::end(OPCODES) )
-            os << f->first;
-        else
-            os << std::to_string(op_t);
+        os << find_opcode_string(op_t);
+
     }
     os << "\n";
 }
@@ -821,16 +855,7 @@ void Configuration::dump_RR_types(std::ostream& os, bool accept) const
         else
             os << ", ";
 
-        auto f = std::find_if(RR_TYPES.begin(),
-                              RR_TYPES.end(),
-                              [rr_t](const std::pair<std::string, unsigned>& rr)
-                              {
-                                  return rr.second == rr_t;
-                              });
-        if ( f != std::end(RR_TYPES) )
-            os << f->first;
-        else
-            os << std::to_string(rr_t);
+        os << find_rrtype_string(rr_t);
     }
     os << "\n";
 }

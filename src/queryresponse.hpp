@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017, 2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2021, 2022 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -127,19 +127,7 @@ public:
      * \param qr     the pair.
      * \return the output stream.
      */
-    friend std::ostream& operator<<(std::ostream& output, const QueryResponse& qr)
-    {
-        output << "Query/Response:\n";
-        if ( qr.query_ )
-            output << "Query: " << *(qr.query_);
-        else
-            output << "No Query\n";
-        if ( qr.response_ )
-            output << "Response: " << *(qr.response_);
-        else
-            output << "No Response\n";
-        return output;
-    }
+    friend std::ostream& operator<<(std::ostream& output, const QueryResponse& qr);
 
 private:
     /**
