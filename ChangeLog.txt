@@ -6,6 +6,15 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.2.1-rc1 
+--------------------------
+
+* Modify the format output by the debug option `--debug-qr` to be more human
+  readable (`--debug-dns` output is left unchanged).
+* Fix 2 minor bugs where an incorrect start time could be written to the CDNS
+  file, resulting in a negative file duration.
+* Documentation: correct the dependency list.
+
 Version 1.2.1-beta2 - 2021-09-23
 --------------------------
 * Bump the private version because schema extended with new stats.
