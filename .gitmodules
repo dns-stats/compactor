@@ -1,3 +1,6 @@
 [submodule "dnstap"]
 	path = dnstap
 	url = https://github.com/dnstap/dnstap.pb
+[submodule "contrib/dns-stats-docker"]
+	path = contrib/dns-stats-docker
+	url = https://github.com/SeanBurford/dns-stats-docker.git
