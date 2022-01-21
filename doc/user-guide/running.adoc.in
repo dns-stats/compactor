@@ -57,8 +57,8 @@ Command options:
   -l [ --list-interfaces ]         list all network interfaces.
 
 Configuration:
-  -t [ --rotation-period ] arg (=300)   rotation period for all outputs, in 
-                                        seconds.
+  -t [ --rotation-period ] arg (=300)   rotation period for filename based rotation
+                                        for all outputs, in seconds.
   -q [ --query-timeout ] arg (=5)       timeout period for unanswered queries, 
                                         in seconds.
 ...(rest of output omitted for brevity)...
@@ -93,10 +93,10 @@ summary information on exit (configuration and basic statistics).
 
 [WARNING]
 ====
-If C-DNS compression is enabled, interrupting _compactor_ causes the
-current output C-DNS to be lost. For this reason you are recommended
-to have C-DNS output file rotation enabled when using compression. For
-more details, see <<C-DNS output compression>>.
+If C-DNS compression is enabled, interrupting _compactor_ causes the current
+compression to be aborted (the 'raw' uncompressed file is retained on disk).
+For this reason you are recommended to have C-DNS output file rotation enabled
+when using compression. For more details, see <<C-DNS output compression>>.
 
 This behaviour is under review.
 ====
@@ -121,10 +121,10 @@ summary information on exit (configuration and basic statistics).
 
 [WARNING]
 ====
-If C-DNS compression is enabled, interrupting _compactor_ causes the
-current output C-DNS to be lost. For this reason you are recommended
-to have C-DNS output file rotation enabled when using compression. For
-more details, see <<C-DNS output compression>>.
+If C-DNS compression is enabled, interrupting _compactor_ causes the current
+compression to be aborted (the 'raw' uncompressed file is retained on disk).
+For this reason you are recommended to have C-DNS output file rotation enabled
+when using compression. For more details, see <<C-DNS output compression>>.
 
 This behaviour is under review.
 ====
@@ -331,6 +331,11 @@ than specified by the *--sampling-threshold* option so sampling is enabled.
 | Drops are now below the sampling threshold and so sampling is disabled after the specified
 time limit. 
 
+| WARNING
+| Aborting compression of <file>
+| On an interrupt of kill of the process, all in progress file compression is
+  aborted. However the 'raw' (uncompressed) file is left on disk. 
+
 | INFO
 | Total packet count, etc.
 | Basic statistics on the ongoing network capture requested by the
@@ -341,8 +346,16 @@ time limit.
 | _compactor_  is starting a network capture.
 
 | INFO
+| Rotating file to <filename>
+| _compactor_  is rotating the current collection file to the named file.
+
+| INFO
 | Re-reading configuration
 | _compactor_  has received a `HUP` signal and is re-reading its configuration.
+
+| INFO
+| Signal handler: Received - <signal>
+| _compactor_  has received a signal.
 
 | INFO
 | Collection interrupted
@@ -375,6 +388,10 @@ line outputs data on sampling:
 
 Note that the LIBPCAP statistics provided here are information only and may not be
 reliable, particularly at high load.
+
+Additional file handling messages can be output by enabling the *log-file-hanlding*
+option. This allows detailed debugging of file processing problems and also 
+measurements of file compression times.
 
 === _compactor_  performance considerations
 
@@ -421,13 +438,12 @@ threads finishes.
 
 [WARNING]
 ====
-If _compactor_ is interrupted, e.g. by the user typing Control-C, the
-C-DNS output is stopped and all compressing threads are requested to
-abort. In this case all temporary output files and incomplete
-compressed output files are deleted and only completed compressed
-files are retained. This means that all data in the current output
-C-DNS file at the time of the interrupt is lost. This behaviour is
-under review.
+If _compactor_ is interrupted, e.g. by the user typing Control-C, the C-DNS
+output is stopped and all compressing threads are requested to abort. In this
+case all incomplete compressed output files are deleted, but the temporary
+uncompressed files are retained (alongside the completed compressed files). The
+files will have a `.raw` extension and users should choose how to manage such
+files. This behaviour is under review.
 ====
 
 [WARNING]

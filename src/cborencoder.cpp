@@ -15,6 +15,7 @@
 #include <limits>
 
 #include "cborencoder.hpp"
+#include "log.cpp"
 
 void CborBaseEncoder::writeTypeValue(unsigned cbor_type, unsigned long value)
 {
@@ -196,6 +197,9 @@ void CborBaseEncoder::writeBreak()
 template<>
 void ParallelWriterPool<StreamWriter>::compressFile(const std::string& input, const std::string& output)
 {
+
+    if (logging_)
+        LOG_INFO << "File handling: Renaming file:            " << input.c_str() << " to " << output.c_str();
     if ( std::rename(input.c_str(), output.c_str()) != 0 )
         throw std::runtime_error("Can't rename " + input + " to " + output);
 }

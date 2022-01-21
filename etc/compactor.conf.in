@@ -56,6 +56,9 @@
 # Log basic collection stats to syslog every n seconds. 0 (default) == never.
 # log-network-stats-period=0
 
+# Log detailed file processing for debugging.
+# log-file-handling=false
+
 # (Sampling is an experimental feature)
 # Sampling threshold is percentage of traffic dropped above which sampling will be enabled. Default is 10.
 # sampling-threshold=10

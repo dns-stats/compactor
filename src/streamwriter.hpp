@@ -52,7 +52,7 @@ public:
      * \param name  filename.
      * \param level compression level
      */
-    StreamWriter(const std::string& name, unsigned level);
+    StreamWriter(const std::string& name, unsigned level, bool logging = false);
 
     /**
      * \brief Destructor.
@@ -106,6 +106,12 @@ private:
      * \brief The temporary file to write to, renamed to final on close.
      */
     std::string temp_name_;
+
+   /**
+    * \brief The temporary file to write to, renamed to final on close.
+    */
+   bool logging_;
+
 };
 
 /**
@@ -123,7 +129,7 @@ public:
      * \param name  filename.
      * \param level compression level
      */
-    GzipStreamWriter(const std::string& name, unsigned level);
+    GzipStreamWriter(const std::string& name, unsigned level, bool logging = false);
 
     /**
      * \brief Destructor.
@@ -199,7 +205,7 @@ public:
      * \param name  filename.
      * \param level compression level
      */
-    XzStreamWriter(const std::string& name, unsigned level);
+    XzStreamWriter(const std::string& name, unsigned level, bool logging = false);
 
     /**
      * \brief Destructor.

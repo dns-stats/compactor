@@ -90,11 +90,11 @@ PcapBackend::PcapBackend(const PcapBackendOptions& opts, const std::string& fnam
     output_path_ = output_name(fname);
 
     if ( opts.baseopts.xz_output )
-        writer_ = make_unique<PcapWriter<XzStreamWriter>>(output_path_, opts.baseopts.xz_preset, 65535);
+        writer_ = make_unique<PcapWriter<XzStreamWriter>>(output_path_, opts.baseopts.xz_preset, 65535, false);
     else if ( opts.baseopts.gzip_output )
-        writer_ = make_unique<PcapWriter<GzipStreamWriter>>(output_path_, opts.baseopts.gzip_level, 65535);
+        writer_ = make_unique<PcapWriter<GzipStreamWriter>>(output_path_, opts.baseopts.gzip_level, 65535, false);
     else
-        writer_ = make_unique<PcapWriter<StreamWriter>>(output_path_, 0, 65535);
+        writer_ = make_unique<PcapWriter<StreamWriter>>(output_path_, 0, 65535, false);
 }
 
 PcapBackend::~PcapBackend()

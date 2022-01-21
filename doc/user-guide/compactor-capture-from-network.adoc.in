@@ -38,6 +38,10 @@
   Every _arg_ seconds, log basic statistics on packet collection to the system log. The
   default value of 0 disables this logging.
 
+*-F, --log-file-handling*::
+  Log detailed file processing when files are rotated and compressed. This facilitates
+  debugging of file processing issues and measurement of file compression times.
+
 *--sampling-threshold* _arg_::
   A threshold for the percentage of traffic dropped on the internal channels above which
   sampling will be enabled (if *sampling-rate* is greater than 0). The

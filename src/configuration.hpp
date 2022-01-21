@@ -858,6 +858,11 @@ public:
     unsigned int log_network_stats_period;
 
    /**
+    * \brief log detailed file handling
+    */
+   bool log_file_handling;
+
+   /**
     * \brief sampling threshold above which to enable sampling
     */
    unsigned int sampling_threshold;

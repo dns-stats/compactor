@@ -112,9 +112,9 @@ public:
      * \param level    compression level, if required.
      * \param snaplen  snap length.
      */
-    PcapWriter(const std::string& filename, unsigned level, unsigned snaplen)
+    PcapWriter(const std::string& filename, unsigned level, unsigned snaplen, bool logging)
         : filename_(filename), level_(level),
-          linktype_(NO_LINK_TYPE), snaplen_(snaplen)
+          linktype_(NO_LINK_TYPE), snaplen_(snaplen), logging_(logging)
     {
     }
 
@@ -138,7 +138,7 @@ public:
     {
         if ( !writer_ )
         {
-            writer_ = make_unique<Writer>(filename_, level_);
+            writer_ = make_unique<Writer>(filename_, level_, logging_);
             if ( linktype_ == NO_LINK_TYPE )
                 set_link_type(pdu);
             write_file_header();
@@ -291,6 +291,12 @@ private:
      * \brief snap length.
      */
     unsigned snaplen_;
+
+   /**
+    * \brief logging
+    */
+   unsigned logging_;
+
 };
 
 /**
@@ -315,9 +321,9 @@ public:
      */
     PcapRotatingWriter(const std::string& pattern,
                        const std::chrono::seconds& period,
-                       unsigned level, unsigned snaplen)
+                       unsigned level, unsigned snaplen, bool logging)
         : fname_(make_unique<RotatingFileName>(pattern + Writer::suggested_extension(), period)),
-          writer_("", level, snaplen)
+          writer_("", level, snaplen, logging)
     {
     }
 
