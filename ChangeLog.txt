@@ -6,6 +6,26 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.2.1-rc2 - 2022-01-26
+--------------------------
+
+* The behaviour of `compactor` is changed when an interrupt (SIGINT, SIGTERM)
+  is received e.g. when the service is restarted or a user enters ^C.
+  Previously all of the in progress C-DNS compression was aborted and all of
+  the in progress output files (compressed and uncompressed) were removed. Now
+  the `.raw` uncompressed output file is left on disk so it can be manually
+  recovered (i.e. renamed and compressed). Users will now need to choose how to
+  managed these uncompressed files. Behaviour on SIGHUP (re-reading of config
+  file without affecting any in progress compression) is unchanged.
+* Additional default logging is added of the specific signal received by
+  `compactor`, when file rotation occurs and when compression is aborted.
+* New `log-file-handing` option to log low level details of file
+  processing on file rotation and compression. This aids with debugging of file
+  processing problems and measurement of C-DNS file compression times.
+* Text added in the documentation to clarify time patterns are needed in file
+  output patterns for filename based file rotation to occur (based on the
+  `rotation-period` option).
+* Fix a bug relating to `compactor` start_time handling introduced in rc1.
 
 Version 1.2.1-rc1 - 2022-01-18
 --------------------------

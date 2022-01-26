@@ -383,7 +383,7 @@ line outputs data on sampling:
 Note that the LIBPCAP statistics provided here are information only and may not be
 reliable, particularly at high load.
 
-Additional file handling messages can be output by enabling the *log-file-hanlding*
+Additional file handling messages can be output by enabling the *--log-file-handling*
 option. This allows detailed debugging of file processing problems and also 
 measurements of file compression times.
 
@@ -430,7 +430,7 @@ maximum number of compression threads that may be active at any time is set in
 configuration; if the limit is reached, C-DNS output blocks until one of the compression
 threads finishes.
 
-Detailed logs of file processing can be enabled with the *log-file-handling* option.
+Detailed logs of file processing can be enabled with the *--log-file-handling* option.
 
 [WARNING]
 ====
