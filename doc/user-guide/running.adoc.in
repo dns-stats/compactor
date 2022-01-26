@@ -57,8 +57,8 @@ Command options:
   -l [ --list-interfaces ]         list all network interfaces.
 
 Configuration:
-  -t [ --rotation-period ] arg (=300)   rotation period for all outputs, in 
-                                        seconds.
+  -t [ --rotation-period ] arg (=300)   rotation period for filename based rotation
+                                        for all outputs, in seconds.
   -q [ --query-timeout ] arg (=5)       timeout period for unanswered queries, 
                                         in seconds.
 ...(rest of output omitted for brevity)...
@@ -93,12 +93,10 @@ summary information on exit (configuration and basic statistics).
 
 [WARNING]
 ====
-If C-DNS compression is enabled, interrupting _compactor_ causes the
-current output C-DNS to be lost. For this reason you are recommended
-to have C-DNS output file rotation enabled when using compression. For
-more details, see <<C-DNS output compression>>.
-
-This behaviour is under review.
+If C-DNS compression is enabled, interrupting _compactor_ causes the current
+compression to be aborted (the '.raw' uncompressed file is retained on disk).
+For this reason you are recommended to have C-DNS output file rotation enabled
+when using compression. For more details, see <<C-DNS output compression>>.
 ====
 
 ==== Capturing DNSTAP traffic
@@ -121,20 +119,16 @@ summary information on exit (configuration and basic statistics).
 
 [WARNING]
 ====
-If C-DNS compression is enabled, interrupting _compactor_ causes the
-current output C-DNS to be lost. For this reason you are recommended
-to have C-DNS output file rotation enabled when using compression. For
-more details, see <<C-DNS output compression>>.
-
-This behaviour is under review.
+If C-DNS compression is enabled, interrupting _compactor_ causes the current
+compression to be aborted (the '.raw' uncompressed file is retained on disk).
+For this reason you are recommended to have C-DNS output file rotation enabled
+when using compression. For more details, see <<C-DNS output compression>>.
 ====
 
 [WARNING]
 ====
 When capturing traffic over DNSTAP, output of raw or ignored packets to PCAP
 is not currently supported. Any related _compactor_ options specified will be ignored.
-
-This behaviour is under review.
 ====
 
 ==== Capturing from PCAP files
@@ -331,6 +325,11 @@ than specified by the *--sampling-threshold* option so sampling is enabled.
 | Drops are now below the sampling threshold and so sampling is disabled after the specified
 time limit. 
 
+| WARNING
+| Aborting compression of <file>
+| On an interrupt of kill of the process, all in progress C-DNS file compression is
+  aborted. However the '.raw' (uncompressed) file is left on disk. 
+
 | INFO
 | Total packet count, etc.
 | Basic statistics on the ongoing network capture requested by the
@@ -341,8 +340,16 @@ time limit.
 | _compactor_  is starting a network capture.
 
 | INFO
+| Rotating file to <filename>
+| _compactor_  is rotating the current collection file to the named file.
+
+| INFO
 | Re-reading configuration
 | _compactor_  has received a `HUP` signal and is re-reading its configuration.
+
+| INFO
+| Signal handler: Received - <signal>
+| _compactor_  has received a signal.
 
 | INFO
 | Collection interrupted
@@ -376,6 +383,10 @@ line outputs data on sampling:
 Note that the LIBPCAP statistics provided here are information only and may not be
 reliable, particularly at high load.
 
+Additional file handling messages can be output by enabling the *--log-file-handling*
+option. This allows detailed debugging of file processing problems and also 
+measurements of file compression times.
+
 === _compactor_  performance considerations
 
 ==== Threading
@@ -408,8 +419,8 @@ configuration, increase the maximum throughput of _compactor_ .
 
 The processed used for C-DNS compression is designed for a scenario where
 _compactor_ is outputting data to a C-DNS file that is periodically rotated; that is,
-the existing output file is close and a new output file with a distinct name is started.
-C-DNS output is first written uncompressed to a temporary output file. When the file is
+the existing output file is closed and a new output file with a distinct name is started.
+C-DNS output is first written uncompressed to a '.raw' temporary output file. When the file is
 complete, either at the end of input from a PCAP file being converted, or after a file
 rotation, a new thread is spawned to compress the temporary output file to the final
 compressed C-DNS file. If strong compression is being used, the compression may
@@ -419,15 +430,20 @@ maximum number of compression threads that may be active at any time is set in
 configuration; if the limit is reached, C-DNS output blocks until one of the compression
 threads finishes.
 
+Detailed logs of file processing can be enabled with the *--log-file-handling* option.
+
 [WARNING]
 ====
-If _compactor_ is interrupted, e.g. by the user typing Control-C, the
-C-DNS output is stopped and all compressing threads are requested to
-abort. In this case all temporary output files and incomplete
-compressed output files are deleted and only completed compressed
-files are retained. This means that all data in the current output
-C-DNS file at the time of the interrupt is lost. This behaviour is
-under review.
+If _compactor_ is interrupted, e.g. by the user typing Control-C or the service
+being restarted, the C-DNS output is stopped and all compressing threads are
+requested to abort. In this case all incomplete compressed output files are
+deleted, but the temporary uncompressed files are retained (alongside the
+completed compressed files). The files will have a `.raw` extension and can be
+renamed and compresses manually. Since these files are uncompressed and could
+be large, users should choose how to manage such files.
+
+This behaviour was changed in 1.2.1. Prior to that all in progress output files
+were removed on interrupt.
 ====
 
 [WARNING]
@@ -440,6 +456,10 @@ another DNS packet is seen or b) in the case of PCAP output any packet is seen.
 
 If _compactor_ is requested to reload its configuration via `HUP`
 signal, existing compression threads are not affected.
+
+Note that if PCAP compression is specified, PCAP files are compressed as they
+are written (not via a two-stage processes as above). On interrupt these files
+are simply closed.
 
 [[runninginspector]]
 == Running _inspector_

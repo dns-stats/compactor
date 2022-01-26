@@ -308,7 +308,7 @@ public:
      *
      * \param name the filename.
      */
-    virtual void open(const std::string& name) = 0;
+    virtual void open(const std::string& name, bool logging = false) = 0;
 
     /**
      * \brief Close the output file.
@@ -374,12 +374,12 @@ public:
      *
      * \param name the base output filename.
      */
-    virtual void open(const std::string& name)
+    virtual void open(const std::string& name, bool logging = false)
     {
         if ( writer_ )
             throw std::runtime_error("Can't open file when one already open.");
 
-        writer_ = make_unique<Writer>(name, level_);
+        writer_ = make_unique<Writer>(name, level_, logging);
         bytes_written_ = 0;
     }
 
@@ -525,11 +525,11 @@ public:
      *
      * \param name the base output filename.
      */
-    virtual void open(const std::string& name)
+    virtual void open(const std::string& name, bool logging = false)
     {
         name_ = name;
 
-        CborStreamFileEncoder<StreamWriter>::open(name_ + ".raw");
+        CborStreamFileEncoder<StreamWriter>::open(name_ + ".raw", logging);
     }
 
     /**
@@ -585,8 +585,8 @@ public:
      * compressing.
      * \param level       the compression level to use.
      */
-    ParallelWriterPool(unsigned max_threads, unsigned level)
-        : level_(level), max_threads_(max_threads), nthreads_(0), abort_(false)
+    ParallelWriterPool(unsigned max_threads, unsigned level, bool logging = false)
+        : level_(level), max_threads_(max_threads), nthreads_(0), abort_(false), logging_(logging)
     {
     }
 
@@ -613,6 +613,12 @@ public:
      */
     virtual void compressFile(const std::string& input, const std::string& output)
     {
+        if (abort_)
+        {
+            LOG_WARN << "Aborting compression of " << input.c_str();
+            // Leave the input file on disk so it can be recovered.
+            return;
+        }
         std::unique_lock<std::mutex> lock(m_);
         if ( nthreads_ >= max_threads_ )
             thread_finished_.wait(lock, [&](){ return nthreads_ < max_threads_; });
@@ -664,13 +670,15 @@ private:
 
         try
         {
+            if (logging_)
+                LOG_INFO << "File handling: Starting compression of:            " << input.c_str() << " to " << output.c_str();
             std::ifstream ifs(input, std::ios::binary);
             if ( !ifs.is_open() )
                 throw std::runtime_error("Can't open file " + input);
             ifs.exceptions(std::ifstream::badbit);
 
             {
-                Writer writer(output, level_);
+                Writer writer(output, level_, logging_);
                 uint8_t buf[OUTPUT_BUFFER_SIZE];
 
                 while ( !abort_ && !ifs.eof() )
@@ -681,10 +689,22 @@ private:
             }
 
             ifs.close();
-            if ( std::remove(input.c_str()) != 0 )
-                throw std::runtime_error("Can't remove file " + input);
-            if ( abort_ && std::remove(output.c_str()) != 0 )
-                throw std::runtime_error("Can't remove file " + output);
+            if ( !abort_)
+            {
+                if (logging_)
+                    LOG_INFO << "File handling: Removing:                           " << input.c_str();
+                if ( std::remove(input.c_str()) != 0 ) 
+                    throw std::runtime_error("Can't remove file " + input);
+                if (logging_)
+                    LOG_INFO << "File handling: Finished compression of:            " << input.c_str() << " to " << output.c_str();
+            } else
+            {
+                // Leave the input file there so it can be recovered.
+                if (logging_)
+                    LOG_INFO << "File handling: Removing file on abort:             " << output.c_str();
+                if (std::remove(output.c_str()) != 0 )
+                    throw std::runtime_error("Can't remove file " + output);
+            }
         }
         catch (const std::exception& err)
         {
@@ -728,6 +748,12 @@ private:
      * \brief condition variable to signal when a thread finishes.
      */
     std::condition_variable thread_finished_;
+
+   /**
+    * \brief logging
+    */
+   bool logging_;
+
 };
 
 /**

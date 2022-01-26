@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2022 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -620,17 +620,20 @@ static std::unique_ptr<PcapBaseRotatingWriter> make_pcap_writer(const std::strin
         return make_unique<PcapRotatingWriter<XzStreamWriter>>(pattern,
                                                                std::chrono::seconds(config.rotation_period),
                                                                config.xz_preset_pcap,
-                                                               config.snaplen);
+                                                               config.snaplen,
+                                                               config.log_file_handling);
     else if ( config.gzip_pcap )
         return make_unique<PcapRotatingWriter<GzipStreamWriter>>(pattern,
                                                                  std::chrono::seconds(config.rotation_period),
                                                                  config.gzip_level_pcap,
-                                                                 config.snaplen);
+                                                                 config.snaplen,
+                                                                 config.log_file_handling);
     else
         return make_unique<PcapRotatingWriter<StreamWriter>>(pattern,
                                                              std::chrono::seconds(config.rotation_period),
                                                              0,
-                                                             config.snaplen);
+                                                             config.snaplen,
+                                                             config.log_file_handling);
 }
 
 /**
@@ -879,6 +882,7 @@ static int run_configuration(const po::variables_map& vm,
     }
 
     signal_handler.wait_for_signals();
+    LOG_INFO << "Signal handler: Received - " << strsignal(signal_received);
     switch(signal_received)
     {
     case 0:
@@ -918,7 +922,6 @@ static int run_configuration(const po::variables_map& vm,
         stats.dump_stats(std::cout);
     }
 
-    LOG_INFO << "Compactor shutdown complete";
     return res;
 }
 
@@ -1033,15 +1036,15 @@ int main(int ac, char *av[])
         {
             if ( configuration.xz_output )
             {
-                writer_pool = std::make_shared<ParallelWriterPool<XzStreamWriter>>(configuration.max_compression_threads, configuration.xz_preset);
+                writer_pool = std::make_shared<ParallelWriterPool<XzStreamWriter>>(configuration.max_compression_threads, configuration.xz_preset, configuration.log_file_handling);
             }
             else if ( configuration.gzip_output )
             {
-                writer_pool = std::make_shared<ParallelWriterPool<GzipStreamWriter>>(configuration.max_compression_threads, configuration.gzip_level);
+                writer_pool = std::make_shared<ParallelWriterPool<GzipStreamWriter>>(configuration.max_compression_threads, configuration.gzip_level, configuration.log_file_handling);
             }
             else
             {
-                writer_pool = std::make_shared<ParallelWriterPool<StreamWriter>>(configuration.max_compression_threads, 0);
+                writer_pool = std::make_shared<ParallelWriterPool<StreamWriter>>(configuration.max_compression_threads, 0, configuration.log_file_handling);
             }
         }
 
@@ -1059,6 +1062,7 @@ int main(int ac, char *av[])
             if ( thread.joinable() )
                 thread.join();
 
+        LOG_INFO << "Compactor main thread shutdown complete. Other threads shutting down.";
         if ( res != 0 )
             return 1;
     }

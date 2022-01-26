@@ -1726,15 +1726,23 @@ namespace block_cbor {
             Timestamp end_ts(*end_time, ticks_per_second);
             end_ts.writeCbor(enc);
         }
-        // There is a rare case where a 'live' capture is fed old data (e.g.
-        // via a DNSTAP socket) and in this case the start time can be later
-        // than the earliest data. Don't write the start time if this is the
-        // case
-        if ( start_time  && start_time <= earliest_time )
+        // There is a rare case where a 'live' capture is fed old data and in
+        // this case the start time can be a lot later than the earliest data,
+        // causing a negative file duration. Additionally, due to how block
+        // processing works, the start_time can be very slightly later than
+        // the earliest_time, so use earliest_time for both cases.
+        if ( start_time )
         {
             enc.write(start_time_index);
-            Timestamp start_ts(*start_time, ticks_per_second);
-            start_ts.writeCbor(enc);
+            if ( *start_time <= earliest_time )
+            {
+                Timestamp start_ts(*start_time, ticks_per_second);
+                start_ts.writeCbor(enc);
+            } else
+            {
+                Timestamp start_ts(earliest_time, ticks_per_second);
+                start_ts.writeCbor(enc);
+            }
         }
 
         if ( block_parameters_index > 0 )

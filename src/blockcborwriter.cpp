@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2022 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,6 +25,7 @@
 #include "blockcbor.hpp"
 #include "blockcbordata.hpp"
 #include "blockcborwriter.hpp"
+#include "log.hpp"
 
 namespace {
     byte_string addr_to_string(const IPAddress& addr, const Configuration& config, bool is_client = true)
@@ -104,7 +105,8 @@ void BlockCborWriter::checkForRotation(const std::chrono::system_clock::time_poi
             data_->start_time = timestamp;
         }
         filename_ = output_pattern_.filename(timestamp, config_);
-        enc_->open(filename_);
+        LOG_INFO << "Rotating C_DNS file to " << filename_;
+        enc_->open(filename_, config_.log_file_handling);
         writeFileHeader();
     }
 }
