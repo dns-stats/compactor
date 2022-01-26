@@ -40,7 +40,7 @@
 
 *-F, --log-file-handling*::
   Log detailed file processing when files are rotated and compressed. This facilitates
-  debugging of file processing issues and measurement of file compression times.
+  debugging of file processing issues and measurement of C-DNS file compression times.
 
 *--sampling-threshold* _arg_::
   A threshold for the percentage of traffic dropped on the internal channels above which

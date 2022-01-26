@@ -24,6 +24,7 @@
 #include "makeunique.hpp"
 #include "nocopypacket.hpp"
 #include "rotatingfilename.hpp"
+#include "log.hpp"
 
 /**
  * \class PcapBaseWriter
@@ -112,7 +113,7 @@ public:
      * \param level    compression level, if required.
      * \param snaplen  snap length.
      */
-    PcapWriter(const std::string& filename, unsigned level, unsigned snaplen, bool logging)
+    PcapWriter(const std::string& filename, unsigned level, unsigned snaplen, bool logging = false)
         : filename_(filename), level_(level),
           linktype_(NO_LINK_TYPE), snaplen_(snaplen), logging_(logging)
     {
@@ -185,6 +186,7 @@ public:
     {
         close();
         filename_ = filename;
+        LOG_INFO << "Rotating PCAP file to " << filename_;
     }
 
 private:
@@ -321,7 +323,7 @@ public:
      */
     PcapRotatingWriter(const std::string& pattern,
                        const std::chrono::seconds& period,
-                       unsigned level, unsigned snaplen, bool logging)
+                       unsigned level, unsigned snaplen, bool logging = false)
         : fname_(make_unique<RotatingFileName>(pattern + Writer::suggested_extension(), period)),
           writer_("", level, snaplen, logging)
     {
@@ -349,9 +351,8 @@ public:
                               const std::chrono::system_clock::time_point& timestamp,
                               const Configuration& config)
     {
-        if ( fname_->need_rotate(timestamp, config) )
+        if ( fname_->need_rotate(timestamp, config) ) 
             writer_.set_filename(fname_->filename(timestamp, config));
-
         writer_.write_packet(pdu, timestamp);
     }
 

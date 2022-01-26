@@ -308,7 +308,7 @@ public:
      *
      * \param name the filename.
      */
-    virtual void open(const std::string& name, bool logging) = 0;
+    virtual void open(const std::string& name, bool logging = false) = 0;
 
     /**
      * \brief Close the output file.
@@ -374,7 +374,7 @@ public:
      *
      * \param name the base output filename.
      */
-    virtual void open(const std::string& name, bool logging)
+    virtual void open(const std::string& name, bool logging = false)
     {
         if ( writer_ )
             throw std::runtime_error("Can't open file when one already open.");
@@ -525,7 +525,7 @@ public:
      *
      * \param name the base output filename.
      */
-    virtual void open(const std::string& name, bool logging)
+    virtual void open(const std::string& name, bool logging = false)
     {
         name_ = name;
 
@@ -585,7 +585,7 @@ public:
      * compressing.
      * \param level       the compression level to use.
      */
-    ParallelWriterPool(unsigned max_threads, unsigned level, bool logging)
+    ParallelWriterPool(unsigned max_threads, unsigned level, bool logging = false)
         : level_(level), max_threads_(max_threads), nthreads_(0), abort_(false), logging_(logging)
     {
     }
@@ -671,7 +671,7 @@ private:
         try
         {
             if (logging_)
-                LOG_INFO << "File handling: Starting compression of:  " << input.c_str() << "     to " << output.c_str();
+                LOG_INFO << "File handling: Starting compression of:            " << input.c_str() << " to " << output.c_str();
             std::ifstream ifs(input, std::ios::binary);
             if ( !ifs.is_open() )
                 throw std::runtime_error("Can't open file " + input);
@@ -692,16 +692,16 @@ private:
             if ( !abort_)
             {
                 if (logging_)
-                    LOG_INFO << "File handling: Removing:                 " << input.c_str();
+                    LOG_INFO << "File handling: Removing:                           " << input.c_str();
                 if ( std::remove(input.c_str()) != 0 ) 
                     throw std::runtime_error("Can't remove file " + input);
                 if (logging_)
-                    LOG_INFO << "File handling: Finished compression of:  " << input.c_str() << " to " << output.c_str();
+                    LOG_INFO << "File handling: Finished compression of:            " << input.c_str() << " to " << output.c_str();
             } else
             {
                 // Leave the input file there so it can be recovered.
                 if (logging_)
-                    LOG_INFO << "File handling: Removing on abort:        " << output.c_str();
+                    LOG_INFO << "File handling: Removing file on abort:             " << output.c_str();
                 if (std::remove(output.c_str()) != 0 )
                     throw std::runtime_error("Can't remove file " + output);
             }

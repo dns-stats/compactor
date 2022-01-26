@@ -105,7 +105,7 @@ void BlockCborWriter::checkForRotation(const std::chrono::system_clock::time_poi
             data_->start_time = timestamp;
         }
         filename_ = output_pattern_.filename(timestamp, config_);
-        LOG_INFO << "Rotating file to " << filename_;
+        LOG_INFO << "Rotating C_DNS file to " << filename_;
         enc_->open(filename_, config_.log_file_handling);
         writeFileHeader();
     }

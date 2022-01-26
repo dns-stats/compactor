@@ -27,14 +27,18 @@
 
 const std::string& StreamWriter::STDOUT_FILE_NAME = "-";
 
-StreamWriter::StreamWriter(const std::string& name, unsigned leve, bool logging)
+StreamWriter::StreamWriter(const std::string& name, unsigned level, bool logging)
     : os_(&std::cout), name_(name), temp_name_(name + ".tmp"), logging_(logging)
 {
     if ( name_ != STDOUT_FILE_NAME )
     {
         ofs_.open(temp_name_, std::ofstream::binary);
-        if (logging_)
-            LOG_INFO << "File handling: Opening temporary file:   " << temp_name_ ;
+        if (logging_) {
+            if (level == 0 )
+                LOG_INFO << "File handling: Opening tmp file (no compression):  " << temp_name_ ;
+            else
+                LOG_INFO << "File handling: Opening tmp file (for compression): " << temp_name_ ;
+        }
         if ( ofs_.fail() )
             throw std::runtime_error("Can't open file " + temp_name_);
         os_ = &ofs_;
@@ -49,7 +53,7 @@ StreamWriter::~StreamWriter()
     {
         ofs_.close();
         if (logging_)
-            LOG_INFO << "File handling: Renaming temporary file:  " << temp_name_.c_str() << " to " << name_.c_str();
+            LOG_INFO << "File handling: Closing and renaming:               " << temp_name_.c_str() << " to " << name_.c_str();
         if ( std::rename(temp_name_.c_str(), name_.c_str()) != 0 )
             LOG_ERROR << "file rename from " << temp_name_ << " to " << name_ << " failed";
     }
