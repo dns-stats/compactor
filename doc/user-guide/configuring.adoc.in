@@ -160,7 +160,7 @@ interface, `interface3` the third and so on.
 | `eth0-eth1`
 
 | `%{rotate-period}`
-| The file rotation period, in seconds.
+| The file rotation period used when file names contain time/date elements, in seconds.
 | `300`
 
 | `%{snaplen}`

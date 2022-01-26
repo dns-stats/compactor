@@ -86,7 +86,7 @@ source, see the documentation for those items.
   {cpp}. Building them requires a {cpp} compiler and tool chain compatible
   with the 2011 ISO standard, otherwise {cpp}11.
 
-| pkg-config | Used for dependency management.
+| `pkg-config` | Used for dependency management.
 
 | `boost-log`
 .5+| Several libraries from http://www.boost.org[Boost
@@ -103,7 +103,7 @@ source, see the documentation for those items.
 
 | `boost-iostreams`
 
-| `boost-filesystem`
+| `boost-filesystem` |
 
 | `liblzma`| The compression library from http://tukaani.org/xz/[XZ utils].
 

@@ -84,7 +84,8 @@ character to the output path.
 Two categories of expansions are available, time expansions and configuration
 expansions. Time expansions are of the form `%` followed by a single letter, and
 expand to a time component determined by the letter. For a list of the available letters,
-see *strftime*(3).
+see *strftime*(3). Time expansions must be included in the output file pattern for
+filename based rotation to occur using the *rotation-period* option.
 
 Configuration expansions are of the form `%{name}`, and substitute the value of the
 configuration item named. The configuration items that may be substituted are

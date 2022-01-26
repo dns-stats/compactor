@@ -27,12 +27,18 @@
 
 const std::string& StreamWriter::STDOUT_FILE_NAME = "-";
 
-StreamWriter::StreamWriter(const std::string& name, unsigned)
-    : os_(&std::cout), name_(name), temp_name_(name + ".tmp")
+StreamWriter::StreamWriter(const std::string& name, unsigned level, bool logging)
+    : os_(&std::cout), name_(name), temp_name_(name + ".tmp"), logging_(logging)
 {
     if ( name_ != STDOUT_FILE_NAME )
     {
         ofs_.open(temp_name_, std::ofstream::binary);
+        if (logging_) {
+            if (level == 0 )
+                LOG_INFO << "File handling: Opening tmp file (no compression):  " << temp_name_ ;
+            else
+                LOG_INFO << "File handling: Opening tmp file (for compression): " << temp_name_ ;
+        }
         if ( ofs_.fail() )
             throw std::runtime_error("Can't open file " + temp_name_);
         os_ = &ofs_;
@@ -46,6 +52,8 @@ StreamWriter::~StreamWriter()
     if ( ofs_.is_open() )
     {
         ofs_.close();
+        if (logging_)
+            LOG_INFO << "File handling: Closing and renaming:               " << temp_name_.c_str() << " to " << name_.c_str();
         if ( std::rename(temp_name_.c_str(), name_.c_str()) != 0 )
             LOG_ERROR << "file rename from " << temp_name_ << " to " << name_ << " failed";
     }
@@ -61,8 +69,8 @@ void StreamWriter::writeBytes(const uint8_t *p, std::ptrdiff_t n_bytes)
     os_->write(reinterpret_cast<const char *>(p), n_bytes);
 }
 
-GzipStreamWriter::GzipStreamWriter(const std::string& name, unsigned level)
-    : StreamWriter(name, level)
+GzipStreamWriter::GzipStreamWriter(const std::string& name, unsigned level, bool logging)
+    : StreamWriter(name, level, logging)
 {
     boost::iostreams::gzip_params gzparams;
 
@@ -115,8 +123,8 @@ const char* XzException::msg(lzma_ret err)
     }
 }
 
-XzStreamWriter::XzStreamWriter(const std::string& name, unsigned level)
-    : StreamWriter(name, level), xz_stream_(LZMA_STREAM_INIT)
+XzStreamWriter::XzStreamWriter(const std::string& name, unsigned level, bool logging)
+    : StreamWriter(name, level, logging), xz_stream_(LZMA_STREAM_INIT)
 {
     lzma_ret ret = lzma_easy_encoder(&xz_stream_, level, LZMA_CHECK_CRC64);
     if ( ret != LZMA_OK )

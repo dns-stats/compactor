@@ -1860,6 +1860,128 @@ SCENARIO("BlockData items can be written", "[block]")
                 REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
             }
         }
+
+        WHEN("start time is present")
+        {
+            BlockParameters bp;
+            std::vector<BlockParameters> bpv;
+            bpv.push_back(bp);
+            /* 2nd params have 10x ticks per second than default. */
+            bp.storage_parameters.ticks_per_second = 10000000;
+            bpv.push_back(bp);
+            BlockData cd(bpv);
+            cd.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(2));
+            cd.end_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(3));
+            cd.start_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(1));
+
+
+            TestCborEncoder tcbe;
+            cd.writeCbor(tcbe);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                const uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        0, (5 << 5) | 3,
+                          0, (4 << 5) | 2, 1, 2,
+                          (1 << 5), (4 << 5) | 2, 1, 3,
+                          (1 << 5) | 1, (4 << 5) | 2, 1, 1,
+
+                        1,
+                        (5 << 5) | 31,
+                        0, 0,
+                        1, 0,
+                        2, 0,
+                        3, 0,
+                        4, 0,
+                        5, 0,
+                        (1 << 5) | 0, 0,
+                        (1 << 5) | 1, 0,
+                        (1 << 5) | 2, 0,
+                        (1 << 5) | 3, 0,
+                        (1 << 5) | 4, 0,
+                        (1 << 5) | 5, 0,
+                        (1 << 5) | 6, 0,
+                        (1 << 5) | 7, 0,
+                        (1 << 5) | 8, 0,
+                        (1 << 5) | 9, 0,
+                        (1 << 5) | 10, 0,
+                        (1 << 5) | 11, 0,
+                        0xff,
+
+                        2,
+                        (5 << 5) | 31,
+                        0xff,
+
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
+
+        WHEN("start time is present but too late")
+        {
+            BlockParameters bp;
+            std::vector<BlockParameters> bpv;
+            bpv.push_back(bp);
+            /* 2nd params have 10x ticks per second than default. */
+            bp.storage_parameters.ticks_per_second = 10000000;
+            bpv.push_back(bp);
+            BlockData cd(bpv);
+            cd.earliest_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(2));
+            cd.end_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(3));
+            cd.start_time = std::chrono::system_clock::time_point(std::chrono::seconds(1) + std::chrono::microseconds(5));
+
+
+            TestCborEncoder tcbe;
+            cd.writeCbor(tcbe);
+            tcbe.flush();
+
+            THEN("the encoding is as expected")
+            {
+                const uint8_t EXPECTED[] =
+                    {
+                        (5 << 5) | 31,
+                        0, (5 << 5) | 3,
+                          0, (4 << 5) | 2, 1, 2,
+                          (1 << 5), (4 << 5) | 2, 1, 3,
+                          (1 << 5) | 1, (4 << 5) | 2, 1, 2,
+
+                        1,
+                        (5 << 5) | 31,
+                        0, 0,
+                        1, 0,
+                        2, 0,
+                        3, 0,
+                        4, 0,
+                        5, 0,
+                        (1 << 5) | 0, 0,
+                        (1 << 5) | 1, 0,
+                        (1 << 5) | 2, 0,
+                        (1 << 5) | 3, 0,
+                        (1 << 5) | 4, 0,
+                        (1 << 5) | 5, 0,
+                        (1 << 5) | 6, 0,
+                        (1 << 5) | 7, 0,
+                        (1 << 5) | 8, 0,
+                        (1 << 5) | 9, 0,
+                        (1 << 5) | 10, 0,
+                        (1 << 5) | 11, 0,
+                        0xff,
+
+                        2,
+                        (5 << 5) | 31,
+                        0xff,
+
+                        0xff
+                    };
+
+                REQUIRE(tcbe.compareBytes(EXPECTED, sizeof(EXPECTED)));
+            }
+        }
     }
 }
 
