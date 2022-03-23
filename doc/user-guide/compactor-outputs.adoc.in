@@ -81,26 +81,28 @@
   the `excludesfile` option. See the user guide for more information.
 
 *-G, --ignore-opcode* _OPCODE_::
-   Indicate an opcode _OPCODE_ that should not be included in the main output.
-   This argument can be given multiple times.
+   DNS messages with this _OPCODE_ should NOT be included in the main output
+   (the DNS message is discarded). This argument can be given multiple times.
 
 *-E, --accept-opcode* _OPCODE_::
-   Indicate an opcode _OPCODE_ that should be included in the main output.
+   DNS messages with this _OPCODE_ should be included in the main output (if
+   used, messages with OPCODES not specified with this option are discarded).
    This argument can be given multiple times.
 
 *-g, --ignore-rr-type* _TYPE_::
-   Indicate an RR type _TYPE_ that should not be included in the main output.
-   The first question is always included, but _TYPE_ nominated using the RR type
-   name (in upper case)  will be omitted from any other question and from
-   any Answer, Authority or  Additional section. This argument can be given
-   multiple times.
+   Records of this RR type _TYPE_ should NOT be included in DNS messages when
+   they are written to the main output. Note that the first question is ALWAYS
+   included, but _TYPE_ nominated using the RR type name (in upper case) will
+   be omitted from any other question and from any Answer, Authority or
+   Additional section. This argument can be given multiple times.
 
 *-e, --accept-rr-type* _TYPE_::
-   Indicate an RR type _TYPE_ that should be included in the main output.
-   The first question is always included, but only _TYPE_ nominated using
-   the RR type name (in upper case) will be included in any other question
-   and in any Answer,  Authority or Additional section. This argument can be
-   given multiple times.
+   Records of this RR type _TYPE_ should be included in DNS messages when they
+   are written to the main output (if used, RR types not specified with this
+   option will be omitted from DNS messages). Note that the first question is
+   ALWAYS included, but only _TYPE_ nominated using the RR type name (in upper
+   case) will be included in any other question and in any Answer, Authority or
+   Additional section. This argument can be given multiple times.
 
 *--max-block-items* _arg_::
    Set the maximum number of query/response items  or address event items
