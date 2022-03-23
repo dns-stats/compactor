@@ -47,10 +47,12 @@
 # the address must be present on a capture interface.
 # server-address-hint=
 
-# RR type to ignore. Type name in UPPER CASE e.g. AAAA, RRSIG.
+# Omit records of this RR type from the content of DNS messages when writing output
+# (note - the first question is always written). Type name in UPPER CASE e.g. AAAA, RRSIG.
 # ignore-rr-type=
 
-# RR type to accept. Type name in UPPER CASE e.g. AAAA, RRSIG.
+# Include records of this RR type in the content of DNS messages when writing output  
+# (note - the first question is always written). Type name in UPPER CASE e.g. AAAA, RRSIG.
 # accept-rr-type=
 
 # Log basic collection stats to syslog every n seconds. 0 (default) == never.

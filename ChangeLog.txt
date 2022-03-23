@@ -6,6 +6,12 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.2.1 - 2022-03-23
+--------------------------
+
+* Minor documentation update to address 
+  https://github.com/dns-stats/compactor/issues/80
+
 Version 1.2.1-rc2 - 2022-01-26
 --------------------------
 
