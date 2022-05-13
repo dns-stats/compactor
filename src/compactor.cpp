@@ -191,6 +191,10 @@ public:
      */
     void operator()(const std::shared_ptr<QueryResponse>& qr)
     {
+        if (qr == NULL) {
+          out_->checkForRotation(std::chrono::system_clock::now(), true);
+          return;
+        }
         out_->writeQR(qr, *stats_);
     }
 
@@ -655,7 +659,7 @@ static int run_configuration(const po::variables_map& vm,
     bool live_capture = false;
 
     // Signal handling.
-    SignalHandler signal_handler({SIGPIPE, SIGINT, SIGTERM, SIGHUP});
+    SignalHandler signal_handler({SIGPIPE, SIGINT, SIGTERM, SIGHUP, SIGUSR1});
     int signal_received = 0;
 
     // Set output limits only when we're capturing. If we set them
@@ -795,7 +799,14 @@ static int run_configuration(const po::variables_map& vm,
                     [&](int signal)
                     {
                         signal_received = signal;
-                        sniffer.breakloop();
+                        LOG_INFO << "Signal handler: Received - " << strsignal(signal_received);
+                        if (signal_received != SIGUSR1)
+                          sniffer.breakloop();
+                        else {
+                          LOG_INFO << "Forcing C-DNS file rotation on SIGUSR1";
+                          CborItem empty_cbi;
+                          output.cbor->put(empty_cbi, true);
+                        }
                     });
                 sniff_loop(&sniffer, matcher, output, config, stats);
             }
@@ -882,7 +893,6 @@ static int run_configuration(const po::variables_map& vm,
     }
 
     signal_handler.wait_for_signals();
-    LOG_INFO << "Signal handler: Received - " << strsignal(signal_received);
     switch(signal_received)
     {
     case 0:

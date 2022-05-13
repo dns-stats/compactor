@@ -9,7 +9,7 @@
 KNOWN ISSUES/LIMITATIONS:
 -------------------------
 
-* Malformed packet recording as described in the implemented C-DNS draft
+* Malformed packet recording as described in the implemented C-DNS RFC
   is not supported. However, the compactor can record malformed
   packets in a separate PCAP file with the `--ignored-pcap` option
   when capturing from network interfaces.
@@ -17,10 +17,26 @@ KNOWN ISSUES/LIMITATIONS:
 * Output of raw or ignored packets to PCAP is not currently supported
   during capture via DNSTAP.
 
+* File rotation is triggered internally in the compactor (if a 
+  file-rotation-period and/or a max-file-size is configured) by the processing of 
+  packets. This means that under low traffic conditions files may not rotate until
+  the first packet arrives after the rotation period has expired, and so files
+  may be much longer than the file rotation period in this case. File rotation
+  may be forced externally by sending a SIGUSR1 to the compactor. It is recommended
+  to use either the configuration parameters OR an external signal to trigger
+  file rotation (to avoid a race condition). The file rotation mechanism is 
+  under review and may be further updated in a coming release.
+
 * File rotation period reported by the inspector is calculated as the
   difference in seconds between the first and last items read from the
   C-DNS file. File rotation is an implementation detail of the compactor,
   and as such is not recorded in the C-DNS format.
+
+* After starting compactor the first capture file is not created on disk until
+  the first packet arrives, and is named based on the file creation time. 
+  Therefore the filename may be later than the actual 'start_time' of the 
+  capture period. The 'start_time` is correctly captured within the C-DNS file 
+  in a proprietary field and is reported by the inspector. 
 
 * Packet loss under Ubuntu Trusty/Debian Jessie. When capturing live data
   from network interfaces, the first packet and any subsequent packet that

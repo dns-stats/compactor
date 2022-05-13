@@ -449,9 +449,16 @@ were removed on interrupt.
 [WARNING]
 ====
 If the _compactor_ is listening on an interface where the DNS traffic
-is very low or stops for some reason then temporary output files may 
-not get rolled and/or compressed until a) in the case of the CDNS output 
+is very low or stops for some reason then output files may 
+not get rotated and/or compressed until a) in the case of the CDNS output 
 another DNS packet is seen or b) in the case of PCAP output any packet is seen.
+
+Alternatively a C-DNS file rotation can be forced by sending a SIGUSR1 to
+`compactor`, but it is recommended to use either the configuration parameters
+OR an external signal to trigger file rotation (to avoid a race condition). The
+file rotation mechanism is under review and may be further updated in a coming
+release.
+
 ====
 
 If _compactor_ is requested to reload its configuration via `HUP`

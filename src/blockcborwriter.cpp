@@ -91,12 +91,13 @@ void BlockCborWriter::writeAE(const std::shared_ptr<AddressEvent>& ae,
     updateBlockStats(stats);
 }
 
-void BlockCborWriter::checkForRotation(const std::chrono::system_clock::time_point& timestamp)
+void BlockCborWriter::checkForRotation(const std::chrono::system_clock::time_point& timestamp, bool force)
 {
     if ( !enc_->is_open() ||
          ( config_.max_output_size.size > 0 &&
            enc_->bytes_written() >= config_.max_output_size.size ) ||
-         output_pattern_.need_rotate(timestamp, config_) )
+           output_pattern_.need_rotate(timestamp, config_) ||
+           force )
     {
         if ( enc_->is_open() )
         {
