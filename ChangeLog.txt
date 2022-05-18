@@ -12,7 +12,8 @@ Version 1.2.2-beta1 - 2022-05-18
 * Provide a mechanism to force a C-DNS file rollover via a SIGUSR1 signal to 
   compactor. See KNOWN ISSUES for more info on file rollover issues. This change
   does not effect PCAP file rollovers. NOTE: this can result in a C-DNS file 
-  containing no DNS messages being produced. 
+  containing no DNS messages being produced.
+* Update Catch from 2.13.2 to 2.13.9 (Thanks LeSuisse)
 
 Version 1.2.1 - 2022-03-23
 --------------------------
