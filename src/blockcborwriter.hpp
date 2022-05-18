@@ -75,7 +75,7 @@ public:
      *
      * \param timestamp the time point to check for rotation.
      */
-    virtual void checkForRotation(const std::chrono::system_clock::time_point& timestamp);
+    virtual void checkForRotation(const std::chrono::system_clock::time_point& timestamp, bool force);
 
     /**
      * \brief A new Query/Response pair is to be output.
