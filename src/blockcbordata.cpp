@@ -1734,11 +1734,20 @@ namespace block_cbor {
         if ( start_time )
         {
             enc.write(start_time_index);
-            if ( *start_time <= earliest_time )
+            // For blocks with no messages (DNS or malformed) the earliest_time
+            // is never updated from the default value of the start of the 
+            // epoch and so should be ignored. Note that Address Event items do 
+            // not have a timestamp so could be present in such a file.
+            if ( earliest_time == std::chrono::system_clock::time_point() ) {
+              Timestamp start_ts(*start_time, ticks_per_second);
+              start_ts.writeCbor(enc);
+            } 
+            else if ( *start_time <= earliest_time )
             {
                 Timestamp start_ts(*start_time, ticks_per_second);
                 start_ts.writeCbor(enc);
-            } else
+            } 
+            else
             {
                 Timestamp start_ts(earliest_time, ticks_per_second);
                 start_ts.writeCbor(enc);

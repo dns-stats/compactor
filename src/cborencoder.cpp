@@ -199,7 +199,7 @@ void ParallelWriterPool<StreamWriter>::compressFile(const std::string& input, co
 {
 
     if (logging_)
-        LOG_INFO << "File handling: Renaming file:                 " << input.c_str() << " to " << output.c_str();
+        LOG_INFO << "File handling: Renaming file:                      " << input.c_str() << " to " << output.c_str();
     if ( std::rename(input.c_str(), output.c_str()) != 0 )
         throw std::runtime_error("Can't rename " + input + " to " + output);
 }

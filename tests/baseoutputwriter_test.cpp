@@ -40,7 +40,7 @@ public:
     TestBaseOutputWriter(const Configuration& config)
         : BaseOutputWriter(config) {}
 
-    virtual void checkForRotation(const std::chrono::system_clock::time_point&)
+    virtual void checkForRotation(const std::chrono::system_clock::time_point&, bool)
     {
     }
 
