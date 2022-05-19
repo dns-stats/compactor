@@ -774,11 +774,19 @@ static int run_configuration(const po::variables_map& vm,
                     [&](int signal)
                     {
                         signal_received = signal;
-                        dnstap.breakloop();
-                        acceptor.cancel();
-                        service.stop();
-                        ::pthread_kill(my_thread, SIGUSR2);
+                        if (signal_received != SIGUSR1) {
+                          dnstap.breakloop();
+                          acceptor.cancel();
+                          service.stop();
+                          ::pthread_kill(my_thread, SIGUSR2);
+                        } else {
+                          LOG_INFO << "Forcing C-DNS file rotation on SIGUSR1";
+                          CborItem empty_cbi;
+                          output.cbor->put(empty_cbi, true);
+                        }
                     });
+
+
 
                 std::function<void (const boost::system::error_code&)> handle_accept = [&](const boost::system::error_code&)
                 {
