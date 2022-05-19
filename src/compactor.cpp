@@ -786,8 +786,6 @@ static int run_configuration(const po::variables_map& vm,
                         }
                     });
 
-
-
                 std::function<void (const boost::system::error_code&)> handle_accept = [&](const boost::system::error_code&)
                 {
                     if ( signal_received == 0 )
