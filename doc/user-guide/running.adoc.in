@@ -8,7 +8,7 @@ configuration has been set up _compactor_  can be run as a service or daemon.
 ==== Linux with `systemd`
 
 By default, http://releases.ubuntu.com/16.04/[Ubuntu 16.04 LTS 'Xenial
-Xerus'] uses `systemd`.
+Xerus'] and later releases use `systemd`.
 
 _compactor_  service is a standard `systemd` service. It can be manually
 started, stopped and requested to reload its configuration.
@@ -454,10 +454,16 @@ not get rotated and/or compressed until a) in the case of the CDNS output
 another DNS packet is seen or b) in the case of PCAP output any packet is seen.
 
 Alternatively a C-DNS file rotation can be forced by sending a SIGUSR1 to
-`compactor`, but it is recommended to use either the configuration parameters
-OR an external signal to trigger file rotation (to avoid a race condition). The
-file rotation mechanism is under review and may be further updated in a coming
-release.
+`compactor`, however it is recommended to either 
+
+. rely on just the file rotation configuration parameters OR 
+. to override the internally triggered rotation with an external signal sent at
+a period much shorter then the file-rotation-period (which defaults to 300s)
+
+The second mechanism must be used with care to avoid a race condition because
+the internal triggering cannot currently be disabled if the filename contains a
+timestamp. The file rotation mechanism is under review and may be further
+updated in a coming release.
 
 ====
 

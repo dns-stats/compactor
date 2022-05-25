@@ -22,10 +22,15 @@ KNOWN ISSUES/LIMITATIONS:
   packets. This means that under low traffic conditions files may not rotate until
   the first packet arrives after the rotation period has expired, and so files
   may be much longer than the file rotation period in this case. File rotation
-  may be forced externally by sending a SIGUSR1 to the compactor. It is recommended
-  to use either the configuration parameters OR an external signal to trigger
-  file rotation (to avoid a race condition). The file rotation mechanism is 
-  under review and may be further updated in a coming release.
+  may be forced externally by sending a SIGUSR1 to the compactor. It is 
+  recommended to either 
+     * rely on just the file rotation configuration parameters OR 
+     * to override the internally triggered rotation with an external signal sent 
+       at a period much shorter then the file-rotation-period (which defaults to 300s)
+  The second mechanism must be used with care to avoid a race condition because
+  the internal triggering cannot currently be disabled if the filename contains
+  a timestamp. The file rotation mechanism is under review and may be further
+  updated in a coming release.
 
 * File rotation period reported by the inspector is calculated as the
   difference in seconds between the first and last items read from the
@@ -44,7 +49,7 @@ KNOWN ISSUES/LIMITATIONS:
   captured. This is a problem with the libpcap library and the kernel.
   Debian Jessie can be used by updating the kernel to a later backported
   kernel; we have tested this with the 4.7.0 kernel. For Ubuntu we
-  recommend upgrading to Xenial.
+  recommend upgrading to at least Xenial.
 
 * The design of C-DNS allows blocks with different storage and
   collection parameters to be present in the same C-DNS file.

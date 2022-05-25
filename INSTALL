@@ -8,7 +8,7 @@ https://github.com/dns-stats/compactor/wiki/user-guide.pdf.
 
 = Installing from packages
 
-Binary install packages for Ubuntu 16.04 'Xenial Xerus' are available
+Binary install packages for Ubuntu are available
 from a Launchpad Personal Package Archive (PPA).
 
 You need first to add the DNS-STATS PPA to your system's Software Sources:
@@ -49,8 +49,11 @@ Optional tools:
 Required libraries:
 
 * The following Boost (http://www.boost.org) libraries:
+  - boost-filesystem
+  - boost-iostreams
   - boost-log
   - boost-program-options
+  - boost-system
   - boost-thread
   - boost-iostreams
 * liblzma (http://tukaani.org/xz/)

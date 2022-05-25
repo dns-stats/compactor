@@ -73,7 +73,8 @@ public:
     /**
      * \brief See if the output file needs rotating.
      *
-     * \param timestamp the time point to check for rotation.
+     * \param timestamp    the time point to check for rotation.
+     * \param force        force a file rotation
      */
     virtual void checkForRotation(const std::chrono::system_clock::time_point& timestamp, bool force);
 
