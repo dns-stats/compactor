@@ -21,9 +21,9 @@ The DNS-STATS Compactor suite currently comprises two programs:
 
 * _compactor_. Similar in usage to the well-known
   http://www.tcpdump.org[_tcpdump_] utility, _compactor_ reads traffic
-  from one or more network interfaces and writes selected details to
+  from one or more network interfaces (or a DNSTAP socket) and writes selected details to
   C-DNS and PCAP output files. _compactor_ can also read and convert
-  pre-recorded PCAP files.
+  pre-recorded PCAP files or DNSTAP files.
 * _inspector_. Reconstructs network traffic from C-DNS files produced
   by _compactor_. It outputs one or more PCAP files suitable for
   direct inspection or input to existing analysis tools. See
@@ -44,9 +44,12 @@ The output file types that may be produced are:
   ancillary information, e.g. ICMP and TCP Reset counts. These files
   are significantly smaller than PCAP files containing the same
   traffic.  See <<C-DNS Format>>.
-* 'Ignored' traffic. These contain captured non-DNS and malformed DNS packets in PCAP format.
-* 'Raw' traffic. These contain all packets in the captured traffic in
-  PCAP format. They are similar to files produced by _tcpdump_.
+* 'Ignored' traffic. When capturing from the network, these contain captured
+  non-DNS and malformed DNS packets in PCAP format. _Ignored_ traffic is not
+  available when capturing from DNSTAP.
+* 'Raw' traffic. When capturing from the network, these contain all packets in
+  the captured traffic in PCAP format. They are similar to files produced by
+  _tcpdump_. _Raw_ traffic is not available when capturing from DNSTAP.
 
 === C-DNS Format
 
@@ -105,12 +108,14 @@ with the following changes:
 ** _BlockPreamble_:
 *** _compactor-end-time_ (-1): if the block rolled over (i.e. a new incoming data caused
     collection to begin a new block), the timestamp of that new data is recorded as
-    the end time of the (older) block. If collection from an interface stops, the time
-    collection stops is recorded as the end time of the block.
+    the end time of the (older) block. If collection from an interface or DNSTAP stops, the time
+    collection stops is recorded as the end time of the block.  No end
+    time is recorded when reading a PCAP or DNSTAP file.
 *** _compactor-start-time_ (-2): if the block rolled over (i.e. a new incoming data caused
     collection to begin a new block), the timestamp of that new data is recorded as
-    the start time of the (newer) block. If collection from an interface starts, the time
-    collection starts is recorded as the start time of the block.
+    the start time of the (newer) block. If collection from an interface or DNSTAP starts, the time
+    collection starts is recorded as the start time of the block. No start
+    time is recorded when reading a PCAP or DNSTAP file.
 ** _BlockStatistics_:
 *** _compactor-non-dns-packets_ (-1): count of the number of received packets that
     could not be interpreted as DNS packets.
@@ -138,8 +143,9 @@ with the following changes:
 The current release does not support the following facilities defined in the RFC:
 
 * Malformed packet data recorded directly into C-DNS.
-* qr-type field
-* response-processing-data field
+* `response-processing-data` field
+
+In addition, note that the `qr-type` field is only present when reading from DNSTAP.
 ====
 
 ===== Changes in version 1.0 DNS-STATS Compactor

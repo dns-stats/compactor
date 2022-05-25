@@ -21,8 +21,7 @@ _compactor_ and  _inspector_  are supplied in separate packages named
 
 Both _compactor_ and _inspector_ use
 https://libtins.github.io/[libtins] for various network related
-functions. There is no suitable pre-packaged version for Ubuntu Xenial, so
-a package is supplied along with the DNS-STATS packages. It will be installed
+functions. It will be installed
 as a pre-requisite package automatically.
 
 ===== Installing
@@ -125,6 +124,7 @@ http://www.openssl.org/.
 | `libctemplate` | Text templating system. https://github.com/OlafvdSpek/ctemplate.
 
 | `libmaxminddb` | MaxMind GeoIP reader. https://github.com/maxmind/libmaxminddb.
+| `protobuf` | Google Protocol Buffers library. https://developers.google.com/protocol-buffers.
 |===
 
 ==== Optionally building documentation

@@ -504,13 +504,13 @@ static void sniff_loop(BaseSniffers* sniffer,
                          << sniffer_stats.pkts_dropped - last_sniffer_stats.pkts_dropped << "/"  << std::setw(w)
                          << sniffer_stats.channel_length;
                 LOG_INFO << " Matcher : recv/dropped/queue     "                         << std::setw(w)
-                         << (stats.raw_packet_count  - last_stats.raw_packet_count)      << "/" << std::setw(w)
+                         << stats.raw_packet_count   - last_stats.raw_packet_count       << "/" << std::setw(w)
                          << stats.matcher_drop_count - last_stats.matcher_drop_count     << "/" << std::setw(w)
                          << matcher.get_length();
                 const char* sampling_text = sampling? "ON":"OFF";
                 if (config.sampling_rate > 0) {
                     LOG_INFO << " Sampling: recv/discard/state     "                                   << std::setw(w)
-                             << (stats.raw_packet_count         - last_stats.raw_packet_count)         << "/" << std::setw(w)
+                             << stats.raw_packet_count          - last_stats.raw_packet_count          << "/" << std::setw(w)
                              << stats.discarded_sampling_count  - last_stats.discarded_sampling_count  << "/" << std::setw(w)
                              << sampling_text;
                 }
@@ -556,12 +556,14 @@ static void sniff_loop(BaseSniffers* sniffer,
  * \param matcher the query/response matcher to use.
  * \param config  the current configuration.
  * \param stats   collect packet statistics here.
+ * \param output  the output channels.
  */
 static void tap_loop(DnsTap& dnstap,
                      std::iostream& stream,
                      QueryResponseMatcher& matcher,
                      const Configuration& config,
-                     PacketStatistics& stats)
+                     PacketStatistics& stats,
+                     OutputChannels& output)
 {
     cno::system_clock::time_point last_recv_timestamp;
     cno::system_clock::time_point next_statslog_timestamp;
@@ -589,14 +591,28 @@ static void tap_loop(DnsTap& dnstap,
             }
             else if ( next_statslog_timestamp <= last_recv_timestamp )
             {
+                int w = 10; //output width, big enough for interval numbers up to 5 billion pps
                 cno::seconds period = cno::duration_cast<cno::seconds>(last_recv_timestamp - last_statslog_timestamp);
 
-                LOG_INFO << "*Stats interval: average rate  " << std::setw(10) 
-                     << (stats.raw_packet_count        - last_stats.raw_packet_count) / period.count() << " pps  over  "
+                LOG_INFO << "*Stats interval: average rate     " << std::setw(w) 
+                     << stats.raw_packet_count        - last_stats.raw_packet_count / period.count() << " pps  over  "
                      << config.log_network_stats_period << "s";
-                LOG_INFO << " C-DNS   : recv/dropped        "                                          << std::setw(10)   
-                         << stats.processed_message_count - last_stats.processed_message_count  << "/" << std::setw(10)   
-                         << stats.output_cbor_drop_count  - last_stats.output_cbor_drop_count   << "/" << std::setw(10);
+                LOG_INFO << " Matcher : recv/dropped/queue     "                         << std::setw(w)
+                         << stats.raw_packet_count   - last_stats.raw_packet_count       << "/" << std::setw(w)
+                         << stats.matcher_drop_count - last_stats.matcher_drop_count     << "/" << std::setw(w)
+                         << matcher.get_length();
+                LOG_INFO << " CDNS    : recv/dropped/queue     "                                       << std::setw(w)
+                         << stats.processed_message_count - last_stats.processed_message_count  << "/" << std::setw(w)
+                         << stats.output_cbor_drop_count  - last_stats.output_cbor_drop_count   << "/" << std::setw(w)
+                         << output.cbor->get_length();
+                uint64_t cdns_written = (stats.processed_message_count - last_stats.processed_message_count) -
+                                        (stats.output_cbor_drop_count  - last_stats.output_cbor_drop_count);
+                int tp = std::lround(cdns_written * 100.0 / (stats.processed_message_count - last_stats.processed_message_count));
+                LOG_INFO << " CDNS out: writ/% traffic         "                                       << std::setw(w)
+                         << cdns_written        << "/" << std::setw(w)
+                         << std::min(tp, 100)   << "/" << std::setw(w)
+                         << "";
+
                 next_statslog_timestamp = last_recv_timestamp + cno::seconds(config.log_network_stats_period);
                 last_statslog_timestamp = last_recv_timestamp;
                 last_stats = stats;
@@ -657,6 +673,7 @@ static int run_configuration(const po::variables_map& vm,
     // Output channels for this run.
     OutputChannels output;
     bool live_capture = false;
+    bool collect_cbor = false;
 
     // Signal handling.
     SignalHandler signal_handler({SIGPIPE, SIGINT, SIGTERM, SIGHUP, SIGUSR1});
@@ -698,6 +715,7 @@ static int run_configuration(const po::variables_map& vm,
         std::unique_ptr<BlockCborWriter> cbor =
             make_unique<BlockCborWriter>(config, std::move(encoder), live_capture);
         threads.emplace_back(cbor_writer, std::move(cbor), output.cbor);
+        collect_cbor = true;
     }
 
     SniffersConfiguration sniff_config;
@@ -779,17 +797,17 @@ static int run_configuration(const po::variables_map& vm,
                           acceptor.cancel();
                           service.stop();
                           ::pthread_kill(my_thread, SIGUSR2);
-                        } else {
-                          LOG_INFO << "Forcing C-DNS file rotation on SIGUSR1";
-                          CborItem empty_cbi;
-                          output.cbor->put(empty_cbi, true);
+                        } else if ( collect_cbor ) {
+                            LOG_INFO << "Forcing C-DNS file rotation on SIGUSR1";
+                            CborItem empty_cbi;
+                            output.cbor->put(empty_cbi, true);
                         }
                     });
 
                 std::function<void (const boost::system::error_code&)> handle_accept = [&](const boost::system::error_code&)
                 {
                     if ( signal_received == 0 )
-                        tap_loop(dnstap, stream, matcher, config, stats);
+                        tap_loop(dnstap, stream, matcher, config, stats, output);
                     acceptor.async_accept(*stream.rdbuf(), handle_accept);
                 };
                 acceptor.async_accept(*stream.rdbuf(), handle_accept);
@@ -808,10 +826,10 @@ static int run_configuration(const po::variables_map& vm,
                         LOG_INFO << "Signal handler: Received - " << strsignal(signal_received);
                         if (signal_received != SIGUSR1)
                           sniffer.breakloop();
-                        else {
-                          LOG_INFO << "Forcing C-DNS file rotation on SIGUSR1";
-                          CborItem empty_cbi;
-                          output.cbor->put(empty_cbi, true);
+                        else if ( collect_cbor ) {
+                            LOG_INFO << "Forcing C-DNS file rotation on SIGUSR1";
+                            CborItem empty_cbi;
+                            output.cbor->put(empty_cbi, true);
                         }
                     });
                 sniff_loop(&sniffer, matcher, output, config, stats);
@@ -833,7 +851,7 @@ static int run_configuration(const po::variables_map& vm,
                                 signal_received = signal;
                                 dnstap.breakloop();
                             });
-                        tap_loop(dnstap, stream, matcher, config, stats);
+                        tap_loop(dnstap, stream, matcher, config, stats, output);
                     }
                     else
                         std::cerr << "Failed to open " << fname << std::endl;

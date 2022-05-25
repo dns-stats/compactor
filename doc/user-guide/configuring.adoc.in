@@ -377,11 +377,11 @@ compactor's use of memory and CPU.
 ==== Linux with `systemd`
 
 By default, http://releases.ubuntu.com/16.04/[Ubuntu 16.04 LTS 'Xenial
-Xerus'] uses `systemd`.
+Xerus'] and later releases use `systemd`.
 
 ===== Running as a daemon
 
-Binary packages for Ubuntu 16.04 include a `systemd` service file with
+Binary packages for Ubuntu include a `systemd` service file with
 the setup information required to run _compactor_ as a daemon.
 
 When installing on Debian-based systems such as Ubuntu, installing the package
