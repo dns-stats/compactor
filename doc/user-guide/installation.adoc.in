@@ -2,14 +2,10 @@
 
 === Installing from packages
 
-Binary install packages are available from a
-https://launchpad.net[Launchpad] PPA (Personal Package Archive)
-`ppa:dns-stats/compactor-bionic` for
+Binary install packages are available from the https://launchpad.net/~dns-stats[dns-stats Launchpad PPA] (Personal Package Archive)
 
-* http://releases.ubuntu.com/18.04/[Ubuntu 18.04 LTS 'Bionic Beaver']
-
-Experimental packages for Ubuntu 20.04 are also available for early testing
-from `ppa:dns-stats/compactor-focal`.
+*  `ppa:dns-stats/compactor-bionic` for http://releases.ubuntu.com/18.04/[Ubuntu 18.04 LTS 'Bionic Beaver']
+*  `ppa:dns-stats/compactor-focal`  for http://releases.ubuntu.com/20.04/[Ubuntu 20.04 LTS 'Focal Fossa']
 
 ==== Ubuntu packages
 
@@ -29,7 +25,7 @@ as a pre-requisite package automatically.
 You need first to add the DNS-STATS PPA to your system's Software Sources:
 
 ----
-sudo add-apt-repository ppa:dns-stats/compactor
+sudo add-apt-repository ppa:dns-stats/compactor-<ubuntu_release>
 sudo apt update
 ----
 

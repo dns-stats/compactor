@@ -6,6 +6,11 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.2.2 - 2022-07-11
+--------------------------
+
+* Minor documentation updates
+
 Version 1.2.2-rc1 - 2022-05-24
 --------------------------
 
