@@ -1072,7 +1072,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
     else
         output << "\nResponse not present";
 
-    output << "\n          Transport Hop-limit MsgID QR OPCODE FLAGS(AA/TC/RD/RA/AD/CD)   RCODE  COUNTS(QD/AN/NS/AD)  Query-type  Class Trans-type\n";
+    output << "\n          Transport Hop-limit MsgID QR OPCODE FLAGS(AA/TC/RD/RA/AD/CD)   RCODE  COUNTS(QD/AN/NS/AD)  Query-type  Class Trans-type OPT-codes\n";
 
     if ( transport )
         output << "             " << transport;
@@ -1128,7 +1128,19 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         else
             output << "         ";
         if ( transaction_type )
-            output << "    " << transaction_type;
+            output << "    " << transaction_type << "    ";
+        auto edns0 = qr.query_opt_rdata;
+        if ( edns0 ) {
+            CaptureDNS::EDNS0 e0(CaptureDNS::INTERNET, 0, *edns0);
+            for ( auto& opt : e0.options() )
+            {
+                output << opt.code() << " ";
+            }
+        }
+        else 
+        {
+            output << "None";
+        }
         output << "\n";
     }
     else

@@ -271,6 +271,7 @@ public:
         PADDING,
         CHAIN,
         KEY_TAG,
+        EDE,
         DEVICE_ID = 26946
     };
 
