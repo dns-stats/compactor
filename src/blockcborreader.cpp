@@ -1132,10 +1132,13 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         auto edns0 = qr.query_opt_rdata;
         if ( edns0 ) {
             CaptureDNS::EDNS0 e0(CaptureDNS::INTERNET, 0, *edns0);
-            for ( auto& opt : e0.options() )
-            {
-                output << opt.code() << " ";
-            }
+            if ( !e0.options().empty() )
+                for ( auto& opt : e0.options() )
+                {
+                    output << opt.code() << " ";
+                }
+            else
+                output << "None";
         }
         else 
         {

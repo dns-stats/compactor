@@ -56,3 +56,4 @@ ResponseQDCount={{response_qdcount}}
 ResponseANCount={{response_ancount}}
 ResponseARCount={{response_arcount}}
 ResponseNSCount={{response_nscount}}
+OPTCodes={{opt_codes:x-array}}

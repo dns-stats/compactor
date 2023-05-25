@@ -162,13 +162,15 @@ std::ostream& operator<<(std::ostream& output, const QueryResponse& qr)
         if ( edns0 )
         {
           auto options = edns0->options();
-          if (!options.empty())
+          if ( !options.empty() )
           {
             for ( auto& opt : options )
             {
                 output << opt.code() << " ";
             }
           }
+          else
+            output << "None";
         }
         else
             output << "None";
