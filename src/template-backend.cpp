@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
+ * Copyright 2018-2023 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -616,7 +616,7 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
             {
                 opt_str = opt_str + std::to_string(opt.code()) + ",";
             }
-            dict.SetValue("opt_codes", opt_str);
+            dict.SetValue("query_opt_codes", opt_str);
         }
     }
 
