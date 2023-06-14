@@ -56,3 +56,4 @@ ResponseQDCount={{response_qdcount}}
 ResponseANCount={{response_ancount}}
 ResponseARCount={{response_arcount}}
 ResponseNSCount={{response_nscount}}
+QueryOPTCodes={{query_opt_codes:x-array}}

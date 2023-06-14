@@ -6,6 +6,11 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.2.3-rc1 - 2023-06-14
+--------------------------
+
+* Extend template backend to write EDNS OPT codes
+
 Version 1.2.2 - 2022-07-11
 --------------------------
 

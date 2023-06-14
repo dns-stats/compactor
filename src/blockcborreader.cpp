@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2022 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2023 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1072,7 +1072,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
     else
         output << "\nResponse not present";
 
-    output << "\n          Transport Hop-limit MsgID QR OPCODE FLAGS(AA/TC/RD/RA/AD/CD)   RCODE  COUNTS(QD/AN/NS/AD)  Query-type  Class Trans-type\n";
+    output << "\n          Transport Hop-limit MsgID QR OPCODE FLAGS(AA/TC/RD/RA/AD/CD)   RCODE  COUNTS(QD/AN/NS/AD)  Query-type  Class Trans-type OPT-codes\n";
 
     if ( transport )
         output << "             " << transport;
@@ -1128,7 +1128,22 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         else
             output << "         ";
         if ( transaction_type )
-            output << "    " << transaction_type;
+            output << "    " << transaction_type << "    ";
+        auto edns0 = qr.query_opt_rdata;
+        if ( edns0 ) {
+            CaptureDNS::EDNS0 e0(CaptureDNS::INTERNET, 0, *edns0);
+            if ( !e0.options().empty() )
+                for ( auto& opt : e0.options() )
+                {
+                    output << opt.code() << " ";
+                }
+            else
+                output << "None";
+        }
+        else 
+        {
+            output << "None";
+        }
         output << "\n";
     }
     else

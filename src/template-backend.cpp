@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
+ * Copyright 2018-2023 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -169,6 +169,20 @@ namespace
         }
     };
 
+    class ArrayModifier : public ctemplate::TemplateModifier
+    {
+    public:
+        virtual void Modify(const char* in, size_t inlen,
+                            const ctemplate::PerExpandData* /* per_expand_data */,
+                            ctemplate::ExpandEmitter* out,
+                            const std::string& /* arg */) const
+        {
+          out->Emit('[');
+          out->Emit(in, inlen);
+          out->Emit(']');
+        }
+    };
+
     class IPAddrModifier : public ctemplate::TemplateModifier
     {
     public:
@@ -335,6 +349,7 @@ namespace
     CStringModifier cStringModifier;
     HexStringModifier hexStringModifier;
     CSVEscapeModifier csvEscapeModifier;
+    ArrayModifier arrayModifier;
     IPAddrModifier ipaddrModifier;
     IP6AddrModifier ip6addrModifier;
     IP6AddrBinModifier ip6addrBinModifier;
@@ -352,6 +367,7 @@ namespace
         ctemplate::AddModifier("x-cstring", &cStringModifier);
         ctemplate::AddModifier("x-hexstring", &hexStringModifier);
         ctemplate::AddModifier("x-csvescape", &csvEscapeModifier);
+        ctemplate::AddModifier("x-array", &arrayModifier);
         ctemplate::AddModifier("x-ipaddr", &ipaddrModifier);
         ctemplate::AddModifier("x-ip6addr", &ip6addrModifier);
         ctemplate::AddModifier("x-ip6addr-bin", &ip6addrBinModifier);
@@ -588,6 +604,21 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
         dict.SetIntValue("transport_flags", *qr.qr_transport_flags);
     if ( qr.dns_flags )
         dict.SetIntValue("dns_flags", *qr.dns_flags);
+
+
+    if (qr.qr_flags & block_cbor::QUERY_HAS_OPT)
+    {
+        auto edns0 = qr.query_opt_rdata;
+        if ( edns0 ) {
+            std::string opt_str;
+            CaptureDNS::EDNS0 e0(CaptureDNS::INTERNET, 0, *edns0);
+            for ( auto& opt : e0.options() )
+            {
+                opt_str = opt_str + std::to_string(opt.code()) + ",";
+            }
+            dict.SetValue("query_opt_codes", opt_str);
+        }
+    }
 
     for ( auto&& val : opts_.values )
         dict.SetValue(val.first, val.second);
