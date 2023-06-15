@@ -158,169 +158,172 @@ is no query question.
 
 [cols="2*"]
 |===
-| `client_address`
+|client_address
 | IP address of client as raw bytes, 4 for IPv4, 16 for IPv6.
 
-| `client_port`
+|client_port
 | Port used by client.
 
-| `server_address`
+|server_address
 | IP address of server as raw bytes, 4 for IPv4, 16 for IPv6.
 
-| `server_port`
+|server_port
 | Port used by server.
 
-| `client_hoplimit`
+|client_hoplimit
 | Value of query client hoplimit. Blank if no query.
 
-| `dns_flags`
+|dns_flags
 | DNS flags value. See C-DNS definition for values.
 
-| `id`
+|id
 | Query ID, or response ID if no query.
 
-| `opcode`
+|opcode
 | Value of query OPCODE, or response OPCODE if no query.
 
-| `query_name`
+|query_name
 | QNAME in first Question. Blank if no question.
 
-| `query_class`
+|query_class
 | Numeric QCLASS in first Question. Blank if no question.
 
-| `query_type`
+|query_type
 | Numeric QTYPE in first Question. Blank if no question.
 
-| `query_authoritative_answer`
+|query_authoritative_answer
 | Value of query AA flag. Blank if no query.
 
-| `query_authenticated_data`
+|query_authenticated_data
 | Value of query AD flag. Blank if no query.
 
-| `query_checking_disabled`
+|query_checking_disabled
 | Value of query CD flag. Blank if no query.
 
-| `query_checking_recursion_available`
+|query_checking_recursion_available
 | Value of query RA flag. Blank if no query.
 
-| `query_checking_recursion_desired`
+|query_checking_recursion_desired
 | Value of query RD flag. Blank if no query.
 
-| `query_truncated`
+|query_truncated
 | Value of query TC flag. Blank if no query.
 
-| `query_z`
+|query_z
 | Value of query Z flag. Blank if no query.
 
-| `query_do`
+|query_do
 | Value of query EDNS0 DO bit. Blank if no query EDNS0.
 
-| `query_edns_udp_payload_size`
+|query_edns_udp_payload_size
 | Value of query EDNS0 UDP payload size. Blank if no query EDNS0.
 
-| `query_edns_version`
+|query_edns_version
 | Value of query EDNS0 version bit. Blank if no query EDNS0.
 
-| `query_len`
+|query_opt_codes
+| Comma separated list of query EDNS0 OPT codes. Blank if no query EDNS0.
+
+|query_len
 | Value of query length on the wire. Blank if no query.
 
-| `query_rcode`
+|query_rcode
 | Value of query RCODE. Blank if no query.
 
-| `query_qdcount`
+|query_qdcount
 | Count of questions captured from the query. Blank if no query.
 
-| `query_ancount`
+|query_ancount
 | Count of answer RR captured from the query. Blank if no query.
 
-| `query_nscount`
+|query_nscount
 | Count of authority RR captured from the query. Blank if no query.
 
-| `query_arcount`
+|query_arcount
 | Count of additional RR captured from the query. Blank if no query.
 
-| `query_response_has_query`
+|query_response_has_query
 | 1 if QR contains a query, otherwise 0.
 
-| `query_response_has_response`
+|query_response_has_response
 | 1 if QR contains a response, otherwise 0.
 
-| `query_response_query_has_opt`
+|query_response_query_has_opt
 | 1 if QR contains a query which has OPT, otherwise 0. Blank if no query.
 
-| `query_response_query_has_no_question`
+|query_response_query_has_no_question
 | 0 if QR contains a query which has a question, otherwise 1. Blank if no query.
 
-| `query_response_response_has_no_question`
+|query_response_response_has_no_question
 | 0 if QR contains a response which has a question, otherwise 1. Blank if no query.
 
-| `query_response_response_has_opt`
+|query_response_response_has_opt
 | 1 if QR contains a response which has OPT, otherwise 0. Blank if no response.
 
-| `query_response_flags`
+|query_response_flags
 | Query/Response flags value. See C-DNS definition for values.
 
-| `response_authoritative_answer`
+|response_authoritative_answer
 | Value of response AA flag. Blank if no response.
 
-| `response_authenticated_data`
+|response_authenticated_data
 | Value of response AD flag. Blank if no response.
 
-| `response_checking_disabled`
+|response_checking_disabled
 | Value of response CD flag. Blank if no response.
 
-| `response_checking_recursion_available`
+|response_checking_recursion_available
 | Value of response RA flag. Blank if no response.
 
-| `response_checking_recursion_desired`
+|response_checking_recursion_desired
 | Value of response RD flag. Blank if no response.
 
-| `response_truncated`
+|response_truncated
 | Value of response TC flag. Blank if no response.
 
-| `response_z`
+|response_z
 | Value of response Z flag. Blank if no response.
 
-| `response_len`
+|response_len
 | Value of response length on the wire. Blank if no response.
 
-| `response_rcode`
+|response_rcode
 | Value of response RCODE. Blank if no response.
 
-| `response_qdcount`
+|response_qdcount
 | Count of questions captured from the response. Blank if no response.
 
-| `response_ancount`
+|response_ancount
 | Count of answer RR captures from the response. Blank if no response.
 
-| `response_nscount`
+|response_nscount
 | Count of authority RR captured from the response. Blank if no response.
 
-| `response_arcount`
+|response_arcount
 | Count of additional RR captured from the response. Blank if no response.
 
-| `response_delay_nanosecs`
+|response_delay_nanosecs
 | Nano-seconds between query and response timestamps. 0 if no query or no response.
 
-| `timestamp_secs`
+|timestamp_secs
 | QR timestamp seconds since epoch.
 
-| `timestamp_microsecs`
+|timestamp_microsecs
 | QR timestamp micro-seconds since epoch.
 
-| `timestamp_nanosecs`
+|timestamp_nanosecs
 | QR timestamp nano-seconds since epoch.
 
-| `transport_flags`
+|transport_flags
 | Transport flags value. See C-DNS definition for values.
 
-| `transaction_type`
+|transaction_type
 | Transaction type value. See C-DNS definition for values.
 
-| `transport_ipv6`
+|transport_ipv6
 | 1 if the IPv4 used, 0 if IPv4.
 
-| `transport_tcp`
+|transport_tcp
 | 1 if the transport used was TCP, 0 if UDP.
 |===
 
@@ -340,40 +343,43 @@ e.g. `{{client_address:x-ipaddr}}`.
 
 [cols="2*"]
 |===
-| `x-cstring`
+|x-cstring
 | Output binary input data using C string style escapes,  e.g. `Hello, world\n\0`.  Non-printable characters without a defined  escape are output as `\xaa`.
 
-| `x-csvescape`
+|x-array
+| Output input data wrapped in square parenthesis.
+
+|x-csvescape
 | Output input data escaping for use with CSV as described in https://tools.ietf.org/html/rfc4180[RFC4180], e.g. `"Hello, ""quotes"""`.
 
-| `x-hexstring`
+|x-hexstring
 | Output binary input data as hex characters. A 0 byte is output as `\0`, all other values as `\xaa`.
 
-| `x-ipaddr`
+|x-ipaddr
 | Output text representation of a IPv4 or IPv6 address, depending on whether  filter input was 4 or 16 bytes.
 
-| `x-ip6addr`
+|x-ip6addr
 | Output IPv4 or IPv6 address as the IPv6 printable address representation. IPv4  addresses are output as `::ffff:192.0.2.25`.
 
-| `x-ip6addr-bin`
+|x-ip6addr-bin
 | Output IPv4 or IPv6 addresses as a 16 byte binary IPv6 address. IPv4 addresses  are output as `0x00000000000000000000ffffc0000219`.
 
-| `x-ipaddr-geo-location`
+|x-ipaddr-geo-location
 | Given an IPv4 or IPv6 address, output the location ID reported by the MaxMind database for that address. The city ID is reported if found, otherwise the country ID if found, otherwise the continent ID if found, otherwise 0. Error if no MaxMind database files are found.
 
-| `x-ipaddr-geo-asn`
+|x-ipaddr-geo-asn
 | Given an IPv4 or IPv6 address, output the ASN reported by the MaxMind database for that address, or 0 if not found. Error if no MaxMind database files are found.
 
-| `x-ipaddr-geo-as-netmask`
+|x-ipaddr-geo-as-netmask
 | Given an IPv4 or IPv6 address, output the netmask reported by the MaxMind database for the AS network containing that address, or 0 if not found. Error if no MaxMind database files are found.
 
-| `x-date`
+|x-date
 | Output timestamp in seconds as a UTC date in ISO601 format (YYYY-MM-DD).
 
-| `x-datefmt=<fmt>`
+|x-datefmt=<fmt>
 | Output timestamp in seconds as a UTC date and time in user-specified format. The string `<fmt>` must be a valid *strftime(3)* format string.
 
-| `x-datetime`
+|x-datetime
 | Output timestamp in seconds as a UTC date and time in ISO601 format (YYYY-MM-DD HH:MM:SS).
 
 |===
