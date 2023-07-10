@@ -16,7 +16,7 @@ AC_PREREQ(2.61)
 AC_USE_SYSTEM_EXTENSIONS
 
 AC_CONFIG_SRCDIR([src/compactor.cpp])
-AC_CONFIG_HEADER([config.h])
+AC_CONFIG_HEADERS([config.h])
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -26,7 +26,7 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 # Checks for programs.
 AC_PROG_CXX
 AX_CXX_COMPILE_STDCXX([11], [noext], [mandatory])
-AC_PROG_LIBTOOL
+LT_INIT
 AC_PROG_AWK
 
 AC_SUBST(ASCIIDOC,[no])

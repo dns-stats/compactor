@@ -6,10 +6,17 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.2.3-rc2 - 2023-07-10
+--------------------------
+
+* Update m4 macros to remove build warnings on Ubuntu Jammy
+* Inspector: Update pseudoanonymisation code for OpenSSL 3.0 to remove warnings
+  about deprecated functions on Ubuntu Jammy
+
 Version 1.2.3-rc1 - 2023-06-14
 --------------------------
 
-* Extend template backend to write EDNS OPT codes
+* Inspector: Extend template backend to write EDNS OPT codes
 
 Version 1.2.2 - 2022-07-11
 --------------------------

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2018-2019, 2023 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -93,7 +93,11 @@ public:
     static byte_string generate_key(const char *str, const char *salt);
 
 private:
+#if OPENSSL_VERSION_MAJOR >= 3
+    byte_string key_str;
+#else
     AES_KEY aes_key;
+#endif
 };
 
 #else
