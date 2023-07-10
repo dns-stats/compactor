@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019, 2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2018-2019, 2021, 2023 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -39,8 +39,12 @@ PseudoAnonymise::PseudoAnonymise(const byte_string& key)
 {
     if ( key.size() != 16 )
         throw std::logic_error("Keys must be 16 bytes long");
+#if OPENSSL_VERSION_MAJOR >= 3
+    key_str = key;
+#else
     if ( AES_set_encrypt_key(key.data(), key.size() * 8, &aes_key) != 0 )
         throw std::range_error("Key setup error");
+#endif
 }
 
 IPAddress PseudoAnonymise::address(const IPAddress& addr) const
@@ -56,7 +60,42 @@ IPAddress PseudoAnonymise::address(const IPAddress& addr) const
         addr_in = addr4 + addr4 + addr4 + addr4;
     }
 
+#if OPENSSL_VERSION_MAJOR >= 3
+    auto cipher_ctx = std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>(EVP_CIPHER_CTX_new(), &EVP_CIPHER_CTX_free);
+    if (cipher_ctx == nullptr) {
+      throw std::runtime_error("Could not initialize EVP cipher context");
+    }
+
+    auto cipher = std::unique_ptr<EVP_CIPHER, decltype(&EVP_CIPHER_free)>(EVP_CIPHER_fetch(nullptr, "AES-128-CBC", nullptr), &EVP_CIPHER_free);
+    if (cipher == nullptr) {
+      throw std::runtime_error("Could not initialize EVP cipher");
+    }
+
+    if (EVP_EncryptInit(cipher_ctx.get(), cipher.get(), reinterpret_cast<const unsigned char*>(key_str.c_str()), nullptr) == 0) {
+      throw std::runtime_error("Could not initialize EVP encryption algorithm");
+    }
+
+    // Disable padding
+    const auto in_size = addr_in.size();
+    assert(in_size == 16);
+    const auto blocksize = EVP_CIPHER_get_block_size(cipher.get());
+    assert(blocksize == 16);
+    EVP_CIPHER_CTX_set_padding(cipher_ctx.get(), 0);
+
+    int update_len = 0;
+    if (EVP_EncryptUpdate(cipher_ctx.get(), &addr_out.front(), &update_len, addr_in.data(), static_cast<int>(in_size)) == 0) {
+      throw std::runtime_error("Could not encrypt address");
+    }
+
+    int final_len = 0;
+    if (EVP_EncryptFinal_ex(cipher_ctx.get(), &addr_out.front() + update_len, &final_len) == 0) {
+      throw std::runtime_error("Could not finalize address encryption");
+    }
+
+    assert(update_len + final_len == (int)in_size);
+#else
     AES_encrypt(addr_in.data(), &addr_out.front(), &aes_key);
+#endif
 
     return IPAddress(addr.is_ipv6() ? addr_out : addr_out.substr(0, 4));
 }
