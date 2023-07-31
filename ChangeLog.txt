@@ -6,6 +6,11 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.2.3 - 2023-07-31
+--------------------------
+
+* No change from ~rc2.
+
 Version 1.2.3-rc2 - 2023-07-10
 --------------------------
 
