@@ -510,7 +510,7 @@ po::variables_map Configuration::parse_command_line(int ac, char *av[])
         po::store(po::command_line_parser(ac, av).options(all).positional(positional_options_).run(), cmdline_vars_);
     } else {
         std::vector<std::string> unrecognised = collect_unrecognized(parsed.options, po::include_positional);
-        for(auto i : unrecognised) {
+        for(const auto& i : unrecognised) {
             LOG_WARN << "Unrecognized command line option: " << i; 
         } 
     }
@@ -1801,7 +1801,7 @@ bool HintsExcluded::read_excludes_file(const std::string& excludesfile)
             std::string::size_type n;
 
             if ( ( n = line.find('#')) != std::string::npos )
-                line = line.substr(0, n);
+                line.resize(n);
             boost::algorithm::trim(line);
             if ( !line.empty() &&
                  *line.begin() != '[' &&

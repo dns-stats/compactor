@@ -421,7 +421,7 @@ bool BlockCborReader::readBlock()
         start_time_ = block_->start_time;
 
     // Accumulate address events counts.
-    for ( auto& aeci : block_->address_event_counts )
+    for ( const auto& aeci : block_->address_event_counts )
     {
         // Check we have all address event info required. If not, ignore this one.
         if ( !aeci.first.address || !aeci.first.type || !aeci.first.code )
@@ -574,7 +574,7 @@ void BlockCborReader::read_extra_info(
     if ( extra_info->questions_list )
     {
         std::vector<QueryResponseData::Question> qvec;
-        for ( auto& qid : block_->questions_lists[*extra_info->questions_list].vec )
+        for ( const auto& qid : block_->questions_lists[*extra_info->questions_list].vec )
         {
             const block_cbor::Question& q = block_->questions[*qid];
             QueryResponseData::Question newq;
@@ -613,7 +613,7 @@ void BlockCborReader::read_rr(block_cbor::index_t index, boost::optional<std::ve
     if ( index )
     {
         std::vector<QueryResponseData::RR> rrvec;
-        for ( auto& rrid : block_->rrs_lists[*index].vec )
+        for ( const auto& rrid : block_->rrs_lists[*index].vec )
         {
             const block_cbor::ResourceRecord& rr = block_->resource_records[*rrid];
             QueryResponseData::RR newrr;
@@ -968,7 +968,7 @@ void BlockCborReader::dump_address_events(std::ostream& os) const
 
         std::sort(aeinfo.begin(), aeinfo.end());
 
-        for ( auto& aei : aeinfo )
+        for ( const auto& aei : aeinfo )
         {
             if ( !seen_one )
             {
@@ -1133,7 +1133,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         if ( edns0 ) {
             CaptureDNS::EDNS0 e0(CaptureDNS::INTERNET, 0, *edns0);
             if ( !e0.options().empty() )
-                for ( auto& opt : e0.options() )
+                for ( const auto& opt : e0.options() )
                 {
                     output << opt.code() << " ";
                 }

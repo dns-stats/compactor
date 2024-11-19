@@ -312,7 +312,7 @@ void CborBaseDecoder::skip()
         break;
 
     default:
-        std::logic_error("Missing CBOR type");
+        throw std::logic_error("Missing CBOR type");
         break;
     }
 }

@@ -6,10 +6,16 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.2.4-rc1 - 2025-05-14
+--------------------------
+
+* Minor updates for Noble support
+* Update golden cbor2diag output for newer versions. Thanks amesgen.
+
 Version 1.2.3 - 2023-07-31
 --------------------------
 
-* No change from ~rc2.
+* No change from -rc2.
 
 Version 1.2.3-rc2 - 2023-07-10
 --------------------------

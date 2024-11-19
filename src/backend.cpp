@@ -552,20 +552,20 @@ void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
 
     if ( !missing.empty() )
     {
-        std::string report;
+        std::string defaults_report;
         bool comma = false;
 
         for ( const auto& a : missing )
         {
             if ( comma )
-                report.append(", ");
-            report.append(a);
+                defaults_report.append(", ");
+            defaults_report.append(a);
             comma = true;
         }
 
         if ( !opts_.defaults.defaults_file_read )
-            report.append(" (no defaults file found)");
+            defaults_report.append(" (no defaults file found)");
 
-        throw pcap_defaults_backend_error(report);
+        throw pcap_defaults_backend_error(defaults_report);
     }
 }

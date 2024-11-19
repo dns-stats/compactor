@@ -11,10 +11,15 @@ https://github.com/dns-stats/compactor/wiki/user-guide.pdf.
 Binary install packages for Ubuntu are available
 from a Launchpad Personal Package Archive (PPA).
 
-You need first to add the DNS-STATS PPA to your system's Software Sources:
+You need first to add the DNS-STATS PPA to your system's Software Sources. We 
+currently maintain separate PPAs for each Ubuntu release :
+
+* ppa:dns-stats/compactor-focal
+* ppa:dns-stats/compactor-jammy
+* ppa:dns-stats/compactor-noble
 
 ----
-sudo add-apt-repository ppa:dns-stats/compactor
+sudo add-apt-repository ppa:dns-stats/compactor-<ubuntu_release>
 sudo apt update
 ----
 
@@ -87,3 +92,14 @@ $ ./autogen.sh
 $ ./configure
 $ make
 $ make install
+
+== Running the tests
+
+To run the tests some additional dependancies are required:
+
+* tshark
+* ruby-rubygems
+* Ruby gems: cbor-diag (b0.9.4 or later) and cddl
+
+$ make check
+$ ./compactor-tests -r junit -o tests.xml

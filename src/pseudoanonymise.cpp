@@ -114,7 +114,7 @@ byte_string PseudoAnonymise::edns0(const byte_string& edns0) const
 
     CaptureDNS::EDNS0 res(CaptureDNS::INTERNET, 0, byte_string());
 
-    for ( auto& opt : e0.options() )
+    for ( const auto& opt : e0.options() )
     {
         if ( opt.code() == CaptureDNS::CLIENT_SUBNET )
         {

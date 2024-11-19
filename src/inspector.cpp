@@ -303,7 +303,7 @@ int main(int ac, char *av[])
             po::store(po::command_line_parser(ac, av).options(all).positional(positional).run(), vm);
         else {
             std::vector<std::string> unrecognised = collect_unrecognized(parsed.options, po::include_positional);
-            for(auto i : unrecognised) {
+            for(const auto& i : unrecognised) {
                 LOG_WARN << "Unrecognized command line option: " << i; 
             } 
         }
@@ -373,7 +373,7 @@ int main(int ac, char *av[])
         }
         else
         {
-            std::string template_args[] = { "template", "value" };
+            const std::string template_args[] = { "template", "value" };
             for ( const std::string& arg : template_args )
                 if ( vm.count(arg) != 0 )
                 {
@@ -542,7 +542,7 @@ int main(int ac, char *av[])
             return convert_stream_to_backend(("(stdin)"), std::cin, output_backend, info, options);
         }
 
-        for ( auto& fname : vm["cdns-file"].as<std::vector<std::string>>() )
+        for ( const auto& fname : vm["cdns-file"].as<std::vector<std::string>>() )
         {
             if ( !output_specified )
             {

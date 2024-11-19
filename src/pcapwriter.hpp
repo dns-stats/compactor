@@ -22,7 +22,6 @@
 
 #include "configuration.hpp"
 #include "makeunique.hpp"
-#include "nocopypacket.hpp"
 #include "rotatingfilename.hpp"
 #include "log.hpp"
 

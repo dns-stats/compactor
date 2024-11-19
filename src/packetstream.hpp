@@ -271,7 +271,7 @@ protected:
      * \param pkt_data basic packet data so far.
      * \throws malformed_packet if no data PDU found.
      */
-    void icmp_packet(Tins::ICMP* icmp, Tins::PDU* ip, PktData& pkt_data);
+    void icmp_packet(Tins::ICMP* icmp, Tins::PDU* ip, const PktData& pkt_data);
 
     /**
      * \brief Process ICMPv6 packet contents.
@@ -281,7 +281,7 @@ protected:
      * \param pkt_data basic packet data so far.
      * \throws malformed_packet if no data PDU found.
      */
-    void icmpv6_packet(Tins::ICMPv6* icmp, Tins::PDU* ip, PktData& pkt_data);
+    void icmpv6_packet(Tins::ICMPv6* icmp, Tins::PDU* ip, const PktData& pkt_data);
 
     /**
      * \brief Dispatch a DNS message.

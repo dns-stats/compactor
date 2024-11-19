@@ -612,7 +612,7 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
         if ( edns0 ) {
             std::string opt_str;
             CaptureDNS::EDNS0 e0(CaptureDNS::INTERNET, 0, *edns0);
-            for ( auto& opt : e0.options() )
+            for ( const auto& opt : e0.options() )
             {
                 opt_str = opt_str + std::to_string(opt.code()) + ",";
             }

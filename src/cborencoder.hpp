@@ -488,11 +488,6 @@ public:
     virtual void abort() = 0;
 
     /**
-     * \brief Wait for the compression to finish.
-     */
-    virtual void wait() = 0;
-
-    /**
      * \brief Return the suggested extension for files using the
      * compression done by this pool.
      */
@@ -597,7 +592,9 @@ public:
      */
     virtual ~ParallelWriterPool()
     {
-        wait();
+        std::unique_lock<std::mutex> lock(m_);
+        if ( nthreads_ > 0 )
+            thread_finished_.wait(lock, [&](){ return nthreads_ == 0; });
     }
 
     /**
@@ -633,16 +630,6 @@ public:
     virtual void abort()
     {
         abort_ = true;
-    }
-
-    /**
-     * \brief Wait for all current compressions to finish.
-     */
-    virtual void wait()
-    {
-        std::unique_lock<std::mutex> lock(m_);
-        if ( nthreads_ > 0 )
-            thread_finished_.wait(lock, [&](){ return nthreads_ == 0; });
     }
 
     /**

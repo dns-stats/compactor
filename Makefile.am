@@ -280,7 +280,6 @@ compactor_headers = \
         src/channel.hpp \
         src/dnstap.hpp \
         src/matcher.hpp \
-        src/nocopypacket.hpp \
         src/packetstatistics.hpp \
         src/packetstream.hpp \
         src/pcapwriter.hpp \
