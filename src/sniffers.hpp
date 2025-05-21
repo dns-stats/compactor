@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021, 2025 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -359,6 +359,12 @@ private:
      * \brief block when adding sniffed packet to processing queue.
      */
     bool block_put_;
+
+   /**
+    * \brief flag to signal an interrupt for the case when
+    * \      no packets are being received
+    */
+    bool interrupt_received_;
 
     /**
      * \brief count of packets sniffed.

@@ -6,10 +6,12 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
-Version 1.2.4-rc1 - 2025-05-14
+Version 1.2.4-rc1 - 2025-06-10
 --------------------------
 
-* Minor updates for Noble support
+* Minor updates for Noble support and to improve CPP check results
+* Fix for behaviour on libpcap 1.10.2 and later where pcap_breakloop()
+  no longer causes a return from the capture loop until another packet arrives
 * Update golden cbor2diag output for newer versions. Thanks amesgen.
 
 Version 1.2.3 - 2023-07-31
