@@ -39,21 +39,24 @@ call_tshark()
     # Should be able to remove the last 2 deletions when we have name compression
      tshark -nr $1 -Y "dns.id==$2" -T text -V  >  $3.full
      sed -r -e '/Frame [0-9]/,/^.*\[Time shift/d' \
-              -e '/^.*\[Time delta/,/Internet/d' \
+              -e '/^.*Frame Number:/,/Internet/d' \
               -e '/^.*\[Timestamps/d' \
               -e '/^.*\[Time since/d' \
-              -e '/^.*Version: 4/,/Fragment offset:/d' \
+              -e '/^.*\[Time delta/d' \
+              -e '/^.*Version: 4/,/Fragment Offset:/d' \
               -e '/^.*Version: 6/,/Next header:/d' \
               -e '/^.*Identification:/d' \
               -e '/^.*Header checksum:/d' \
               -e '/^.*Checksum:/d' \
               -e '/^.*Total length:/d' \
-              -e '/^.*Window size value:/,/^.*\[PDU Size/d' \
+              -e '/^.*Window:/,/^.*\[PDU Size/d' \
               -e '/^.*TCP segment data/,/^.*\[Reassembled TCP Data/d' \
               -e '/^.*Transmission Control Protocol/d' \
               -e '/^.*\[Next sequence number:/d' \
               -e '/^.*\Acknowledgment number.*:/d' \
-              -e '/^.*\Sequence number.*:/d' \
+              -e '/^.*\Acknowledgment Number.*:/d' \
+              -e '/^.*\Stream Packet Number.*:/d' \
+              -e '/^.*\Sequence Number.*:/d' \
               -e '/^.*\[Stream index:/d' \
               -e '/^.*\[.*(Source|Destination) GeoIP/d' \
               -e '/^.*Request In:/d' \
