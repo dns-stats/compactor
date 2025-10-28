@@ -37,26 +37,13 @@ call_tshark()
     # $3 = Base output file path.
 
     # Should be able to remove the last 2 deletions when we have name compression
-     tshark -nr $1 -Y "dns.id==$2" -T text -V  >  $3.full
-     sed -r -e '/Frame [0-9]/,/^.*\[Time shift/d' \
-              -e '/^.*\[Time delta/,/Internet/d' \
-              -e '/^.*\[Timestamps/d' \
-              -e '/^.*\[Time since/d' \
-              -e '/^.*Version: 4/,/Fragment offset:/d' \
-              -e '/^.*Version: 6/,/Next header:/d' \
-              -e '/^.*Identification:/d' \
-              -e '/^.*Header checksum:/d' \
-              -e '/^.*Checksum:/d' \
-              -e '/^.*Total length:/d' \
-              -e '/^.*Window size value:/,/^.*\[PDU Size/d' \
-              -e '/^.*TCP segment data/,/^.*\[Reassembled TCP Data/d' \
-              -e '/^.*Transmission Control Protocol/d' \
-              -e '/^.*\[Next sequence number:/d' \
-              -e '/^.*\Acknowledgment number.*:/d' \
-              -e '/^.*\Sequence number.*:/d' \
-              -e '/^.*\[Stream index:/d' \
-              -e '/^.*\[.*(Source|Destination) GeoIP/d' \
-              -e '/^.*Request In:/d' \
+     tshark -nr $1 -Y "dns.id==$2" -T text -O dns  >  $3.full
+     tshark -nr $1 -Y "dns.id==$2" -T text -T fields -e frame.time_epoch -e ip.ttl -e  udp.length >> $3.full
+     sed -r -e 's/Frame .*:/Frame:/g' \
+            -e '/^.*Ethernet II/d' \
+            -e 's/, Seq:.*//g' \
+            -e '/^.*\[Request In:/d' \
+            -e '/^.*\[Time:/d' \
               $3.full > $3.out
 }
 
