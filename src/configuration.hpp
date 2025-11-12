@@ -857,24 +857,29 @@ public:
      */
     unsigned int log_network_stats_period;
 
-   /**
-    * \brief log detailed file handling
-    */
-   bool log_file_handling;
-
-   /**
-    * \brief sampling threshold above which to enable sampling
-    */
-   unsigned int sampling_threshold;
-
-   /**
-    * \brief sampling rate to use if enabled
-    */
-   unsigned int sampling_rate;
+    /**
+     * \brief Log stats output in JSON instead of human readable text
+     */
+    bool log_network_stats_json;
 
     /**
-     * \brief minimum time to apply sampling for
+     * \brief log detailed file handling
      */
+    bool log_file_handling;
+
+    /**
+     * \brief sampling threshold above which to enable sampling
+     */
+    unsigned int sampling_threshold;
+ 
+    /**
+     * \brief sampling rate to use if enabled
+     */
+    unsigned int sampling_rate;
+ 
+     /**
+      * \brief minimum time to apply sampling for
+      */
     unsigned int sampling_time;
 
     /**

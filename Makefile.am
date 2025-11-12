@@ -280,6 +280,7 @@ compactor_headers = \
         src/channel.hpp \
         src/dnstap.hpp \
         src/matcher.hpp \
+        src/monitoring.hpp \
         src/packetstatistics.hpp \
         src/packetstream.hpp \
         src/pcapwriter.hpp \
@@ -302,6 +303,7 @@ compactor_src_with_internal_tests = \
 
 compactor_src_without_internal_tests = \
         src/blockcborwriter.cpp \
+        src/monitoring.cpp \
         src/packetstream.cpp \
         src/signalhandler.cpp \
         src/sniffers.cpp

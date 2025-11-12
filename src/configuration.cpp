@@ -304,7 +304,7 @@ Configuration::Configuration()
       max_block_items(5000),
       max_output_size(0),
       report_info(false), relaxed_mode(false), log_network_stats_period(0),
-      log_file_handling(false),
+      log_network_stats_json(false), log_file_handling(false),
       sampling_threshold(10), sampling_rate(0), sampling_time(100),
       debug_dns(false), debug_qr(false),
       omit_hostid(false), omit_sysid(false), start_end_times_from_data(false),
@@ -482,6 +482,11 @@ Configuration::Configuration()
         ("log-network-stats-period,L",
          po::value<unsigned int>(&log_network_stats_period)->default_value(0),
          "log network collection stats period.")
+#ifdef ENABLE_LOGNETWORKSTATSJSON
+        ("log-network-stats-json,j",
+         po::value<bool>(&log_network_stats_json)->implicit_value(true),
+          "log the network stats in json format (not multi-line text).")
+#endif
          ("log-file-handling,F",
           po::value<bool>(&log_file_handling)->implicit_value(true),
           "log details of file handling on rotation.")
@@ -548,6 +553,7 @@ po::variables_map Configuration::reread_config_file()
      * from the config file first read.
      */
     po::variables_map res = cmdline_vars_;
+    LOG_INFO << "Trying to load config from " << config_file_;
 
     if ( boost::filesystem::exists(config_file_) )
     {
@@ -567,6 +573,7 @@ po::variables_map Configuration::reread_config_file()
         }
         LOG_INFO << "Loaded config from " << config_file_;
     }
+    LOG_INFO << "Config file not found (using command line args and defaults)";
 
     po::notify(res);
     set_config_items(res);
