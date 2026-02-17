@@ -165,10 +165,19 @@ static void packet_writer(const char* name,
         {
             out->write_packet(*(pcap->pdu), pcap->timestamp, config);
         }
+        catch (Tins::serialization_error& err)
+        {
+          double ts = std::chrono::duration_cast<std::chrono::microseconds>(pcap->timestamp.time_since_epoch()).count();
+          if ( config.warn_on_serialization_error )
+              LOG_WARN  << "Warning - libtins 'Serialization error' ignored while writing PCAP packet with timestamp " << std::setprecision (16) << (ts) << "us since epoch";
+          else
+              LOG_ERROR << "Error from libtins while writing PCAP packet with timestamp " << std::setprecision (16) << (ts) << "us since epoch: " << err.what();
+          if ( config.log_opt_on_serialization_error )
+              PcapBaseWriter::log_if_tcp_opt_issue(pcap->pdu.get(), config);
+        }
         catch (const std::exception& err)
         {
-            double ts = std::chrono::duration_cast<std::chrono::microseconds>(pcap->timestamp.time_since_epoch()).count();
-            LOG_ERROR << "Error while writing PCAP packet with timestamp " << std::setprecision (16) << (ts) << "us since epoch: " << err.what();
+            LOG_ERROR << "Error while writing PCAP packet" << err.what();
         }
     }
 }

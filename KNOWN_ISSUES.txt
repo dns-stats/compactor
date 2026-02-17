@@ -63,3 +63,10 @@ KNOWN ISSUES/LIMITATIONS:
 * We are observing that, when run inside a virtual machine, compactor
   can sustain without dropping packets only a fraction of the traffic levels
   it can manage when run directly on the host. We are investigating.
+
+* Up to and including at least `libtins` v4.6 there is a known bug with the serialization 
+  of PCAP packets that contain certain TCP options, see 
+  https://github.com/mfontanini/libtins/pull/404. This affects valid packets
+  that contain a TCP Fast Open Cookie Request. Configuration options are now provided to
+  treat all serialization errors from `libtins` as warnings instead of errors, and to also
+  optionally parse the affected packet to log if it does contain such a TCP option. 

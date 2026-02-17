@@ -143,3 +143,10 @@
    The server address is the address of the recipient of a query or the sender
    of a response.  _arg_ must be a positive integer less than or equal to 128.
    The default is 128, so the entire IPv6 address is stored.
+
+*--warn-on-serialization-error*::
+   Treat libtins serialization error on PCAP packet write as warning, not error. See KNOWN ISSUES.
+
+*--log-opt-on-serialization-error*::
+   If libtins serialization occurs, log if the packet contains TCP OPT known to trigger this. See KNOWN ISSUES.
+

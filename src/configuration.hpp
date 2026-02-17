@@ -868,6 +868,18 @@ public:
     bool log_file_handling;
 
     /**
+     * \brief Treat libtins serialization error on PCAP packet
+     *        write as warning, not error, See KNOWN ISSUES
+     */
+    bool warn_on_serialization_error;
+
+    /**
+     * \brief If libtins serialization occurs, log if the packet
+     *        contains TCP OPT known to trigger this, see KNOWN ISSUES
+     */
+    bool log_opt_on_serialization_error;
+
+    /**
      * \brief sampling threshold above which to enable sampling
      */
     unsigned int sampling_threshold;

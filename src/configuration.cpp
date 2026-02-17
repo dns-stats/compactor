@@ -305,6 +305,7 @@ Configuration::Configuration()
       max_output_size(0),
       report_info(false), relaxed_mode(false), log_network_stats_period(0),
       log_network_stats_json(false), log_file_handling(false),
+      warn_on_serialization_error(false), log_opt_on_serialization_error(false),
       sampling_threshold(10), sampling_rate(0), sampling_time(100),
       debug_dns(false), debug_qr(false),
       omit_hostid(false), omit_sysid(false), start_end_times_from_data(false),
@@ -490,6 +491,12 @@ Configuration::Configuration()
          ("log-file-handling,F",
           po::value<bool>(&log_file_handling)->implicit_value(true),
           "log details of file handling on rotation.")
+         ("warn-on-serialization-error,W",
+          po::value<bool>(&warn_on_serialization_error)->implicit_value(true),
+           "treat libtins serialization error on PCAP packet write as warning, not error.")
+         ("log-opt-on-serialization-error,O",
+          po::value<bool>(&log_opt_on_serialization_error)->implicit_value(true),
+           "if libtins serialization occurs, log if the packet contains TCP OPT known to trigger this.")
          ("sampling-threshold",
          po::value<unsigned int>(&sampling_threshold)->default_value(10),
          "sampling threshold - percentage of traffic dropped.")
