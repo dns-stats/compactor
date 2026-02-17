@@ -265,7 +265,7 @@ void BaseSniffers::packet_read_thread()
                 case -1:
                     // TODO: Find way to indicate error rather than EOF to
                     // receiving thread.
-                    LOG_ERROR << pcap_geterr(h);
+                    LOG_ERROR << "Error from libpcap pcap_next_ex(): " << pcap_geterr(h);
                     finished = true;
                     break;
 

@@ -206,7 +206,7 @@ void Monitoring::write_stats(const LogStats& ls)
              << ls.matc_recv << "/" << std::setw(w)
              << ls.matc_drop << "/" << std::setw(w)
              << ls.matc_queue;
-    if (config_.sampling_rate > 0) 
+    if (sniffer_ && config_.sampling_rate > 0) 
     {
         const char* sampling_text = sampling_? "ON":"OFF";
         LOG_INFO << " Sampling: recv/discard/state     " << std::setw(w)
@@ -249,7 +249,7 @@ void Monitoring::write_stats_json(const LogStats& ls)
     data["matcher"] = { {"recv",    ls.matc_recv},
                         {"drop",    ls.matc_drop},
                         {"queue",   ls.matc_queue} };
-    if (config_.sampling_rate > 0)
+    if (sniffer_ && config_.sampling_rate > 0)
     {
         const char* sampling_text = sampling_? "ON":"OFF";
         data["sampling"] = { {"recv",    ls.matc_recv},

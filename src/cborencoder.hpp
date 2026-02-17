@@ -695,7 +695,7 @@ private:
         }
         catch (const std::exception& err)
         {
-            LOG_ERROR << err.what();
+            LOG_ERROR << "Error while compressing file " << input.c_str()  << ": "<< err.what();
         }
 
         std::unique_lock<std::mutex> lock(m_);

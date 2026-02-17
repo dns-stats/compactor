@@ -55,7 +55,7 @@ StreamWriter::~StreamWriter()
         if (logging_)
             LOG_INFO << "File handling: Closing and renaming:               " << temp_name_.c_str() << " to " << name_.c_str();
         if ( std::rename(temp_name_.c_str(), name_.c_str()) != 0 )
-            LOG_ERROR << "file rename from " << temp_name_ << " to " << name_ << " failed";
+            LOG_ERROR << "File rename from " << temp_name_ << " to " << name_ << " failed";
     }
 }
 
@@ -142,7 +142,7 @@ XzStreamWriter::~XzStreamWriter()
     }
     catch (const XzException& err)
     {
-        LOG_ERROR << err.what();
+        LOG_ERROR << "Error in XzStreamWriter: " << err.what();
     }
 }
 

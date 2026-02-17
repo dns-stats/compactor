@@ -573,7 +573,8 @@ po::variables_map Configuration::reread_config_file()
         }
         LOG_INFO << "Loaded config from " << config_file_;
     }
-    LOG_INFO << "Config file not found (using command line args and defaults)";
+    else
+      LOG_INFO << "Config file not found (using just command line args and defaults)";
 
     po::notify(res);
     set_config_items(res);

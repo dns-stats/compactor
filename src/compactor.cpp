@@ -167,7 +167,8 @@ static void packet_writer(const char* name,
         }
         catch (const std::exception& err)
         {
-            LOG_ERROR << err.what();
+            double ts = std::chrono::duration_cast<std::chrono::microseconds>(pcap->timestamp.time_since_epoch()).count();
+            LOG_ERROR << "Error while writing PCAP packet with timestamp " << std::setprecision (16) << (ts) << "us since epoch: " << err.what();
         }
     }
 }
@@ -249,7 +250,7 @@ static void cbor_writer(std::unique_ptr<BlockCborWriter> out,
         }
         catch (const std::exception& err)
         {
-            LOG_ERROR << err.what();
+            LOG_ERROR << "Error while in cbor_writer: "<<  err.what();
         }
     }
 }
@@ -701,7 +702,7 @@ static int run_configuration(const po::variables_map& vm,
     catch (const Tins::invalid_pcap_filter& err)
     {
         if ( log_errs )
-            LOG_ERROR << "Invalid PCAP filter:" << err.what();
+            LOG_ERROR << "Invalid PCAP filter: " << err.what();
         else
             std::cerr << "Invalid PCAP filter: " << err.what() << std::endl;
         res = 3;
@@ -710,7 +711,7 @@ static int run_configuration(const po::variables_map& vm,
     catch (const dnstap_invalid& err)
     {
         if ( log_errs )
-            LOG_ERROR << "Invalid DNSTAP:" << err.what();
+            LOG_ERROR << "Invalid DNSTAP: " << err.what();
         else
             std::cerr << "Invalid DNSTAP: " << err.what() << std::endl;
         res = 3;
@@ -919,8 +920,8 @@ int main(int ac, char *av[])
     }
     catch (po::error& err)
     {
-        LOG_ERROR << err.what();
-        std::cerr << "Error: " << err.what() << std::endl;
+        LOG_ERROR << "Error in compactor main function: " << err.what();
+        std::cerr << "Error in compactor main function: " << err.what() << std::endl;
         return 1;
     }
 
