@@ -44,7 +44,7 @@ Required tools:
 * A C++ compiler and build chain that supports the 2011 ISO standard,
   otherwise C++11.
 * GNU autoconf, automake, libtool
-* protofbuf compiler (https://developers.google.com/protocol-buffers)
+* protofbuf compiler (https://developers.google.com/protocol-buffers) if DNSTAP support enabled
 
 Optional tools:
 
@@ -63,13 +63,17 @@ Required libraries:
   - boost-iostreams
 * liblzma (http://tukaani.org/xz/)
 * libtins (http://libtins.github.io/)
-* openssl (http://www.openssl.org/)
 * libctemplate (https://github.com/OlafvdSpek/ctemplate)
 * libmaxminddb (https://github.com/maxmind/libmaxminddb)
-* protobuf (https://developers.google.com/protocol-buffers)
 
 Optional libraries:
 
+* protobuf (https://developers.google.com/protocol-buffers)
+  Required for DNSTAP support, can be disabled via configure option
+* openssl (http://www.openssl.org/)
+  Required for pseudo-anonymisation, can be disabled via configure option
+* nlohmann/json (https://json.nlohmann.me)
+  Required for statistics logging in JSON, can be disable via configure option
 * libtcmalloc (http://goog-perftools.sourceforge.net/doc/tcmalloc.html).
   This gives a notable performance boost over the standard glibc malloc.
 

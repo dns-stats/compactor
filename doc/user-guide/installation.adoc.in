@@ -75,7 +75,7 @@ are required.  They should be available via standard installation repositories
 for most platforms. If not, for information on building pre-requisite items from
 source, see the documentation for those items.
 
-[cols=".^,.^",frame=none,grid=none]
+[cols=".^,.^"]
 |===
 
 | `{cpp} compiler` | _compactor_ and _inspector_ are written in
@@ -115,13 +115,25 @@ source, see the documentation for those items.
 | `libtins` | Networking functions library. http://libtins.github.io/.
 See  <<libtins>> if there is no package for your OS.
 
-| `openssl` | Cryptography library, used in pseudo-anonymisation.
-http://www.openssl.org/.
 
 | `libctemplate` | Text templating system. https://github.com/OlafvdSpek/ctemplate.
 
 | `libmaxminddb` | MaxMind GeoIP reader. https://github.com/maxmind/libmaxminddb.
-| `protobuf` | Google Protocol Buffers library. https://developers.google.com/protocol-buffers.
+|===
+
+==== Minimal build
+ 
+The following dependancies are required for features that are enabled by default. However if a minimal build is desired, 
+support for each of those options can be disabled via an option to `configure` which is shown below.
+
+[cols=".^,.^"]
+|===
+| `openssl` | Cryptography library, used in pseudo-anonymisation.
+http://www.openssl.org/. (`--disable-pseudo-anonymisation`)
+
+| `protobuf` | Google Protocol Buffers library. https://developers.google.com/protocol-buffers. (`--disable-dnstap`)
+
+| `nlohmann/json` | JSON library https://json.nlohmann.me. (`--disable-log-network-stats-json`)
 |===
 
 ==== Optionally building documentation

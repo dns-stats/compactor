@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2021, 2026 Internet Corporation for Assigned Names and Numbers.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,9 +9,16 @@
 Version 1.2.4-rc1 - 2025-06-10
 --------------------------
 
-* Minor updates for Noble support and to improve CPP check results
-* Fix for behaviour on libpcap 1.10.2 and later where pcap_breakloop()
+* Compactor: Refactor of packet statistics logging to now additionally 
+  support logging in JSON format using the `--log-network-stats-json` 
+  option. Requires additional dependency on `nlohmann/json`.
+* Compactor: Workarounds for known `libtins` serialization issue of certain 
+  TCP Options, see KNOWN ISSUES.
+* Compactor: Fix for behaviour on libpcap 1.10.2 and later where pcap_breakloop()
   no longer causes a return from the capture loop until another packet arrives
+* Fix for tshark test failures with Wireshark 4.6.0 to close
+  https://github.com/dns-stats/compactor/issues/92
+* Minor updates for Noble support and to improve CPP check results
 * Update golden cbor2diag output for newer versions. Thanks amesgen.
 
 Version 1.2.3 - 2023-07-31

@@ -283,8 +283,8 @@ configuration file are used.
 === _compactor_  log messages
 
 _compactor_  logs some messages to the system log. There are error messages,
-reporting an error within _compactor_ , and also some informational
-messages.
+reporting an error within _compactor_ , and also some warning and informational
+messages. A selection are explained below.
 
 [cols="1,2,3",options="header"]
 |===
@@ -293,20 +293,20 @@ messages.
 | Comment
 
 | ERROR
-| Dropping on these channels: Sniffer Matcher C-DNS 
+| Dropping on this channel: Sniffer/Matcher/C-DNS 
 | Packets are arriving faster than _compactor_  can
 process them, so packets are being dropped internally on the specified
 channels. More information is available via the *--log-network-stats-period* logging output.
 
 | ERROR
-| Dropping on these channels: Ignored-PCAP
+| Dropping on this channel: Ignored-PCAP
 | More ignored packets - that is, packets that do not appear to be DNS
 related or which are malformed - are arriving than can be processed
 and recorded to the ignored PCAP output. At least one has been
 dropped.
 
 | ERROR
-| Dropping on these channels: Raw-PCAP
+| Dropping on this channel: Raw-PCAP
 | More input packets are arriving than can be processed and recorded
 to the raw PCAP output. At least one has been dropped.
 
@@ -359,7 +359,8 @@ time limit.
 
 Other error messages are reporting an internal error.
 
-Example statistics produced by enabling the *log-network-stats-period* option:
+Example statistics produced by enabling the *log-network-stats-period* option when using the
+default, human readable multi-line format:
 
 ----
 *Stats interval: average rate           1896 pps  over  1s
@@ -378,6 +379,12 @@ line outputs data on sampling:
 
 ----
  Sampling: recv/discard/state            1896/         0/       OFF
+----
+
+Alternatively JSON format can be used by enabling the *log-network-stats-json* option:
+
+----
+{"Stats":{"ave_rate":0,"stats_interval":5,"libpcap":{"recv":6,"os_drop":0,"if_drop":0},"sniffer":{"recv":6,"drop":0,"queue":1},"matcher":{"recv":5,"drop":0,"queue":1},"cdns":{"recv":2,"drop":0,"queue":0},"cdns_out":{"written":2,"percent_traffic":33},"pcap_out":{"raw_drop":0,"ignored_drop":0}}}
 ----
 
 Note that the LIBPCAP statistics provided here are information only and may not be

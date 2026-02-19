@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018, 2022, 2025 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018, 2022, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -59,7 +59,7 @@ public:
                               const std::chrono::system_clock::time_point& timestamp) = 0;
 
      /**
-      * \brief Utility function to detect any TCP option that has length field but no data
+      * \brief Utility function to detect any TCP option that has length field but no data.
       *        libtins will throw a serialization error when trying to write
       *        this even when valid e.g. a TCP Fast Open Cookie request.
       *
@@ -67,8 +67,6 @@ public:
       */
     static bool log_if_tcp_opt_issue(Tins::PDU* pdu, const Configuration& config)
     {
-      std::unique_ptr<Tins::IP> ip;
-      std::unique_ptr<Tins::IPv6> ipv6;
       try
       {
           if ( pdu->pdu_type() == Tins::PDU::RAW )

@@ -1,5 +1,5 @@
 #
-# Copyright 2016-2019, 2021 Internet Corporation for Assigned Names and Numbers.
+# Copyright 2016-2019, 2021, 2026 Internet Corporation for Assigned Names and Numbers.
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -64,9 +64,17 @@ KNOWN ISSUES/LIMITATIONS:
   can sustain without dropping packets only a fraction of the traffic levels
   it can manage when run directly on the host. We are investigating.
 
-* Up to and including at least `libtins` v4.6 there is a known bug with the serialization 
-  of PCAP packets that contain certain TCP options, see 
+* Up to and including at least `libtins` v4.6 there is a known bug with the
+  serialization of PCAP packets that contain certain TCP options, see
   https://github.com/mfontanini/libtins/pull/404. This affects valid packets
-  that contain a TCP Fast Open Cookie Request. Configuration options are now provided to
-  treat all serialization errors from `libtins` as warnings instead of errors, and to also
-  optionally parse the affected packet to log if it does contain such a TCP option. 
+  that contain a TCP Fast Open Cookie Request when capturing all PCAP traffic
+  with the `raw-pacp` option. If only capturing ignored PCAP packets with the
+  `ignored-pacp` option it only affects packets that are treated as 'Non-DNS
+  packets' i.e. those that do not arrive on the port configured as the `dns-port`
+  in the `compactor` configuration. For example if the `dns-port` is configured
+  as port 53, a TCP SYN packet arriving on port 853 will trigger this issue.
+  Configuration options are now provided to  
+  **  treat all serialization errors from `libtins` as warnings instead of errors
+      `--warn-on-serialization-error`
+  **  optionally parse the affected packet and log if it does contain such a TCP option
+      `--log-opt-on-serialization-error`
