@@ -1355,6 +1355,16 @@ namespace block_cbor {
                 dnsf |= RESPONSE_AA;
             else if ( tok == "query-do" )
                 dnsf |= QUERY_DO;
+            else if ( tok == "query-co" )
+                dnsf |= QUERY_CO;
+            else if ( tok == "query-de" )
+                dnsf |= QUERY_DE;
+            else if ( tok == "response-do" )
+                dnsf |= RESPONSE_DO;
+            else if ( tok == "response-co" )
+                dnsf |= RESPONSE_CO;
+            else if ( tok == "response-de" )
+                dnsf |= RESPONSE_DE;
             else if ( !tok.empty() )
                 throw po::validation_error(po::validation_error::invalid_option_value);
         }

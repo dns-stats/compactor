@@ -771,13 +771,15 @@ uint8_t BlockCborReader::synthesise_qr_flags(const block_cbor::QueryResponseItem
              (block_cbor::QUERY_CD | block_cbor::QUERY_AD |
               block_cbor::QUERY_Z | block_cbor::QUERY_RA |
               block_cbor::QUERY_RD | block_cbor::QUERY_TC |
-              block_cbor::QUERY_AA | block_cbor::QUERY_DO) )
+              block_cbor::QUERY_AA | block_cbor::QUERY_DO |
+              block_cbor::QUERY_CO | block_cbor::QUERY_DE ) )
             res |= block_cbor::HAS_QUERY;
         if ( *sig.dns_flags &
              (block_cbor::RESPONSE_CD | block_cbor::RESPONSE_AD |
               block_cbor::RESPONSE_Z | block_cbor::RESPONSE_RA |
               block_cbor::RESPONSE_RD | block_cbor::RESPONSE_TC |
-              block_cbor::RESPONSE_AA) )
+              block_cbor::RESPONSE_AA | block_cbor::RESPONSE_DO |
+              block_cbor::RESPONSE_CO | block_cbor::RESPONSE_DE ) )
             res |= block_cbor::HAS_RESPONSE;
     }
 
@@ -1072,7 +1074,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
     else
         output << "\nResponse not present";
 
-    output << "\n          Transport Hop-limit MsgID QR OPCODE FLAGS(AA/TC/RD/RA/AD/CD)   RCODE  COUNTS(QD/AN/NS/AD)  Query-type  Class Trans-type OPT-codes\n";
+    output << "\n          Transport Hop-limit MsgID QR OPCODE FLAGS(AA/TC/RD/RA/AD/CD/DO/CO/DE)   RCODE  COUNTS(QD/AN/NS/AD)  Query-type  Class Trans-type OPT-codes\n";
 
     if ( transport )
         output << "             " << transport;
@@ -1100,6 +1102,9 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
             output <<  ((*qr.dns_flags & block_cbor::QUERY_RA ) ? " 1 " : " 0 ") ;
             output <<  ((*qr.dns_flags & block_cbor::QUERY_AD ) ? " 1 " : " 0 ") ;
             output <<  ((*qr.dns_flags & block_cbor::QUERY_CD ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::QUERY_DO ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::QUERY_CO ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::QUERY_DE ) ? " 1 " : " 0 ") ;
         } else 
             output << "                  ";
         if ( qr.query_rcode )
@@ -1166,6 +1171,9 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
             output <<  ((*qr.dns_flags & block_cbor::RESPONSE_RA ) ? " 1 " : " 0 ") ;
             output <<  ((*qr.dns_flags & block_cbor::RESPONSE_AD ) ? " 1 " : " 0 ") ;
             output <<  ((*qr.dns_flags & block_cbor::RESPONSE_CD ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::RESPONSE_DO ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::RESPONSE_CO ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::RESPONSE_DE ) ? " 1 " : " 0 ") ;
         }
         if ( qr.response_rcode )
             output << "  " << std::left <<  std::setw(11)  << Configuration::find_rcode_string(*qr.response_rcode) << "    " ;

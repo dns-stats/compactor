@@ -212,6 +212,10 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
             ttl <<= 16;
             if ( *qrd.dns_flags & block_cbor::QUERY_DO )
                 ttl |= 0x8000;
+            if ( *qrd.dns_flags & block_cbor::QUERY_CO )
+                ttl |= 0x4000;
+            if ( *qrd.dns_flags & block_cbor::QUERY_DE )
+                ttl |= 0x2000;
             query->dns.add_additional(
                 CaptureDNS::resource(
                     "",
@@ -256,7 +260,7 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
         // If the query had an OPT, and we've not recorded a response OPT,
         // (unlike query OPTs, response OPTs are recorded in C-DNS if
         // additional section data is recorded), make one up.
-        // No RDATA, no extended RCODE/flags, and sender
+        // No RDATA, echo the DO bit but no other bits, and sender
         // UDP payload size set to the default query payload size.
         if ( qrd.qr_flags & block_cbor::RESPONSE_HAS_OPT )
         {

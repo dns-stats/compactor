@@ -114,8 +114,9 @@ namespace block_cbor {
     /**
      * \brief DNS flags enum.
      *
-     * Note that we always store response OPT RRs directly in the file,
-     * so there is no need for a response DO in the following.
+     * Note that since the response OPT RRs may not
+     * be included (depending on the hints) we store
+     * the response flags here too
      */
     enum DNSFlags
     {
@@ -134,6 +135,11 @@ namespace block_cbor {
         RESPONSE_RD = (1 << 12),
         RESPONSE_TC = (1 << 13),
         RESPONSE_AA = (1 << 14),
+        QUERY_CO = (1 << 15),
+        QUERY_DE = (1 << 16),
+        RESPONSE_DO = (1 << 17),
+        RESPONSE_CO = (1 << 18),
+        RESPONSE_DE = (1 << 19),
     };
 
     /**
@@ -1277,21 +1283,24 @@ namespace block_cbor {
      *
      * The DNS flag value composed from the DNSFlag enum.
      *
+     * Note this sets the query EDNS0 flags (DO/CO/DE) but
+     * NOT the response ones.
+     *
      * \param qr    the Query/Response.
      * \return DNS flags value.
      */
-    uint16_t dns_flags(const QueryResponse& qr);
+    uint32_t dns_flags(const QueryResponse& qr);
 
     /**
      * \brief Set the basic DNS flags in a query or response message.
      *
-     * Note this does not set the query DO flag.
+     * Note this does not set any of the EDNS0 flags. 
      *
      * \param msg   the message.
      * \param flags DNS flags value.
      * \param query `true` if the message is a query.
      */
-    void set_dns_flags(DNSMessage& msg, uint16_t flags, bool query);
+    void set_dns_flags(DNSMessage& msg, uint32_t flags, bool query);
 
     /**
      * \brief Convert possibly older format DNS flags to current.
@@ -1299,7 +1308,7 @@ namespace block_cbor {
      * \param flags        DNS flags value.
      * \param from_version the file format version.
      */
-    uint16_t convert_dns_flags(uint16_t flags, FileFormatVersion version);
+    uint32_t convert_dns_flags(uint32_t flags, FileFormatVersion version);
 
     /**
      * \brief Convert possibly older format QR flags to current.

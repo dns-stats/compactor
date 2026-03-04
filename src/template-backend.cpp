@@ -477,8 +477,11 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
     if ( qr.query_edns_version )
     {
         dict.SetIntValue("query_edns_version", *qr.query_edns_version);
-        if ( ( qr.qr_flags & block_cbor::HAS_QUERY ) && qr.dns_flags )
+        if ( ( qr.qr_flags & block_cbor::HAS_QUERY ) && qr.dns_flags ) {
             dict.SetIntValue("query_do", !!(*qr.dns_flags & block_cbor::QUERY_DO));
+            dict.SetIntValue("query_co", !!(*qr.dns_flags & block_cbor::QUERY_CO));
+            dict.SetIntValue("query_de", !!(*qr.dns_flags & block_cbor::QUERY_DE));
+          }
     }
     if ( qr.query_edns_payload_size )
         dict.SetIntValue("query_edns_udp_payload_size", *qr.query_edns_payload_size);
@@ -591,6 +594,12 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
                                            return r.rtype && *r.rtype == CaptureDNS::OPT;
                                        });
         dict.SetIntValue("query_response_response_has_opt", response_opt);
+        if ( response_opt && qr.dns_flags ) 
+        {
+          dict.SetIntValue("response_do", !!(*qr.dns_flags & block_cbor::RESPONSE_DO));
+          dict.SetIntValue("response_co", !!(*qr.dns_flags & block_cbor::RESPONSE_CO));
+          dict.SetIntValue("response_de", !!(*qr.dns_flags & block_cbor::RESPONSE_DE));
+        }
     }
 
     if ( qr.response_size )

@@ -847,7 +847,7 @@ namespace block_cbor {
         /**
          * \brief DNS flags.
          */
-        boost::optional<uint16_t> dns_flags;
+        boost::optional<uint32_t> dns_flags;
 
         /**
          * \brief query class/type.

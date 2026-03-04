@@ -29,6 +29,8 @@ using Tins::Memory::OutputMemoryStream;
 namespace {
     const unsigned MAX_DNAME_LEN = 512;
     const unsigned DO_BIT = (1 << 15);
+    const unsigned CO_BIT = (1 << 14);
+    const unsigned DE_BIT = (1 << 13);
 }
 
 const std::vector<CaptureDNS::Opcode> CaptureDNS::OPCODES =
@@ -131,6 +133,10 @@ uint32_t CaptureDNS::EDNS0::make_ttl() const
     uint32_t res = 0;
     if ( do_bit_ )
         res |= DO_BIT;
+    if ( co_bit_ )
+        res |= CO_BIT;
+    if ( de_bit_ )
+        res |= DE_BIT;
     res |= (edns_version_ << 16);
     res |= (extended_rcode_ << 24);
     return res;
@@ -139,6 +145,9 @@ uint32_t CaptureDNS::EDNS0::make_ttl() const
 void CaptureDNS::EDNS0::extract_ttl_data(uint32_t ttl)
 {
     do_bit_ = ( (ttl & DO_BIT) != 0 );
+    co_bit_ = ( (ttl & CO_BIT) != 0 );
+    de_bit_ = ( (ttl & DE_BIT) != 0 );
+    flags_field_ = (ttl & 0x0000ffff);
     edns_version_ = (ttl & 0x00ff0000) >> 16;
     extended_rcode_ = (ttl & 0xff000000) >> 24;
 }

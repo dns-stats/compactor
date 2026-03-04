@@ -164,7 +164,7 @@ public:
     /**
      * \brief DNS flags.
      */
-    boost::optional<uint16_t> dns_flags;
+    boost::optional<uint32_t> dns_flags;
 
     /**
      * \brief class of first Question.
