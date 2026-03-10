@@ -1,0 +1,12 @@
+-----------------------------------------------------------------------------------------------------------------------------------
+                  Timestamp                   Client IP/port      Server IP/port          QNAME
+Query     2026-03-10 14h15m16s345713us UTC    ::1:54127  ::1:53     example.com
+Response  2026-03-10 14h15m16s646791us UTC    ::1:54127  ::1:53     example.com
+          Transport Hop-limit MsgID QR OPCODE FLAGS(AA/TC/RD/RA/AD/CD/DO/CO/DE)   RCODE  COUNTS(QD/AN/NS/AD)  Query-type  Class Trans-type OPT-codes
+             UDP       64     2977   0 QUERY         0  0  1  0  1  0  1  1  1   NOERROR         1  0  0  1       NS        1    Unknown    10 
+                              2977   1 QUERY         0  0  1  1  1  0  1  1  1   NOERROR         1  3  0  1       NS        1    Unknown
+          Response Answers:    Type    Class    Name
+                                 NS      1      example.com
+                                 NS      1      example.com
+                              RRSIG      1      example.com
+

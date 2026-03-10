@@ -98,7 +98,14 @@ _compactor_ 1.0 and later writes C-DNS as described in
 https://tools.ietf.org/html/rfc8618[RFC8618],
 with the following changes:
 
-* A private version ID of 3 is present.
+* A private version ID of 4 is present.
+* The _DNSFlags_ field defined in Section 7.3.2.3.2 of RFC 8618 is extended in the
+  following ways (see the c-dns.cddl file): 
+** The value of the respose DO bit is included
+** The values of the query and response CO (RFC 9824) bits are included
+** The values of the query and response DE bits (https://datatracker.ietf.org/doc/draft-ietf-deleg/)
+   are included. Although this I-D is not an RFC at the initial time of 
+   adding these flags, we include them to aid with data gathering whilst experimentation is taking place.
 * Some _compactor_ implementation-specific entries are added
   to several C-DNS maps (see RFC section 7.1). They are listed below
   with their _compactor_ key values in parenthesis.

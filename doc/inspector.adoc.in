@@ -293,7 +293,7 @@ is no query question.
 |response_do
 | Value of response EDNS0 DO bit. Blank if no response EDNS0.
 
-|responseco
+|response_co
 | Value of response EDNS0 CO bit. Blank if no response EDNS0.
 
 |response_de

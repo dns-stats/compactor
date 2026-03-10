@@ -1213,7 +1213,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
             for ( const auto& r : *qr.response_answers )
             {
                 if ( r.rtype )
-                    output << "\t\t             " << std::right << std::setw(6) << Configuration::find_rrtype_string(*r.rtype);
+                    output << "                             " << std::right << std::setw(6) << Configuration::find_rrtype_string(*r.rtype);
                 if ( r.rclass )
                     output << "      "<< static_cast<unsigned>(*r.rclass);
                 if ( r.name )
