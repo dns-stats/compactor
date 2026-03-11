@@ -6,9 +6,13 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
-Version 1.2.4-rc1 - 2025-06-10
+Version 1.2.4-rc1 - 2026-03-11
 --------------------------
 
+* Compactor: Extend the DNSFlags field to include the DE bit to support data
+  gathering for DELEG activities: https://datatracker.ietf.org/doc/draft-ietf-deleg/
+  For completeness this field now includes the response DO bit, the query and
+  response CO bit and the query and response DE bit.
 * Compactor: Refactor of packet statistics logging to now additionally 
   support logging in JSON format using the `--log-network-stats-json` 
   option. Requires additional dependency on `nlohmann/json`.
