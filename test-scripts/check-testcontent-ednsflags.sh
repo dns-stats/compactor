@@ -31,15 +31,11 @@ command -v cmp > /dev/null 2>&1 || { echo "No cmp, skipping test." >&2; exit 77;
 command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }
 command -v mktemp > /dev/null 2>&1 || { echo "No mktemp, skipping test." >&2; exit 77; }
 
-tmpdir=`mktemp -d -t "check-testcontent.XXXXXX"`
+tmpdir=`mktemp -d -t "check-testcontent-ednsflags.XXXXXX"`
 
 cleanup()
 {
-    # rm -rf $tmpdir
-
-
-
-    echo $tmpdir
+    rm -rf $tmpdir
     exit $1
 }
 

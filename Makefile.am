@@ -186,6 +186,7 @@ check_DATA = GeoLite2-ASN.mmdb \
              matching.pcap \
              oldfmtgold.pcap \
              testcontent.pcap \
+             testcontent-ednsflags.pcap \
              unmatched.pcap \
              nsd-live.dump \
              nsd-live.raw.pcap \

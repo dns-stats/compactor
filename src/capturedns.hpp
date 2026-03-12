@@ -647,15 +647,6 @@ public:
             return de_bit_;
         }
 
-       /**
-        * \brief Getter for the full flags field.
-        *
-        * \returns flags field.
-        */
-       uint8_t flags_field() const {
-           return flags_field_;
-       }
-
         /**
          * \brief Getter for the extended RCODE.
          *
@@ -741,11 +732,6 @@ public:
          * \brief the EDNS0 extended RCODE.
          */
         uint8_t extended_rcode_;
-
-       /**
-        * \brief the full flags field.
-        */
-       uint8_t flags_field_;
 
         /**
          * \brief the EDNS0 DO bit.

@@ -147,7 +147,6 @@ void CaptureDNS::EDNS0::extract_ttl_data(uint32_t ttl)
     do_bit_ = ( (ttl & DO_BIT) != 0 );
     co_bit_ = ( (ttl & CO_BIT) != 0 );
     de_bit_ = ( (ttl & DE_BIT) != 0 );
-    flags_field_ = (ttl & 0x0000ffff);
     edns_version_ = (ttl & 0x00ff0000) >> 16;
     extended_rcode_ = (ttl & 0xff000000) >> 24;
 }

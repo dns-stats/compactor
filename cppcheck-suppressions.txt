@@ -16,9 +16,9 @@ unmatchedSuppression:src/blockcbordata.hpp:1943
 
 // We do need/use CaptureDNS::extract_metadata() and header_size().
 // And write_serialisation() gets confused by HAVE_LIBTINS4.
-unusedFunction:src/capturedns.cpp:179
-unusedFunction:src/capturedns.cpp:1152
-unusedFunction:src/capturedns.cpp:1169
+unusedFunction:src/capturedns.cpp:187
+unusedFunction:src/capturedns.cpp:1160
+unusedFunction:src/capturedns.cpp:1177
 
 // Various functions are present for completeness but not used.
 unusedFunction:src/cbordecoder.cpp:166
@@ -28,9 +28,9 @@ unusedFunction:src/sniffers.hpp:57
 unusedFunction:src/sniffers.hpp:78
 unusedFunction:src/sniffers.hpp:98
 unusedFunction:src/channel.hpp:68
-unusedFunction:src/capturedns.hpp:972
-unusedFunction:src/capturedns.cpp:571
-unusedFunction:src/blockcbor.hpp:898
+unusedFunction:src/capturedns.hpp:1005
+unusedFunction:src/capturedns.cpp:579
+unusedFunction:src/blockcbor.hpp:904
 
 // Lambdas are confusing.
 unmatchedSuppression:src/compactor.cpp:272
@@ -59,8 +59,8 @@ unusedFunction:src/template-backend.cpp:34
 
 // Perhaps not a place for a STL algorithm. And confusion over what
 // is a member variable.
-uninitMemberVar:src/capturedns.cpp:186
-useStlAlgorithm:src/capturedns.cpp:1183
+uninitMemberVar:src/capturedns.cpp:194
+useStlAlgorithm:src/capturedns.cpp:1191
 
 // We are searching for two items
 useStlAlgorithm:src/inspector.cpp:379
