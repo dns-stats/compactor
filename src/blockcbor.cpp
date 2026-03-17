@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017, 2019-2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017, 2019-2021, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,7 +35,7 @@ namespace block_cbor {
     /**
      * \brief Current output format private version.
      */
-    const unsigned FILE_FORMAT_10_PRIVATE_VERSION = 3;
+    const unsigned FILE_FORMAT_10_PRIVATE_VERSION = 4;
 
     /**
      * \brief Current output format major version.
@@ -180,9 +180,9 @@ namespace block_cbor {
         QueryResponseField::query_size,
     };
 
-    uint16_t dns_flags(const QueryResponse& qr)
+    uint32_t dns_flags(const QueryResponse& qr)
     {
-        uint16_t res = 0;
+        uint32_t res = 0;
 
         if ( qr.has_query() )
         {
@@ -203,9 +203,15 @@ namespace block_cbor {
                 res |= QUERY_AA;
 
             auto edns0 = q.dns.edns0();
-
-            if ( edns0 && edns0->do_bit() )
-                res |= QUERY_DO;
+            if ( edns0 )
+            {
+                if ( edns0->do_bit() )
+                    res |= QUERY_DO;
+                if ( edns0->co_bit() )
+                    res |= QUERY_CO;
+                if ( edns0->de_bit() )
+                    res |= QUERY_DE;
+            }
         }
 
         if ( qr.has_response() )
@@ -230,7 +236,7 @@ namespace block_cbor {
         return res;
     }
 
-    void set_dns_flags(DNSMessage& msg, uint16_t flags, bool query)
+    void set_dns_flags(DNSMessage& msg, uint32_t flags, bool query)
     {
         if ( query )
         {
@@ -268,7 +274,7 @@ namespace block_cbor {
         }
     }
 
-    uint16_t convert_dns_flags(uint16_t flags, FileFormatVersion)
+    uint32_t convert_dns_flags(uint32_t flags, FileFormatVersion)
     {
         return flags;
     }

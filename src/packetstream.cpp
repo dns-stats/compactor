@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,10 +13,10 @@
 #include <algorithm>
 #include <functional>
 #include <iostream>
+#include <chrono>
 
 #include "dnsmessage.hpp"
 #include "makeunique.hpp"
-#include "nocopypacket.hpp"
 
 #include "packetstream.hpp"
 
@@ -158,12 +158,13 @@ void PacketStream::tcp_packet(Tins::TCP* tcp, Tins::PDU* ip_pdu,
     // of the packet. What we see especially is zero length TCP packets
     // at the first data packet in a transaction. So copy the packet before
     // feeding the copy into the stream follower.
-    Tins::Packet pkt(ip_pdu, NoCopyPacket::tsToTins(pkt_data.timestamp));
+    Tins::Timestamp tins_timestamp(std::chrono::duration_cast<std::chrono::microseconds>(pkt_data.timestamp.time_since_epoch()));
+    Tins::Packet pkt(ip_pdu, tins_timestamp);
     tcp_stream_follower_.process_packet(pkt);
 }
 
 void PacketStream::icmp_packet(Tins::ICMP* icmp, Tins::PDU* /* ip_pdu */,
-                               PktData& pkt_data)
+                               const PktData& pkt_data)
 {
     AddressEvent::EventType event_type;
 
@@ -209,7 +210,7 @@ void PacketStream::icmp_packet(Tins::ICMP* icmp, Tins::PDU* /* ip_pdu */,
 }
 
 void PacketStream::icmpv6_packet(Tins::ICMPv6* icmp, Tins::PDU* /* ip_pdu */,
-                                 PktData& pkt_data)
+                                 const PktData& pkt_data)
 {
     AddressEvent::EventType event_type;
 

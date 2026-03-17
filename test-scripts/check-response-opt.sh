@@ -47,6 +47,9 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
+# Tshark 4.2.2 has trailing whitespace that needs to be stripped
+sed -i 's/[ \t]*$//' $tmpdir/opt.txt
+
 # Make text file with expected responses.
 cat > $tmpdir/opt.gold <<EOF
 Name: <Root>
@@ -60,5 +63,5 @@ Z: 0x0000
 Data length: 0
 EOF
 
-diff -q $tmpdir/opt.gold $tmpdir/opt.txt
+diff $tmpdir/opt.gold $tmpdir/opt.txt
 cleanup $?

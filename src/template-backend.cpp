@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2023 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
+ * Copyright 2018-2023, 2026 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -477,8 +477,11 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
     if ( qr.query_edns_version )
     {
         dict.SetIntValue("query_edns_version", *qr.query_edns_version);
-        if ( ( qr.qr_flags & block_cbor::HAS_QUERY ) && qr.dns_flags )
+        if ( ( qr.qr_flags & block_cbor::HAS_QUERY ) && qr.dns_flags ) {
             dict.SetIntValue("query_do", !!(*qr.dns_flags & block_cbor::QUERY_DO));
+            dict.SetIntValue("query_co", !!(*qr.dns_flags & block_cbor::QUERY_CO));
+            dict.SetIntValue("query_de", !!(*qr.dns_flags & block_cbor::QUERY_DE));
+          }
     }
     if ( qr.query_edns_payload_size )
         dict.SetIntValue("query_edns_udp_payload_size", *qr.query_edns_payload_size);
@@ -591,6 +594,12 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
                                            return r.rtype && *r.rtype == CaptureDNS::OPT;
                                        });
         dict.SetIntValue("query_response_response_has_opt", response_opt);
+        if ( response_opt && qr.dns_flags ) 
+        {
+          dict.SetIntValue("response_do", !!(*qr.dns_flags & block_cbor::RESPONSE_DO));
+          dict.SetIntValue("response_co", !!(*qr.dns_flags & block_cbor::RESPONSE_CO));
+          dict.SetIntValue("response_de", !!(*qr.dns_flags & block_cbor::RESPONSE_DE));
+        }
     }
 
     if ( qr.response_size )
@@ -612,7 +621,7 @@ void TemplateBackend::output(const QueryResponseData& qr, const Configuration& /
         if ( edns0 ) {
             std::string opt_str;
             CaptureDNS::EDNS0 e0(CaptureDNS::INTERNET, 0, *edns0);
-            for ( auto& opt : e0.options() )
+            for ( const auto& opt : e0.options() )
             {
                 opt_str = opt_str + std::to_string(opt.code()) + ",";
             }

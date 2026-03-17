@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019, 2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019, 2021, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -133,7 +133,8 @@ namespace {
 
 BaseSniffers::BaseSniffers(unsigned chan_max_size, bool block)
     : max_fd_(0), select_timeout_(1000), packets_(chan_max_size),
-      block_put_(block), packets_sniffed_(0), packets_dropped_(0)
+      block_put_(block), interrupt_received_(false), packets_sniffed_(0), 
+      packets_dropped_(0)
 {
     FD_ZERO(&fdset_);
 }
@@ -192,6 +193,7 @@ bool BaseSniffers::pcap_stats(struct pcap_stat& stats)
 void BaseSniffers::breakloop()
 {
     std::unique_lock<std::mutex> lock(m_);
+    interrupt_received_ = true;
     for ( auto h : handles_ )
         pcap_breakloop(h);
 }
@@ -263,7 +265,7 @@ void BaseSniffers::packet_read_thread()
                 case -1:
                     // TODO: Find way to indicate error rather than EOF to
                     // receiving thread.
-                    LOG_ERROR << pcap_geterr(h);
+                    LOG_ERROR << "Error from libpcap pcap_next_ex(): " << pcap_geterr(h);
                     finished = true;
                     break;
 
@@ -274,6 +276,12 @@ void BaseSniffers::packet_read_thread()
             }
         }
         while ( read_one && !finished );
+
+        // In libpcap 1.10.2 and later it appears pcap_breakloop() will not
+        // cause pcap_next_ex() to return -2 unless a packet is received
+        // So we must check directly in this case
+        if (interrupt_received_ == true)
+          finished = true;
 
         if ( finished )
             continue;

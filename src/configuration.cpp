@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2022 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2022, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -304,7 +304,8 @@ Configuration::Configuration()
       max_block_items(5000),
       max_output_size(0),
       report_info(false), relaxed_mode(false), log_network_stats_period(0),
-      log_file_handling(false),
+      log_network_stats_json(false), log_file_handling(false),
+      warn_on_serialization_error(false), log_opt_on_serialization_error(false),
       sampling_threshold(10), sampling_rate(0), sampling_time(100),
       debug_dns(false), debug_qr(false),
       omit_hostid(false), omit_sysid(false), start_end_times_from_data(false),
@@ -482,9 +483,20 @@ Configuration::Configuration()
         ("log-network-stats-period,L",
          po::value<unsigned int>(&log_network_stats_period)->default_value(0),
          "log network collection stats period.")
+#ifdef ENABLE_LOGNETWORKSTATSJSON
+        ("log-network-stats-json,j",
+         po::value<bool>(&log_network_stats_json)->implicit_value(true),
+          "log the network stats in json format (not multi-line text).")
+#endif
          ("log-file-handling,F",
           po::value<bool>(&log_file_handling)->implicit_value(true),
           "log details of file handling on rotation.")
+         ("warn-on-serialization-error,W",
+          po::value<bool>(&warn_on_serialization_error)->implicit_value(true),
+           "treat libtins serialization error on PCAP packet write as warning, not error.")
+         ("log-opt-on-serialization-error,O",
+          po::value<bool>(&log_opt_on_serialization_error)->implicit_value(true),
+           "if libtins serialization occurs, log if the packet contains TCP OPT known to trigger this.")
          ("sampling-threshold",
          po::value<unsigned int>(&sampling_threshold)->default_value(10),
          "sampling threshold - percentage of traffic dropped.")
@@ -510,7 +522,7 @@ po::variables_map Configuration::parse_command_line(int ac, char *av[])
         po::store(po::command_line_parser(ac, av).options(all).positional(positional_options_).run(), cmdline_vars_);
     } else {
         std::vector<std::string> unrecognised = collect_unrecognized(parsed.options, po::include_positional);
-        for(auto i : unrecognised) {
+        for(const auto& i : unrecognised) {
             LOG_WARN << "Unrecognized command line option: " << i; 
         } 
     }
@@ -548,6 +560,7 @@ po::variables_map Configuration::reread_config_file()
      * from the config file first read.
      */
     po::variables_map res = cmdline_vars_;
+    LOG_INFO << "Trying to load config from " << config_file_;
 
     if ( boost::filesystem::exists(config_file_) )
     {
@@ -567,6 +580,8 @@ po::variables_map Configuration::reread_config_file()
         }
         LOG_INFO << "Loaded config from " << config_file_;
     }
+    else
+      LOG_INFO << "Config file not found (using just command line args and defaults)";
 
     po::notify(res);
     set_config_items(res);
@@ -1340,6 +1355,16 @@ namespace block_cbor {
                 dnsf |= RESPONSE_AA;
             else if ( tok == "query-do" )
                 dnsf |= QUERY_DO;
+            else if ( tok == "query-co" )
+                dnsf |= QUERY_CO;
+            else if ( tok == "query-de" )
+                dnsf |= QUERY_DE;
+            else if ( tok == "response-do" )
+                dnsf |= RESPONSE_DO;
+            else if ( tok == "response-co" )
+                dnsf |= RESPONSE_CO;
+            else if ( tok == "response-de" )
+                dnsf |= RESPONSE_DE;
             else if ( !tok.empty() )
                 throw po::validation_error(po::validation_error::invalid_option_value);
         }
@@ -1801,7 +1826,7 @@ bool HintsExcluded::read_excludes_file(const std::string& excludesfile)
             std::string::size_type n;
 
             if ( ( n = line.find('#')) != std::string::npos )
-                line = line.substr(0, n);
+                line.resize(n);
             boost::algorithm::trim(line);
             if ( !line.empty() &&
                  *line.begin() != '[' &&

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2022 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2022, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -56,7 +56,7 @@ namespace block_cbor {
     void write_vector(const std::vector<T>& vec, CborBaseEncoder& enc)
     {
         enc.writeArrayHeader(vec.size());
-        for ( auto& i : vec )
+        for ( const auto& i : vec )
             enc.write(i);
     }
 
@@ -420,7 +420,7 @@ namespace block_cbor {
         {
             enc.write(server_addresses_index);
             enc.writeArrayHeader(server_addresses.size());
-            for ( auto& i : server_addresses )
+            for ( const auto& i : server_addresses )
                 enc.write(i.asNetworkBinary());
         }
         if ( !vlan_ids.empty() )
@@ -1916,7 +1916,7 @@ namespace block_cbor {
         {
             enc.write(aec_index);
             enc.writeArrayHeader(address_event_counts.size());
-            for ( auto& aeci : address_event_counts )
+            for ( const auto& aeci : address_event_counts )
             {
                 AddressEventCount aec;
                 aec.aei = aeci.first;

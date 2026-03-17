@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018, 2022 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018, 2022, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,7 +22,6 @@
 
 #include "configuration.hpp"
 #include "makeunique.hpp"
-#include "nocopypacket.hpp"
 #include "rotatingfilename.hpp"
 #include "log.hpp"
 
@@ -58,6 +57,82 @@ public:
      */
     virtual void write_packet(Tins::PDU& pdu,
                               const std::chrono::system_clock::time_point& timestamp) = 0;
+
+     /**
+      * \brief Utility function to detect any TCP option that has length field but no data.
+      *        libtins will throw a serialization error when trying to write
+      *        this even when valid e.g. a TCP Fast Open Cookie request.
+      *
+      * \param pdu   the packet to check
+      */
+    static bool log_if_tcp_opt_issue(Tins::PDU* pdu, const Configuration& config)
+    {
+      try
+      {
+          if ( pdu->pdu_type() == Tins::PDU::RAW )
+              return false;
+          // Find the inner IP pdu
+          while ( pdu &&
+                  pdu->pdu_type() != Tins::PDU::IP &&
+                  pdu->pdu_type() != Tins::PDU::IPv6 )
+          {
+              if ( pdu->pdu_type() == Tins::PDU::DOT1Q &&
+                   !config.vlan_ids.empty() )
+              {
+                  const Tins::Dot1Q* dot1q = reinterpret_cast<const Tins::Dot1Q*>(pdu);
+                  if ( std::find(config.vlan_ids.begin(),
+                                 config.vlan_ids.end(),
+                                 dot1q->id()) == std::end(config.vlan_ids) )
+                      return false;
+              }
+
+              pdu = pdu->inner_pdu();
+          }
+          if ( !pdu )
+              return false;
+
+          // Find IP version
+          switch (pdu->pdu_type())
+          {
+          case Tins::PDU::IP:
+              pdu = reinterpret_cast<Tins::IP*>(pdu);
+              break;
+          case Tins::PDU::IPv6:
+              pdu = reinterpret_cast<Tins::IPv6*>(pdu);
+              break;
+          default:
+              return false;
+          }
+          if ( !pdu )
+              return false;
+
+          //Find TCP SYN packet
+          pdu = pdu->inner_pdu();
+          if ( !pdu )
+              return false;
+          if ( pdu->pdu_type() != Tins::PDU::TCP )
+            return false;
+          Tins::TCP* tcp = reinterpret_cast<Tins::TCP*>(pdu);
+          if ( !( tcp->flags() & Tins::TCP::SYN ) )
+            return false;
+
+          // Now check all the TCP options for a length field but no data see:
+          // https://github.com/mfontanini/libtins/pull/404
+          for (Tins::TCP::options_type::const_iterator iter = tcp->options().begin(); iter != tcp->options().end(); ++iter) 
+          {
+              const Tins::TCP::option& opt = *iter;
+              if ( opt.option() != Tins::TCP::EOL && opt.option() != Tins::TCP::NOP && opt.option() != Tins::TCP::SACK_OK
+                   && opt.data_size() == 0 )
+                 LOG_WARN << "TCP Option (not SACK_OK) with length field but no data found with type " << (int)opt.option() << ". libtins throws 'Serialization error' for this.";
+          }
+      }
+      catch (const std::exception& err)
+      {
+        LOG_ERROR << "Error while decoding packet to check TCP Options" << err.what();
+      }
+ 
+      return true;
+    }
 };
 
 /**
@@ -367,5 +442,6 @@ private:
      */
     PcapWriter<Writer> writer_;
 };
+
 
 #endif

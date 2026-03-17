@@ -20,7 +20,7 @@ File = [
 FilePreamble = {
     major-format-version => 1,
     minor-format-version => 0,
-    ? private-version    => 3,       ; Compactor private indicator
+    ? private-version    => 4,       ; Compactor private indicator
     block-parameters     => [+ BlockParameters],
 }
 major-format-version = 0
@@ -395,6 +395,11 @@ response-rcode        = 16
       response-rd: 12,
       response-tc: 13,
       response-aa: 14,
+      query-co   : 15,
+      query-de   : 16,
+      response-do: 17,
+      response-co: 18,
+      response-de: 19,
   )
   DNSFlags = uint .bits DNSFlagValues
 

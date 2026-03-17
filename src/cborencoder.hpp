@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019, 2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019, 2021, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -488,11 +488,6 @@ public:
     virtual void abort() = 0;
 
     /**
-     * \brief Wait for the compression to finish.
-     */
-    virtual void wait() = 0;
-
-    /**
      * \brief Return the suggested extension for files using the
      * compression done by this pool.
      */
@@ -597,7 +592,9 @@ public:
      */
     virtual ~ParallelWriterPool()
     {
-        wait();
+        std::unique_lock<std::mutex> lock(m_);
+        if ( nthreads_ > 0 )
+            thread_finished_.wait(lock, [&](){ return nthreads_ == 0; });
     }
 
     /**
@@ -633,16 +630,6 @@ public:
     virtual void abort()
     {
         abort_ = true;
-    }
-
-    /**
-     * \brief Wait for all current compressions to finish.
-     */
-    virtual void wait()
-    {
-        std::unique_lock<std::mutex> lock(m_);
-        if ( nthreads_ > 0 )
-            thread_finished_.wait(lock, [&](){ return nthreads_ == 0; });
     }
 
     /**
@@ -708,7 +695,7 @@ private:
         }
         catch (const std::exception& err)
         {
-            LOG_ERROR << err.what();
+            LOG_ERROR << "Error while compressing file " << input.c_str()  << ": "<< err.what();
         }
 
         std::unique_lock<std::mutex> lock(m_);

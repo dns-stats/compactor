@@ -38,6 +38,9 @@
   Every _arg_ seconds, log basic statistics on packet collection to the system log. The
   default value of 0 disables this logging.
 
+*-j, --log-network-stats-json*::
+  Log the network stats in json format (not multi-line human readable text)
+
 *-F, --log-file-handling*::
   Log detailed file processing when files are rotated and compressed. This facilitates
   debugging of file processing issues and measurement of C-DNS file compression times.

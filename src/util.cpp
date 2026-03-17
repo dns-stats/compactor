@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, 2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2019, 2021, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -53,14 +53,14 @@ void set_file_owner_perms(const std::string& path,
 
         if ( !owner.empty() )
         {
-            struct passwd* pwd = ::getpwnam(owner.c_str());
+            const struct passwd* pwd = ::getpwnam(owner.c_str());
             if ( !pwd )
                 throw std::system_error(errno, std::system_category(), owner + ": no such user");
             uid = pwd->pw_uid;
         }
         if ( !group.empty() )
         {
-            struct group* grp = ::getgrnam(group.c_str());
+            const struct group* grp = ::getgrnam(group.c_str());
             if ( !grp )
                 throw std::system_error(errno, std::system_category(), group + ": no such group");
             gid = grp->gr_gid;

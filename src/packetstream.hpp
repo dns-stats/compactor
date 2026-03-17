@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018, 2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2018, 2021, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -271,7 +271,7 @@ protected:
      * \param pkt_data basic packet data so far.
      * \throws malformed_packet if no data PDU found.
      */
-    void icmp_packet(Tins::ICMP* icmp, Tins::PDU* ip, PktData& pkt_data);
+    void icmp_packet(Tins::ICMP* icmp, Tins::PDU* ip, const PktData& pkt_data);
 
     /**
      * \brief Process ICMPv6 packet contents.
@@ -281,7 +281,7 @@ protected:
      * \param pkt_data basic packet data so far.
      * \throws malformed_packet if no data PDU found.
      */
-    void icmpv6_packet(Tins::ICMPv6* icmp, Tins::PDU* ip, PktData& pkt_data);
+    void icmpv6_packet(Tins::ICMPv6* icmp, Tins::PDU* ip, const PktData& pkt_data);
 
     /**
      * \brief Dispatch a DNS message.

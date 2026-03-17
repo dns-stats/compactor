@@ -58,6 +58,9 @@
 # Log basic collection stats to syslog every n seconds. 0 (default) == never.
 # log-network-stats-period=0
 
+# Log stats output in JSON instead of human readable multi line text.
+# log-network-stats-json=false
+
 # Log detailed file processing for debugging.
 # log-file-handling=false
 
@@ -138,6 +141,12 @@ xz-output=true
 
 # PCAP xz compression level.
 # xz-preset-pcap=6
+
+# Treat libtins serialization error on PCAP packet write as warning, not error. See KNOWN ISSUES.
+# warn-on-serialization-error=false
+
+# If libtins serialization occurs, log if the packet contains TCP OPT known to trigger this. See KNOWN ISSUES.
+# log-opt-on-serialization-error=false
 
 # Query matching options.
 

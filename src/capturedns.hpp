@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2023, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -561,17 +561,22 @@ public:
          *
          * \param udp_payload_size      UDP payload size.
          * \param do_bit                DO bit.
+         * \param co_bit                CO bit.
+         * \param de_bit                DE bit.
          * \param extended_rcode        Extended RCODE.
          * \param edns_version          EDNS version. Should be 0.
          */
         EDNS0(uint16_t udp_payload_size,
               bool do_bit,
+              bool co_bit,
+              bool de_bit,
               uint8_t extended_rcode,
               uint8_t edns_version = 0)
             : udp_payload_size_(udp_payload_size),
               extended_rcode_(extended_rcode),
-              do_bit_(do_bit),
-              edns_version_(edns_version) {}
+              do_bit_(do_bit), co_bit_(co_bit), de_bit_(de_bit),
+              edns_version_(edns_version) {
+              }
 
         /**
          * \brief Constructor.
@@ -622,6 +627,24 @@ public:
          */
         bool do_bit() const {
             return do_bit_;
+        }
+
+        /**
+         * \brief Getter for the CO bit.
+         *
+         * \return <code>true</code> if CO bit set.
+         */
+        bool co_bit() const {
+            return co_bit_;
+        }
+
+        /**
+         * \brief Getter for the DE bit.
+         *
+         * \return <code>true</code> if DE bit set.
+         */
+        bool de_bit() const {
+            return de_bit_;
         }
 
         /**
@@ -714,6 +737,16 @@ public:
          * \brief the EDNS0 DO bit.
          */
         bool do_bit_;
+
+        /**
+         * \brief the EDNS0 CO bit.
+         */
+        bool co_bit_;
+
+        /**
+         * \brief the EDNS0 DE bit.
+         */
+        bool de_bit_;
 
         /**
          * \brief the individual EDNS0 options.

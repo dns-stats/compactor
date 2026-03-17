@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019, 2021 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
+ * Copyright 2018-2019, 2021, 2026 Internet Corporation for Assigned Names and Numbers, Sinodun IT.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -212,6 +212,10 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
             ttl <<= 16;
             if ( *qrd.dns_flags & block_cbor::QUERY_DO )
                 ttl |= 0x8000;
+            if ( *qrd.dns_flags & block_cbor::QUERY_CO )
+                ttl |= 0x4000;
+            if ( *qrd.dns_flags & block_cbor::QUERY_DE )
+                ttl |= 0x2000;
             query->dns.add_additional(
                 CaptureDNS::resource(
                     "",
@@ -256,7 +260,7 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
         // If the query had an OPT, and we've not recorded a response OPT,
         // (unlike query OPTs, response OPTs are recorded in C-DNS if
         // additional section data is recorded), make one up.
-        // No RDATA, no extended RCODE/flags, and sender
+        // No RDATA, echo the DO bit but no other bits, and sender
         // UDP payload size set to the default query payload size.
         if ( qrd.qr_flags & block_cbor::RESPONSE_HAS_OPT )
         {
@@ -552,20 +556,20 @@ void PcapBackend::check_exclude_hints(const HintsExcluded& exclude_hints)
 
     if ( !missing.empty() )
     {
-        std::string report;
+        std::string defaults_report;
         bool comma = false;
 
         for ( const auto& a : missing )
         {
             if ( comma )
-                report.append(", ");
-            report.append(a);
+                defaults_report.append(", ");
+            defaults_report.append(a);
             comma = true;
         }
 
         if ( !opts_.defaults.defaults_file_read )
-            report.append(" (no defaults file found)");
+            defaults_report.append(" (no defaults file found)");
 
-        throw pcap_defaults_backend_error(report);
+        throw pcap_defaults_backend_error(defaults_report);
     }
 }

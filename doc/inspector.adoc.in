@@ -215,6 +215,12 @@ is no query question.
 |query_do
 | Value of query EDNS0 DO bit. Blank if no query EDNS0.
 
+|query_co
+| Value of query EDNS0 CO bit. Blank if no query EDNS0.
+
+|query_de
+| Value of query EDNS0 DE bit. Blank if no query EDNS0.
+
 |query_edns_udp_payload_size
 | Value of query EDNS0 UDP payload size. Blank if no query EDNS0.
 
@@ -283,6 +289,15 @@ is no query question.
 
 |response_z
 | Value of response Z flag. Blank if no response.
+
+|response_do
+| Value of response EDNS0 DO bit. Blank if no response EDNS0.
+
+|response_co
+| Value of response EDNS0 CO bit. Blank if no response EDNS0.
+
+|response_de
+| Value of response EDNS0 DE bit. Blank if no response EDNS0.
 
 |response_len
 | Value of response length on the wire. Blank if no response.

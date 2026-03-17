@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2022 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2022, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -249,6 +249,15 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         {
             if ( !exclude.response_rcode )
                 qs.response_rcode = CaptureDNS::Rcode(*qs.response_rcode + (edns0->extended_rcode() << 4));
+            if ( !exclude.dns_flags )
+            {
+                if ( edns0->do_bit() )
+                    qs.dns_flags.get() |= block_cbor::RESPONSE_DO;
+                if ( edns0->co_bit() )
+                    qs.dns_flags.get() |= block_cbor::RESPONSE_CO;
+                if ( edns0->de_bit() )
+                    qs.dns_flags.get() |= block_cbor::RESPONSE_DE;
+            }
             qri.qr_flags |= block_cbor::RESPONSE_HAS_OPT;
         }
 

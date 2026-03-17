@@ -58,6 +58,12 @@ AC_ARG_WITH([geoip-data-dir],
         [geoipdir=$withval],
         [geoipdir="$localstatedir/lib/GeoIP"])
 AC_SUBST([geoipdir], [$geoipdir])
+AC_ARG_ENABLE([log-network-stats-json],
+        [AS_HELP_STRING([--disable-log-network-stats-json],
+                [do not include json logging of network stats])],
+        [],
+        [enable_log_network_stats_json=yes])
+AM_CONDITIONAL([ENABLE_LOGNETWORKSTATSJSON], [test "x$enable_log_network_stats_json" == "xyes"])
 
 # Checks for libraries.
 AC_LANG([C++])
@@ -85,6 +91,11 @@ AS_IF([test "x$enable_dnstap" != xno],
 AS_IF([test "x$enable_pseudo_anonymisation" != xno],
         [AX_CHECK_OPENSSL([], [AC_MSG_ERROR([pseudo-anonymisation requires OpenSSL])])
          AC_DEFINE([ENABLE_PSEUDOANONYMISATION], [1], [Define to 1 to enable pseudo-anonymisation])
+        ])
+AS_IF([test "x$enable_log_network_stats_json" != xno],
+        [AC_CHECK_HEADER([nlohmann/json.hpp], [], [AC_MSG_ERROR([log networks stats in json requires nlohman-json])])
+         AC_CHECK_HEADERS([nlohmann/ordered_map.hpp], [], [])
+         AC_DEFINE([ENABLE_LOGNETWORKSTATSJSON], [1], [Define to 1 to enable log network stats in json])
         ])
 
 AC_CHECK_LIB([pcap],[pcap_create],

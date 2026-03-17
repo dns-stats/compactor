@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2023 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2023, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -421,7 +421,7 @@ bool BlockCborReader::readBlock()
         start_time_ = block_->start_time;
 
     // Accumulate address events counts.
-    for ( auto& aeci : block_->address_event_counts )
+    for ( const auto& aeci : block_->address_event_counts )
     {
         // Check we have all address event info required. If not, ignore this one.
         if ( !aeci.first.address || !aeci.first.type || !aeci.first.code )
@@ -574,7 +574,7 @@ void BlockCborReader::read_extra_info(
     if ( extra_info->questions_list )
     {
         std::vector<QueryResponseData::Question> qvec;
-        for ( auto& qid : block_->questions_lists[*extra_info->questions_list].vec )
+        for ( const auto& qid : block_->questions_lists[*extra_info->questions_list].vec )
         {
             const block_cbor::Question& q = block_->questions[*qid];
             QueryResponseData::Question newq;
@@ -613,7 +613,7 @@ void BlockCborReader::read_rr(block_cbor::index_t index, boost::optional<std::ve
     if ( index )
     {
         std::vector<QueryResponseData::RR> rrvec;
-        for ( auto& rrid : block_->rrs_lists[*index].vec )
+        for ( const auto& rrid : block_->rrs_lists[*index].vec )
         {
             const block_cbor::ResourceRecord& rr = block_->resource_records[*rrid];
             QueryResponseData::RR newrr;
@@ -771,13 +771,15 @@ uint8_t BlockCborReader::synthesise_qr_flags(const block_cbor::QueryResponseItem
              (block_cbor::QUERY_CD | block_cbor::QUERY_AD |
               block_cbor::QUERY_Z | block_cbor::QUERY_RA |
               block_cbor::QUERY_RD | block_cbor::QUERY_TC |
-              block_cbor::QUERY_AA | block_cbor::QUERY_DO) )
+              block_cbor::QUERY_AA | block_cbor::QUERY_DO |
+              block_cbor::QUERY_CO | block_cbor::QUERY_DE ) )
             res |= block_cbor::HAS_QUERY;
         if ( *sig.dns_flags &
              (block_cbor::RESPONSE_CD | block_cbor::RESPONSE_AD |
               block_cbor::RESPONSE_Z | block_cbor::RESPONSE_RA |
               block_cbor::RESPONSE_RD | block_cbor::RESPONSE_TC |
-              block_cbor::RESPONSE_AA) )
+              block_cbor::RESPONSE_AA | block_cbor::RESPONSE_DO |
+              block_cbor::RESPONSE_CO | block_cbor::RESPONSE_DE ) )
             res |= block_cbor::HAS_RESPONSE;
     }
 
@@ -968,7 +970,7 @@ void BlockCborReader::dump_address_events(std::ostream& os) const
 
         std::sort(aeinfo.begin(), aeinfo.end());
 
-        for ( auto& aei : aeinfo )
+        for ( const auto& aei : aeinfo )
         {
             if ( !seen_one )
             {
@@ -1072,7 +1074,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
     else
         output << "\nResponse not present";
 
-    output << "\n          Transport Hop-limit MsgID QR OPCODE FLAGS(AA/TC/RD/RA/AD/CD)   RCODE  COUNTS(QD/AN/NS/AD)  Query-type  Class Trans-type OPT-codes\n";
+    output << "\n          Transport Hop-limit MsgID QR OPCODE FLAGS(AA/TC/RD/RA/AD/CD/DO/CO/DE)   RCODE  COUNTS(QD/AN/NS/AD)  Query-type  Class Trans-type OPT-codes\n";
 
     if ( transport )
         output << "             " << transport;
@@ -1100,6 +1102,9 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
             output <<  ((*qr.dns_flags & block_cbor::QUERY_RA ) ? " 1 " : " 0 ") ;
             output <<  ((*qr.dns_flags & block_cbor::QUERY_AD ) ? " 1 " : " 0 ") ;
             output <<  ((*qr.dns_flags & block_cbor::QUERY_CD ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::QUERY_DO ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::QUERY_CO ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::QUERY_DE ) ? " 1 " : " 0 ") ;
         } else 
             output << "                  ";
         if ( qr.query_rcode )
@@ -1133,7 +1138,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
         if ( edns0 ) {
             CaptureDNS::EDNS0 e0(CaptureDNS::INTERNET, 0, *edns0);
             if ( !e0.options().empty() )
-                for ( auto& opt : e0.options() )
+                for ( const auto& opt : e0.options() )
                 {
                     output << opt.code() << " ";
                 }
@@ -1166,6 +1171,9 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
             output <<  ((*qr.dns_flags & block_cbor::RESPONSE_RA ) ? " 1 " : " 0 ") ;
             output <<  ((*qr.dns_flags & block_cbor::RESPONSE_AD ) ? " 1 " : " 0 ") ;
             output <<  ((*qr.dns_flags & block_cbor::RESPONSE_CD ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::RESPONSE_DO ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::RESPONSE_CO ) ? " 1 " : " 0 ") ;
+            output <<  ((*qr.dns_flags & block_cbor::RESPONSE_DE ) ? " 1 " : " 0 ") ;
         }
         if ( qr.response_rcode )
             output << "  " << std::left <<  std::setw(11)  << Configuration::find_rcode_string(*qr.response_rcode) << "    " ;
@@ -1205,7 +1213,7 @@ std::ostream& operator<<(std::ostream& output, const QueryResponseData& qr)
             for ( const auto& r : *qr.response_answers )
             {
                 if ( r.rtype )
-                    output << "\t\t             " << std::right << std::setw(6) << Configuration::find_rrtype_string(*r.rtype);
+                    output << "                             " << std::right << std::setw(6) << Configuration::find_rrtype_string(*r.rtype);
                 if ( r.rclass )
                     output << "      "<< static_cast<unsigned>(*r.rclass);
                 if ( r.name )

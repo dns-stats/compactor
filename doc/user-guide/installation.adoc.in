@@ -4,8 +4,16 @@
 
 Binary install packages are available from the https://launchpad.net/~dns-stats[dns-stats Launchpad PPA] (Personal Package Archive)
 
-*  `ppa:dns-stats/compactor-bionic` for http://releases.ubuntu.com/18.04/[Ubuntu 18.04 LTS 'Bionic Beaver']
 *  `ppa:dns-stats/compactor-focal`  for http://releases.ubuntu.com/20.04/[Ubuntu 20.04 LTS 'Focal Fossa']
+*  `ppa:dns-stats/compactor-jammy` for http://releases.ubuntu.com/22.04/[Ubuntu 22.04 LTS 'Jammy Jellyfish']
+*  `ppa:dns-stats/compactor`  for http://releases.ubuntu.com/24.04/[Ubuntu 24.04 LTS 'Noble Nubmat']
+
+For historic reasons a separate PPA was created for each Ubuntu version
+supported. However from the v1.2.4 release the PPAs for the DNS-STATS packages
+are being re-organised and this release and all future releases for all Ubuntu versions will be available from
+a single PPA: `ppa:dns-stats/compactor`. (Unstable pre-release packages will be
+available from `ppa:dns-stats/compactor-unstable`). We will maintain 
+the existing platform specific PPAs whilst that platform is supported.
 
 ==== Ubuntu packages
 
@@ -25,7 +33,7 @@ as a pre-requisite package automatically.
 You need first to add the DNS-STATS PPA to your system's Software Sources:
 
 ----
-sudo add-apt-repository ppa:dns-stats/compactor-<ubuntu_release>
+sudo add-apt-repository ppa:dns-stats/compactor
 sudo apt update
 ----
 
@@ -74,7 +82,7 @@ are required.  They should be available via standard installation repositories
 for most platforms. If not, for information on building pre-requisite items from
 source, see the documentation for those items.
 
-[cols=".^,.^",frame=none,grid=none]
+[cols=".^,.^"]
 |===
 
 | `{cpp} compiler` | _compactor_ and _inspector_ are written in
@@ -114,13 +122,25 @@ source, see the documentation for those items.
 | `libtins` | Networking functions library. http://libtins.github.io/.
 See  <<libtins>> if there is no package for your OS.
 
-| `openssl` | Cryptography library, used in pseudo-anonymisation.
-http://www.openssl.org/.
 
 | `libctemplate` | Text templating system. https://github.com/OlafvdSpek/ctemplate.
 
 | `libmaxminddb` | MaxMind GeoIP reader. https://github.com/maxmind/libmaxminddb.
-| `protobuf` | Google Protocol Buffers library. https://developers.google.com/protocol-buffers.
+|===
+
+==== Minimal build
+ 
+The following dependancies are required for features that are enabled by default. However if a minimal build is desired, 
+support for each of those options can be disabled via an option to `configure` which is shown below.
+
+[cols=".^,.^"]
+|===
+| `openssl` | Cryptography library, used in pseudo-anonymisation.
+http://www.openssl.org/. (`--disable-pseudo-anonymisation`)
+
+| `protobuf` | Google Protocol Buffers library. https://developers.google.com/protocol-buffers. (`--disable-dnstap`)
+
+| `nlohmann/json` | JSON library https://json.nlohmann.me. (`--disable-log-network-stats-json`)
 |===
 
 ==== Optionally building documentation

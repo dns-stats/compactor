@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2021, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -164,7 +164,7 @@ public:
     /**
      * \brief DNS flags.
      */
-    boost::optional<uint16_t> dns_flags;
+    boost::optional<uint32_t> dns_flags;
 
     /**
      * \brief class of first Question.

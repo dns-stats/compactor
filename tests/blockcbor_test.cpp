@@ -1,5 +1,5 @@
 /*
- * Copyright 2019, 2021 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2019, 2021, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -147,7 +147,7 @@ SCENARIO("DNS flags are encoded correctly", "[block flags]")
 
         AND_WHEN("Query DO flag set")
         {
-            q.dns.add_additional(CaptureDNS::EDNS0(2048, true, 0).rr());
+            q.dns.add_additional(CaptureDNS::EDNS0(2048, true, false, false, 0).rr());
 
             QueryResponse qr(make_unique<DNSMessage>(q));
             qr.set_response(make_unique<DNSMessage>(r));
@@ -155,6 +155,32 @@ SCENARIO("DNS flags are encoded correctly", "[block flags]")
             THEN("Flags are correct")
             {
                 REQUIRE(dns_flags(qr) == QUERY_DO);
+            }
+        }
+
+        AND_WHEN("Query CO flag set")
+        {
+            q.dns.add_additional(CaptureDNS::EDNS0(2048, false, true, false, 0).rr());
+
+            QueryResponse qr(make_unique<DNSMessage>(q));
+            qr.set_response(make_unique<DNSMessage>(r));
+
+            THEN("Flags are correct")
+            {
+                REQUIRE(dns_flags(qr) == QUERY_CO);
+            }
+        }
+
+        AND_WHEN("Query DE flag set")
+        {
+            q.dns.add_additional(CaptureDNS::EDNS0(2048, false, false, true, 0).rr());
+
+            QueryResponse qr(make_unique<DNSMessage>(q));
+            qr.set_response(make_unique<DNSMessage>(r));
+
+            THEN("Flags are correct")
+            {
+                REQUIRE(dns_flags(qr) == QUERY_DE);
             }
         }
 
