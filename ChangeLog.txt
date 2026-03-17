@@ -6,7 +6,7 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
-Version 1.2.4-rc1 - 2026-03-11
+Version 1.2.4-rc1 - 2026-03-17
 --------------------------
 
 * Compactor: Extend the DNSFlags field to include the DE bit to support data

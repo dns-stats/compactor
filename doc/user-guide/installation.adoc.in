@@ -6,7 +6,14 @@ Binary install packages are available from the https://launchpad.net/~dns-stats[
 
 *  `ppa:dns-stats/compactor-focal`  for http://releases.ubuntu.com/20.04/[Ubuntu 20.04 LTS 'Focal Fossa']
 *  `ppa:dns-stats/compactor-jammy` for http://releases.ubuntu.com/22.04/[Ubuntu 22.04 LTS 'Jammy Jellyfish']
-*  `ppa:dns-stats/compactor-noble`  for http://releases.ubuntu.com/24.04/[Ubuntu 24.04 LTS 'Noble Nubmat']
+*  `ppa:dns-stats/compactor`  for http://releases.ubuntu.com/24.04/[Ubuntu 24.04 LTS 'Noble Nubmat']
+
+For historic reasons a separate PPA was created for each Ubuntu version
+supported. However from the v1.2.4 release the PPAs for the DNS-STATS packages
+are being re-organised and this release and all future releases for all Ubuntu versions will be available from
+a single PPA: `ppa:dns-stats/compactor`. (Unstable pre-release packages will be
+available from `ppa:dns-stats/compactor-unstable`). We will maintain 
+the existing platform specific PPAs whilst that platform is supported.
 
 ==== Ubuntu packages
 
@@ -26,7 +33,7 @@ as a pre-requisite package automatically.
 You need first to add the DNS-STATS PPA to your system's Software Sources:
 
 ----
-sudo add-apt-repository ppa:dns-stats/compactor-<ubuntu_release>
+sudo add-apt-repository ppa:dns-stats/compactor
 sudo apt update
 ----
 
