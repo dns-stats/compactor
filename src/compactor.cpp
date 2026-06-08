@@ -821,6 +821,10 @@ int main(int ac, char *av[])
             return 1;
         }
 
+        // Do not read the config file until now as an error in that will
+        // prevent the previous 2 command line opions from working.
+        vm = configuration.reread_config_file();
+
         if ( vm.count("list-interfaces") )
         {
             std::cout << "Network interfaces:\n";

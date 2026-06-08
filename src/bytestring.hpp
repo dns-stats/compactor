@@ -24,7 +24,7 @@ using byte_string = std::basic_string<unsigned char>;
 /**
  * \brief A byte string literal
  */
-byte_string operator "" _b(const char* s, std::size_t len);
+byte_string operator ""_b(const char* s, std::size_t len);
 
 /**
  * \brief Convert string to a byte_string.
