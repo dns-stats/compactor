@@ -549,7 +549,7 @@ po::variables_map Configuration::parse_command_line(int ac, char *av[])
             throw po::error("Defaults file " + defaults_file_ + " not found.");
     }
 
-    return reread_config_file();
+    return cmdline_vars_;
 }
 
 po::variables_map Configuration::reread_config_file()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2017 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2017,2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -24,7 +24,7 @@ using byte_string = std::basic_string<unsigned char>;
 /**
  * \brief A byte string literal
  */
-byte_string operator "" _b(const char* s, std::size_t len);
+byte_string operator ""_b(const char* s, std::size_t len);
 
 /**
  * \brief Convert string to a byte_string.

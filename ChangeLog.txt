@@ -6,6 +6,14 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.2.4-rc2 - 2026-06-09
+--------------------------
+
+* Compactor: Fix issue where incorrectly formatted config file meant
+  `--help` and `--version` commands did not return correctly.
+* Fix deprecated build warning about literal operators
+* Update address of users mailing list
+
 Version 1.2.4-rc1 - 2026-03-17
 --------------------------
 
