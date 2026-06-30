@@ -78,3 +78,21 @@ KNOWN ISSUES/LIMITATIONS:
       `--warn-on-serialization-error`
   **  optionally parse the affected packet and log if it does contain such a TCP option
       `--log-opt-on-serialization-error`
+
+* `inspector` v1.2.3 and earlier assume a fixed QueryResponseSignature
+  structure and as a result any extension of that structure in a later
+  `compactor` release can result in an error when reading in the newer file (a
+  hash collision could occur causing an index mismatch). Before this was
+  understood, additional fields were added to the DNS Flags element of that
+  Signature (CO and DE bits) in `compactor` 1.2.4~rc2 and hence if any bits
+  were set in the new fields the files could not be read by `inspector` 1.2.3.
+  The underlying issue has been fixed, but due to this the next `dns-stats`
+  release will now be the 1.3.0 release (skipping 1.2.4). The 1.3.0 release
+  includes those new fields but by default they are not written to the C-DNS
+  file by `compactor`, hence maintaining backwards compatibility with
+  `inspector` 1.2.3. To write those new fields the configuration option
+  `extended-qrsig-mode=true` can be set for the `compactor`. The resulting
+  files can be read by `inspector` 1.2.4 and later, but not by 1.2.3 or
+  earlier. The default for this setting may be changed to `true` in a later
+  release.
+

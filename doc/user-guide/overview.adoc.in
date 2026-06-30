@@ -99,10 +99,9 @@ https://tools.ietf.org/html/rfc8618[RFC8618],
 with the following changes:
 
 * A private version ID of 4 is present.
-* The _DNSFlags_ field defined in Section 7.3.2.3.2 of RFC 8618 is extended in the
-  following ways (see the c-dns.cddl file): 
-** The value of the respose DO bit is included
-** The values of the query and response CO (RFC 9824) bits are included
+* If the `extended-qrsig-mode` flag is set to `true`, the _DNSFlags_ field defined in Section 7.3.2.3.2 of RFC 8618 is extended as described below (see the c-dns.cddl file). Note that the default value of that flag is `false` since versions before 1.3.0 cannot read C-DNS files with those additional fields present (due to a restriction in the `compactor` implementation in 1.2.3 and earlier). See KNOWN ISSUES for more details.
+** The value of the response DO bit is included
+** The values of the query and response CO bits (RFC 9824) are included
 ** The values of the query and response DE bits (https://datatracker.ietf.org/doc/draft-ietf-deleg/)
    are included. Although this I-D is not an RFC at the initial time of 
    adding these flags, we include them to aid with data gathering whilst experimentation is taking place.

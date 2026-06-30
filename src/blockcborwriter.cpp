@@ -165,7 +165,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
     if ( !exclude.transaction_type )
         qs.qr_type = block_cbor::transaction_type(*qr);
     if ( !exclude.dns_flags )
-        qs.dns_flags = block_cbor::dns_flags(*qr);
+        qs.dns_flags = block_cbor::dns_flags(*qr, config_.extended_qrsig_mode);
 
     // Basic query/response info.
     if ( !exclude.timestamp )
@@ -249,7 +249,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
         {
             if ( !exclude.response_rcode )
                 qs.response_rcode = CaptureDNS::Rcode(*qs.response_rcode + (edns0->extended_rcode() << 4));
-            if ( !exclude.dns_flags )
+            if ( !exclude.dns_flags and config_.extended_qrsig_mode )
             {
                 if ( edns0->do_bit() )
                     qs.dns_flags.get() |= block_cbor::RESPONSE_DO;

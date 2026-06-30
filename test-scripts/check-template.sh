@@ -6,7 +6,7 @@
 #
 # Check that running the conversion produces the expected output files.
 
-COMP=./compactor
+COMP='./compactor --extended-qrsig-mode'
 INSP=./inspector
 
 command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }

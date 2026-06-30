@@ -6,7 +6,7 @@
 #
 # Check that inspector generates response OPTs when necessary.
 
-COMP=./compactor
+COMP='./compactor --extended-qrsig-mode'
 INSP=./inspector
 DATAFILE=./dnscap.pcap
 
