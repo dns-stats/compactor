@@ -180,7 +180,7 @@ namespace block_cbor {
         QueryResponseField::query_size,
     };
 
-    uint32_t dns_flags(const QueryResponse& qr)
+    uint32_t dns_flags(const QueryResponse& qr, bool extended_qrsig_mode)
     {
         uint32_t res = 0;
 
@@ -207,10 +207,12 @@ namespace block_cbor {
             {
                 if ( edns0->do_bit() )
                     res |= QUERY_DO;
-                if ( edns0->co_bit() )
-                    res |= QUERY_CO;
-                if ( edns0->de_bit() )
-                    res |= QUERY_DE;
+                if ( extended_qrsig_mode ) {
+                    if ( edns0->co_bit() )
+                        res |= QUERY_CO;
+                    if ( edns0->de_bit() )
+                        res |= QUERY_DE;
+                }
             }
         }
 

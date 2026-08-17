@@ -85,6 +85,7 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/check-testcontent-endtime.sh \
                 test-scripts/check-testcontent-exclude.sh \
                 test-scripts/check-testcontent-ednsflags.sh \
+                test-scripts/check-testcontent-ednsflags-pre-1.2.3.sh \
                 test-scripts/check-addressprefix.sh \
                 test-scripts/inspector-outputs.sh \
                 test-scripts/output-size-limit.sh \
@@ -150,6 +151,9 @@ dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/testcontent-ednsflags.diag \
                   test-scripts/testcontent-ednsflags.debugqr \
                   test-scripts/testcontent-ednsflags.dump \
+                  test-scripts/testcontent-ednsflags-pre.diag \
+                  test-scripts/testcontent-ednsflags-pre.debugqr \
+                  test-scripts/testcontent-ednsflags-pre.dump \
                   test-scripts/testcontent.debugqr \
                   test-scripts/addressprefix.diag \
                   test-scripts/addressprefix.debugqr \

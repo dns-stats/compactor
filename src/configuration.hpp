@@ -852,6 +852,12 @@ public:
     */
     bool relaxed_mode;
 
+   /**
+    * \brief write files compatible for reading by v1.2.3 and earlier
+    *        where the QR signature was assumed to be fixed
+    */
+    bool extended_qrsig_mode;
+
     /**
      * \brief log stats periodically during packet collection
      */

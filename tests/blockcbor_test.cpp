@@ -167,7 +167,7 @@ SCENARIO("DNS flags are encoded correctly", "[block flags]")
 
             THEN("Flags are correct")
             {
-                REQUIRE(dns_flags(qr) == QUERY_CO);
+                REQUIRE(dns_flags(qr, true) == QUERY_CO);
             }
         }
 
@@ -180,7 +180,7 @@ SCENARIO("DNS flags are encoded correctly", "[block flags]")
 
             THEN("Flags are correct")
             {
-                REQUIRE(dns_flags(qr) == QUERY_DE);
+                REQUIRE(dns_flags(qr, true) == QUERY_DE);
             }
         }
 

@@ -56,7 +56,7 @@ BlockCborReader::BlockCborReader(CborBaseDecoder& dec,
       pseudo_anon_(pseudo_anon)
 {
     readFileHeader(config);
-    block_ = make_unique<block_cbor::BlockData>(block_parameters_, file_format_version_);
+    block_ = make_unique<block_cbor::BlockData>(block_parameters_, file_format_version_, 0, true);
 }
 
 void BlockCborReader::readFileHeader(Configuration& config)

@@ -8,7 +8,7 @@
 # are specified. See check-testcontent.sh. Exclude client and server
 # address and port so we check Q/R and Q/R sig.
 
-COMP=./compactor
+COMP='./compactor --extended-qrsig-mode'
 INSP=./inspector
 CBOR2DIAG=cbor2diag.rb
 

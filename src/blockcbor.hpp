@@ -1287,9 +1287,10 @@ namespace block_cbor {
      * NOT the response ones.
      *
      * \param qr    the Query/Response.
+     * \param extended_qrsig_mode  write extended signature (not backwards compatible to 1.2.3)
      * \return DNS flags value.
      */
-    uint32_t dns_flags(const QueryResponse& qr);
+    uint32_t dns_flags(const QueryResponse& qr, bool extended_qrsig_mode = false);
 
     /**
      * \brief Set the basic DNS flags in a query or response message.

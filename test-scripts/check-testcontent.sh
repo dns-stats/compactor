@@ -16,7 +16,7 @@
 # output lines on xenial but not on mac). cbor2diag is consistent,
 # so use that.
 
-COMP=./compactor
+COMP='./compactor --extended-qrsig-mode'
 INSP=./inspector
 
 DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"

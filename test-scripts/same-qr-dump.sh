@@ -7,7 +7,7 @@
 # Check that dumping Query/Response text from compactor and inspector
 # produces the same result.
 
-COMP=./compactor
+COMP='./compactor --extended-qrsig-mode'
 INSP=./inspector
 
 DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"

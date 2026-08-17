@@ -150,3 +150,8 @@
 *--log-opt-on-serialization-error*::
    If libtins serialization occurs, log if the packet contains TCP OPT known to trigger this. See KNOWN ISSUES.
 
+*--extended-qrsig-mode*::
+   Write files that collect additional elements of the QR signature (CO and DE
+   bits). Note that these files CANNOT be read by v1.2.3 and earlier where the
+   QR Signature was assumed to be fixed. The default for this value is `false`
+   in v1.3.0 but may be changed in future. See KNOWN ISSUES.

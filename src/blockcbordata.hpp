@@ -1436,8 +1436,8 @@ namespace block_cbor {
         /**
          * \brief Default constructor.
          */
-        explicit HeaderList(bool one_based = false)
-            : one_based_(one_based) {}
+        explicit HeaderList(bool one_based = false, bool allow_duplicates = false)
+            : one_based_(one_based), allow_duplicates_(allow_duplicates) {}
 
         /**
          * \brief Find if a key value is in the list.
@@ -1504,8 +1504,8 @@ namespace block_cbor {
         {
             const K& key = val.key();
             index_t res;
-            if ( !find(key, res) )
-                res = add_value(val);
+            if ( allow_duplicates_ || !find(key, res) )
+                  res = add_value(val);
             return res;
         }
 
@@ -1637,6 +1637,7 @@ namespace block_cbor {
          * If not, they are 0-based.
          */
         bool one_based_;
+        bool allow_duplicates_;
     };
 
     /**
@@ -1665,18 +1666,18 @@ namespace block_cbor {
          */
         explicit BlockData(const std::vector<BlockParameters>& block_parameters,
                            FileFormatVersion file_version = FileFormatVersion::format_10,
-                           unsigned bp_index = 0)
+                           unsigned bp_index = 0, bool allow_duplicates = false)
             : block_parameters_(block_parameters),
               block_parameters_index(bp_index),
-              ip_addresses(file_version < FileFormatVersion::format_10),
-              class_types(file_version < FileFormatVersion::format_10),
-              questions(file_version < FileFormatVersion::format_10),
-              resource_records(file_version < FileFormatVersion::format_10),
-              names_rdatas(file_version < FileFormatVersion::format_10),
-              query_response_signatures(file_version < FileFormatVersion::format_10),
-              questions_lists(file_version < FileFormatVersion::format_10),
-              rrs_lists(file_version < FileFormatVersion::format_10),
-              malformed_message_data(file_version < FileFormatVersion::format_10)
+              ip_addresses(file_version < FileFormatVersion::format_10, allow_duplicates),
+              class_types(file_version < FileFormatVersion::format_10, allow_duplicates),
+              questions(file_version < FileFormatVersion::format_10, allow_duplicates),
+              resource_records(file_version < FileFormatVersion::format_10, allow_duplicates),
+              names_rdatas(file_version < FileFormatVersion::format_10, allow_duplicates),
+              query_response_signatures(file_version < FileFormatVersion::format_10, allow_duplicates),
+              questions_lists(file_version < FileFormatVersion::format_10, allow_duplicates),
+              rrs_lists(file_version < FileFormatVersion::format_10, allow_duplicates),
+              malformed_message_data(file_version < FileFormatVersion::format_10, allow_duplicates)
         {
             init();
         }
