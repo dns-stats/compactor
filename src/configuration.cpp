@@ -305,7 +305,7 @@ Configuration::Configuration()
       output_options_queries(0), output_options_responses(0),
       max_block_items(5000),
       max_output_size(0),
-      report_info(false), relaxed_mode(false), extended_qrsig_mode(false),
+      report_info(false), relaxed_mode(false), extended_qrsig_mode(false), real_cookie_in_qrsig(false),
       log_network_stats_period(0), log_network_stats_json(false), log_file_handling(false), 
       warn_on_serialization_error(false), log_opt_on_serialization_error(false),
       sampling_threshold(10), sampling_rate(0), sampling_time(100),
@@ -428,6 +428,12 @@ Configuration::Configuration()
         ("ignore-rr-type,g",
          po::value<std::vector<std::string>>(),
         "RR types to be ignored.")
+        ("extended-qrsig-mode,M",
+         po::value<bool>(&extended_qrsig_mode)->implicit_value(true),
+         "write files with extended QR signatures (cannot be read by v1.2.3 and earlier).")
+        ("real-cookie-in-qrsig,C",
+         po::value<bool>(&real_cookie_in_qrsig)->implicit_value(true),
+         "write the real cookie value into the QR signature (instead of zeroed value). Likely to create unique signature for each query increasing file size.")
         ("max-block-items",
          po::value<unsigned int>(&max_block_items)->default_value(5000),
          "maximum number of items in an output block.")
@@ -499,9 +505,6 @@ Configuration::Configuration()
          ("log-opt-on-serialization-error,O",
           po::value<bool>(&log_opt_on_serialization_error)->implicit_value(true),
            "if libtins serialization occurs, log if the packet contains TCP OPT known to trigger this.")
-         ("extended-qrsig-mode,M",
-          po::value<bool>(&extended_qrsig_mode)->implicit_value(true),
-          "write files with extended QR signatures (cannot be read by v1.2.3 and earlier).")
          ("sampling-threshold",
          po::value<unsigned int>(&sampling_threshold)->default_value(10),
          "sampling threshold - percentage of traffic dropped.")

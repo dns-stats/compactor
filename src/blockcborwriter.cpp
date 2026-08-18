@@ -227,7 +227,7 @@ void BlockCborWriter::writeBasic(const std::shared_ptr<QueryResponse>& qr,
             if ( !exclude.query_edns_version )
                 qs.query_edns_version = edns0->edns_version();
             if ( !exclude.query_opt_rdata )
-                qs.query_opt_rdata = data_->add_name_rdata(edns0->rr().data());
+                qs.query_opt_rdata = data_->add_name_rdata(edns0->rr(config_.real_cookie_in_qrsig).data());
         }
     }
 

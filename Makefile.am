@@ -79,6 +79,8 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/check-outputs.sh \
                 test-scripts/check-query-only.sh \
                 test-scripts/check-response-opt.sh \
+                test-scripts/check-query-opt.sh \
+                test-scripts/check-query-opt-with-cookie.sh \
                 test-scripts/check-stats.sh \
                 test-scripts/check-template.sh \
                 test-scripts/check-testcontent.sh \
@@ -122,6 +124,7 @@ endif
 dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/GeoLite2-ASN.mmdb.xz \
                   test-scripts/GeoLite2-City.mmdb.xz \
+                  test-scripts/cookie.pcap.xz \
                   test-scripts/dns.pcap.xz \
                   test-scripts/dnscap.pcap.xz \
                   test-scripts/test.dnstap \
@@ -180,6 +183,7 @@ EXTRA_DIST = getversion.sh .version
 
 check_DATA = GeoLite2-ASN.mmdb \
              GeoLite2-City.mmdb \
+             cookie.pcap \
              dns.pcap \
              dnscap.pcap \
              gold.pcap \

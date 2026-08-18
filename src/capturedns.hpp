@@ -685,11 +685,13 @@ public:
         /**
          * \brief Construct the resource embodying this EDNS0.
          *
+         * \param real_cookie_value write real cookie value
+         *        which creates unique QRsig for each query
          * \returns the resource.
          */
-        resource rr() const {
+        resource rr(bool real_cookie_value = false) const {
             return resource("",
-                            make_options_data(),
+                            make_options_data(real_cookie_value),
                             OPT,
                             static_cast<QueryClass>(udp_payload_size_),
                             make_ttl());
@@ -713,9 +715,11 @@ public:
         /**
          * \brief Construct resource data from the options.
          *
+         * \param real_cookie_value write real cookie value
+         *        which creates unique QRsig for each query
          * \returns resource data with the options.
          */
-        byte_string make_options_data() const;
+        byte_string make_options_data(bool real_cookie_value) const;
 
         /**
          * \brief Extract EDNS0 options from resource data.

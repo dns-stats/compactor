@@ -831,6 +831,18 @@ public:
      */
     std::vector<unsigned> accept_rr_types;
 
+   /**
+    * \brief write files compatible for reading by v1.2.3 and earlier
+    *        where the QR signature was assumed to be fixed
+    */
+    bool extended_qrsig_mode;
+
+   /**
+    * \brief write real cookie value into the C-DNS qrsig 
+    *        warning - this createes a unique qrsig for each query
+    */
+    bool real_cookie_in_qrsig;
+
     /**
      * \brief set the maximum number of query/response items
      * or address event items in a block.
@@ -851,12 +863,6 @@ public:
     * \brief only warn (not error) on unrecognised command options
     */
     bool relaxed_mode;
-
-   /**
-    * \brief write files compatible for reading by v1.2.3 and earlier
-    *        where the QR signature was assumed to be fixed
-    */
-    bool extended_qrsig_mode;
 
     /**
      * \brief log stats periodically during packet collection
