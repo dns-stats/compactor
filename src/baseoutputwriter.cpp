@@ -137,7 +137,8 @@ void BaseOutputWriter::writeSections(const DNSMessage& dm, bool is_query)
         for ( const auto& r : dm.dns.additional() )
         {
             if ( r.query_type() == CaptureDNS::QueryType::OPT &&
-                 dm.dns.type() == CaptureDNS::QRType::QUERY )
+                 dm.dns.type() == CaptureDNS::QRType::QUERY &&
+                   !config_.query_opt_in_additional)
                 continue;
 
             if ( !config_.output_rr_type(r.query_type()) )

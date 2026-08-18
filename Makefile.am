@@ -81,6 +81,7 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/check-response-opt.sh \
                 test-scripts/check-query-opt.sh \
                 test-scripts/check-query-opt-with-cookie.sh \
+                test-scripts/check-query-opt-with-full-opt.sh \
                 test-scripts/check-stats.sh \
                 test-scripts/check-template.sh \
                 test-scripts/check-testcontent.sh \

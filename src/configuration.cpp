@@ -305,7 +305,8 @@ Configuration::Configuration()
       output_options_queries(0), output_options_responses(0),
       max_block_items(5000),
       max_output_size(0),
-      report_info(false), relaxed_mode(false), extended_qrsig_mode(false), real_cookie_in_qrsig(false),
+      report_info(false), relaxed_mode(false), extended_qrsig_mode(false), 
+      real_cookie_in_qrsig(false), query_opt_in_additional(false), 
       log_network_stats_period(0), log_network_stats_json(false), log_file_handling(false), 
       warn_on_serialization_error(false), log_opt_on_serialization_error(false),
       sampling_threshold(10), sampling_rate(0), sampling_time(100),
@@ -434,6 +435,9 @@ Configuration::Configuration()
         ("real-cookie-in-qrsig,C",
          po::value<bool>(&real_cookie_in_qrsig)->implicit_value(true),
          "write the real cookie value into the QR signature (instead of zeroed value). Likely to create unique signature for each query increasing file size.")
+        ("query-opt-in-additional,P",
+         po::value<bool>(&query_opt_in_additional)->implicit_value(true),
+         "write the full query OPT RR into the additional section if that sections is captured (even though most data is written into QR signature)")
         ("max-block-items",
          po::value<unsigned int>(&max_block_items)->default_value(5000),
          "maximum number of items in an output block.")

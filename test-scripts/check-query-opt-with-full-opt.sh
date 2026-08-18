@@ -34,7 +34,7 @@ cleanup()
 trap "cleanup 1" HUP INT TERM
 
 # Run the compactor recording minimal data.
-$COMP -c /dev/null --include=all -o $tmpdir/out.cdns $DATAFILE
+$COMP -c /dev/null  --include=all --query-opt-in-additional -o $tmpdir/out.cdns $DATAFILE
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
@@ -70,8 +70,8 @@ Data length: 12
 Option: COOKIE
     Option Code: COOKIE (10)
     Option Length: 8
-    Option Data: 0000000000000000
-    Client Cookie: 0000000000000000
+    Option Data: 183e703c679889c0
+    Client Cookie: 183e703c679889c0
     Server Cookie: <MISSING>
 EOF
 

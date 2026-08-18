@@ -843,6 +843,11 @@ public:
     */
     bool real_cookie_in_qrsig;
 
+   /**
+    * \brief capture query OPT RR into additional section
+    */
+    bool query_opt_in_additional;
+
     /**
      * \brief set the maximum number of query/response items
      * or address event items in a block.

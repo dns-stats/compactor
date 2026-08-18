@@ -28,6 +28,14 @@ Version 1.3.0-rc1 - 2026-08-01
   re-instated with the `real-cookie-in-qrsig` configuration option.
 * Add RESINFO and DELEG to list of recognized RR types specified in
   configuration options.
+* Add configuration option `query-opt-in-additional` to write the full query
+  OPT RR into the additional section. Virtually all the information in the
+  query OPT RR is stored directly in specific fields in the Query/Response
+  signature but this option forces the full OPT RR to ALSO be written into the
+  additional section (if that section is configured to be captured). This can
+  be useful to capture e.g. new flags in the EDNS0 flags field before they are
+  added to the C-DNS definition, or to also capture full EDNS0 DNS COOKIE data
+  (as an alternative to using the `real-cookie-in-qr-sig` flag)
 * Compactor: Refactor of packet statistics logging to now additionally 
   support logging in JSON format using the `--log-network-stats-json` 
   option. Requires additional dependency on `nlohmann/json`.

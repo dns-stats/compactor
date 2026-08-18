@@ -115,6 +115,16 @@ ignored-pcap=@DSLOCALSTATEDIR@/pcap/ignored/%Y%m%d-%H%M%S_%{rotate-period}_%{int
 # If no include is specified then no optional sections are captured. 
 include=all
 
+# Write files that collect additional elements of the QR signature (CO and DE
+# bits). Note that these files CANNOT be read by v1.2.3 or earlier.
+# extended-qrsig-mode=false
+
+# Write the full EDNS0 DNS COOKIE option data into the Query/Response signature field. 
+# real-cookie-in-qr-sig=false
+
+# Also write the full query OPT RR into the additional section. 
+# query-opt-in-additional=false
+
 # maximum number of compression threads.
 # max-compression-threads=2
 
