@@ -122,8 +122,10 @@ const std::vector<CaptureDNS::QueryType> CaptureDNS::QUERYTYPES =
     TYPE_ANY,
     URI,
     CAA,
+    RESINFO,
     TA,
-    DLV
+    DLV,
+    DELEG
 };
 
 CaptureDNS::NameCompression CaptureDNS::name_compression_ = CaptureDNS::DEFAULT;

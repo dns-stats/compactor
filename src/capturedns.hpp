@@ -222,9 +222,10 @@ public:
         TYPE_ANY,
         URI,
         CAA,
+        RESINFO = 261,
         TA = 32768,
         DLV,
-
+        DELEG = 61440,
         NSEC3PARAMS = NSEC3PARAM,
         CERT = CERTIFICATE
     };

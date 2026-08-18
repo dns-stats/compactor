@@ -153,8 +153,10 @@ namespace {
         { "TYPE_ANY", 255 },
         { "URI", 256 },
         { "CAA", 257 },
-        { "TA", 32768  },
-        { "DLV", 32769  },
+        { "RESINFO", 261 },
+        { "TA", 32768 },
+        { "DLV", 32769 },
+        { "DELEG" , 61440 }
     };
 
     const std::unordered_map<std::string, unsigned> RR_TYPES_ALT = {
@@ -499,7 +501,7 @@ Configuration::Configuration()
            "if libtins serialization occurs, log if the packet contains TCP OPT known to trigger this.")
          ("extended-qrsig-mode,M",
           po::value<bool>(&extended_qrsig_mode)->implicit_value(true),
-          "write files with extended QR signatures (cannot be read by v1.2.3 and earlier.")
+          "write files with extended QR signatures (cannot be read by v1.2.3 and earlier).")
          ("sampling-threshold",
          po::value<unsigned int>(&sampling_threshold)->default_value(10),
          "sampling threshold - percentage of traffic dropped.")
