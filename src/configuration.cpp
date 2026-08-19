@@ -303,10 +303,8 @@ Configuration::Configuration()
       dnstap(false),
 #endif
       output_options_queries(0), output_options_responses(0),
-      max_block_items(5000),
-      max_output_size(0),
-      report_info(false), relaxed_mode(false), extended_qrsig_mode(false), 
-      real_cookie_in_qrsig(false), query_opt_in_additional(false), 
+      extended_qrsig_mode(false), real_cookie_in_qrsig(false), query_opt_in_additional(false),
+      max_block_items(5000), max_output_size(0), report_info(false), relaxed_mode(false), 
       log_network_stats_period(0), log_network_stats_json(false), log_file_handling(false), 
       warn_on_serialization_error(false), log_opt_on_serialization_error(false),
       sampling_threshold(10), sampling_rate(0), sampling_time(100),

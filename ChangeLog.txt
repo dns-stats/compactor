@@ -6,18 +6,20 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
-Version 1.3.0-rc1 - 2026-08-01
+Version 1.3.0-rc1 - 2026-08-31
 --------------------------
 
-* Compactor: Extend the DNSFlags field to include the DE bit to support data
-  gathering for DELEG activities:
-  https://datatracker.ietf.org/doc/draft-ietf-deleg/ For completeness this
-  field now includes the response DO bit, the query and response CO bit and the
-  query and response DE bit. The configuration option `extended-qrsig-mode=true`
-  must be set to collect these fields, since the presence of these fields
-  generates files that may cause errors when read by `inspector` 1.2.3 and
-  earlier. See KNOWN ISSUES for a detailed discussion of the problem.
-* Change the default behaviour with respect to capture of EDNS0 DNS COOKIE
+* Compactor and Inspector: Extend the DNSFlags field to include the DE bit to support data
+  gathering for DELEG activities: https://datatracker.ietf.org/doc/draft-ietf-deleg/ 
+  For completeness this field now includes the response DO bit, the query and
+  response CO bit and the query and response DE bit. The configuration option
+  `extended-qrsig-mode=true` must be set to collect these fields, since the
+  presence of these fields generates files that may cause errors when read by
+  `inspector` 1.2.3 and earlier. See KNOWN ISSUES for a detailed discussion of
+  the problem.
+* Compactor: Add RESINFO and DELEG to list of recognized RR types specified in
+  configuration options.
+* Compactor: Change the default behaviour with respect to capture of EDNS0 DNS COOKIE
   client option data (RFC7873) in the OPT data of the Query/Response signature.
   Previously the full query OPT RR data was stored in the QRsignature
   structure, which effectively created a unique signature for each query that
@@ -26,9 +28,7 @@ Version 1.3.0-rc1 - 2026-08-01
   client cookie data containing only zeros. This is to reduce the number of
   unique QRsignatures and therefore file sizes. The previous behaviour can be
   re-instated with the `real-cookie-in-qrsig` configuration option.
-* Add RESINFO and DELEG to list of recognized RR types specified in
-  configuration options.
-* Add configuration option `query-opt-in-additional` to write the full query
+* Compactor: Add configuration option `query-opt-in-additional` to write the full query
   OPT RR into the additional section. Virtually all the information in the
   query OPT RR is stored directly in specific fields in the Query/Response
   signature but this option forces the full OPT RR to ALSO be written into the

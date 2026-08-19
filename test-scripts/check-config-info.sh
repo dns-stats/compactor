@@ -6,6 +6,8 @@
 #
 # Check that main configuration info is correct in .info.
 
+rm -rf FAILED_TEST_RESUTLS_*
+
 COMP=./compactor
 INSP=./inspector
 

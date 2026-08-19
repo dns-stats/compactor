@@ -124,8 +124,9 @@
    be written into the additional section (if that section is configured to be
    captured). This can be useful to capture e.g. new flags in the EDNS0 flags
    field before they are added to the C-DNS definition, or to also capture full
-   EDNS0 DNS COOKIE data (as an alternative to using the
-   `real-cookie-in-qr-sig` flag)
+   EDNS0 DNS COOKIE data (as an alternative to using the `real-cookie-in-qr-sig`
+   flag). This requires that the additional section is separately configured to 
+   be captures via `include` options or the `excluded_fields` file.
 
 *--max-block-items* _arg_::
    Set the maximum number of query/response items  or address event items

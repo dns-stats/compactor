@@ -116,7 +116,7 @@ public:
      *
      * \returns the collection filter, an empty string if none set.
      */
-    std::string filter() const
+    const std::string& filter() const
     {
         return filter_;
     }

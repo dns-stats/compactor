@@ -122,7 +122,8 @@ include=all
 # Write the full EDNS0 DNS COOKIE option data into the Query/Response signature field. 
 # real-cookie-in-qr-sig=false
 
-# Also write the full query OPT RR into the additional section. 
+# Also write the full query OPT RR into the additional section. This requires that the additional
+# section is separately configured to be captures via `include` options or the `excluded_fields` file.
 # query-opt-in-additional=false
 
 # maximum number of compression threads.
