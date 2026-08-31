@@ -14,16 +14,16 @@
 # output lines on xenial but not on mac). cbor2diag is consistent,
 # so use that.
 
-COMP='./compactor --extended-qrsig-mode'
+COMP='./compactor'
 INSP=./inspector
 
 DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
 
 CBOR2DIAG=cbor2diag.rb
 DATAFILE=./testcontent-ednsflags.pcap
-DATADIAG=$srcdir/test-scripts/testcontent-ednsflags.diag
-DATAQR=$srcdir/test-scripts/testcontent-ednsflags.debugqr
-DATADUMP=$srcdir/test-scripts/testcontent-ednsflags.dump
+DATADIAG=$srcdir/test-scripts/testcontent-ednsflags-pre.diag
+DATAQR=$srcdir/test-scripts/testcontent-ednsflags-pre.debugqr
+DATADUMP=$srcdir/test-scripts/testcontent-ednsflags-pre.dump
 TEMPLATE=$srcdir/test-scripts/test-block.tpl
 
 command -v $CBOR2DIAG > /dev/null 2>&1 || { echo "No cbor2diag, skipping test." >&2; exit 77; }

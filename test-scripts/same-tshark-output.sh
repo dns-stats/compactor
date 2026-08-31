@@ -24,6 +24,12 @@ tmpdir=`mktemp -d -t "same-tshark-output.XXXXXX"`
 
 cleanup()
 {
+    if [ $1 -ne 0 ]; then
+      localdir=FAILED_TEST_RESUTLS_$(basename "$0")
+      rm -rf $localdir
+      mkdir $localdir
+      cp $tmpdir/* $localdir
+    fi
     rm -rf $tmpdir
     exit $1
 }

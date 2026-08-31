@@ -9,17 +9,17 @@ unusedFunction:src/blockcbordata.cpp:1648
 unusedFunction:src/blockcbordata.cpp:1680
 unusedFunction:src/blockcbordata.cpp:1852
 unusedFunction:src/blockcbordata.cpp:1929
-unusedFunction:src/blockcbordata.hpp:1943
+unusedFunction:src/blockcbordata.hpp:1944
 unmatchedSuppression:src/blockcbordata.cpp:1648
 unmatchedSuppression:src/blockcbordata.cpp:1852
-unmatchedSuppression:src/blockcbordata.hpp:1943
-
+unmatchedSuppression:src/blockcbordata.hpp:1944
 // We do need/use CaptureDNS::extract_metadata() and header_size().
 // And write_serialisation() gets confused by HAVE_LIBTINS4.
-unusedFunction:src/capturedns.cpp:187
-unusedFunction:src/capturedns.cpp:1160
-unusedFunction:src/capturedns.cpp:1177
-
+unusedFunction:src/capturedns.cpp:201
+unusedFunction:src/capturedns.cpp:593
+unusedFunction:src/capturedns.hpp:1010
+unusedFunction:src/capturedns.cpp:1174
+unusedFunction:src/capturedns.cpp:1191
 // Various functions are present for completeness but not used.
 unusedFunction:src/cbordecoder.cpp:166
 unusedFunction:src/cbordecoder.cpp:181
@@ -27,10 +27,13 @@ unusedFunction:src/cbordecoder.cpp:196
 unusedFunction:src/sniffers.hpp:57
 unusedFunction:src/sniffers.hpp:78
 unusedFunction:src/sniffers.hpp:98
+unusedFunction:src/sniffers.hpp:119
 unusedFunction:src/channel.hpp:68
-unusedFunction:src/capturedns.hpp:1005
-unusedFunction:src/capturedns.cpp:579
 unusedFunction:src/blockcbor.hpp:904
+// validate() for Size is definitely used.
+unusedFunction:src/configuration.cpp:260
+// No obvious reason why CStringModifier::Modify should be thought to be unused.
+unusedFunction:src/template-backend.cpp:34
 
 // Lambdas are confusing.
 unmatchedSuppression:src/compactor.cpp:272
@@ -51,16 +54,10 @@ unreadVariable:src/compactor.cpp:545
 variableScope:src/configuration.cpp
 shadowVariable:src/configuration.cpp
 
-// validate() for Size is definitely used.
-unusedFunction:src/configuration.cpp:258
-
-// No obvious reason why CStringModifier::Modify should be thought to be unused.
-unusedFunction:src/template-backend.cpp:34
-
 // Perhaps not a place for a STL algorithm. And confusion over what
 // is a member variable.
-uninitMemberVar:src/capturedns.cpp:194
-useStlAlgorithm:src/capturedns.cpp:1191
+uninitMemberVar:src/capturedns.cpp:208
+useStlAlgorithm:src/capturedns.cpp:1205
 
 // We are searching for two items
 useStlAlgorithm:src/inspector.cpp:379

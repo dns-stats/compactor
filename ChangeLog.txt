@@ -6,6 +6,53 @@
 # file, you can obtain one at https://mozilla.org/MPL/2.0/.
 #
 
+Version 1.3.0-rc1 - 2026-08-31
+--------------------------
+
+* Compactor and Inspector: Extend the DNSFlags field to include the DE bit to support data
+  gathering for DELEG activities: https://datatracker.ietf.org/doc/draft-ietf-deleg/ 
+  For completeness this field now includes the response DO bit, the query and
+  response CO bit and the query and response DE bit. The configuration option
+  `extended-qrsig-mode=true` must be set to collect these fields, since the
+  presence of these fields generates files that may cause errors when read by
+  `inspector` 1.2.3 and earlier. See KNOWN ISSUES for a detailed discussion of
+  the problem.
+* Compactor: Add RESINFO and DELEG to list of recognized RR types specified in
+  configuration options.
+* Compactor: Change the default behaviour with respect to capture of EDNS0 DNS COOKIE
+  client option data (RFC7873) in the OPT data of the Query/Response signature.
+  Previously the full query OPT RR data was stored in the QRsignature
+  structure, which effectively created a unique signature for each query that
+  contained a cookie option. From this release the default is to replace the
+  real client cookie request contents with just a client cookie field with the
+  client cookie data containing only zeros. This is to reduce the number of
+  unique QRsignatures and therefore file sizes. The previous behaviour can be
+  re-instated with the `real-cookie-in-qrsig` configuration option.
+* Compactor: Add configuration option `query-opt-in-additional` to write the full query
+  OPT RR into the additional section. Virtually all the information in the
+  query OPT RR is stored directly in specific fields in the Query/Response
+  signature but this option forces the full OPT RR to ALSO be written into the
+  additional section (if that section is configured to be captured). This can
+  be useful to capture e.g. new flags in the EDNS0 flags field before they are
+  added to the C-DNS definition, or to also capture full EDNS0 DNS COOKIE data
+  (as an alternative to using the `real-cookie-in-qr-sig` flag)
+* Compactor: Refactor of packet statistics logging to now additionally 
+  support logging in JSON format using the `--log-network-stats-json` 
+  option. Requires additional dependency on `nlohmann/json`.
+* Compactor: Workarounds for known `libtins` serialization issue of certain 
+  TCP Options, see KNOWN ISSUES.
+* Compactor: Fix for behaviour on libpcap 1.10.2 and later where
+  pcap_breakloop() no longer causes a return from the capture loop until
+  another packet arrives
+* Fix for tshark test failures with Wireshark 4.6.0 to close
+  https://github.com/dns-stats/compactor/issues/92
+* Minor updates for Noble support and to improve CPP check results
+* Update golden cbor2diag output for newer versions. Thanks amesgen.
+* Compactor: Fix issue where incorrectly formatted config file meant
+  `--help` and `--version` commands did not return correctly.
+* Fix deprecated build warning about literal operators
+* Update address of users mailing list
+
 Version 1.2.4-rc2 - 2026-06-09
 --------------------------
 

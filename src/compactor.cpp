@@ -425,8 +425,6 @@ static void tap_loop(DnsTap& dnstap,
                      OutputChannels& output)
 {
     cno::system_clock::time_point last_recv_timestamp;
-    cno::system_clock::time_point next_log_timestamp;
-    cno::system_clock::time_point last_log_timestamp;
 
     Monitoring mon(stats, config, NULL);
 

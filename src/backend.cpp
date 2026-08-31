@@ -206,23 +206,34 @@ std::unique_ptr<QueryResponse> PcapBackend::convert_to_wire(const QueryResponseD
 
         if ( qrd.qr_flags & block_cbor::QUERY_HAS_OPT )
         {
-            uint32_t ttl = ((*qrd.query_rcode >> 4) &0xff);
-            ttl <<= 8;
-            ttl |= (*qrd.query_edns_version & 0xff);
-            ttl <<= 16;
-            if ( *qrd.dns_flags & block_cbor::QUERY_DO )
-                ttl |= 0x8000;
-            if ( *qrd.dns_flags & block_cbor::QUERY_CO )
-                ttl |= 0x4000;
-            if ( *qrd.dns_flags & block_cbor::QUERY_DE )
-                ttl |= 0x2000;
-            query->dns.add_additional(
-                CaptureDNS::resource(
-                    "",
-                    *qrd.query_opt_rdata,
-                    CaptureDNS::OPT,
-                    static_cast<CaptureDNS::QueryClass>(*qrd.query_edns_payload_size),
-                    ttl));
+            // Check to see if the full OPT RR was written into the additional section
+            // (because the config was set to do this), if not fabricate the OPT RR
+            if ( !qrd.query_additionals ||
+                 std::find_if(std::begin(*qrd.query_additionals),
+                               std::end(*qrd.query_additionals),
+                               [](const QueryResponseData::RR& rr)
+                               {
+                                   return rr.rtype && *rr.rtype == CaptureDNS::OPT;
+                               }) == std::end(*qrd.query_additionals) )
+            {
+                uint32_t ttl = ((*qrd.query_rcode >> 4) &0xff);
+                ttl <<= 8;
+                ttl |= (*qrd.query_edns_version & 0xff);
+                ttl <<= 16;
+                if ( *qrd.dns_flags & block_cbor::QUERY_DO )
+                    ttl |= 0x8000;
+                if ( *qrd.dns_flags & block_cbor::QUERY_CO )
+                    ttl |= 0x4000;
+                if ( *qrd.dns_flags & block_cbor::QUERY_DE )
+                    ttl |= 0x2000;
+                query->dns.add_additional(
+                    CaptureDNS::resource(
+                        "",
+                        *qrd.query_opt_rdata,
+                        CaptureDNS::OPT,
+                        static_cast<CaptureDNS::QueryClass>(*qrd.query_edns_payload_size),
+                        ttl));
+            }
         }
     }
 

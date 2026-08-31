@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 Internet Corporation for Assigned Names and Numbers.
+ * Copyright 2016-2019, 2026 Internet Corporation for Assigned Names and Numbers.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -137,7 +137,8 @@ void BaseOutputWriter::writeSections(const DNSMessage& dm, bool is_query)
         for ( const auto& r : dm.dns.additional() )
         {
             if ( r.query_type() == CaptureDNS::QueryType::OPT &&
-                 dm.dns.type() == CaptureDNS::QRType::QUERY )
+                 dm.dns.type() == CaptureDNS::QRType::QUERY &&
+                   !config_.query_opt_in_additional)
                 continue;
 
             if ( !config_.output_rr_type(r.query_type()) )

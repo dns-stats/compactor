@@ -99,13 +99,22 @@ https://tools.ietf.org/html/rfc8618[RFC8618],
 with the following changes:
 
 * A private version ID of 4 is present.
-* The _DNSFlags_ field defined in Section 7.3.2.3.2 of RFC 8618 is extended in the
-  following ways (see the c-dns.cddl file): 
-** The value of the respose DO bit is included
-** The values of the query and response CO (RFC 9824) bits are included
+* If the `extended-qrsig-mode` flag is set to `true`, the _DNSFlags_ field defined in Section 7.3.2.3.2 of RFC 8618 is extended as described below (see the c-dns.cddl file). Note that the default value of that flag is `false` since versions before 1.3.0 cannot read C-DNS files with those additional fields present (due to a restriction in the `compactor` implementation in 1.2.3 and earlier). See KNOWN ISSUES for more details.
+** The value of the response DO bit is included
+** The values of the query and response CO bits (RFC 9824) are included
 ** The values of the query and response DE bits (https://datatracker.ietf.org/doc/draft-ietf-deleg/)
    are included. Although this I-D is not an RFC at the initial time of 
    adding these flags, we include them to aid with data gathering whilst experimentation is taking place.
+* A change is made to the default behaviour with respect to capture of EDNS0
+  DNS COOKIE client option data (RFC7873) in the OPT data of the Query/Response
+  signature. Previous to version 1.3.0 the full query OPT RR data was stored in
+  the QRsignature structure, which effectively created a unique signature for
+  each query that contained a cookie option. From that release the default is
+  to replace the real client cookie request contents with just a client cookie
+  field with the client cookie data containing only zeros. This is to reduce
+  the number of unique QRsignatures and therefore file sizes. The previous
+  behaviour can be re-instated with the `real-cookie-in-qrsig` configuration
+  option.
 * Some _compactor_ implementation-specific entries are added
   to several C-DNS maps (see RFC section 7.1). They are listed below
   with their _compactor_ key values in parenthesis.

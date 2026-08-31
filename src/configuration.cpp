@@ -153,8 +153,10 @@ namespace {
         { "TYPE_ANY", 255 },
         { "URI", 256 },
         { "CAA", 257 },
-        { "TA", 32768  },
-        { "DLV", 32769  },
+        { "RESINFO", 261 },
+        { "TA", 32768 },
+        { "DLV", 32769 },
+        { "DELEG" , 61440 }
     };
 
     const std::unordered_map<std::string, unsigned> RR_TYPES_ALT = {
@@ -301,10 +303,9 @@ Configuration::Configuration()
       dnstap(false),
 #endif
       output_options_queries(0), output_options_responses(0),
-      max_block_items(5000),
-      max_output_size(0),
-      report_info(false), relaxed_mode(false), log_network_stats_period(0),
-      log_network_stats_json(false), log_file_handling(false),
+      extended_qrsig_mode(false), real_cookie_in_qrsig(false), query_opt_in_additional(false),
+      max_block_items(5000), max_output_size(0), report_info(false), relaxed_mode(false), 
+      log_network_stats_period(0), log_network_stats_json(false), log_file_handling(false), 
       warn_on_serialization_error(false), log_opt_on_serialization_error(false),
       sampling_threshold(10), sampling_rate(0), sampling_time(100),
       debug_dns(false), debug_qr(false),
@@ -426,6 +427,15 @@ Configuration::Configuration()
         ("ignore-rr-type,g",
          po::value<std::vector<std::string>>(),
         "RR types to be ignored.")
+        ("extended-qrsig-mode,M",
+         po::value<bool>(&extended_qrsig_mode)->implicit_value(true),
+         "write files with extended QR signatures (cannot be read by v1.2.3 and earlier).")
+        ("real-cookie-in-qrsig,C",
+         po::value<bool>(&real_cookie_in_qrsig)->implicit_value(true),
+         "write the real cookie value into the QR signature (instead of zeroed value). Likely to create unique signature for each query increasing file size.")
+        ("query-opt-in-additional,P",
+         po::value<bool>(&query_opt_in_additional)->implicit_value(true),
+         "write the full query OPT RR into the additional section if that sections is captured (even though most data is written into QR signature)")
         ("max-block-items",
          po::value<unsigned int>(&max_block_items)->default_value(5000),
          "maximum number of items in an output block.")

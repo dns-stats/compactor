@@ -79,12 +79,16 @@ check_SCRIPTS = test-scripts/check-config-info.sh \
                 test-scripts/check-outputs.sh \
                 test-scripts/check-query-only.sh \
                 test-scripts/check-response-opt.sh \
+                test-scripts/check-query-opt.sh \
+                test-scripts/check-query-opt-with-cookie.sh \
+                test-scripts/check-query-opt-with-full-opt.sh \
                 test-scripts/check-stats.sh \
                 test-scripts/check-template.sh \
                 test-scripts/check-testcontent.sh \
                 test-scripts/check-testcontent-endtime.sh \
                 test-scripts/check-testcontent-exclude.sh \
                 test-scripts/check-testcontent-ednsflags.sh \
+                test-scripts/check-testcontent-ednsflags-pre-1.2.3.sh \
                 test-scripts/check-addressprefix.sh \
                 test-scripts/inspector-outputs.sh \
                 test-scripts/output-size-limit.sh \
@@ -121,6 +125,7 @@ endif
 dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/GeoLite2-ASN.mmdb.xz \
                   test-scripts/GeoLite2-City.mmdb.xz \
+                  test-scripts/cookie.pcap.xz \
                   test-scripts/dns.pcap.xz \
                   test-scripts/dnscap.pcap.xz \
                   test-scripts/test.dnstap \
@@ -150,6 +155,9 @@ dist_check_DATA = doc/c-dns.cddl \
                   test-scripts/testcontent-ednsflags.diag \
                   test-scripts/testcontent-ednsflags.debugqr \
                   test-scripts/testcontent-ednsflags.dump \
+                  test-scripts/testcontent-ednsflags-pre.diag \
+                  test-scripts/testcontent-ednsflags-pre.debugqr \
+                  test-scripts/testcontent-ednsflags-pre.dump \
                   test-scripts/testcontent.debugqr \
                   test-scripts/addressprefix.diag \
                   test-scripts/addressprefix.debugqr \
@@ -176,6 +184,7 @@ EXTRA_DIST = getversion.sh .version
 
 check_DATA = GeoLite2-ASN.mmdb \
              GeoLite2-City.mmdb \
+             cookie.pcap \
              dns.pcap \
              dnscap.pcap \
              gold.pcap \

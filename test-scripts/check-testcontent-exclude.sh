@@ -8,7 +8,7 @@
 # are specified. See check-testcontent.sh. Exclude client and server
 # address and port so we check Q/R and Q/R sig.
 
-COMP=./compactor
+COMP='./compactor --extended-qrsig-mode'
 INSP=./inspector
 CBOR2DIAG=cbor2diag.rb
 
@@ -31,6 +31,12 @@ tmpdir=`mktemp -d -t "check-testcontent-exclude.XXXXXX"`
 
 cleanup()
 {
+    if [ $1 -ne 0 ]; then
+      localdir=FAILED_TEST_RESUTLS_$(basename "$0")
+      rm -rf $localdir
+      mkdir $localdir
+      cp $tmpdir/* $localdir
+    fi
     rm -rf $tmpdir
     exit $1
 }

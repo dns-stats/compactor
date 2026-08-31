@@ -122,8 +122,10 @@ const std::vector<CaptureDNS::QueryType> CaptureDNS::QUERYTYPES =
     TYPE_ANY,
     URI,
     CAA,
+    RESINFO,
     TA,
-    DLV
+    DLV,
+    DELEG
 };
 
 CaptureDNS::NameCompression CaptureDNS::name_compression_ = CaptureDNS::DEFAULT;
@@ -151,7 +153,7 @@ void CaptureDNS::EDNS0::extract_ttl_data(uint32_t ttl)
     extended_rcode_ = (ttl & 0xff000000) >> 24;
 }
 
-byte_string CaptureDNS::EDNS0::make_options_data() const
+byte_string CaptureDNS::EDNS0::make_options_data(bool real_cookie_value) const
 {
     byte_string res;
 
@@ -159,9 +161,21 @@ byte_string CaptureDNS::EDNS0::make_options_data() const
     {
         res.push_back((opt.code() & 0xff00) >> 8);
         res.push_back(opt.code() & 0xff);
-        res.push_back((opt.data().size() & 0xff00) >> 8);
-        res.push_back(opt.data().size() & 0xff);
-        res.append(opt.data());
+        if ( opt.code() == CaptureDNS::COOKIE && !real_cookie_value)
+        {
+            // Write cookie data with just a client cookie of len 8 and all zeros
+            // This is technically valid and will not create a unique QR signature
+            // for the message as the presence of a unique cookie value would
+            byte_string ZERO_COOKIE = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+            res.push_back((ZERO_COOKIE.size() & 0xff00) >> 8);
+            res.push_back(ZERO_COOKIE.size() & 0xff);
+            res.append(ZERO_COOKIE);
+        }
+        else {
+            res.push_back((opt.data().size() & 0xff00) >> 8);
+            res.push_back(opt.data().size() & 0xff);
+            res.append(opt.data());
+        } 
     }
 
     return res;

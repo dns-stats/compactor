@@ -8,7 +8,7 @@
 
 COMP='./compactor --extended-qrsig-mode'
 INSP=./inspector
-DATAFILE=./dnscap.pcap
+DATAFILE=./cookie.pcap
 
 DEFAULTS="--defaultsfile $srcdir/test-scripts/test.defaults"
 
@@ -34,7 +34,7 @@ cleanup()
 trap "cleanup 1" HUP INT TERM
 
 # Run the compactor recording minimal data.
-$COMP -c /dev/null -o $tmpdir/out.cdns $DATAFILE
+$COMP -c /dev/null --include=all -o $tmpdir/out.cdns $DATAFILE
 if [ $? -ne 0 ]; then
     cleanup 1
 fi
@@ -45,9 +45,9 @@ if [ $? -ne 0 ]; then
     cleanup 1
 fi
 
-# Get detailed text description of first response and extract the
+# Get detailed text description of first query and extract the
 # bit that should be about the OPT.
-tshark -c 2 -T text -r $tmpdir/out.pcap -Y dns.flags.response==1 -V | \
+tshark -c 2 -T text -r $tmpdir/out.pcap -Y dns.flags.response==0 -V | \
     sed -e "1,/OPT/d" -e "/Request In:/,\$d" -e "s/^            //" -e "/^$/d" > $tmpdir/opt.txt
 if [ $? -ne 0 ]; then
     cleanup 1
@@ -63,10 +63,16 @@ Type: OPT (41)
 UDP payload size: 4096
 Higher bits in extended RCODE: 0x00
 EDNS0 version: 0
-Z: 0x0000
-    0... .... .... .... = DO bit: Cannot handle DNSSEC security RRs
+Z: 0x8000
+    1... .... .... .... = DO bit: Accepts DNSSEC security RRs
     .000 0000 0000 0000 = Reserved: 0x0000
-Data length: 0
+Data length: 12
+Option: COOKIE
+    Option Code: COOKIE (10)
+    Option Length: 8
+    Option Data: 0000000000000000
+    Client Cookie: 0000000000000000
+    Server Cookie: <MISSING>
 EOF
 
 diff $tmpdir/opt.gold $tmpdir/opt.txt

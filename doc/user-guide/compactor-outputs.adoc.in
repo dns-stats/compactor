@@ -104,6 +104,30 @@
    case) will be included in any other question and in any Answer, Authority or
    Additional section. This argument can be given multiple times.
 
+*--extended-qrsig-mode*::
+   Write files that collect additional elements of the QR signature (CO and DE
+   bits). Note that these files CANNOT be read by v1.2.3 and earlier where the
+   QR Signature was assumed to be fixed. The default for this value is `false`
+   in v1.3.0 but may be changed in future. See KNOWN ISSUES.
+
+*--real-cookie-in-qr-sig*::
+   Write the full EDNS0 DNS COOKIE option data into the Query/Response
+   signature field. Prior to release 1.3.0 this was the default, but
+   effectively created a unique signature per query that contained a cookie.
+   From release 1.3.0 the new default is to replace the DNS COOKIE option data
+   with just a client cookie with a cookie value of all zeros.
+
+*--query-opt-in-additional*::
+   Also write the full query OPT RR into the additional section. Virtually all
+   the information in the query OPT RR is stored directly in specific fields in
+   the Query/Response signature but this option forces the full OPT RR to ALSO
+   be written into the additional section (if that section is configured to be
+   captured). This can be useful to capture e.g. new flags in the EDNS0 flags
+   field before they are added to the C-DNS definition, or to also capture full
+   EDNS0 DNS COOKIE data (as an alternative to using the `real-cookie-in-qr-sig`
+   flag). This requires that the additional section is separately configured to 
+   be captures via `include` options or the `excluded_fields` file.
+
 *--max-block-items* _arg_::
    Set the maximum number of query/response items  or address event items
    included in a single output C-DNS block. _arg_ must be a positive integer.
@@ -149,4 +173,3 @@
 
 *--log-opt-on-serialization-error*::
    If libtins serialization occurs, log if the packet contains TCP OPT known to trigger this. See KNOWN ISSUES.
-

@@ -6,7 +6,7 @@
 #
 # Check that running the conversion produces the expected output files.
 
-COMP=./compactor
+COMP='./compactor --extended-qrsig-mode'
 INSP=./inspector
 
 command -v diff > /dev/null 2>&1 || { echo "No diff, skipping test." >&2; exit 77; }
@@ -16,6 +16,12 @@ tmpdir=`mktemp -d -t "check-template.XXXXXX"`
 
 cleanup()
 {
+    if [ $1 -ne 0 ]; then
+      localdir=FAILED_TEST_RESUTLS_$(basename "$0")
+      rm -rf $localdir
+      mkdir $localdir
+      cp $tmpdir/* $localdir
+    fi
     rm -rf $tmpdir
     exit $1
 }
